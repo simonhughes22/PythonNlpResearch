@@ -1,42 +1,15 @@
+from collections import defaultdict
+
 import numpy as np
+from gensim import matutils
+from numpy import random
+from sklearn.tree import DecisionTreeClassifier
 
 from Metrics import rpf1a
 from Rpfa import rpfa
-
-from gensim import matutils
-from numpy import random
-from collections import defaultdict
-from IterableFP import compact
-
-from Essay import Essay, essay_loader
+from Essay import essay_loader
 from WindowSplitter import split_into_windows
 from IdGenerator import IdGenerator
-
-from sklearn.linear_model import LogisticRegression
-from sklearn.naive_bayes import BernoulliNB
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.svm import LinearSVC
-from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
-from sklearn.lda import LDA
-
-def analyse_essays(essays):
-    code2txt = defaultdict(list)
-    for essay in essays:
-        for concept in essay.concepts:
-            code2txt[concept.code].append(concept.txt)
-
-    mean_lens = {}
-    for code in sorted(code2txt.keys()):
-        v = code2txt[code]
-        v.sort()
-        print code
-
-        lens = []
-        for txt in v:
-            print "\t" + txt
-            lngth = len(compact(txt.split(" ")))
-            lens.append(lngth)
-        mean_lens[code] = np.mean(lens)
 
 """ Start Script """
 WINDOW_SIZE = 5
@@ -92,14 +65,7 @@ def extract_tags(window):
     target_wd, tags = window[MID_IX]
     return tags
 
-def extract_features(window):
-    feats = {}
 
-    for i, (wd, tags) in enumerate(window):
-        feature_name = "WD:" + str(-MID_IX + i) + " " + wd
-        feats[feature_name] = 1
-
-    return feats
 
 xs = []
 ysByCode = defaultdict(list)
@@ -155,12 +121,13 @@ for code in sorted(all_codes):
     td_xs, vd_xs, td_ys, vd_ys  = xs[td_ixs], xs[vd_ixs], ys[td_ixs], ys[vd_ixs]
 
     #cls = LogisticRegression(penalty="l2", dual=True)
-    #cls = DecisionTreeClassifier(max_depth=10, min_samples_leaf=2)
+    cls = DecisionTreeClassifier(max_depth=10, min_samples_leaf=2)
     #cls = LinearSVC()
     """ Currently running """
-    cls = GradientBoostingClassifier()
+    #cls = GradientBoostingClassifier()
     #cls = RandomForestClassifier()
     #cls = LDA()
+
 
     if printed_classifier == False:
         print "Classifier:", str(cls)

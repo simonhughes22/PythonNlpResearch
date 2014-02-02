@@ -1,4 +1,6 @@
 from collections import defaultdict
+import logging
+
 import Clusterer
 import ClustersToFile
 import SentenceData
@@ -7,7 +9,7 @@ import MatrixHelper
 import TfIdf
 import WindowSplitter
 import WordTokenizer as dbnetwork
-import logging
+
 
 def split_documents_into_windows(lst_tokens, window_size):
     """ Takes a list of tokens and turns them into a larger list of  

@@ -10,7 +10,6 @@
       <sourceFolder url="file://$MODULE_DIR$/CollectionsHelper" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Data" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/DeepLearning" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/Ensemble" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Frequency" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/LanguageModel" isTestSource="false" />
@@ -39,8 +38,12 @@
       <sourceFolder url="file://$MODULE_DIR$/Data/GlobalWarmingAnnotated" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleaching" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Data/CoralBleachingAnnotated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Data/PublicDataSets" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/FeatureExtraction" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/FeatureExtraction/Text" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 2.7.5 (C:/Python27/python.exe)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="EnthoughtDistro_PhDWork" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">

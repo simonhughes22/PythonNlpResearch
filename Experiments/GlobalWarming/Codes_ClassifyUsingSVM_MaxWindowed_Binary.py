@@ -1,6 +1,5 @@
 from sklearn.svm import SVC
 from GwExperimentBase import *
-import numpy as np
 from WindowSplitter import split_into_windows
 from TermFrequency import TermFrequency
 

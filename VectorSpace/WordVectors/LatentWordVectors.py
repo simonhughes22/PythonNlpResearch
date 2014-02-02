@@ -3,9 +3,9 @@ from collections import defaultdict
 from gensim.models import LsiModel
 from gensim.models import LdaModel
 from gensim.models import RpModel
-from MatrixHelper import unit_vector
-
 import numpy as np
+
+from MatrixHelper import unit_vector
 import TfIdf
 import TermFrequency
 from WindowSplitter import split_into_windows

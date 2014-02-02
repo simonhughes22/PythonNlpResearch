@@ -209,7 +209,6 @@ class Essay(object):
 
     def __repr__(self):
         return self.full_path.split("/")[-1]
-pass
 
 def essay_loader():
     import Settings
@@ -219,7 +218,7 @@ def essay_loader():
     settings = Settings.Settings()
     root_folder = settings.data_directory + "CoralBleaching/Files/"
 
-    onlyfiles = [f for f in listdir(root_folder) if isfile(join(root_folder, f))]
+    onlyfiles = [f for f in listdir(root_folder) if isfile(join(root_folder, f)) and f.endswith(".xml")]
     full_paths = map(lambda f: join(root_folder, f), onlyfiles)
 
     # Make linux style path
@@ -229,3 +228,37 @@ def essay_loader():
     print "%d files found" % len(full_paths)
     return map(Essay, full_paths)
 
+def analyse_essays(essays):
+    code2txt = defaultdict(list)
+    for essay in essays:
+        for concept in essay.concepts:
+            code2txt[concept.code].append(concept.txt)
+
+    mean_lens = {}
+    for code in sorted(code2txt.keys()):
+        v = code2txt[code]
+        v.sort()
+        print code
+
+        lens = []
+        for txt in v:
+            print "\t" + txt
+            lngth = len(compact(txt.split(" ")))
+            lens.append(lngth)
+        mean_lens[code] = np.mean(lens)
+
+def extract_tagged_sentences(essays, tag):
+
+    sentences = []
+    sentence_tags = []
+
+    for essay in essays:
+        for sentence in essay.tagged_sentences:
+
+            sentence, tags = zip(*sentence)
+            processed_tags = [t if t == tag else None for t in tags]
+
+            sentence_tags.append(processed_tags)
+            sentences.append(sentence)
+
+    return (sentences, sentence_tags)
