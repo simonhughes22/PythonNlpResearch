@@ -7,9 +7,8 @@ from gensim import matutils
 from numpy import random
 from collections import defaultdict
 from IterableFP import compact
-from os import listdir
-from os.path import isfile, join
-from Essay import Essay
+
+from Essay import Essay, essay_loader
 from WindowSplitter import split_into_windows
 from IdGenerator import IdGenerator
 
@@ -19,9 +18,6 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.svm import LinearSVC
 from sklearn.ensemble import GradientBoostingClassifier, RandomForestClassifier
 from sklearn.lda import LDA
-
-def linux_style_path(fpath):
-    return fpath.replace("\\", "/")
 
 def analyse_essays(essays):
     code2txt = defaultdict(list)
@@ -42,18 +38,6 @@ def analyse_essays(essays):
             lens.append(lngth)
         mean_lens[code] = np.mean(lens)
 
-def load_essays(root_folder):
-
-    onlyfiles = [f for f in listdir(root_folder) if isfile(join(root_folder, f))]
-    full_paths = map(lambda f: join(root_folder, f), onlyfiles)
-    # Make linux style path
-    full_paths = map(linux_style_path, full_paths)
-    assert len(full_paths) == 105, \
-        "Wrong number of files found: %d. Expected  - 105" % len(full_paths)
-    print "%d files found" % len(full_paths)
-
-    return map(Essay, full_paths)
-
 """ Start Script """
 WINDOW_SIZE = 5
 
@@ -62,7 +46,7 @@ SENTENCE_END    = "SENTENCE_END"
 MIN_SENTENCE_FREQ = 5
 PCT_VALIDATION  = 0.2
 
-essays = load_essays(root_folder = 'C:\Users\simon.hughes\Dropbox\PhD\Data\Coral Bleaching\Final XMLs\Final XMLs')
+essays = essay_loader()
 
 all_wds = set([SENTENCE_START, SENTENCE_END])
 all_codes = set()

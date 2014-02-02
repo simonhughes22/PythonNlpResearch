@@ -2,18 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9643b290-4022-45ff-b8a9-41737414cadc" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Results/_Process_Socher_RAE_Results.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingDecisionTree.py" afterPath="$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingDecisionTree.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingMaxEnt.py" afterPath="$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingMaxEnt.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingNaiveBayes.py" afterPath="$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingNaiveBayes.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingSVM.py" afterPath="$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingSVM.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Experiments/Chicago/ClassifyUsingDecisionTree.py" afterPath="$PROJECT_DIR$/Experiments/Chicago/ClassifyUsingDecisionTree.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingMaxEnt.py" afterPath="$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingMaxEnt.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingSVM_with_EssayBasedLSA.py" afterPath="$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingSVM_with_EssayBasedLSA.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Experiments/ExperimentBase.py" afterPath="$PROJECT_DIR$/Experiments/ExperimentBase.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Experiments/GlobalWarming/GwExperimentBase.py" afterPath="$PROJECT_DIR$/Experiments/GlobalWarming/GwExperimentBase.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Settings.py" afterPath="$PROJECT_DIR$/Settings.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py" afterPath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py" afterPath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py" />
     </list>
     <ignored path="NlpResearch.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -36,85 +26,24 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="Settings.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Settings.py">
+      <file leaf-file-name="LoadCrAnnotatedData.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="25" column="13" selection-start="693" selection-end="693" vertical-scroll-proportion="0.0" vertical-offset="319" max-vertical-offset="816">
+            <state line="10" column="18" selection-start="208" selection-end="215" vertical-scroll-proportion="-1.5747801" vertical-offset="1244" max-vertical-offset="3400">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Codes_ClassifyUsingMaxEnt.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingMaxEnt.py">
+      <file leaf-file-name="Essay.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="22" column="45" selection-start="493" selection-end="508" vertical-scroll-proportion="0.0" vertical-offset="1" max-vertical-offset="1394">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Codes_ClassifyUsingSVM_with_EssayBasedLSA.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingSVM_with_EssayBasedLSA.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="24" column="62" selection-start="572" selection-end="572" vertical-scroll-proportion="0.0" vertical-offset="42" max-vertical-offset="1292">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CR_ClassifyUsingDecisionTree.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingDecisionTree.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="37" column="60" selection-start="1020" selection-end="1020" vertical-scroll-proportion="0.0" vertical-offset="331" max-vertical-offset="1428">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CR_ClassifyUsingMaxEnt.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingMaxEnt.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="15" column="27" selection-start="345" selection-end="345" vertical-scroll-proportion="0.0" vertical-offset="18" max-vertical-offset="1003">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CR_ClassifyUsingNaiveBayes.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingNaiveBayes.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="16" column="60" selection-start="379" selection-end="379" vertical-scroll-proportion="0.0" vertical-offset="35" max-vertical-offset="1020">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="ExperimentBase.py" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Experiments/ExperimentBase.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="105" column="114" selection-start="3114" selection-end="3114" vertical-scroll-proportion="0.38772213" vertical-offset="1545" max-vertical-offset="4301">
+            <state line="219" column="59" selection-start="8159" selection-end="8159" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="646">
               <folding>
-                <element signature="e#0#14#0" expanded="true" />
+                <element signature="e#0#35#0" expanded="true" />
+                <element signature="e#251#7953#0" expanded="false" />
+                <marker date="1391366779840" expanded="true" signature="7979:8605" placeholder="..." />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="CR_ClassifyUsingSVM.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingSVM.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="18" column="60" selection-start="438" selection-end="438" vertical-scroll-proportion="0.0" vertical-offset="18" max-vertical-offset="1258">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="GwData.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/Data/GlobalWarming/GwData.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="10" column="0" selection-start="225" selection-end="225" vertical-scroll-proportion="0.0" vertical-offset="8" max-vertical-offset="4607">
-              <folding />
             </state>
           </provider>
         </entry>
@@ -137,9 +66,7 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/CollectionsHelper/WindowSplitter.py" />
         <option value="$PROJECT_DIR$/Calculations/Metrics.py" />
-        <option value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py" />
         <option value="$PROJECT_DIR$/Ideas.txt" />
         <option value="$PROJECT_DIR$/Data/GlobalWarming/GwData.py" />
         <option value="$PROJECT_DIR$/../analytics-python/RecommenderEngine/TextProcessing/SpellingCorrector.py" />
@@ -153,6 +80,8 @@
         <option value="$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingNaiveBayes.py" />
         <option value="$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingSVM.py" />
         <option value="$PROJECT_DIR$/Experiments/ExperimentBase.py" />
+        <option value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py" />
+        <option value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py" />
       </list>
     </option>
   </component>
@@ -234,25 +163,7 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="GlobalWarming" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="NlpResearch" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="NlpResearch" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Data" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="Chicago" />
+              <option name="myItemId" value="CoralBleachingAnnotated" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -300,7 +211,7 @@
       <recent name="C:\Users\simon.hughes\Dropbox\AI EDU For Peter\Code\PyCharmProjects\NlpResearch\VectorSpace\WordVectors" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.Codes_ClassifyUsingNB">
+  <component name="RunManager" selected="Python.LoadCrAnnotatedData">
     <configuration default="false" name="CR_usingLSA_withBinary" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -589,11 +500,11 @@
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.46463245" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24967825" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.21943372" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.16151866" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2998713" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.16216215" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32871014" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.6138996" sideWeight="0.53536755" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.38223937" sideWeight="0.53536755" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Documentation" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="92" y="92" width="1416" height="676" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -787,12 +698,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py</url>
-          <line>119</line>
+          <line>103</line>
           <option name="timeStamp" value="317" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py</url>
-          <line>159</line>
+          <line>143</line>
           <option name="timeStamp" value="324" />
         </line-breakpoint>
       </breakpoints>
@@ -803,32 +714,11 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/Ideas.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="150" column="0" selection-start="10320" selection-end="10320" vertical-scroll-proportion="0.0" vertical-offset="2074" max-vertical-offset="2771">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Data/GlobalWarming/Labeler.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="7" column="0" selection-start="117" selection-end="117" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="510">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingNB.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="2" column="46" selection-start="78" selection-end="78" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="510">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../analytics-python/RecommenderEngine/TextProcessing/SpellingCorrector.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="15" column="45" selection-start="414" selection-end="414" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1105">
           <folding>
-            <element signature="e#0#22#0" expanded="true" />
+            <element signature="e#0#22#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -912,10 +802,35 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Experiments/ExperimentBase.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="105" column="114" selection-start="3114" selection-end="3114" vertical-scroll-proportion="0.38772213" vertical-offset="1545" max-vertical-offset="4301">
+        <state line="105" column="114" selection-start="3114" selection-end="3114" vertical-scroll-proportion="0.0" vertical-offset="1545" max-vertical-offset="4301">
           <folding>
-            <element signature="e#0#14#0" expanded="true" />
+            <element signature="e#0#14#0" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Python27/Lib/ntpath.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="62" column="4" selection-start="1842" selection-end="1842" vertical-scroll-proportion="0.3323741" vertical-offset="721" max-vertical-offset="9061">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="219" column="59" selection-start="8159" selection-end="8159" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="646">
+          <folding>
+            <element signature="e#0#35#0" expanded="true" />
+            <element signature="e#251#7953#0" expanded="false" />
+            <marker date="1391366779840" expanded="true" signature="7979:8605" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="10" column="18" selection-start="208" selection-end="215" vertical-scroll-proportion="-1.5747801" vertical-offset="1244" max-vertical-offset="3400">
+          <folding />
         </state>
       </provider>
     </entry>

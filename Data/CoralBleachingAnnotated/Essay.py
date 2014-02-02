@@ -210,3 +210,22 @@ class Essay(object):
     def __repr__(self):
         return self.full_path.split("/")[-1]
 pass
+
+def essay_loader():
+    import Settings
+    from os import listdir
+    from os.path import isfile, join
+
+    settings = Settings.Settings()
+    root_folder = settings.data_directory + "CoralBleaching/Files/"
+
+    onlyfiles = [f for f in listdir(root_folder) if isfile(join(root_folder, f))]
+    full_paths = map(lambda f: join(root_folder, f), onlyfiles)
+
+    # Make linux style path
+    full_paths = map(lambda pth: pth.replace("\\", "/"), full_paths)
+    assert len(full_paths) == 105, \
+        "Wrong number of files found: %d. Expected  - 105" % len(full_paths)
+    print "%d files found" % len(full_paths)
+    return map(Essay, full_paths)
+
