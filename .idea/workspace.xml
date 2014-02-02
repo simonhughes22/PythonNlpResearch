@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="9643b290-4022-45ff-b8a9-41737414cadc" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py" afterPath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py" afterPath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py" />
-    </list>
+    <list default="true" id="9643b290-4022-45ff-b8a9-41737414cadc" name="Default" comment="" />
     <ignored path="NlpResearch.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -29,8 +26,10 @@
       <file leaf-file-name="LoadCrAnnotatedData.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="10" column="18" selection-start="208" selection-end="215" vertical-scroll-proportion="-1.5747801" vertical-offset="1244" max-vertical-offset="3400">
-              <folding />
+            <state line="87" column="0" selection-start="2518" selection-end="2518" vertical-scroll-proportion="0.34457478" vertical-offset="1244" max-vertical-offset="3400">
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -504,7 +503,7 @@
       <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2998713" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.16216215" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32871014" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.38223937" sideWeight="0.53536755" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.47361648" sideWeight="0.53536755" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Documentation" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="92" y="92" width="1416" height="676" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -829,8 +828,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="10" column="18" selection-start="208" selection-end="215" vertical-scroll-proportion="-1.5747801" vertical-offset="1244" max-vertical-offset="3400">
-          <folding />
+        <state line="87" column="0" selection-start="2518" selection-end="2518" vertical-scroll-proportion="0.34457478" vertical-offset="1244" max-vertical-offset="3400">
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
