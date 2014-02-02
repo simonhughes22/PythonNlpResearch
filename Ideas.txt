@@ -1,0 +1,158 @@
+
+Input processing
+  1. Replace all dates with a special word
+  2. Replace all non-date numbers with a special word
+  3. Rather than removing infrequent words, replace with a special invented word (same across all low frequency words)
+
+RRBM (Recursive RBM):
+  1. Train with a cls that outputs a probability (e.g. RF). 
+  	- > Use a decision tree or SVM to train on the probability and the labels
+  2. Train one iteration then only train on errors when passed thru some classifier
+  3. Modify Socher code
+  4. Try RAE implementations (theano, and the one I already have)
+  5. Try different sizes of compositional vectors, reducing a single word at a time (e.g. 3 -> 2 instead of 2 -> 1)
+  6. At each level of the parse tree, also pass in a BOW repr of the current words in that subtree, projected into 50 data points using LSA
+  7. Include the class labels as inputs
+  8. Include labels as 2 inputs, and try to echo out the inputs using blank labels
+  9. Go back to trying normalizing
+  10. *** Figure out optimum prob value to maximize F1
+  11. Try a multi-layered RBM (DBN)
+
+Pattern Matching (reg ex learning \ ordered rule induction) - EFFICIENCY IS PARAMOUNT TO ENABLE DEEP SEARCHING QUICKLY
+   1. Use rule inference procedure to learn rules that match regex patterns, taking into account WORD ORDER
+        For speed, be smart about it - keep growing rule while entropy is dropping, but only consider adding words that
+            eliminate false positives (words in the true positive matches but not in false positive matches) - DON'T
+            need to consider every possible word!!
+   2. Use F1 score not entropy when building a rule? Or precision, and stop when overall F1 score drops?
+   3. Generate ngrams (single to length 3) and skip grams (maybe using procedure from 1 to generate ones with > 2 words)
+        and build patterns to classify sentences using a similar approach to initial algorithm - pick highest precision
+        patterns and add greedily (by precision on unmatched sentences). Also include NEGATED patterns ( A OR B) AND NOT (C OR D)).
+        Keep adding positive matching patterns while F1 increases (on training).
+        Then keep adding negative matching patterns while F1 increases.
+        Keep adding positive... etc until no further improvement
+        Regularize - set aside test set to prune - remove whole rules, and words from ngrams \ skip grams while F1 on VD improves
+   4. Once pattern matching algorithm 'perfected' expand by using un-labelled data to learn synonyms, and then patterns can be learned
+        over synonyms as well as specific words (algorithm can choose).
+   5. Incorporate other surface features such as POS and parts of dependency parsing output
+
+ Detecting Inference:
+  1. Try the pattern matching approach of Moldovani and Girju.
+  2. Try an SVM but throwing the kitchen sink at it
+  3. Model as an RTE problem. Use alignment and other models to compute alignments between 
+  		sentences and the example sentences 
+  4. Input data: Use Winograd schemas: http://www.cs.nyu.edu/davise/papers/WS.html.
+    (makes one or more statements and then asks a qu on those statements that requires common sense knowledge to solve) 
+  	Use a SOTA parser to parse sentences. Extract subject, verb, object phrases to generate potential answers.
+  		Pick from the answers using word similarity computed over neural word embeddings vectors. 
+  		Or use a language model to determine which answer more probable.
+  	e.g. The ball broke the table because it was made of styrofoam. What was made of styrofoam?
+  		 (ball or table) extracted given: What -> thing, table + styrofoam + break MORE SIMILAR \ probable than ball + styrofoam + break  
+  
+ Other:
+  Try training an SVM to un-corrupt noisy input vectors (using SVM multi-class). Use binary BOW's as inputs and outputs. Can you layer them?
+  Try training an SVM using dropout
+
+ Neural Networks:
+  Can the success of sparsity constraints be explained by them forcing the network to learn maximally dissimilar features? c.f. PCA
+  A paper demonstrating this would be most interesting (and likely well cited). Look the activation correlations between hidden 
+  nodes in a sparse and none-sparse auto encoder. Also look at this in a regular neural network.
+  
+  Can we apply Socher's concept of multi-objective semi-supervised training to training a deep auto-encoder, layer by layer?
+  
+  Can a Boltzmann machine be used in a k-nn approach? Present an unseen input vector, perform Gibbs sampling until the reconstruction
+  error is below some threshold, which should transform original input vector into one close to one of the training example.
+  Then find most similar labelled example and apply it's label to the problem. Like a form of distributed memory.
+  
+  Neural Networks are prone to slipping into local minima. Once the error on the data has stabilized,
+  try switching to an evolutionary search, whereby the weight matrices are decomposed into a single column
+  vector, and input into a GA, and the GA is used to finetune the weights.
+  
+  Try concatenating the hidden activations with the inputs (i.e. ((x,a),y) instead of (x,y) or (a,y))
+  
+  1. Penalize nodes that do the same thing (learn the same feature). I suspect sparsity is a poor man's
+  	way at approximating this.
+  2. Train an auto-encoder like network by random init, and the pick the 
+  	50% of neurons that have highest activation, treat their expected output as
+  	1 and the rest 0. Repeat over all training instances and several epochs
+  3. Layer a regular auto-encoder on top of an RBM. The stochastic output should make it a denoising auto-encoder
+  4. On each epoch, record the output activations. Train an inverted Kohonen network on those outputs 
+  	(nodes that fire together the most inhibit one another). Use Kohonen outputs to retrain the network
+  	to discourage learning the same features
+  5. Does the order of the training examples affect training performance? Learning in humans displays
+  	interference when similar concepts are learned close to on another. Use clustering to train a network
+  	on one batch of similar examples at a time. Alternatively, maybe training on consecutive instances that
+  	are maximally dissimilar is optimum.
+  6. Use a GA to seed the weights by picking connection weights that express features that maximize the 
+  	performance of a fast classifier (e.g. an SVM, logistic regression) when fed the network outputs
+  7. Learn an auto-encoder by setting the weights as the mean of the outer-products computed from randomly
+    sampling pairs of input vectors. This might prove to a be a good initialization procedure
+
+ Generalized ML Framework \ Theory
+  I believe that most if not all ML algorithms can be represented as probabilistic graphical models.
+  Re-build a few ML algorithms in this way to test the theory.
+  Determine 'atomic elements' of a ML algorithm (feature extraction, updating state, model search procedure, etc)
+  Build off of Bayesian frameworks for describing ML algos (MAP, Max Likelihood, etc) and statistical learning theory
+
+ Generalized Deep Learning Theory
+  I theorize that deep learning is successful primarily because it learns features in a hierarchical manner.
+  There should be mechanisms by which you can improve on other ML models in a similar way.
+  RBM's can be shown to increase the log probability of the data with each new layer (in a deep boltzmann machine).
+  This means that with each new layer, they better model the data.
+  Can we generalize this to other (or all) ML models?
+  e.g.
+    1. harden the independence assumption in NB -> by using one input variable to predict another, learn features that
+    are strongly correlated with other features by being able to predict them. Then do this hierarchically. i.e. learn
+    (with some cond probability threshold) the (nominal) features that predict other (nominal) features correctly.
+    The result would not be a NB model, but some Bayesian model, possibly similar to a HTM (or the spatial aspects of it,
+    ignoring the temporal properties)
+    at least x% of the time (maybe 2x as often as not so p(A/b) = 0.67). Then learn combos of those features, and so on.
+    2. knn - learn knn models over feature subsets. Then learn knn models over those subsets, and so on.
+	
+ Sequential Classifier - For boosting Concept code performance, and detecting inference
+	First, learn standard model for concept coding (pick something fast for testing to test whether improves perf much - e.g. DT or NB, or log reg or svm 0n a BOW model)
+	Then, learn a language model of bigrams and trigrams of concept codes (for adjacent sentences).
+	Combine both when predicting a concept code to boost accuracy.
+	
+ Use word2vec, or other clustering approach, to learn grammar rules
+   Predict w2v better for this than other word sim measurea as uses sequence info
+   1. Use w2v to learn density clusters of similar word (above a threshold)
+   2. Re place words with cluster labels
+   3. Compute priors for labels
+   4. Generate grammar rules -> compute bigrams that have a prob higher than predicted by the product of the priors
+   5. Replace labels with bigrams rules (reduces 2 -> 1). If overlap, more common wins
+   GOTO 1 Retrain w2v on new labels
+   Repeat while atleast 1 rule learned above certain freq
+
+Frequent Itemset Mining
+    Try apriori or similar algorithm to find frequent word patterns
+
+Bayesian DT
+    Use conditional probs (p(A/B)/p(A/~B)) to build a dt instead of entropy
+
+DT's as dimensionality Reducers
+    Use  a DT, train it to reproduce each input column (with bounded depth). Throw away cols that can be easily
+    reproduced from other columns
+
+Bayesian Network
+    Learn a bayesian network in a greedy manner using conditional probs
+
+Generalize Dropout \ Drop Connect to all \ other ML models
+    Like RF
+
+Random Connect
+    Build a NN that has noisy connections (like drop connect mixed with RBM). The noisiness should reduce over time
+    depending on the stregth of the connection (i.e. it's abs value).
+
+Predictive RNN
+    Rather than using an auto-encoder to collapse words by minimizing reconstruction error, collapse words based on the
+    probability output by a NNLM, i.e. collapse words in a greedy manner when one word follows the next with a high prob
+    according to the NNLM
+
+Handling Polysemy in Word Vector Representations
+	Train a NNLM using a convolutional input layer for the word vectors surrounding a word, a middle non-linear layer and repeat the convolutional
+	layer once for the predicted word. Train model to learn word vectors. Then compute polysemous word vector by taking the predicted output vector
+	using surrounded words, and averaging with the learned vector representation for that same word.
+
+Consistency Hypothesis - Relate to scene construction hypothesis
+	Thinking might be like a MT system. There is a model that creates ideas (translates words from one language into a set of foreign words) and a separate model that searches thru 
+	configurations of those ideas for thoughts that are consistent with the real world (cf the language model of the foreign language)

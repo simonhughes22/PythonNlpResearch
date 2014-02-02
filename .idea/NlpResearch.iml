@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PYTHON_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/Results" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Calculations" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Classifiers" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Clustering" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/CodeGen" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/CollectionsHelper" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Data" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DeepLearning" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Ensemble" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Frequency" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/LanguageModel" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/VectorSpace" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/VectorSpace/WordVectors" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Tagging" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/Chicago" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/GlobalWarming" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/GlobalWarming/Causal" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/GlobalWarming/WordClustering" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DeepLearning/DeepBeliefNetwork" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DeepLearning/Examples" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DeepLearning/Examples/DeepAutoEncoder" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Data/Chicago" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Data/GoogleNGrams" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Data/GlobalWarming" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DeepLearning/Examples/DeepAutoEncoder_MichaelNielsen" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/VectorSpace/WordVectors/Word2Vec" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Classifiers/RegEx" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DeepLearning/MyCode" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DeepLearning/WordVectors" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Classifiers/Trees" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Data/CoralBleaching" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Data/GlobalWarmingAnnotated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleaching" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Data/CoralBleachingAnnotated" isTestSource="false" />
+    </content>
+    <orderEntry type="jdk" jdkName="Python 2.7.5 (C:/Python27/python.exe)" jdkType="Python SDK" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+  <component name="PyDocumentationSettings">
+    <option name="myDocStringFormat" value="Plain" />
+  </component>
+  <component name="TestRunnerService">
+    <option name="projectConfiguration" value="Nosetests" />
+    <option name="PROJECT_TEST_RUNNER" value="Nosetests" />
+  </component>
+</module>
+
