@@ -20,7 +20,7 @@ class GwExperimentBase(ExperimentBase):
         return GwData.FOLDER
 
     def get_data(self, settings):
-        return GwData.GwData(directory=settings.data_directory + "\\" + self.sub_dir())
+        return GwData.GwData(directory=settings.data_directory + self.sub_dir())
 
     def codes_to_filter(self):
         return important_codes

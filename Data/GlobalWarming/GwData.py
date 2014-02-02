@@ -8,7 +8,7 @@ import logging
 import Settings
 
 CAUSAL = "Causal"
-FOLDER = "GlobalWarming"
+FOLDER = "GlobalWarming/Files"
 
 class GwData(DataBaseClass.DataBaseClass):
 
@@ -19,10 +19,10 @@ class GwData(DataBaseClass.DataBaseClass):
         
         if directory == None:
             s = Settings.Settings()
-            directory = s.data_directory + FOLDER + "\\"
+            directory = s.data_directory + FOLDER + "/"
 
-        if not directory.endswith("\\"):
-            directory += "\\"
+        if not directory.endswith("/"):
+            directory += "/"
 
         self.directory = directory
         logging.log(logging.INFO, "GwDataClass: Processing Data from directory \n\t'%s'", directory)
