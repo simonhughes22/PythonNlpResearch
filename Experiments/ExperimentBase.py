@@ -103,7 +103,7 @@ class ExperimentBase(object):
 
     def __get_results_folder__(self):
         folder_for_class = str(self.__class__)[1:-2].replace("class '", "").split(".")[-1]
-        results_dir = ExperimentBase.__settings__.results_directory + self.sub_dir() + "\\" + folder_for_class + "\\"
+        results_dir = ExperimentBase.__settings__.results_directory + self.sub_dir() + "/" + folder_for_class + "/"
         return results_dir
 
     def __build_aggregate_results_string__(self, mean_td_metrics, mean_vd_metrics, wt_mean_td_metrics,

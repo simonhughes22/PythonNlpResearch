@@ -21,7 +21,7 @@ class Settings(object):
         # Ensure is in linux form, which works for both OS'
         root_path = linux_delim.join( parts[: ix_root + 1] ) + linux_delim
         self.root_path = root_path
-        self.public_data_dir = self.root_path + "/Data/PublicDatasets/"
+        self.public_data_dir = self.root_path + "Data/PublicDatasets/"
 
         self.results_directory = "/Users/simon.hughes/Dropbox/Phd/Results/"
         self.data_directory    = "/Users/simon.hughes/Dropbox/Phd/Data/"

@@ -20,7 +20,7 @@ def train():
     cv_folds = 10
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     settings = Settings.Settings()
-    results_dir = settings.results_directory + "GlobalWarming\\"
+    results_dir = settings.results_directory + GwData.FOLDER
 
     #TOKENIZE
     xs = GwData.GwData()

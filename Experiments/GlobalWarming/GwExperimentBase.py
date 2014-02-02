@@ -9,7 +9,8 @@ import GwData
 
 important_codes = set([
     "0", "1", "12", "20", "22", "3", "38", "40", "42", "50", "53", "bck", #Target change codes
-    "p14", "p20", "p21", "p28", "p33", "p34", "p4", "p40", "p49", GwData.CAUSAL
+    "p14", "p20", "p21", "p28", "p33", "p34", "p4", "p40", "p49"
+    #, GwData.CAUSAL
 ])
 
 

@@ -37,7 +37,7 @@ def train():
     best_n_words = 10000
     logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
     settings = Settings.Settings()
-    results_dir = settings.results_directory + "Chicago\\"
+    results_dir = settings.results_directory + "Chicago/Files"
 
     #TOKENIZE
     xs = SentenceData.SentenceData()
