@@ -14,8 +14,6 @@ from IdGenerator import IdGenerator
 """ Start Script """
 WINDOW_SIZE = 5
 
-SENTENCE_START  = "SENTENCE_START"
-SENTENCE_END    = "SENTENCE_END"
 MIN_SENTENCE_FREQ = 5
 PCT_VALIDATION  = 0.2
 
@@ -64,8 +62,6 @@ idgen = IdGenerator()
 def extract_tags(window):
     target_wd, tags = window[MID_IX]
     return tags
-
-
 
 xs = []
 ysByCode = defaultdict(list)

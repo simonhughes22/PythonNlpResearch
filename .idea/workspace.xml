@@ -2,14 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9643b290-4022-45ff-b8a9-41737414cadc" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/FeatureExtraction/Text/WindowFeatures.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/CollectionsHelper/WindowSplitter.py" afterPath="$PROJECT_DIR$/FeatureExtraction/Text/WindowSplitter.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Experiments/Chicago/ClusterSentencesByWindowConstrainedLsa.py" afterPath="$PROJECT_DIR$/Experiments/Chicago/ClusterSentencesByWindowConstrainedLsa.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingSVM_MaxWindowed_Binary.py" afterPath="$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingSVM_MaxWindowed_Binary.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py" afterPath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/CollectionsHelper/IterableFP.py" afterPath="$PROJECT_DIR$/CollectionsHelper/IterableFP.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/VectorSpace/WordVectors/LatentWordVectors.py" afterPath="$PROJECT_DIR$/VectorSpace/WordVectors/LatentWordVectors.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/FeatureExtraction/Text/IOBEncode.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py" afterPath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/FeatureExtraction/Text/WindowFeatures.py" afterPath="$PROJECT_DIR$/FeatureExtraction/Text/WindowFeatures.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/FeatureExtraction/Text/WindowSplitter.py" afterPath="$PROJECT_DIR$/FeatureExtraction/Text/WindowSplitter.py" />
     </list>
     <ignored path="NlpResearch.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -35,16 +31,36 @@
       <file leaf-file-name="LoadCrAnnotatedData.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="67" column="0" selection-start="1849" selection-end="1849" vertical-scroll-proportion="0.0" vertical-offset="597" max-vertical-offset="2505">
+            <state line="64" column="0" selection-start="1780" selection-end="1780" vertical-scroll-proportion="0.0" vertical-offset="744" max-vertical-offset="2445">
+              <folding>
+                <element signature="e#0#35#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="IOBEncode.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/FeatureExtraction/Text/IOBEncode.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="3" column="35" selection-start="86" selection-end="86" vertical-scroll-proportion="0.07120253" vertical-offset="0" max-vertical-offset="945">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="WindowFeatures.py" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="WindowFeatures.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/FeatureExtraction/Text/WindowFeatures.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="36" column="0" selection-start="940" selection-end="940" vertical-scroll-proportion="0.8244275" vertical-offset="0" max-vertical-offset="655">
+            <state line="48" column="31" selection-start="1322" selection-end="1322" vertical-scroll-proportion="0.0" vertical-offset="281" max-vertical-offset="960">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="WindowSplitter.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/FeatureExtraction/Text/WindowSplitter.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="59" column="60" selection-start="1746" selection-end="1746" vertical-scroll-proportion="0.0" vertical-offset="348" max-vertical-offset="990">
               <folding />
             </state>
           </provider>
@@ -53,12 +69,11 @@
       <file leaf-file-name="Essay.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="263" column="37" selection-start="9521" selection-end="9521" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="315">
+            <state line="263" column="37" selection-start="9521" selection-end="9521" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="525">
               <folding>
                 <element signature="e#251#7953#0" expanded="false" />
                 <element signature="e#7979#8623#0" expanded="false" />
                 <element signature="e#8657#9118#0" expanded="false" />
-                <element signature="e#9168#9521#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -82,8 +97,6 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/Data/GlobalWarming/GwData.py" />
-        <option value="$PROJECT_DIR$/../analytics-python/RecommenderEngine/TextProcessing/SpellingCorrector.py" />
         <option value="$PROJECT_DIR$/Settings.py" />
         <option value="$PROJECT_DIR$/Experiments/GlobalWarming/GwExperimentBase.py" />
         <option value="$PROJECT_DIR$/Experiments/Chicago/ClassifyUsingDecisionTree.py" />
@@ -96,8 +109,10 @@
         <option value="$PROJECT_DIR$/Experiments/ExperimentBase.py" />
         <option value="$PROJECT_DIR$/CollectionsHelper/IterableFP.py" />
         <option value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py" />
+        <option value="$PROJECT_DIR$/FeatureExtraction/Text/WindowSplitter.py" />
         <option value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py" />
         <option value="$PROJECT_DIR$/FeatureExtraction/Text/WindowFeatures.py" />
+        <option value="$PROJECT_DIR$/FeatureExtraction/Text/IOBEncode.py" />
       </list>
     </option>
   </component>
@@ -226,43 +241,7 @@
       <recent name="C:\Users\simon.hughes\Dropbox\AI EDU For Peter\Code\PyCharmProjects\NlpResearch\Classifiers\RegEx" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.LoadCrAnnotatedData">
-    <configuration default="false" name="CR_usingLSA_withBinary" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Experiments/GlobalWarming/Causal" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="NlpResearch" />
-      <option name="SCRIPT_NAME" value="C:\Users\simon.hughes\Dropbox\PhD\Code\PyCharmProjects\NlpResearch\Experiments\GlobalWarming\Causal\CR_usingLDA_withBinary.py" />
-      <option name="PARAMETERS" value="" />
-      <RunnerSettings RunnerId="PythonRunner" />
-      <ConfigurationWrapper RunnerId="PythonRunner" />
-      <method />
-    </configuration>
-    <configuration default="false" name="CR_NaiveBayes" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Experiments/GlobalWarming/Causal" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="NlpResearch" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_NaiveBayes.py" />
-      <option name="PARAMETERS" value="" />
-      <RunnerSettings RunnerId="PythonRunner" />
-      <ConfigurationWrapper RunnerId="PythonRunner" />
-      <method />
-    </configuration>
+  <component name="RunManager" selected="Python.IOBEncode">
     <configuration default="false" name="Essay" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -318,6 +297,44 @@
       <RunnerSettings RunnerId="PyDebugRunner" />
       <RunnerSettings RunnerId="PythonRunner" />
       <ConfigurationWrapper RunnerId="PyDebugRunner" />
+      <ConfigurationWrapper RunnerId="PythonRunner" />
+      <method />
+    </configuration>
+    <configuration default="false" name="WindowSplitter" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/FeatureExtraction/Text" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="NlpResearch" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/FeatureExtraction/Text/WindowSplitter.py" />
+      <option name="PARAMETERS" value="" />
+      <RunnerSettings RunnerId="PyDebugRunner" />
+      <RunnerSettings RunnerId="PythonRunner" />
+      <ConfigurationWrapper RunnerId="PyDebugRunner" />
+      <ConfigurationWrapper RunnerId="PythonRunner" />
+      <method />
+    </configuration>
+    <configuration default="false" name="IOBEncode" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/FeatureExtraction/Text" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="NlpResearch" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/FeatureExtraction/Text/IOBEncode.py" />
+      <option name="PARAMETERS" value="" />
+      <RunnerSettings RunnerId="PythonRunner" />
       <ConfigurationWrapper RunnerId="PythonRunner" />
       <method />
     </configuration>
@@ -464,19 +481,19 @@
     </configuration>
     <list size="6">
       <item index="0" class="java.lang.String" itemvalue="Python.LoadCrAnnotatedData" />
-      <item index="1" class="java.lang.String" itemvalue="Python.CR_usingLSA_withBinary" />
-      <item index="2" class="java.lang.String" itemvalue="Python.CR_NaiveBayes" />
-      <item index="3" class="java.lang.String" itemvalue="Python.Essay" />
-      <item index="4" class="java.lang.String" itemvalue="Python.Settings" />
-      <item index="5" class="java.lang.String" itemvalue="Python.Codes_ClassifyUsingNB" />
+      <item index="1" class="java.lang.String" itemvalue="Python.Essay" />
+      <item index="2" class="java.lang.String" itemvalue="Python.Settings" />
+      <item index="3" class="java.lang.String" itemvalue="Python.Codes_ClassifyUsingNB" />
+      <item index="4" class="java.lang.String" itemvalue="Python.WindowSplitter" />
+      <item index="5" class="java.lang.String" itemvalue="Python.IOBEncode" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.Codes_ClassifyUsingNB" />
-        <item index="1" class="java.lang.String" itemvalue="Python.Settings" />
-        <item index="2" class="java.lang.String" itemvalue="Python.Essay" />
-        <item index="3" class="java.lang.String" itemvalue="Python.CR_NaiveBayes" />
-        <item index="4" class="java.lang.String" itemvalue="Python.CR_usingLSA_withBinary" />
+        <item index="0" class="java.lang.String" itemvalue="Python.IOBEncode" />
+        <item index="1" class="java.lang.String" itemvalue="Python.WindowSplitter" />
+        <item index="2" class="java.lang.String" itemvalue="Python.Codes_ClassifyUsingNB" />
+        <item index="3" class="java.lang.String" itemvalue="Python.Settings" />
+        <item index="4" class="java.lang.String" itemvalue="Python.Essay" />
       </list>
     </recent_temporary>
   </component>
@@ -508,18 +525,18 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="22" width="1440" height="801" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32918397" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.46412885" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24967825" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.18220946" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2998713" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.18220946" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2998565" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.16216215" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32871014" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.25035867" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.42539454" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Documentation" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="92" y="92" width="1416" height="676" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
@@ -713,32 +730,32 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py</url>
-          <line>69</line>
+          <line>65</line>
           <option name="timeStamp" value="317" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py</url>
-          <line>109</line>
+          <line>105</line>
           <option name="timeStamp" value="324" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/FeatureExtraction/Text/WindowSplitter.py</url>
+          <line>23</line>
+          <option name="timeStamp" value="328" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/FeatureExtraction/Text/WindowSplitter.py</url>
+          <line>31</line>
+          <option name="timeStamp" value="329" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="328" />
+      <option name="time" value="330" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/Data/GlobalWarming/GwData.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="10" column="0" selection-start="225" selection-end="225" vertical-scroll-proportion="0.0" vertical-offset="8" max-vertical-offset="4607" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingMaxEnt.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="22" column="45" selection-start="493" selection-end="508" vertical-scroll-proportion="0.0" vertical-offset="1" max-vertical-offset="1394" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingSVM_with_EssayBasedLSA.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="24" column="62" selection-start="572" selection-end="572" vertical-scroll-proportion="0.0" vertical-offset="42" max-vertical-offset="1292" />
@@ -794,7 +811,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state line="17" column="7" selection-start="360" selection-end="360" vertical-scroll-proportion="0.0" vertical-offset="205" max-vertical-offset="3045">
           <folding>
-            <element signature="e#29#81#0" expanded="true" />
+            <element signature="e#29#81#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -813,21 +830,36 @@
             <element signature="e#251#7953#0" expanded="false" />
             <element signature="e#7979#8623#0" expanded="false" />
             <element signature="e#8657#9118#0" expanded="false" />
-            <element signature="e#9168#9521#0" expanded="false" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/FeatureExtraction/Text/WindowSplitter.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="59" column="60" selection-start="1746" selection-end="1746" vertical-scroll-proportion="0.0" vertical-offset="348" max-vertical-offset="990">
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="67" column="0" selection-start="1849" selection-end="1849" vertical-scroll-proportion="0.0" vertical-offset="597" max-vertical-offset="2505">
-          <folding />
+        <state line="64" column="0" selection-start="1780" selection-end="1780" vertical-scroll-proportion="0.0" vertical-offset="744" max-vertical-offset="2445">
+          <folding>
+            <element signature="e#0#35#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/FeatureExtraction/Text/WindowFeatures.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="36" column="0" selection-start="940" selection-end="940" vertical-scroll-proportion="0.8244275" vertical-offset="0" max-vertical-offset="655">
+        <state line="48" column="31" selection-start="1322" selection-end="1322" vertical-scroll-proportion="0.0" vertical-offset="281" max-vertical-offset="960">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/FeatureExtraction/Text/IOBEncode.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="3" column="35" selection-start="86" selection-end="86" vertical-scroll-proportion="0.07120253" vertical-offset="0" max-vertical-offset="945">
           <folding />
         </state>
       </provider>
