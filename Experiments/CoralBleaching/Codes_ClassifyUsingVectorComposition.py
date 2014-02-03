@@ -1,6 +1,6 @@
 import Converter
 from FindThreshold import best_threshold_for_f1, apply_threshold
-from CbExperimentBase import CbExperimentBase
+from CbBowExperimentBase import CbExperimentBase
 from collections import defaultdict
 from sklearn import metrics, svm
 from sklearn.ensemble import RandomForestClassifier

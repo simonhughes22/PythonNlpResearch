@@ -247,7 +247,7 @@ def analyse_essays(essays):
             lens.append(lngth)
         mean_lens[code] = np.mean(lens)
 
-def extract_tagged_sentences(essays, tag):
+def extract_tagged_sentences(essays):
 
     sentences = []
     sentence_tags = []
@@ -256,9 +256,8 @@ def extract_tagged_sentences(essays, tag):
         for sentence in essay.tagged_sentences:
 
             sentence, tags = zip(*sentence)
-            processed_tags = [t if t == tag else None for t in tags]
 
-            sentence_tags.append(processed_tags)
             sentences.append(sentence)
+            sentence_tags.append(tags)
 
     return (sentences, sentence_tags)

@@ -3,6 +3,24 @@ __author__ = 'simon.hughes'
 def middle_index(window_size):
     return int((window_size + 1) / 2.0) - 1
 
+SENTENCE_START  = "SENTENCE_START"
+SENTENCE_END    = "SENTENCE_END"
+
+def add_bookends(sentence, tags):
+    """
+    sentence    :   list of str
+                        sentence
+    tags        :   list of str
+                        tags for sentence
+    returns (padded sentence, padded tags)
+
+    Adds special start and end tags to a sentence
+    """
+    return (
+        [SENTENCE_START]  + sentence + [SENTENCE_END],
+        [None] + tags + [None]
+    )
+
 def split_into_windows(lst, window_size, pad_ends = False):
     """ Computes a series of windows of size
         window_size for a list
@@ -25,9 +43,9 @@ def split_into_windows(lst, window_size, pad_ends = False):
     modified_list = lst[:]
 
     if pad_ends:
-        for i in range(mix_ix-1):
-            modified_list.insert(0, lst[0])
-            modified_list.append(lst[-1])
+        for i in range(mix_ix):
+            modified_list.insert(0, SENTENCE_START)
+            modified_list.append(SENTENCE_END)
 
     length = len(modified_list)
     if length < window_size or length == 0 or window_size <= 0:
@@ -48,8 +66,6 @@ def split_into_windows(lst, window_size, pad_ends = False):
 if __name__ == "__main__":
 
     lst = range(10)
-    lst.insert(0, "START")
-    lst.append("END")
 
     windows = split_into_windows(lst, window_size=5, pad_ends=True)
 

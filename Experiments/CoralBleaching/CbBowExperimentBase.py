@@ -3,6 +3,7 @@ __author__ = 'simon.hughes'
 from ExperimentBase import *
 import CbData
 
+
 class CbExperimentBase(ExperimentBase):
     __metaclass__ = ABCMeta
 
