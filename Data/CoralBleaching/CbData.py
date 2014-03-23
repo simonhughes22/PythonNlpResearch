@@ -10,7 +10,7 @@ def is_causal(code):
     return 0.0
 
 class CbData(DataBaseClass):
-
+    """ Class that is equivalent to the GwData and classifies the data at the sentence level """
     def __init__(self, directory = None, include_vague = True):
         if directory == None:
             s = Settings.Settings()

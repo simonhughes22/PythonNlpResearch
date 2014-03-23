@@ -42,6 +42,7 @@
       <sourceFolder url="file://$MODULE_DIR$/FeatureExtraction" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/FeatureExtraction/Text" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
+      <excludeFolder url="file://$MODULE_DIR$/Notebooks" />
     </content>
     <orderEntry type="jdk" jdkName="EnthoughtDistro_PhDWork" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

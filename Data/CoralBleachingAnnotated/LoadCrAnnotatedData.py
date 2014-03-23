@@ -9,6 +9,7 @@ from Metrics import rpf1a
 from Rpfa import rpfa
 from Essay import essay_loader
 from WindowSplitter import split_into_windows
+from WindowFeatures import extract_positional_word_features, extract_word_features
 from IdGenerator import IdGenerator
 
 """ Start Script """
@@ -16,6 +17,9 @@ WINDOW_SIZE = 5
 
 MIN_SENTENCE_FREQ = 5
 PCT_VALIDATION  = 0.2
+
+SENTENCE_START = "<SENTENEC_STATRT>"
+SENTENCE_END   = "<SENTENEC_END>"
 
 essays = essay_loader()
 
@@ -37,12 +41,12 @@ print "Creating Windows"
 for essay in essays:
     for sentence in essay.tagged_sentences:
 
-        for wd, tags in sentence:
+        for wd, tags4word in sentence:
             all_wds.add(wd)
-            if len(tags) > 0:
-                all_codes.update(tags)
+            if len(tags4word) > 0:
+                all_codes.update(tags4word)
 
-        modified_sentence = [(w, tags) for (w, tags) in sentence if wd_sent_freq[w] >= MIN_SENTENCE_FREQ]
+        modified_sentence = [(w, tags4word) for (w, tags4word) in sentence if wd_sent_freq[w] >= MIN_SENTENCE_FREQ]
         if len(modified_sentence) == 0:
             continue
 
@@ -68,8 +72,11 @@ ysByCode = defaultdict(list)
 
 print "Extracting Features"
 for window in windows:
-    features = extract_features(window)
-    tags = extract_tags(window)
+    words, _ = zip(*window)
+
+    features = extract_positional_word_features(words, MID_IX, feature_val=1) + extract_word_features(words, feature_val=1)
+    #Tags for middle word (target)
+    tags4word = extract_tags(window)
 
     x = []
     for feat, val in features.items():
@@ -77,9 +84,9 @@ for window in windows:
         x.append( (id, val) )
     xs.append(x)
 
-    for code in tags:
+    for code in tags4word:
         ysByCode[code].append(1)
-    for code in all_codes - tags:
+    for code in all_codes - tags4word:
         ysByCode[code].append(0)
 
 assert len(xs) == len(ysByCode.values()[0])

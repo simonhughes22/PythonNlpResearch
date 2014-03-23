@@ -13,6 +13,7 @@ def extract_positional_word_features(window, mid_ix, feature_val = 1):
                         dct[str]:val
 
     Extracts positional word features
+        (features are different for same word in different positions)
     """
 
     feats = {}
@@ -31,11 +32,11 @@ def extract_word_features(window, feature_val = 1 ):
     returns     :   dct
                         dct[str]:val
 
-    Extracts positional word features
+    Extracts word features, IGNORING POSITION
     """
 
     feats = {}
-    for i, (wd, tags) in enumerate(window):
+    for (wd, tags) in window:
         feature_name = wd
         feats[feature_name] = feature_val
     return feats
