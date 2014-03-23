@@ -17,7 +17,7 @@ def extract_positional_word_features(window, mid_ix, feature_val = 1):
     """
 
     feats = {}
-    for i, (wd, tags) in enumerate(window):
+    for i, wd in enumerate(window):
         feature_name = "WD:" + str(-mid_ix + i) + " " + wd
         feats[feature_name] = feature_val
 
@@ -36,7 +36,7 @@ def extract_word_features(window, feature_val = 1 ):
     """
 
     feats = {}
-    for (wd, tags) in window:
+    for wd in window:
         feature_name = wd
         feats[feature_name] = feature_val
     return feats

@@ -61,20 +61,23 @@ for essay in essays:
         assert min(lens) == max(lens) == WINDOW_SIZE, "Windows are not all the correct size"
         windows.extend(new_windows)
 
-idgen = IdGenerator()
-
 def extract_tags(window):
     target_wd, tags = window[MID_IX]
     return tags
 
-xs = []
+idgen = IdGenerator()
 ysByCode = defaultdict(list)
+xs = []
 
 print "Extracting Features"
 for window in windows:
     words, _ = zip(*window)
 
-    features = extract_positional_word_features(words, MID_IX, feature_val=1) + extract_word_features(words, feature_val=1)
+    features = extract_positional_word_features(words, MID_IX, feature_val=1)
+    word_features = extract_word_features(words, feature_val=1)
+
+    features.update(word_features)
+
     #Tags for middle word (target)
     tags4word = extract_tags(window)
 
