@@ -107,6 +107,7 @@ print "Number of features:", num_features
 for k, v in ysByCode.items():
     ysByCode[k] = np.asarray(v)
 
+
 """ Compute TD \ VD split """
 num_validation = int(0.2 * len(xs))
 num_training = len(xs) - num_validation
