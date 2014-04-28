@@ -1,7 +1,7 @@
 from collections import defaultdict
 from itertools import imap
 from xml.dom import minidom
-from EssayElements import *
+from XmlEssayElements import *
 
 
 __ESSAY_START__  = "ESSAY_START"
@@ -210,16 +210,16 @@ class Essay(object):
     def __repr__(self):
         return self.full_path.split("/")[-1]
 
-def essay_loader():
+def essay_xml_loader():
     import Settings
     from os import listdir
     from os.path import isfile, join
 
     settings = Settings.Settings()
-    root_folder = settings.data_directory + "CoralBleaching/Files/"
+    xml_root_folder = settings.data_directory + "CoralBleaching/XmlData/Files/"
 
-    onlyfiles = [f for f in listdir(root_folder) if isfile(join(root_folder, f)) and f.endswith(".xml")]
-    full_paths = map(lambda f: join(root_folder, f), onlyfiles)
+    onlyfiles = [f for f in listdir(xml_root_folder) if isfile(join(xml_root_folder, f)) and f.endswith(".xml")]
+    full_paths = map(lambda f: join(xml_root_folder, f), onlyfiles)
 
     # Make linux style path
     full_paths = map(lambda pth: pth.replace("\\", "/"), full_paths)

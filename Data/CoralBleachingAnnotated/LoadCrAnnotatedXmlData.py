@@ -7,7 +7,7 @@ from sklearn.tree import DecisionTreeClassifier
 
 from Metrics import rpf1a
 from Rpfa import rpfa
-from Essay import essay_loader
+from XmlEssay import essay_xml_loader
 from WindowSplitter import split_into_windows
 from WindowFeatures import extract_positional_word_features, extract_word_features
 from IdGenerator import IdGenerator
@@ -21,7 +21,7 @@ PCT_VALIDATION  = 0.2
 SENTENCE_START = "<SENTENEC_STATRT>"
 SENTENCE_END   = "<SENTENEC_END>"
 
-essays = essay_loader()
+essays = essay_xml_loader()
 
 all_wds = set([SENTENCE_START, SENTENCE_END])
 all_codes = set()

@@ -29,4 +29,3 @@ if __name__ == "__main__":
     cl = Codes_ClassifyUsingRandomForest(criterion, num_trees)
     cl.Run("Codes_ClassifyUsingRandomForest_Criterion_" + str(criterion) + "_Trees_" + str(num_trees) + ".txt")
     
-    

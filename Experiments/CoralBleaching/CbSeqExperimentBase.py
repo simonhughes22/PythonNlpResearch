@@ -1,7 +1,7 @@
 __author__ = 'simon.hughes'
 
 from collections import defaultdict
-from Essay import essay_loader, extract_tagged_sentences
+from XmlEssay import essay_xml_loader, extract_tagged_sentences
 from nltk import PorterStemmer, tokenize as tkn, flatten
 from SpellingCorrector import SpellingCorrector
 from abc import ABCMeta, abstractmethod
@@ -16,7 +16,7 @@ class CbSeqExperimentBase(object):
         self.negative_label = -1
 
     def load_tagged_sentences(self):
-        essays = essay_loader()
+        essays = essay_xml_loader()
         return extract_tagged_sentences(essays)
 
     def extract_tag(self, tags, tag):

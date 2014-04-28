@@ -2,7 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9643b290-4022-45ff-b8a9-41737414cadc" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py" afterPath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Data/FindFiles.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py" afterPath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/XmlEssay.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/EssayElements.py" afterPath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/XmlEssayElements.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py" afterPath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedXmlData.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Experiments/CoralBleaching/CbSeqExperimentBase.py" afterPath="$PROJECT_DIR$/Experiments/CoralBleaching/CbSeqExperimentBase.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingRandomForest.py" afterPath="$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingRandomForest.py" />
     </list>
     <ignored path="NlpResearch.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -25,13 +31,22 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="LoadCrAnnotatedData.py" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py">
+      <file leaf-file-name="BrattEssay.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="109" column="0" selection-start="2943" selection-end="2943" vertical-scroll-proportion="0.78197676" vertical-offset="1097" max-vertical-offset="2610">
+            <state line="24" column="0" selection-start="642" selection-end="642" vertical-scroll-proportion="0.33333334" vertical-offset="144" max-vertical-offset="2535">
               <folding>
-                <element signature="e#0#35#0" expanded="true" />
+                <element signature="e#1#10#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="XmlEssayElements.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/XmlEssayElements.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="37" column="0" selection-start="1254" selection-end="1254" vertical-scroll-proportion="0.0" vertical-offset="540" max-vertical-offset="2190">
+              <folding />
             </state>
           </provider>
         </entry>
@@ -39,8 +54,31 @@
       <file leaf-file-name="WindowFeatures.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/FeatureExtraction/Text/WindowFeatures.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="38" column="11" selection-start="1015" selection-end="1015" vertical-scroll-proportion="0.0" vertical-offset="570" max-vertical-offset="720">
+            <state line="38" column="11" selection-start="1015" selection-end="1015" vertical-scroll-proportion="0.0" vertical-offset="72" max-vertical-offset="720">
               <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="XmlEssay.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/XmlEssay.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="218" column="79" selection-start="7986" selection-end="8181" vertical-scroll-proportion="0.0" vertical-offset="2869" max-vertical-offset="3540">
+              <folding>
+                <element signature="e#8688#9149#0" expanded="false" />
+                <element signature="e#9194#9468#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="FindFiles.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Data/FindFiles.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="21" column="0" selection-start="601" selection-end="601" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="405">
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -75,19 +113,25 @@
         <option value="$PROJECT_DIR$/FeatureExtraction/Text/IOBEncode.py" />
         <option value="$PROJECT_DIR$/Experiments/CoralBleaching/CbBowExperimentBase.py" />
         <option value="$PROJECT_DIR$/FeatureExtraction/Text/WindowSplitter.py" />
-        <option value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py" />
         <option value="$PROJECT_DIR$/Experiments/CoralBleaching/CbSeqExperimentBase.py" />
         <option value="$PROJECT_DIR$/Data/CoralBleaching/CbData.py" />
         <option value="$PROJECT_DIR$/BuildPythonPath.py" />
         <option value="$PROJECT_DIR$/FeatureExtraction/Text/WindowFeatures.py" />
         <option value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py" />
+        <option value="$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingRandomForest.py" />
+        <option value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py" />
+        <option value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/XmlEssay.py" />
+        <option value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/BratEssay.py" />
+        <option value="$PROJECT_DIR$/Data/FindFiles.py" />
+        <option value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
+    <option name="x" value="91" />
     <option name="y" value="22" />
-    <option name="width" value="1440" />
-    <option name="height" value="808" />
+    <option name="width" value="1398" />
+    <option name="height" value="804" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true">
     <OptionsSetting value="true" id="Add" />
@@ -115,7 +159,6 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -144,18 +187,33 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="Calculations" />
+              <option name="myItemId" value="_Scratch" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="NlpResearch" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="NlpResearch" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Data" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="GoToFile.includeJavaFiles" value="false" />
     <property name="options.splitter.main.proportions" value="0.3" />
-    <property name="options.lastSelected" value="com.jetbrains.python.configuration.PythonContentEntriesConfigurable" />
+    <property name="options.lastSelected" value="pyconsole" />
     <property name="recentsLimit" value="5" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/FeatureExtraction/Text" />
     <property name="FullScreen" value="false" />
@@ -171,6 +229,7 @@
         <option name="myAddSourceRoots" value="true" />
       </console-settings>
     </option>
+    <option name="myShowDebugConsoleByDefault" value="true" />
   </component>
   <component name="PyDebuggerOptionsProvider">
     <option name="mySaveCallSignatures" value="true" />
@@ -191,25 +250,7 @@
       <recent name="C:\Users\simon.hughes\Dropbox\AI EDU For Peter\Code\PyCharmProjects\NlpResearch\Classifiers\RegEx" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.LoadCrAnnotatedData">
-    <configuration default="false" name="Settings" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="NlpResearch" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Settings.py" />
-      <option name="PARAMETERS" value="" />
-      <RunnerSettings RunnerId="PythonRunner" />
-      <ConfigurationWrapper RunnerId="PythonRunner" />
-      <method />
-    </configuration>
+  <component name="RunManager" selected="Python.BrattEssay">
     <configuration default="false" name="Codes_ClassifyUsingNB" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -283,6 +324,26 @@
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/BuildPythonPath.py" />
       <option name="PARAMETERS" value="" />
       <RunnerSettings RunnerId="PythonRunner" />
+      <ConfigurationWrapper RunnerId="PythonRunner" />
+      <method />
+    </configuration>
+    <configuration default="false" name="BrattEssay" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Data/CoralBleachingAnnotated" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="NlpResearch" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py" />
+      <option name="PARAMETERS" value="" />
+      <RunnerSettings RunnerId="PyDebugRunner" />
+      <RunnerSettings RunnerId="PythonRunner" />
+      <ConfigurationWrapper RunnerId="PyDebugRunner" />
       <ConfigurationWrapper RunnerId="PythonRunner" />
       <method />
     </configuration>
@@ -419,7 +480,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="NlpResearch" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedXmlData.py" />
       <option name="PARAMETERS" value="" />
       <RunnerSettings RunnerId="PyDebugRunner" />
       <RunnerSettings RunnerId="PythonRunner" />
@@ -429,19 +490,19 @@
     </configuration>
     <list size="6">
       <item index="0" class="java.lang.String" itemvalue="Python.LoadCrAnnotatedData" />
-      <item index="1" class="java.lang.String" itemvalue="Python.Settings" />
-      <item index="2" class="java.lang.String" itemvalue="Python.Codes_ClassifyUsingNB" />
-      <item index="3" class="java.lang.String" itemvalue="Python.WindowSplitter" />
-      <item index="4" class="java.lang.String" itemvalue="Python.IOBEncode" />
-      <item index="5" class="java.lang.String" itemvalue="Python.BuildPythonPath" />
+      <item index="1" class="java.lang.String" itemvalue="Python.Codes_ClassifyUsingNB" />
+      <item index="2" class="java.lang.String" itemvalue="Python.WindowSplitter" />
+      <item index="3" class="java.lang.String" itemvalue="Python.IOBEncode" />
+      <item index="4" class="java.lang.String" itemvalue="Python.BuildPythonPath" />
+      <item index="5" class="java.lang.String" itemvalue="Python.BrattEssay" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.BuildPythonPath" />
-        <item index="1" class="java.lang.String" itemvalue="Python.WindowSplitter" />
-        <item index="2" class="java.lang.String" itemvalue="Python.IOBEncode" />
-        <item index="3" class="java.lang.String" itemvalue="Python.Codes_ClassifyUsingNB" />
-        <item index="4" class="java.lang.String" itemvalue="Python.Settings" />
+        <item index="0" class="java.lang.String" itemvalue="Python.BrattEssay" />
+        <item index="1" class="java.lang.String" itemvalue="Python.BuildPythonPath" />
+        <item index="2" class="java.lang.String" itemvalue="Python.WindowSplitter" />
+        <item index="3" class="java.lang.String" itemvalue="Python.IOBEncode" />
+        <item index="4" class="java.lang.String" itemvalue="Python.Codes_ClassifyUsingNB" />
       </list>
     </recent_temporary>
   </component>
@@ -472,24 +533,24 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="22" width="1440" height="808" extended-state="6" />
+    <frame x="91" y="22" width="1398" height="804" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32918397" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.46207866" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24947146" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.14728682" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2998565" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.21316166" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.579646" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.16216215" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32871014" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.34549356" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.3090129" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Documentation" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="92" y="92" width="1416" height="676" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.46272856" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24967825" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -677,12 +738,12 @@
           <option name="timeStamp" value="276" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py</url>
+          <url>file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/XmlEssay.py</url>
           <line>180</line>
           <option name="timeStamp" value="306" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py</url>
+          <url>file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedXmlData.py</url>
           <line>116</line>
           <option name="timeStamp" value="324" />
         </line-breakpoint>
@@ -696,15 +757,94 @@
           <line>49</line>
           <option name="timeStamp" value="329" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py</url>
+          <line>153</line>
+          <option name="timeStamp" value="344" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py</url>
+          <line>157</line>
+          <option name="timeStamp" value="347" />
+        </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="330" />
+      <option name="time" value="348" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py">
+    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedXmlData.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="109" column="0" selection-start="2943" selection-end="2943" vertical-scroll-proportion="0.0" vertical-offset="1846" max-vertical-offset="2610">
+          <folding>
+            <element signature="e#0#35#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Calculations/Metrics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="127" column="41" selection-start="3373" selection-end="3373" vertical-scroll-proportion="0.0" vertical-offset="1125" max-vertical-offset="2190">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Experiments/ExperimentBase.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="234" column="23" selection-start="8909" selection-end="8909" vertical-scroll-proportion="0.0" vertical-offset="3103" max-vertical-offset="3795">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Results/Rpfa.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="8" column="26" selection-start="200" selection-end="200" vertical-scroll-proportion="0.0" vertical-offset="120" max-vertical-offset="840">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingVectorComposition_AndLogisticRegression_NoThreshold.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="2" column="49" selection-start="86" selection-end="86" vertical-scroll-proportion="0.0" vertical-offset="30" max-vertical-offset="1710">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/sklearn/linear_model/logistic.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="7" column="6" selection-start="186" selection-end="186" vertical-scroll-proportion="0.0" vertical-offset="105" max-vertical-offset="2190">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingRandomForest.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="31" column="0" selection-start="1055" selection-end="1055" vertical-scroll-proportion="0.0" vertical-offset="435" max-vertical-offset="555">
+          <folding>
+            <element signature="e#0#23#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedXmlData.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="109" column="0" selection-start="2943" selection-end="2943" vertical-scroll-proportion="0.0" vertical-offset="1097" max-vertical-offset="2610">
+          <folding>
+            <element signature="e#0#35#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/FeatureExtraction/Text/WindowFeatures.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="38" column="11" selection-start="1015" selection-end="1015" vertical-scroll-proportion="0.0" vertical-offset="570" max-vertical-offset="720">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedXmlData.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="37" column="32" selection-start="894" selection-end="894" vertical-scroll-proportion="0.0" vertical-offset="360" max-vertical-offset="2595">
           <folding>
@@ -720,7 +860,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py">
+    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedXmlData.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="107" column="31" selection-start="2639" selection-end="2941" vertical-scroll-proportion="0.0" vertical-offset="180" max-vertical-offset="2595">
           <folding>
@@ -736,7 +876,7 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py">
+    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedXmlData.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="33" column="12" selection-start="719" selection-end="719" vertical-scroll-proportion="0.0" vertical-offset="330" max-vertical-offset="2445">
           <folding>
@@ -755,11 +895,6 @@
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1365" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/CollectionsHelper/IterableFP.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="17" column="7" selection-start="360" selection-end="360" vertical-scroll-proportion="0.0" vertical-offset="205" max-vertical-offset="3045" />
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/sklearn/naive_bayes.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="188" column="6" selection-start="5848" selection-end="5848" vertical-scroll-proportion="0.0" vertical-offset="5078" max-vertical-offset="8490" />
@@ -775,13 +910,6 @@
         <state line="3" column="0" selection-start="68" selection-end="116" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="3030" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/FeatureExtraction/Text/WindowSplitter.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="68" column="0" selection-start="1959" selection-end="1959" vertical-scroll-proportion="0.0" vertical-offset="598" max-vertical-offset="1230">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Data/DataBaseClass.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="8" column="6" selection-start="195" selection-end="195" vertical-scroll-proportion="0.12116317" vertical-offset="0" max-vertical-offset="2640" />
@@ -790,11 +918,6 @@
     <entry file="file://$PROJECT_DIR$/Data/GlobalWarming/GwData.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="12" column="34" selection-start="291" selection-end="291" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="4065" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Experiments/ExperimentBase.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="1" column="17" selection-start="32" selection-end="32" vertical-scroll-proportion="0.0" vertical-offset="19" max-vertical-offset="3795" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Results/CrossValidation.py">
@@ -821,7 +944,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state line="13" column="0" selection-start="366" selection-end="366" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1635">
           <folding>
-            <element signature="e#0#35#0" expanded="true" />
+            <element signature="e#0#35#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -841,10 +964,101 @@
         <state line="51" column="33" selection-start="1737" selection-end="1737" vertical-scroll-proportion="0.0" vertical-offset="303" max-vertical-offset="915" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/Essay.py">
+    <entry file="file://$PROJECT_DIR$/FeatureExtraction/Text/WindowSplitter.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="11" column="6" selection-start="231" selection-end="231" vertical-scroll-proportion="0.0" vertical-offset="2385" max-vertical-offset="3990">
+        <state line="68" column="0" selection-start="1959" selection-end="1959" vertical-scroll-proportion="0.0" vertical-offset="248" max-vertical-offset="1230">
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CollectionsHelper/IterableFP.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="152" column="25" selection-start="4095" selection-end="4095" vertical-scroll-proportion="0.0" vertical-offset="1725" max-vertical-offset="3030" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Calculations/Metrics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="127" column="41" selection-start="3373" selection-end="3373" vertical-scroll-proportion="0.0" vertical-offset="1125" max-vertical-offset="2190">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Experiments/ExperimentBase.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="234" column="23" selection-start="8909" selection-end="8909" vertical-scroll-proportion="0.0" vertical-offset="3103" max-vertical-offset="3795">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Results/Rpfa.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="8" column="26" selection-start="200" selection-end="200" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="840">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingRandomForest.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="31" column="0" selection-start="1055" selection-end="1055" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="555">
+          <folding>
+            <element signature="e#0#23#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/_Scratch/AprioriOnGwData.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="667">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/sklearn/linear_model/logistic.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="7" column="6" selection-start="186" selection-end="186" vertical-scroll-proportion="0.06787331" vertical-offset="0" max-vertical-offset="2130">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Settings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="26" column="13" selection-start="769" selection-end="769" vertical-scroll-proportion="0.0" vertical-offset="59" max-vertical-offset="720">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingVectorComposition_AndLogisticRegression_NoThreshold.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="2" column="49" selection-start="86" selection-end="86" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1710">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedXmlData.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2610">
+          <folding>
+            <element signature="e#0#35#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Data/FindFiles.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="21" column="0" selection-start="601" selection-end="601" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="405">
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/XmlEssay.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="218" column="79" selection-start="7986" selection-end="8181" vertical-scroll-proportion="0.0" vertical-offset="2869" max-vertical-offset="3540">
+          <folding>
+            <element signature="e#8688#9149#0" expanded="false" />
+            <element signature="e#9194#9468#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -855,11 +1069,18 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedData.py">
+    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/XmlEssayElements.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="109" column="0" selection-start="2943" selection-end="2943" vertical-scroll-proportion="0.78197676" vertical-offset="1097" max-vertical-offset="2610">
+        <state line="37" column="0" selection-start="1254" selection-end="1254" vertical-scroll-proportion="0.0" vertical-offset="540" max-vertical-offset="2190">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="24" column="0" selection-start="642" selection-end="642" vertical-scroll-proportion="0.33333334" vertical-offset="144" max-vertical-offset="2535">
           <folding>
-            <element signature="e#0#35#0" expanded="true" />
+            <element signature="e#1#10#0" expanded="true" />
           </folding>
         </state>
       </provider>
