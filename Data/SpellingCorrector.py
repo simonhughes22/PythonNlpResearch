@@ -1,29 +1,40 @@
-import re, collections
 import os
 import Settings
+import re, collections
+from collections import defaultdict
 
 class SpellingCorrector(object):
 
     """ 
         This is a simple spelling corrector taking from Peter Norvig's site
     """    
-    def __init__(self):
+    def __init__(self, words = None):
 
-        settings = Settings.Settings()
-        large_text_file = settings.data_directory + "big.txt"
-        dictionary_file = settings.data_directory + "words.lst"
+        #settings = Settings.Settings()
+        dir = "/Users/simon.hughes/GitHub/NlpResearch/Data/PublicDataSets/"
+        dictionary_file = dir + "words.lst"
 
-        self.nwords = self.train(self.words(file(large_text_file).read()))
+        if not words:
+            large_text_file = dir + "big.txt"
+            words = self.extract_words(file(large_text_file).read())
+
+        word_freq = self.train(words)
 
         with open(dictionary_file, "r+") as f:
             words_in_dict = f.readlines()
 
+        self.nwords = defaultdict(int)
         for line in words_in_dict:
-            self.nwords[line.lower().strip()] += 1
-        
-        self.alphabet = 'abcdefghijklmnopqrstuvwxyz'
+            word = line.lower().strip()
+            self.nwords[word] += 1
+            if word in word_freq:
+                self.nwords[word] += word_freq[word]
+
+        #add apostrophe
+        self.alphabet = "abcdefghijklmnopqrstuvwxyz'"
+        self.memoize = {}
     
-    def words(self, text): 
+    def extract_words(self, text):
         return re.findall('[a-z]+', text.lower()) 
 
     def train(self,features):
@@ -46,9 +57,20 @@ class SpellingCorrector(object):
     def known(self, words): return set(w for w in words if w in self.nwords)
     
     def correct(self, word):
+        #don't correct words with numerics
+        #need to ignore ' here
+        if not word.replace("'","").isalpha():
+            return word
+        if word in self.memoize:
+            return self.memoize[word]
+        correction = self.__correct__(word)
+        self.memoize[word] = correction
+        return correction
+
+    def __correct__(self, word):
         candidates = self.known([word]) or self.known(self.edits1(word)) or self.known_edits2(word) or [word]
         return max(candidates, key=self.nwords.get)
-    
+
 if __name__ == "__main__":
     sc = SpellingCorrector()
     

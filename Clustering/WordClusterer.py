@@ -39,7 +39,7 @@ class WordCluster(object):
             self.docs = remove_less_than(tokenized_docs, self.doc_freq, min_doc_freq)
 
         if remove_stop_words:
-            stop_wds = stopwords.words("english")
+            stop_wds = stopwords.extract_words("english")
             self.docs = remove_stop_words(self.docs, stop_wds)
 
         self.num_unique_tokens = self.__count_unique_tokens__(self.docs)

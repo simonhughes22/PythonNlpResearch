@@ -12,8 +12,50 @@ class AnnotationBase(object):
         self.contents = self.split[1].replace("  ", " ").split(" ")
         self.code = self.contents[0]
 
+def is_compound(line):
+    if ";" in line:
+        l = line.replace(" ","")
+        index = l.index(";")
+        return l[index-1].isdigit() or l[index+1].isdigit()
+
+class CompoundTextAnnotation(AnnotationBase):
+    def __init__(self, line, full_text):
+        """ Basic essay element, has
+                txt
+                id
+                start
+                end
+        """
+        AnnotationBase.__init__(self, line)
+        self.txt = self.split[2]
+
+        first  = self.contents[1]
+        second, third = self.contents[2].split(";")
+        fourth = self.contents[3]
+
+        first, second, third, fourth = int(first) + 1, int(second) + 1, int(third) + 1, int(fourth) + 1
+
+        txt_split = self.txt.split(" ")
+
+        txt_first  = txt_split[0]
+        txt_second = txt_split[-1]
+
+        if len(txt_split) != 2:
+            length = len(txt_split)
+            for i in range(1, length):
+                a = " ".join(txt_split[:i])
+                b = " ".join(txt_split[i:])
+                if a in full_text[first-10:second+10] and b in full_text[third-10:third+10]:
+                    txt_first = a
+                    txt_second = b
+                    break
+
+        self.first_part  = TextAnnotation(self.id + "\t" + self.code + " " + str(first) + " " + str(second) + "\t" + txt_first, full_text)
+        self.second_part = TextAnnotation(self.id + "\t" + self.code + " " + str(third) + " " + str(fourth) + "\t" + txt_second, full_text)
+        pass
+
 class TextAnnotation(AnnotationBase):
-    def __init__(self, line):
+    def __init__(self, line, full_text):
         """ Basic essay element, has
                 txt
                 id
@@ -23,12 +65,20 @@ class TextAnnotation(AnnotationBase):
         AnnotationBase.__init__(self, line)
         self.start = int(self.contents[1])
         self.end = int(self.contents[2])
-        assert self.start <= self.end, "Start index should be before the end"
+        self.txt = ""
+
         if len(self.split) > 2:
-            self.txt = self.split[2]
-        else:
-            self.txt = ""
-    pass
+            self.txt = self.split[2].strip()
+            match = full_text[self.start:self.end].strip()
+            if match != self.txt:
+                #Correct start and end
+                offset = min(self.start, max(5, len(self.txt)))
+                substr = full_text[self.start-offset:]
+                ix = substr.index(self.txt)
+                self.start = self.start - offset + ix
+                self.end = self.start + len(self.txt)
+                assert full_text[self.start:self.end].strip() == self.txt
+        assert self.start <= self.end, "Start index should be before the end"
 
 class AttributeAnnotation(AnnotationBase):
 
@@ -56,8 +106,6 @@ class NoteAnnotation(AnnotationBase):
 
 class Essay(object):
 
-    SENTENCE_TERM = set([".", "!", "?"])
-
     def __init__(self, full_path):
 
         self.full_path = full_path
@@ -79,17 +127,39 @@ class Essay(object):
 
         codes_start = defaultdict(set)
         codes_end = defaultdict(set)
+
+        def process_text_annotation(annotation):
+            if annotation.start == annotation.end:
+                return False
+            codes_start[annotation.start].add(annotation.code)
+            codes_end[annotation.end].add(annotation.code)
+            return True
+
         for line in lines:
             if len(line.strip()) == 0:
                 continue
             first_char = line[0]
             if first_char == "T":
-                annotation = TextAnnotation(line)
-                #Bad annotation, ignore
-                if annotation.start == annotation.end:
-                    continue
-                codes_start[annotation.start].add(annotation.code)
-                codes_end[annotation.end].add(annotation.code)
+                if is_compound(line):
+                    annotation = CompoundTextAnnotation(line, self.txt)
+                    process_text_annotation(annotation.first_part)
+                    process_text_annotation(annotation.second_part)
+
+                    """
+                    print ""
+                    print line.strip()
+                    print annotation.txt
+                    print "First:  ", self.txt[annotation.first_part.start:annotation.first_part.end]
+                    print "Second: ", self.txt[annotation.second_part.start:annotation.second_part.end]
+                    print annotation.first_part.start, annotation.first_part.end, " ",
+                    print annotation.second_part.start, annotation.second_part.end
+                    """
+                else:
+                    annotation = TextAnnotation(line, self.txt)
+                    #Bad annotation, ignore
+                    if not process_text_annotation(annotation):
+                        continue
+
             elif first_char == "A":
                 annotation = AttributeAnnotation(line)
                 for id in annotation.child_annotation_ids:
@@ -111,13 +181,16 @@ class Essay(object):
         current_word = ""
         current_sentence = []
 
-        def add_pair(current_word, current_sentence, codes, ch):
+        def add_pair(current_word, current_sentence, codes, ch, ix):
             if current_word.strip() != "":
                 pair = (current_word.lower(), codes)
                 current_sentence.append(pair)
                 self.tagged_words.append(pair)
             if ch.strip() != "":
-                pair2 = (ch, set())
+                if ix in codes_start:
+                    pair2 = (ch, codes_start[ix])
+                else:
+                    pair2 = (ch, set())
                 current_sentence.append(pair2)
                 self.tagged_words.append(pair2)
 
@@ -126,8 +199,8 @@ class Essay(object):
             if ch.isalnum() or ch == "'":
                 current_word += ch
             else:
-                add_pair(current_word, current_sentence, codes.copy(), ch)
-                if ch in self.SENTENCE_TERM:
+                add_pair(current_word, current_sentence, codes.copy(), ch, ix)
+                if ch == "\n" and len(current_sentence) > 0:
                     self.tagged_sentences.append(current_sentence)
                     current_sentence = []
                 current_word = ""
@@ -138,20 +211,30 @@ class Essay(object):
                 codes.difference_update(codes_end[ix])
 
         # add any remaining
-        add_pair(current_word, current_sentence, codes.copy(), "")
+        add_pair(current_word, current_sentence, codes.copy(), "", ix)
+        if len(current_sentence) > 0:
+            self.tagged_sentences.append(current_sentence)
 
-def load_bratt_essays():
-    import Settings
-
-    settings = Settings.Settings()
-    bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/Merged/"
+def load_bratt_essays(directory = None):
+    bratt_root_folder = directory
+    if not bratt_root_folder:
+        import Settings
+        settings = Settings.Settings()
+        bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/Merged/"
 
     files = find_files(bratt_root_folder, "\.ann$", remove_empty=True)
     print len(files), "files found"
 
-    essays = map(Essay, files)
+    essays = []
+    for f in files:
+        #try:
+        essay = Essay(f)
+        essays.append(essay)
+        #except Exception, e:
+        #    print "Error processing file: ", e.message, f
 
-    pass
+    print "%s essays processed" % str(len(essays))
+    return essays
 
 if __name__ == "__main__":
 
