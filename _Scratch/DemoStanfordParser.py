@@ -10,7 +10,3 @@ tupleResult = [(rel, gov.text, dep.text) for rel, gov, dep in dependencies.depen
 for tuple in tupleResult:
     print tuple
 
-#assertEqual(tupleResult, [('prt', 'Pick', 'up'),
-#                               ('det', 'pallet', 'the'),
-#                               ('nn', 'pallet', 'tire'),
- #                              ('dobj', 'Pick', 'pallet')

@@ -41,6 +41,8 @@
       <sourceFolder url="file://$MODULE_DIR$/Data/PublicDataSets" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/FeatureExtraction" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/FeatureExtraction/Text" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/stanford_parser" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Synonyms" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/Notebooks" />
     </content>

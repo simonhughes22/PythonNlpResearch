@@ -59,3 +59,17 @@ def sort_by_value(d, reverse = False):
     @return: a list of tuples {key, value}
     """
     return __sort_dictionary__(d, lambda item: item[1], reverse)
+
+def to_file(filename, dct):
+    with open(filename, "w+") as f:
+        for k,v in dct.items():
+            f.write(str(k) + ":" + str(v) + "\n")
+
+def from_file(filename, key_from_str = str, val_from_str = str):
+    dct = {}
+    with open(filename, "r+") as f:
+        lines = f.readlines()
+    for line in lines:
+        split = line.split(":")
+        dct[key_from_str(split[0])] = val_from_str(split[1])
+    return dct

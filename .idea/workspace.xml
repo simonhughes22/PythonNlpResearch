@@ -2,15 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9643b290-4022-45ff-b8a9-41737414cadc" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/_Scratch/DemoNltkCrfTagger.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/_Scratch/DemoStanfordParser.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Data/MoveFiles.py" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/_Scratch/SpectralClusterWords.py" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py" afterPath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Data/SpellingCorrector.py" afterPath="$PROJECT_DIR$/Data/SpellingCorrector.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Clustering/WordClusterer.py" afterPath="$PROJECT_DIR$/Clustering/WordClusterer.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Data/WordTokenizer.py" afterPath="$PROJECT_DIR$/Data/WordTokenizer.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Data/PublicDataSets/words.lst" afterPath="$PROJECT_DIR$/Data/PublicDataSets/words.lst" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Synonyms/WordNetSynonyms.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/_Scratch/DemoStanfordParser.py" afterPath="$PROJECT_DIR$/_Scratch/DemoStanfordParser.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/CollectionsHelper/DictionaryHelper.py" afterPath="$PROJECT_DIR$/CollectionsHelper/DictionaryHelper.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/launch_notbook.sh" afterPath="$PROJECT_DIR$/launch_notbook.sh" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/stanford_parser/parser_test.py" afterPath="$PROJECT_DIR$/stanford_parser/parser_test.py" />
     </list>
     <ignored path="NlpResearch.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -36,25 +32,84 @@
       <file leaf-file-name="parser_test.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/stanford_parser/parser_test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="20" column="70" selection-start="812" selection-end="812" vertical-scroll-proportion="0.0" vertical-offset="150" max-vertical-offset="1380">
+            <state line="4" column="24" selection-start="93" selection-end="93" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1365">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="DemoStanfordParser.py" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="DemoStanfordParser.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/_Scratch/DemoStanfordParser.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="15" column="31" selection-start="499" selection-end="499" vertical-scroll-proportion="0.34615386" vertical-offset="0" max-vertical-offset="650">
+            <state line="12" column="0" selection-start="302" selection-end="302" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="270">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="__init__.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/stanford_parser/__init__.py">
+      <file leaf-file-name="PosTagger.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Tagging/PosTagger.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="120">
+            <state line="12" column="0" selection-start="356" selection-end="356" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="270">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="NeuralNetwork.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="268" column="22" selection-start="10273" selection-end="10273" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="5220">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="WordNetSynonyms.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Synonyms/WordNetSynonyms.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="130" column="0" selection-start="4407" selection-end="4407" vertical-scroll-proportion="3.1100478" vertical-offset="0" max-vertical-offset="2280">
+              <folding>
+                <element signature="e#1#12#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="wordnet.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/nltk/corpus/reader/wordnet.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="1378" column="0" selection-start="52829" selection-end="52829" vertical-scroll-proportion="0.0" vertical-offset="20341" max-vertical-offset="26670">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="DictionaryHelper.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/CollectionsHelper/DictionaryHelper.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="74" column="14" selection-start="2432" selection-end="2432" vertical-scroll-proportion="0.0" vertical-offset="507" max-vertical-offset="1200">
+              <folding>
+                <marker date="1399257799000" expanded="true" signature="2038:2156" placeholder="..." />
+                <marker date="1399257799000" expanded="true" signature="2222:2432" placeholder="..." />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="NeuralNetwork.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/DeepLearning/NeuralNetwork.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="263" column="6" selection-start="10110" selection-end="10110" vertical-scroll-proportion="0.0" vertical-offset="3589" max-vertical-offset="5055">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="_core.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/jpype/_core.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="43" column="0" selection-start="1189" selection-end="1189" vertical-scroll-proportion="0.0" vertical-offset="211" max-vertical-offset="1605">
               <folding />
             </state>
           </provider>
@@ -63,7 +118,7 @@
       <file leaf-file-name="parser.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/stanford_parser/parser.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="77" column="0" selection-start="2220" selection-end="2220" vertical-scroll-proportion="0.0" vertical-offset="916" max-vertical-offset="2730">
+            <state line="87" column="0" selection-start="2651" selection-end="2651" vertical-scroll-proportion="0.0" vertical-offset="1006" max-vertical-offset="2730">
               <folding />
             </state>
           </provider>
@@ -116,8 +171,12 @@
         <option value="$PROJECT_DIR$/_Scratch/SpectralClusterWords.py" />
         <option value="$PROJECT_DIR$/_Scratch/DemoNltkCrfTagger.py" />
         <option value="$PROJECT_DIR$/stanford_parser/parser.py" />
-        <option value="$PROJECT_DIR$/_Scratch/DemoStanfordParser.py" />
         <option value="$PROJECT_DIR$/stanford_parser/standoff.py" />
+        <option value="$PROJECT_DIR$/StanfordParser/parser_test.py" />
+        <option value="$PROJECT_DIR$/stanford_parser/parser_test.py" />
+        <option value="$PROJECT_DIR$/_Scratch/DemoStanfordParser.py" />
+        <option value="$PROJECT_DIR$/CollectionsHelper/DictionaryHelper.py" />
+        <option value="$PROJECT_DIR$/Synonyms/WordNetSynonyms.py" />
       </list>
     </option>
   </component>
@@ -152,7 +211,6 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -181,20 +239,21 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="_Scratch" />
+              <option name="myItemId" value="Synonyms" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="GoToFile.includeJavaFiles" value="false" />
     <property name="options.splitter.main.proportions" value="0.3" />
-    <property name="options.lastSelected" value="com.jetbrains.python.configuration.PythonContentEntriesConfigurable" />
+    <property name="options.lastSelected" value="com.jetbrains.python.configuration.PythonSdkConfigurable" />
     <property name="recentsLimit" value="5" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../analytics-python/RecommenderEngine" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/Synonyms" />
     <property name="FullScreen" value="false" />
     <property name="options.searchVisible" value="true" />
     <property name="options.splitter.details.proportions" value="0.2" />
@@ -229,61 +288,13 @@
       <recent name="C:\Users\simon.hughes\Dropbox\AI EDU For Peter\Code\PyCharmProjects\NlpResearch\Classifiers\RegEx" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.DemoStanfordParser">
-    <configuration default="false" name="Nosetests in parser_test" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/stanford_parser" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="NlpResearch" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/StanfordParser/parser_test.py" />
-      <option name="CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_SCRIPT" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
-      <RunnerSettings RunnerId="PythonRunner" />
-      <ConfigurationWrapper RunnerId="PythonRunner" />
-      <method />
-    </configuration>
-    <configuration default="false" name="Nosetests in TestCase" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/stanford_parser" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="NlpResearch" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/stanford_parser/parser_test.py" />
-      <option name="CLASS_NAME" value="TestCase" />
-      <option name="METHOD_NAME" value="" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_CLASS" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
-      <RunnerSettings RunnerId="PyDebugRunner" />
-      <RunnerSettings RunnerId="PythonRunner" />
-      <ConfigurationWrapper RunnerId="PyDebugRunner" />
-      <ConfigurationWrapper RunnerId="PythonRunner" />
-      <method />
-    </configuration>
+  <component name="RunManager" selected="Python.WordNetSynonyms">
     <configuration default="false" name="Nosetest TestCase.testParse" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/stanford_parser" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/StanfordParser" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
@@ -303,7 +314,50 @@
       <ConfigurationWrapper RunnerId="PythonRunner" />
       <method />
     </configuration>
-    <configuration default="false" name="Nosetests in TestCase (1)" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="DemoStanfordParser" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/_Scratch" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="NlpResearch" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/_Scratch/DemoStanfordParser.py" />
+      <option name="PARAMETERS" value="" />
+      <RunnerSettings RunnerId="PyDebugRunner" />
+      <RunnerSettings RunnerId="PythonRunner" />
+      <ConfigurationWrapper RunnerId="PyDebugRunner" />
+      <ConfigurationWrapper RunnerId="PythonRunner" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Nosetests in parser_test (1)" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/stanford_parser" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="NlpResearch" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/stanford_parser/parser_test.py" />
+      <option name="CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_SCRIPT" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <option name="PARAMS" value="" />
+      <option name="USE_PARAM" value="false" />
+      <RunnerSettings RunnerId="PythonRunner" />
+      <ConfigurationWrapper RunnerId="PythonRunner" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Nosetests in TestCase (2)" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -326,19 +380,19 @@
       <ConfigurationWrapper RunnerId="PyDebugRunner" />
       <method />
     </configuration>
-    <configuration default="false" name="DemoStanfordParser" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration default="false" name="WordNetSynonyms" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
         <env name="PYTHONUNBUFFERED" value="1" />
       </envs>
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/_Scratch" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Synonyms" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="NlpResearch" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/_Scratch/DemoStanfordParser.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Synonyms/WordNetSynonyms.py" />
       <option name="PARAMETERS" value="" />
       <RunnerSettings RunnerId="PyDebugRunner" />
       <RunnerSettings RunnerId="PythonRunner" />
@@ -489,19 +543,19 @@
     </configuration>
     <list size="6">
       <item index="0" class="java.lang.String" itemvalue="Python.LoadCrAnnotatedData" />
-      <item index="1" class="java.lang.String" itemvalue="Python tests.Nosetests in parser_test" />
-      <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetests in TestCase" />
-      <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetest TestCase.testParse" />
-      <item index="4" class="java.lang.String" itemvalue="Python tests.Nosetests in TestCase (1)" />
-      <item index="5" class="java.lang.String" itemvalue="Python.DemoStanfordParser" />
+      <item index="1" class="java.lang.String" itemvalue="Python tests.Nosetest TestCase.testParse" />
+      <item index="2" class="java.lang.String" itemvalue="Python.DemoStanfordParser" />
+      <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetests in parser_test (1)" />
+      <item index="4" class="java.lang.String" itemvalue="Python tests.Nosetests in TestCase (2)" />
+      <item index="5" class="java.lang.String" itemvalue="Python.WordNetSynonyms" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.DemoStanfordParser" />
-        <item index="1" class="java.lang.String" itemvalue="Python tests.Nosetests in TestCase" />
-        <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetest TestCase.testParse" />
-        <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetests in TestCase (1)" />
-        <item index="4" class="java.lang.String" itemvalue="Python tests.Nosetests in parser_test" />
+        <item index="0" class="java.lang.String" itemvalue="Python.WordNetSynonyms" />
+        <item index="1" class="java.lang.String" itemvalue="Python.DemoStanfordParser" />
+        <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetests in TestCase (2)" />
+        <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetest TestCase.testParse" />
+        <item index="4" class="java.lang.String" itemvalue="Python tests.Nosetests in parser_test (1)" />
       </list>
     </recent_temporary>
   </component>
@@ -538,21 +592,21 @@
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32913166" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32918397" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.60504204" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24947146" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.21530758" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.5751073" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.23608175" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.5422031" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.16216215" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32871014" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.5135909" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.55078685" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Documentation" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="92" y="92" width="1416" height="676" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.46078432" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24967825" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24967825" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
     </layout>
     <layout-to-restore>
       <window_info id="Documentation" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="92" y="92" width="1416" height="676" />
@@ -570,9 +624,9 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24967825" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21943372" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24967825" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.5276705" sideWeight="0.52420473" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24967825" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
     </layout-to-restore>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -773,59 +827,38 @@
           <option name="timeStamp" value="387" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/_Scratch/DemoStanfordParser.py</url>
-          <line>9</line>
-          <option name="timeStamp" value="391" />
+          <url>file://$PROJECT_DIR$/stanford_parser/parser_test.py</url>
+          <line>6</line>
+          <option name="timeStamp" value="392" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/Synonyms/WordNetSynonyms.py</url>
+          <line>136</line>
+          <option name="timeStamp" value="398" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/Synonyms/WordNetSynonyms.py</url>
+          <line>79</line>
+          <option name="timeStamp" value="403" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/Synonyms/WordNetSynonyms.py</url>
+          <line>87</line>
+          <option name="timeStamp" value="404" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/Synonyms/WordNetSynonyms.py</url>
+          <line>89</line>
+          <option name="timeStamp" value="405" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="392" />
+      <option name="time" value="406" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/Experiments/CoralBleaching/CbBowExperimentBase.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="6" column="35" selection-start="109" selection-end="109" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="360" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Experiments/CoralBleaching/CbSeqExperimentBase.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="76" column="8" selection-start="2642" selection-end="2642" vertical-scroll-proportion="0.0" vertical-offset="748" max-vertical-offset="1395" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Experiments/CoralBleaching/Codes_ClassifyUsingVectorComposition.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2370" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Data/CoralBleaching/CbData.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="13" column="0" selection-start="366" selection-end="366" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1635">
-          <folding>
-            <element signature="e#0#35#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Calculations/CosineSimilarity.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="606" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/BuildPythonPath.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="51" column="33" selection-start="1737" selection-end="1737" vertical-scroll-proportion="0.0" vertical-offset="303" max-vertical-offset="915" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/FeatureExtraction/Text/WindowSplitter.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="68" column="0" selection-start="1959" selection-end="1959" vertical-scroll-proportion="0.0" vertical-offset="248" max-vertical-offset="1230">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/CollectionsHelper/IterableFP.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="152" column="25" selection-start="4095" selection-end="4095" vertical-scroll-proportion="0.0" vertical-offset="1725" max-vertical-offset="3030" />
@@ -912,11 +945,6 @@
         <state line="22" column="58" selection-start="734" selection-end="734" vertical-scroll-proportion="0.0" vertical-offset="65" max-vertical-offset="705" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/CollectionsHelper/DictionaryHelper.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="24" column="84" selection-start="821" selection-end="821" vertical-scroll-proportion="0.0" vertical-offset="285" max-vertical-offset="990" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/FeatureExtraction/Text/WindowFeatures.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="38" column="11" selection-start="1015" selection-end="1015" vertical-scroll-proportion="0.0" vertical-offset="34" max-vertical-offset="720" />
@@ -969,11 +997,6 @@
         <state line="392" column="17" selection-start="17779" selection-end="17779" vertical-scroll-proportion="0.0" vertical-offset="5319" max-vertical-offset="9285" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Tagging/PosTagger.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="12" column="0" selection-start="356" selection-end="356" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="270" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/_Scratch/ez_setup.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="4335" />
@@ -998,9 +1021,7 @@
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/nltk/tag/crf.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="153" column="8" selection-start="5647" selection-end="5647" vertical-scroll-proportion="0.0" vertical-offset="2295" max-vertical-offset="11490">
-          <folding />
-        </state>
+        <state line="153" column="8" selection-start="5647" selection-end="5647" vertical-scroll-proportion="0.0" vertical-offset="2295" max-vertical-offset="11490" />
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/nltk/internals.py">
@@ -1024,42 +1045,22 @@
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/nose/util.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="468" column="0" selection-start="15186" selection-end="15186" vertical-scroll-proportion="0.0" vertical-offset="6679" max-vertical-offset="9780">
-          <folding />
-        </state>
+        <state line="468" column="0" selection-start="15186" selection-end="15186" vertical-scroll-proportion="0.0" vertical-offset="6679" max-vertical-offset="9780" />
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/nose/suite.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="213" column="0" selection-start="6617" selection-end="6617" vertical-scroll-proportion="0.0" vertical-offset="3195" max-vertical-offset="9075">
-          <folding />
-        </state>
+        <state line="213" column="0" selection-start="6617" selection-end="6617" vertical-scroll-proportion="0.0" vertical-offset="3195" max-vertical-offset="9075" />
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/jpype/_jclass.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="78" column="0" selection-start="2248" selection-end="2248" vertical-scroll-proportion="0.0" vertical-offset="931" max-vertical-offset="2835">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/stanford_parser/parser_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="20" column="70" selection-start="812" selection-end="812" vertical-scroll-proportion="0.0" vertical-offset="150" max-vertical-offset="1380">
-          <folding />
-        </state>
+        <state line="78" column="0" selection-start="2248" selection-end="2248" vertical-scroll-proportion="0.0" vertical-offset="931" max-vertical-offset="2835" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/stanford_parser/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="686">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/stanford_parser/parser.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="77" column="0" selection-start="2220" selection-end="2220" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2730">
           <folding />
         </state>
       </provider>
@@ -1071,10 +1072,92 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/stanford_parser/dependencies_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="663">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/stanford_parser/dependencies.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="6" column="29" selection-start="353" selection-end="353" vertical-scroll-proportion="0.096969694" vertical-offset="26" max-vertical-offset="1500">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/jpype/_core.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="43" column="0" selection-start="1189" selection-end="1189" vertical-scroll-proportion="0.0" vertical-offset="211" max-vertical-offset="1605">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/stanford_parser/parser_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="4" column="24" selection-start="93" selection-end="93" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1365">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/stanford_parser/parser.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="87" column="0" selection-start="2651" selection-end="2651" vertical-scroll-proportion="0.0" vertical-offset="1006" max-vertical-offset="2730">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Tagging/PosTagger.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="12" column="0" selection-start="356" selection-end="356" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="270">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DeepLearning/NeuralNetwork.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="263" column="6" selection-start="10110" selection-end="10110" vertical-scroll-proportion="0.0" vertical-offset="3589" max-vertical-offset="5055">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="268" column="22" selection-start="10273" selection-end="10273" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="5220">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/_Scratch/DemoStanfordParser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="15" column="31" selection-start="499" selection-end="499" vertical-scroll-proportion="0.34615386" vertical-offset="0" max-vertical-offset="650">
+        <state line="12" column="0" selection-start="302" selection-end="302" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="270">
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/CollectionsHelper/DictionaryHelper.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="74" column="14" selection-start="2432" selection-end="2432" vertical-scroll-proportion="0.0" vertical-offset="507" max-vertical-offset="1200">
+          <folding>
+            <marker date="1399257799000" expanded="true" signature="2038:2156" placeholder="..." />
+            <marker date="1399257799000" expanded="true" signature="2222:2432" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/nltk/corpus/reader/wordnet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="1378" column="0" selection-start="52829" selection-end="52829" vertical-scroll-proportion="0.0" vertical-offset="20341" max-vertical-offset="26670">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Synonyms/WordNetSynonyms.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="130" column="0" selection-start="4407" selection-end="4407" vertical-scroll-proportion="3.1100478" vertical-offset="0" max-vertical-offset="2280">
+          <folding>
+            <element signature="e#1#12#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
