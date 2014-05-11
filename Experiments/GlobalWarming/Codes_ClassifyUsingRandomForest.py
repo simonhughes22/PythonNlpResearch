@@ -1,5 +1,6 @@
 from sklearn import svm
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.svm import SVR
 from GwExperimentBase import *
 
 class Codes_ClassifyUsingRandomForest(GwExperimentBase):
@@ -13,7 +14,9 @@ class Codes_ClassifyUsingRandomForest(GwExperimentBase):
     
     def create_classifier(self, code):
         def cls_create(xs, ys):
-            
+
+            SVR()
+
             rf_cls = RandomForestClassifier(n_estimators = self.num_trees, criterion=self.criterion,  n_jobs = -1)
             rf_cls.fit(xs, ys)
             return rf_cls
@@ -28,4 +31,3 @@ if __name__ == "__main__":
     
     cl = Codes_ClassifyUsingRandomForest(criterion, num_trees)
     cl.Run("Codes_ClassifyUsingRandomForest_Criterion_" + str(criterion) + "_Trees_" + str(num_trees) + ".txt")
-    
