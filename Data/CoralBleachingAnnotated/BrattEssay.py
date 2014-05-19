@@ -12,6 +12,9 @@ class AnnotationBase(object):
         self.contents = self.split[1].replace("  ", " ").split(" ")
         self.code = self.contents[0]
 
+    def __repr__(self):
+        return "[" + str(type(self)) + "]" + self.code + ":" + self.type
+
 def is_compound(line):
     if ";" in line:
         l = line.replace(" ","")
@@ -80,6 +83,18 @@ class TextAnnotation(AnnotationBase):
                 assert full_text[self.start:self.end].strip() == self.txt
         assert self.start <= self.end, "Start index should be before the end"
 
+    def clone(self):
+        annotation = AnnotationBase("a\tb c")
+        annotation.split = self.split[::]
+        annotation.id = self.id[:]
+        annotation.type = self.type[:]
+        annotation.contents = self.contents[:]
+        annotation.code = self.code[::]
+        annotation.start = self.start
+        annotation.end = self.end
+        annotation.txt = self.txt[::]
+        return annotation
+
 class AttributeAnnotation(AnnotationBase):
 
     def __init__(self, line):
@@ -93,9 +108,37 @@ class RelationshipAnnotation(AnnotationBase):
         pass
 
 class EventAnnotation(AnnotationBase):
-    def __init__(self, line):
+    def __init__(self, line, id2annotation):
         AnnotationBase.__init__(self, line)
-        pass
+
+        self.__dependencies__ = None
+        self.id2annotation = id2annotation
+
+    def dependencies(self):
+        if self.__dependencies__ is None:
+            self.__dependencies__ = []
+            for annotation in self.contents:
+                typ, id = annotation.split(":")
+                if typ.strip().startswith("explicit"):
+                    continue
+                if typ[-1].isdigit():
+                    typ = typ[:-1]
+
+                dep = self.id2annotation[id]
+                if type(dep) == CompoundTextAnnotation:
+                    clonea = dep.first_part.clone()
+                    clonea.code = typ
+
+                    cloneb = dep.second_part.clone()
+                    cloneb.code = typ
+                    self.__dependencies__.append(clonea)
+                    self.__dependencies__.append(cloneb)
+                else:
+                    clone = dep.clone()
+                    clone.code = typ
+                    self.__dependencies__.append(clone)
+        return self.__dependencies__
+
 
 class NoteAnnotation(AnnotationBase):
     def __init__(self, line):
@@ -135,6 +178,7 @@ class Essay(object):
             codes_end[annotation.end].add(annotation.code)
             return True
 
+        annotations_with_dependencies = []
         for line in lines:
             if len(line.strip()) == 0:
                 continue
@@ -167,7 +211,8 @@ class Essay(object):
             elif first_char == "R":
                 annotation = RelationshipAnnotation(line)
             elif first_char == "E":
-                annotation = EventAnnotation(line)
+                annotation = EventAnnotation(line, self.id2annotation)
+                annotations_with_dependencies.append(annotation)
             elif first_char == "#":
                 annotation = NoteAnnotation(line)
                 for id in annotation.child_annotation_ids:
@@ -176,6 +221,10 @@ class Essay(object):
                 raise Exception("Unknown annotation type")
 
             self.id2annotation[annotation.id] = annotation
+
+        for annotation in annotations_with_dependencies:
+            for dependency in annotation.dependencies():
+                process_text_annotation(dependency)
 
         codes = set()
         current_word = ""

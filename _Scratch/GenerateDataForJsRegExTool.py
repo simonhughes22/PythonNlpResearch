@@ -2,6 +2,8 @@
 from GwData import GwData
 from WordTokenizer import tokenize
 
+import nltk.tag.crf
+
 """ Generates a dataset for the html and js based reg ex exploration tool for exploring patterns over the dataset """
 
 def map_punctuation(token):
