@@ -4,9 +4,9 @@ Created on Aug 18, 2013
 
 Auto-encoder implementation. Can be used to implement a denoising auto-encoder, sparse or contractive auto-encoder
 '''
-
 import numpy as np
 from numpy import matlib
+from DataHelper import shuffle_examples
 
 class NeuralNetwork(object):
     '''
@@ -14,12 +14,12 @@ class NeuralNetwork(object):
     '''
 
     def __init__(self, num_inputs, num_hidden, num_outputs, learning_rate = 0.1, activation_fn = "sigmoid", 
-                 initial_wt_max = 0.01, weight_decay = 0.0, desired_sparsity = 0.05, sparsity_wt = 0.00,
+                 initial_wt_max = 0.01, weight_decay = 0.0, desired_sparsity = 0.05, sparsity_wt = 0.01,
                  w1_b1 = None, w2_b2 = None):
         '''
         num_inputs = number of inputs \ outputs
         num_hidden = size of the hidden layer
-        activation_fn = activation function to use ("sigmoid" | "tanh" | "linear" | "relu")
+        activation_fn = activation function to use ("sigmoid" | "tanh")
         initial_wt_max = the initial weights will be set to random weights in the range -initial_wt_max to +initial_wt_max
         weight_decay = a regularization term to stop over-fitting. Only turn on if network converges too fast or overfits the data
         
@@ -28,6 +28,7 @@ class NeuralNetwork(object):
             This allows weight sharing between networks
         
         '''
+
         """ Properties """
         self.learning_rate = learning_rate
         self.activation_fn = activation_fn
@@ -61,7 +62,7 @@ class NeuralNetwork(object):
         
         assert self.w2.shape == (num_outputs, num_hidden)
         assert self.b2.shape == (1, num_outputs)
-
+        
         pass
     
     def train(self, xs, ys, epochs = 100, batch_size = 100):
@@ -91,15 +92,11 @@ class NeuralNetwork(object):
         mse = -1.0
         mae = -1.0
         for epoch in range(epochs):
-            if num_batches == 1:
-                w1ds, w2ds, b1ds, b2ds, mini_batch_errors = self.__train_mini_batch__(inputs, outputs)
-                """ Apply changes """
-                self.w1 -= w1ds
-                self.w2 -= w2ds
-                self.b1 -= b1ds
-                self.b2 -= b2ds
+            # Re-shuffled example orders
+            inputs, outputs = shuffle_examples(inputs, outputs)
 
-                errors = mini_batch_errors
+            if num_batches == 1:
+                errors = self.__train_mini_batch__(inputs, outputs)
             else:
                 errors = None
                 for batch in range(num_batches):
@@ -116,14 +113,12 @@ class NeuralNetwork(object):
                     self.w2 -= w2ds
                     self.b1 -= b1ds
                     self.b2 -= b2ds
-
+                    
                     if errors == None:
                         errors = mini_batch_errors
                     else:
                         errors = np.append(errors, mini_batch_errors, 0 )
-
-
-
+            
             mse = np.mean(np.square(errors) )
             mae = np.mean(np.abs(errors))
             print "MSE for epoch {0} is {1}".format(epoch, mse),
@@ -157,10 +152,6 @@ class NeuralNetwork(object):
             self.__in_range__(min_inp, max_inp,  0.0, 1.0)
         elif self.activation_fn == "tanh":
             self.__in_range__(min_inp, max_inp, -1.0, 1.0)
-        elif self.activation_fn == "relu":
-            self.__in_range__(min_inp, max_inp, 0.0, np.inf)
-        else:
-            pass
    
     def __in_range__(self, actual_min, actual_max, exp_min, exp_max):
         assert actual_min >= exp_min
@@ -182,17 +173,8 @@ class NeuralNetwork(object):
         
         """ errors """
         errors = (outputs_T - a3)
-        return (a3.T, a2.T, errors.T)
-
-    def feed_forward(self, inputs):
-        inputs_T = np.array(inputs).T
-
-        """ Compute activations """
-        z2, a2 = self.__prop_up__(inputs_T, self.w1, self.b1)
-        z3, a3 = self.__prop_up__(a2, self.w2, self.b2)
-
-        return a3.T
-
+        return (a3.T, a2.T, errors.T) 
+        
     def __prop_up__(self, inputs_T, wts, bias):
         
         """ Compute activations """
@@ -226,11 +208,11 @@ class NeuralNetwork(object):
             """ SPARSITY PENALTY """
             pj = np.mean(a2, axis = 1)
             p = self.desired_sparsity
-            sparsity_penalty = self.sparsity_wt * ( -p/pj + (1 - p)/(1 - pj) )
+            sparsity_penalty = self.sparsity_wt * ( -p/pj + (1 - p)/(1 - pj) ) 
             delta2 = np.multiply( np.dot(self.w2.T, delta3) + sparsity_penalty, deriv2 )
         else:
-            delta2 = np.multiply( np.dot(self.w2.T, delta3), deriv2 )
-
+            delta2 = np.multiply( np.dot(self.w2.T, delta3), deriv2 ) 
+        
         """ Delta for weights is the dot product of the delta3 (error deltas for output) and activations for that layer"""
         frows = float(rows)
         
@@ -260,8 +242,6 @@ class NeuralNetwork(object):
         """ return a list of errors (one item per row in mini batch) """
         
         """ Compute Mean errors across all training examples in mini batch """
-
-        errors = np.nan_to_num(errors)
         return (w1ds, w2ds, b1ds, b2ds, errors.T)
    
     def __compute_z__(self, inputs, weights, bias):
@@ -273,14 +253,8 @@ class NeuralNetwork(object):
             return 1/ (1 + np.exp(-z))
         elif self.activation_fn == "tanh":
             return np.tanh(z)
-        elif self.activation_fn == "linear":
-            return z
-        elif self.activation_fn == "relu":
-            copy = z.copy()
-            copy[copy < 0] = 0
-            return copy
         else:
-            raise NotImplementedError("Only sigmoid, tanh, linear and relu currently implemented")
+            raise NotImplementedError("Only sigmoid and tanh currently implemented")
     
     def __derivative__(self, activations):
         if self.activation_fn == "sigmoid": 
@@ -289,17 +263,14 @@ class NeuralNetwork(object):
         elif self.activation_fn == "tanh":
             """ 1 - f(z)^2 """
             return 1 - np.square(activations)
-        elif self.activation_fn == "linear":
-            return activations
-        elif self.activation_fn == "relu":
-            copy = activations.copy()
-            copy[copy < 0] = 0
-            return copy
         else:
-            raise NotImplementedError("Only sigmoid, tanh, linear and relu currently implemented")
+            raise NotImplementedError("Only sigmoid and tanh currently implemented")
         
 if __name__ == "__main__":
-
+    
+    activation_fn = "sigmoid"
+    #activation_fn = "tanh"
+    
     """
     xs = [
           [1,    0,     0.5,    0.1],
@@ -311,68 +282,64 @@ if __name__ == "__main__":
           [1,    0.5,   0.65,   0  ],
           [0.7,  0.9,   0,      1  ]
     ]
+    xs = [
+          [1, 0, 0, 0, 0, 0, 0, 0],
+          [0, 1, 0, 0, 0, 0, 0, 0],
+          [0, 0, 1, 0, 0, 0, 0, 0],
+          [0, 0, 0, 1, 0, 0, 0, 0],
+          [0, 0, 0, 0, 1, 0, 0, 0],
+          [0, 0, 0, 0, 0, 1, 0, 0],
+          [0, 0, 0, 0, 0, 0, 1, 0],
+          [0, 0, 0, 0, 0, 0, 0, 1]
+          ]
     """
-    xs = [
-        [1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 0, 0, 0],
-        [0, 0, 0, 0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 1]
-    ]
 
     xs = [
-        [1, 0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 1, 0, 0, 0, 0],
-        [1, 0, 0, 1, 0, 0, 0, 0],
-        [1, 0, 0, 0, 1, 0, 1, 0],
-        [0, 0, 0, 0, 0, 1, 0, 0],
-        [0, 1, 0, 0, 1, 0, 1, 0],
-        [1, 0, 1, 0, 1, 0, 0, 1]
-    ]
+          [1, 0, 0, 0, 0, 0, 0, 0],
+          [1, 1, 0, 0, 0, 0, 0, 0],
+          [0, 0, 1, 1, 0, 0, 0, 0],
+          [1, 0, 0, 1, 0, 0, 0, 0],
+          [1, 0, 0, 0, 1, 0, 1, 0],
+          [0, 0, 0, 0, 0, 1, 0, 0],
+          [0, 1, 0, 0, 1, 0, 1, 0],
+          [1, 0, 1, 0, 1, 0, 0, 1]
+          ]
+
+    if activation_fn == "tanh":
+        # Set to -1 -> 1 range
+        xs = (xs + 1.0) / 2.0
+    
     xs = np.array(xs)
-
-    #activation_fn = "linear"
-    activation_fn = "relu"
-    #activation_fn = "sigmoid"
-    #activation_fn = "tanh"
-
-    #if activation_fn == "tanh":
-        #xs = (xs + 1.0) / 2.0
-
-    ys  = np.sum(xs, axis=1, keepdims = True) * 1.0
+    ys = np.sum(xs, axis=1, keepdims = True) * 1.0
     ys = (ys - np.min(ys)) / (np.max(ys) - np.min(ys))
-    ys = np.array(ys)
     """ Test as an Auto Encoder """
     ys = xs
-
+    
     num_inputs = len(xs[0])
     num_hidden = int(round(np.log2(num_inputs)))
-
+    
     """ Note that the range of inputs for tanh is 2* sigmoid, and so the MAE should be 2* """
-    ae = NeuralNetwork(num_inputs, num_hidden, len(ys[0]),  learning_rate = 0.02,
-                       activation_fn = activation_fn,
-                       weight_decay=0.0, desired_sparsity=0.05, sparsity_wt=0.0)
-
-    ae.train(xs, ys, 10000)
-
+    ae = NeuralNetwork(num_inputs, num_hidden, len(ys[0]),  learning_rate = 0.1, activation_fn = activation_fn, 
+                     weight_decay=0.0, desired_sparsity=0.05, sparsity_wt=0.0)
+    
+    ae.train(xs, ys, 1000, batch_size = 4)
+   
     xs_T = np.array(xs).T
     activations = ae.__activate__(xs_T)
 
-    print ""
-    print ae.w1
-    print ae.w2
-    print ""
-    print ae.hidden_activations(xs)
+    decimals = 5
+    print "\n\nInput -> Hidden Weights:"
+    print np.round(ae.w1, decimals)
+    print "\nHidden -> Output Weights:"
+    print np.round(ae.w2, decimals)
+    print "\nHidden Activations"
+    print np.round(ae.hidden_activations(xs), decimals)
+    print "Hidden Activations (rounded to 0 decimals)"
     print np.round(ae.hidden_activations(xs))
-    print ""
+    print "\nYs [TRUTH]:"
     print ys
-    print ae.prop_up(xs, xs)[0]
-    print ys
-    #print np.round(ae.prop_up(xs, xs)[0] * 3.0) * 0.3
+    print "\nPredictions"
+    print np.round(np.array(ae.prop_up(xs, xs)[0]), decimals)
+    print "Predictions (rounded to 0 decimals)"
     print np.round(ae.prop_up(xs, xs)[0])
     pass
-

@@ -26,7 +26,7 @@ class WordTokenizer(object):
         self.spelling_correct = spelling_correct
         self.__stop_words__ = set()
         if remove_stop_words:
-            self.__stop_words__ = set(stopwords.extract_words())
+            self.__stop_words__ = set(stopwords.words())
 
         self.__special_tokens__ = {
                     'quote-mark': "'", 

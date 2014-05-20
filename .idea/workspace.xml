@@ -2,10 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9643b290-4022-45ff-b8a9-41737414cadc" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/_Scratch/TryPyStruct.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py" afterPath="$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/_Scratch/GenerateDataForJsRegExTool.py" afterPath="$PROJECT_DIR$/_Scratch/GenerateDataForJsRegExTool.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LanguageModel/NgramGenerator.py" afterPath="$PROJECT_DIR$/LanguageModel/NgramGenerator.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetworkGPU.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/_Scratch/__init__.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/DeepLearning/NeuralNetwork.py" afterPath="$PROJECT_DIR$/_Scratch/NeuralNetwork.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py" afterPath="$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py" afterPath="$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Data/WordTokenizer.py" afterPath="$PROJECT_DIR$/Data/WordTokenizer.py" />
     </list>
     <ignored path="NlpResearch.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -28,10 +30,48 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="BrattEssay.py" pinned="false" current="true" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py">
+      <file leaf-file-name="NeuralNetwork.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="124" column="0" selection-start="4207" selection-end="4207" vertical-scroll-proportion="0.33233532" vertical-offset="1608" max-vertical-offset="4485">
+            <state line="344" column="0" selection-start="12316" selection-end="12316" vertical-scroll-proportion="0.27906978" vertical-offset="4965" max-vertical-offset="5745">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="NeuralNetworkGPU.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetworkGPU.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="138" column="65" selection-start="5036" selection-end="5036" vertical-scroll-proportion="0.0" vertical-offset="2070" max-vertical-offset="5955">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="RecursiveAutoEncoder.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="452" column="58" selection-start="18628" selection-end="18628" vertical-scroll-proportion="0.0" vertical-offset="60" max-vertical-offset="7365">
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="util.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/nltk/corpus/util.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="70" column="0" selection-start="2755" selection-end="2755" vertical-scroll-proportion="0.0" vertical-offset="1050" max-vertical-offset="1215">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="WordTokenizer.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Data/WordTokenizer.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="28" column="0" selection-start="901" selection-end="901" vertical-scroll-proportion="0.0" vertical-offset="205" max-vertical-offset="3030">
               <folding />
             </state>
           </provider>
@@ -95,11 +135,15 @@
         <option value="$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/sklearn/externals/joblib/parallel.py" />
         <option value="$PROJECT_DIR$/LanguageModel/NgramGenerator.py" />
         <option value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py" />
+        <option value="$PROJECT_DIR$/DeepLearning/NeuralNetwork.py" />
+        <option value="$PROJECT_DIR$/DeepLearning/NeuralNetworkGPU.py" />
+        <option value="$PROJECT_DIR$/Data/WordTokenizer.py" />
+        <option value="$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py" />
+        <option value="$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-1" />
     <option name="y" value="22" />
     <option name="width" value="1440" />
     <option name="height" value="801" />
@@ -130,7 +174,6 @@
       <sortByType />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -159,7 +202,7 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="Data" />
+              <option name="myItemId" value="DeepLearning" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -173,16 +216,39 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="Data" />
+              <option name="myItemId" value="DeepLearning" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="CoralBleachingAnnotated" />
+              <option name="myItemId" value="MyCode" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="NlpResearch" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="NlpResearch" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="DeepLearning" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="MyCode" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="RecursiveAutoEncoder" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -190,7 +256,7 @@
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="options.lastSelected" value="com.jetbrains.python.configuration.PythonSdkConfigurable" />
     <property name="recentsLimit" value="5" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../analytics-python/SalaryPrediction" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../cudamat" />
     <property name="FullScreen" value="false" />
     <property name="options.searchVisible" value="true" />
     <property name="options.splitter.details.proportions" value="0.2" />
@@ -211,101 +277,21 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/DeepLearning" />
       <recent name="C:\Users\simon.hughes\Dropbox\PhD\Code\PyCharmProjects\NlpResearch\Experiments\CoralBleaching" />
       <recent name="C:\Users\simon.hughes\Dropbox\PhD\Code\PyCharmProjects\NlpResearch\Experiments\GlobalWarming" />
       <recent name="C:\Users\simon.hughes\Dropbox\PhD\Code\PyCharmProjects\NlpResearch\Results\GlobalWarming" />
       <recent name="C:\Users\simon.hughes\Dropbox\PhD\Code\PyCharmProjects\NlpResearch\_Scratch\Sub" />
-      <recent name="C:\Users\simon.hughes\Dropbox\PhD\Code\PyCharmProjects\NlpResearch\Results\GlobalWarming\Codes_ClassifyUsingLDA_WithBinaryValues" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/DeepLearning/MyCode" />
+      <recent name="$PROJECT_DIR$/_Scratch" />
       <recent name="$PROJECT_DIR$/FeatureExtraction/Text" />
       <recent name="C:\Users\simon.hughes\Dropbox\PhD\Code\PyCharmProjects\NlpResearch\Data\GlobalWarmingAnnotated" />
       <recent name="C:\Users\simon.hughes\Dropbox\AI EDU For Peter\Code\PyCharmProjects\NlpResearch\DeepLearning\WordVectors" />
-      <recent name="C:\Users\simon.hughes\Dropbox\AI EDU For Peter\Code\PyCharmProjects\NlpResearch\DeepLearning\MyCode" />
-      <recent name="C:\Users\simon.hughes\Dropbox\AI EDU For Peter\Code\PyCharmProjects\NlpResearch\Classifiers\RegEx" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.BrattEssay">
-    <configuration default="false" name="DemoStanfordParser" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/_Scratch" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="NlpResearch" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/_Scratch/DemoStanfordParser.py" />
-      <option name="PARAMETERS" value="" />
-      <RunnerSettings RunnerId="PyDebugRunner" />
-      <RunnerSettings RunnerId="PythonRunner" />
-      <ConfigurationWrapper RunnerId="PyDebugRunner" />
-      <ConfigurationWrapper RunnerId="PythonRunner" />
-      <method />
-    </configuration>
-    <configuration default="false" name="WordNetSynonyms" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/Synonyms" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="NlpResearch" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/Synonyms/WordNetSynonyms.py" />
-      <option name="PARAMETERS" value="" />
-      <RunnerSettings RunnerId="PyDebugRunner" />
-      <RunnerSettings RunnerId="PythonRunner" />
-      <ConfigurationWrapper RunnerId="PyDebugRunner" />
-      <ConfigurationWrapper RunnerId="PythonRunner" />
-      <method />
-    </configuration>
-    <configuration default="false" name="DemoNltkCrfTagger" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/_Scratch" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="NlpResearch" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/_Scratch/DemoNltkCrfTagger.py" />
-      <option name="PARAMETERS" value="" />
-      <RunnerSettings RunnerId="PyDebugRunner" />
-      <RunnerSettings RunnerId="PythonRunner" />
-      <ConfigurationWrapper RunnerId="PyDebugRunner" />
-      <ConfigurationWrapper RunnerId="PythonRunner" />
-      <method />
-    </configuration>
-    <configuration default="false" name="TryPyStruct" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/_Scratch" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="NlpResearch" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/_Scratch/TryPyStruct.py" />
-      <option name="PARAMETERS" value="" />
-      <RunnerSettings RunnerId="PyDebugRunner" />
-      <RunnerSettings RunnerId="PythonRunner" />
-      <ConfigurationWrapper RunnerId="PyDebugRunner" />
-      <ConfigurationWrapper RunnerId="PythonRunner" />
-      <method />
-    </configuration>
+  <component name="RunManager" selected="Python.NeuralNetwork">
     <configuration default="false" name="BrattEssay" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -322,6 +308,82 @@
       <option name="PARAMETERS" value="" />
       <RunnerSettings RunnerId="PyDebugRunner" />
       <ConfigurationWrapper RunnerId="PyDebugRunner" />
+      <method />
+    </configuration>
+    <configuration default="false" name="NeuralNetwork" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/DeepLearning" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="NlpResearch" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py" />
+      <option name="PARAMETERS" value="" />
+      <RunnerSettings RunnerId="PyDebugRunner" />
+      <RunnerSettings RunnerId="PythonRunner" />
+      <ConfigurationWrapper RunnerId="PyDebugRunner" />
+      <ConfigurationWrapper RunnerId="PythonRunner" />
+      <method />
+    </configuration>
+    <configuration default="false" name="NeuralNetworkGPU" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/DeepLearning" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="NlpResearch" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetworkGPU.py" />
+      <option name="PARAMETERS" value="" />
+      <RunnerSettings RunnerId="PythonRunner" />
+      <ConfigurationWrapper RunnerId="PythonRunner" />
+      <method />
+    </configuration>
+    <configuration default="false" name="NeuralNetwork (1)" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/DeepLearning/MyCode" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="NlpResearch" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/_Scratch/NeuralNetwork.py" />
+      <option name="PARAMETERS" value="" />
+      <RunnerSettings RunnerId="PythonRunner" />
+      <ConfigurationWrapper RunnerId="PythonRunner" />
+      <method />
+    </configuration>
+    <configuration default="false" name="RecursiveAutoEncoder" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="NlpResearch" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py" />
+      <option name="PARAMETERS" value="" />
+      <RunnerSettings RunnerId="PyDebugRunner" />
+      <RunnerSettings RunnerId="PythonRunner" />
+      <ConfigurationWrapper RunnerId="PyDebugRunner" />
+      <ConfigurationWrapper RunnerId="PythonRunner" />
       <method />
     </configuration>
     <configuration default="true" type="tests" factoryName="py.test">
@@ -467,19 +529,19 @@
     </configuration>
     <list size="6">
       <item index="0" class="java.lang.String" itemvalue="Python.LoadCrAnnotatedData" />
-      <item index="1" class="java.lang.String" itemvalue="Python.DemoStanfordParser" />
-      <item index="2" class="java.lang.String" itemvalue="Python.WordNetSynonyms" />
-      <item index="3" class="java.lang.String" itemvalue="Python.DemoNltkCrfTagger" />
-      <item index="4" class="java.lang.String" itemvalue="Python.TryPyStruct" />
-      <item index="5" class="java.lang.String" itemvalue="Python.BrattEssay" />
+      <item index="1" class="java.lang.String" itemvalue="Python.BrattEssay" />
+      <item index="2" class="java.lang.String" itemvalue="Python.NeuralNetwork" />
+      <item index="3" class="java.lang.String" itemvalue="Python.NeuralNetworkGPU" />
+      <item index="4" class="java.lang.String" itemvalue="Python.NeuralNetwork (1)" />
+      <item index="5" class="java.lang.String" itemvalue="Python.RecursiveAutoEncoder" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.BrattEssay" />
-        <item index="1" class="java.lang.String" itemvalue="Python.TryPyStruct" />
-        <item index="2" class="java.lang.String" itemvalue="Python.DemoNltkCrfTagger" />
-        <item index="3" class="java.lang.String" itemvalue="Python.WordNetSynonyms" />
-        <item index="4" class="java.lang.String" itemvalue="Python.DemoStanfordParser" />
+        <item index="0" class="java.lang.String" itemvalue="Python.NeuralNetwork" />
+        <item index="1" class="java.lang.String" itemvalue="Python.RecursiveAutoEncoder" />
+        <item index="2" class="java.lang.String" itemvalue="Python.NeuralNetwork (1)" />
+        <item index="3" class="java.lang.String" itemvalue="Python.NeuralNetworkGPU" />
+        <item index="4" class="java.lang.String" itemvalue="Python.BrattEssay" />
       </list>
     </recent_temporary>
   </component>
@@ -510,27 +572,27 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-1" y="22" width="1440" height="801" extended-state="6" />
-    <editor active="false" />
+    <frame x="0" y="22" width="1440" height="801" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32913166" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32918397" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.119887166" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24947146" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.14449213" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Debug" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.5350501" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.21816881" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.5" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.16216215" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32871014" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4620887" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.52932763" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Documentation" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="92" y="92" width="1416" height="676" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.37235543" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24967825" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24967825" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
     </layout>
     <layout-to-restore>
       <window_info id="Documentation" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="92" y="92" width="1416" height="676" />
@@ -548,9 +610,9 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24967825" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.21943372" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.5276705" sideWeight="0.52420473" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24967825" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24967825" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.5276705" sideWeight="0.52420473" order="4" side_tool="false" content_ui="tabs" />
     </layout-to-restore>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -784,54 +846,24 @@
           <line>74</line>
           <option name="timeStamp" value="412" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py</url>
+          <line>67</line>
+          <option name="timeStamp" value="437" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py</url>
+          <line>93</line>
+          <option name="timeStamp" value="439" />
+        </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="430" />
+      <option name="time" value="441" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/nltk/tag/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1545" />
-      </provider>
-    </entry>
-    <entry file="file:///Applications/Canopy.app/appdata/canopy-1.2.0.1610.macosx-x86_64/Canopy.app/Contents/lib/python2.7/unittest/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1005" />
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/nose/util.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="468" column="0" selection-start="15186" selection-end="15186" vertical-scroll-proportion="0.0" vertical-offset="6679" max-vertical-offset="9780" />
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/nose/suite.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="213" column="0" selection-start="6617" selection-end="6617" vertical-scroll-proportion="0.0" vertical-offset="3195" max-vertical-offset="9075" />
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/jpype/_jclass.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="78" column="0" selection-start="2248" selection-end="2248" vertical-scroll-proportion="0.0" vertical-offset="931" max-vertical-offset="2835" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/stanford_parser/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="686" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/stanford_parser/standoff.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="60" column="4" selection-start="1563" selection-end="1563" vertical-scroll-proportion="1.3846154" vertical-offset="0" max-vertical-offset="1305" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/stanford_parser/dependencies_test.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="663" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/stanford_parser/dependencies.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="6" column="29" selection-start="353" selection-end="353" vertical-scroll-proportion="0.096969694" vertical-offset="26" max-vertical-offset="1500" />
@@ -876,16 +908,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="268" column="22" selection-start="10273" selection-end="10273" vertical-scroll-proportion="-0.043923866" vertical-offset="4020" max-vertical-offset="5220" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/DeepLearning/NeuralNetwork.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="263" column="6" selection-start="10110" selection-end="10110" vertical-scroll-proportion="-0.021961933" vertical-offset="3945" max-vertical-offset="5055" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/CollectionsHelper/DictionaryHelper.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="74" column="14" selection-start="2432" selection-end="2432" vertical-scroll-proportion="0.0" vertical-offset="517" max-vertical-offset="1200" />
@@ -922,16 +944,12 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/_Scratch/ez_setup.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="4335">
-          <folding />
-        </state>
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="4335" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/_Scratch/GenerateDataForJsRegExTool.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="4" column="18" selection-start="81" selection-end="81" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1425">
-          <folding />
-        </state>
+        <state line="4" column="18" selection-start="81" selection-end="81" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1425" />
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/nltk/tag/crf.py">
@@ -958,46 +976,32 @@
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/pystruct-0.2-py2.7-macosx-10.6-x86_64.egg/pystruct/inference/inference_methods.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="280" column="0" selection-start="10076" selection-end="10076" vertical-scroll-proportion="0.0" vertical-offset="1590" max-vertical-offset="7245">
-          <folding />
-        </state>
+        <state line="280" column="0" selection-start="10076" selection-end="10076" vertical-scroll-proportion="0.0" vertical-offset="1590" max-vertical-offset="7245" />
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/pystruct-0.2-py2.7-macosx-10.6-x86_64.egg/pystruct/models/crf.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="9" column="8" selection-start="220" selection-end="220" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2445">
-          <folding />
-        </state>
+        <state line="9" column="8" selection-start="220" selection-end="220" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2445" />
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/pystruct-0.2-py2.7-macosx-10.6-x86_64.egg/pystruct/models/multilabel_svm.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="36" column="8" selection-start="1231" selection-end="1231" vertical-scroll-proportion="0.74963397" vertical-offset="13" max-vertical-offset="1635">
-          <folding />
-        </state>
+        <state line="36" column="8" selection-start="1231" selection-end="1231" vertical-scroll-proportion="0.74963397" vertical-offset="13" max-vertical-offset="1635" />
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/pystruct-0.2-py2.7-macosx-10.6-x86_64.egg/pystruct/learners/one_slack_ssvm.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="130" column="8" selection-start="4502" selection-end="4502" vertical-scroll-proportion="-0.897511" vertical-offset="2428" max-vertical-offset="7935">
-          <folding />
-        </state>
+        <state line="130" column="8" selection-start="4502" selection-end="4502" vertical-scroll-proportion="-0.897511" vertical-offset="2428" max-vertical-offset="7935" />
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/pystruct-0.2-py2.7-macosx-10.6-x86_64.egg/pystruct/learners/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="683">
-          <folding>
-            <element signature="e#0#36#0" expanded="false" />
-          </folding>
-        </state>
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="683" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingRandomForest.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="37" selection-start="541" selection-end="541" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="540">
-          <folding />
-        </state>
+        <state line="19" column="37" selection-start="541" selection-end="541" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="540" />
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Caches/PyCharm30/python_stubs/-1214748750/__builtin__.py">
@@ -1009,16 +1013,12 @@
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/sklearn/externals/joblib/parallel.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="295" column="30" selection-start="11382" selection-end="11382" vertical-scroll-proportion="0.83434653" vertical-offset="3756" max-vertical-offset="8055">
-          <folding />
-        </state>
+        <state line="295" column="30" selection-start="11382" selection-end="11382" vertical-scroll-proportion="0.83434653" vertical-offset="3756" max-vertical-offset="8055" />
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/sklearn/ensemble/forest.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="292" column="23" selection-start="9603" selection-end="9603" vertical-scroll-proportion="0.0" vertical-offset="3711" max-vertical-offset="19845">
-          <folding />
-        </state>
+        <state line="292" column="23" selection-start="9603" selection-end="9603" vertical-scroll-proportion="0.0" vertical-offset="3711" max-vertical-offset="19845" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedXmlData.py">
@@ -1030,27 +1030,17 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/FeatureExtraction/Text/WindowFeatures.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="20" column="58" selection-start="611" selection-end="611" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="720">
-          <folding />
-        </state>
+        <state line="20" column="58" selection-start="611" selection-end="611" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="720" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingLsaNearestNeighbor.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2025">
-          <folding>
-            <element signature="e#0#46#0" expanded="false" />
-          </folding>
-        </state>
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2025" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingLsaNearestNeighbor_OnSourceText.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="390" max-vertical-offset="2310">
-          <folding>
-            <element signature="e#0#46#0" expanded="false" />
-          </folding>
-        </state>
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="390" max-vertical-offset="2310" />
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Caches/PyCharm30/python_stubs/-1214748750/numpy/core/multiarray.py">
@@ -1060,57 +1050,113 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/numpy/core/numeric.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="379" column="29" selection-start="11779" selection-end="11779" vertical-scroll-proportion="0.0" vertical-offset="5358" max-vertical-offset="40905">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/LanguageModel/NgramGenerator.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="22" column="23" selection-start="610" selection-end="610" vertical-scroll-proportion="0.0" vertical-offset="48" max-vertical-offset="660">
-          <folding />
-        </state>
+        <state line="22" column="23" selection-start="610" selection-end="610" vertical-scroll-proportion="0.0" vertical-offset="48" max-vertical-offset="660" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingSVM_WithBinaryValues.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="21" column="28" selection-start="636" selection-end="636" vertical-scroll-proportion="0.0" vertical-offset="15" max-vertical-offset="930">
-          <folding>
-            <element signature="e#0#23#0" expanded="false" />
-          </folding>
-        </state>
+        <state line="21" column="28" selection-start="636" selection-end="636" vertical-scroll-proportion="0.0" vertical-offset="15" max-vertical-offset="930" />
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/sklearn/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="56" column="4" selection-start="1825" selection-end="1825" vertical-scroll-proportion="0.33333334" vertical-offset="636" max-vertical-offset="1320">
-          <folding />
-        </state>
+        <state line="56" column="4" selection-start="1825" selection-end="1825" vertical-scroll-proportion="0.33333334" vertical-offset="636" max-vertical-offset="1320" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingAuto_Encoder_WithSVM.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="18" column="12" selection-start="483" selection-end="483" vertical-scroll-proportion="0.0" vertical-offset="210" max-vertical-offset="1845">
-          <folding>
-            <element signature="e#0#32#0" expanded="false" />
-          </folding>
-        </state>
+        <state line="18" column="12" selection-start="483" selection-end="483" vertical-scroll-proportion="0.0" vertical-offset="210" max-vertical-offset="1845" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/_Scratch/TryPyStruct.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="74" column="0" selection-start="2321" selection-end="2321" vertical-scroll-proportion="0.32599118" vertical-offset="888" max-vertical-offset="1650">
           <folding>
-            <element signature="e#810#826#0" expanded="true" />
+            <element signature="e#810#826#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="124" column="0" selection-start="4207" selection-end="4207" vertical-scroll-proportion="0.33233532" vertical-offset="1608" max-vertical-offset="4485">
+        <state line="124" column="0" selection-start="4207" selection-end="4207" vertical-scroll-proportion="0.0" vertical-offset="1860" max-vertical-offset="4485">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/numpy/matrixlib/defmatrix.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="340" column="0" selection-start="9353" selection-end="9353" vertical-scroll-proportion="0.0" vertical-offset="4878" max-vertical-offset="16500">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/numpy/lib/function_base.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="3554" column="0" selection-start="113746" selection-end="113746" vertical-scroll-proportion="0.0" vertical-offset="52770" max-vertical-offset="53415">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../cudamat/gnumpy.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="1138" column="0" selection-start="64861" selection-end="64861" vertical-scroll-proportion="0.0" vertical-offset="16837" max-vertical-offset="17505" />
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/numpy/core/numeric.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="459" column="0" selection-start="14203" selection-end="14203" vertical-scroll-proportion="0.0" vertical-offset="6535" max-vertical-offset="40905">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/numpy/core/fromnumeric.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="42" column="0" selection-start="1193" selection-end="1193" vertical-scroll-proportion="0.0" vertical-offset="291" max-vertical-offset="43755">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetworkGPU.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="138" column="65" selection-start="5036" selection-end="5036" vertical-scroll-proportion="0.0" vertical-offset="712" max-vertical-offset="5940">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/_Scratch/NeuralNetwork.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="10" column="28" selection-start="283" selection-end="283" vertical-scroll-proportion="0.0" vertical-offset="195" max-vertical-offset="5220" />
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/nltk/corpus/util.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="70" column="0" selection-start="2755" selection-end="2755" vertical-scroll-proportion="0.0" vertical-offset="624" max-vertical-offset="1200">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Data/WordTokenizer.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="28" column="0" selection-start="901" selection-end="901" vertical-scroll-proportion="0.0" vertical-offset="205" max-vertical-offset="3030">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="452" column="58" selection-start="18628" selection-end="18628" vertical-scroll-proportion="0.0" vertical-offset="60" max-vertical-offset="7365">
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="344" column="0" selection-start="12316" selection-end="12316" vertical-scroll-proportion="0.27906978" vertical-offset="4965" max-vertical-offset="5745">
           <folding />
         </state>
       </provider>
