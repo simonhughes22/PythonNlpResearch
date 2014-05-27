@@ -10,3 +10,5 @@ tupleResult = [(rel, gov.text, dep.text) for rel, gov, dep in dependencies.depen
 for tuple in tupleResult:
     print tuple
 
+print ""
+print "\n".join(map(str,dependencies.dependencies[0]))

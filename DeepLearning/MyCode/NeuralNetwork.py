@@ -91,9 +91,15 @@ class NeuralNetwork(object):
         mse = -1.0
         mae = -1.0
         for epoch in range(epochs):
+
+            """ Note that the error may start increasing exponentially at some point
+                if so, halt training
+            """
             if num_batches == 1:
                 w1ds, w2ds, b1ds, b2ds, mini_batch_errors = self.__train_mini_batch__(inputs, outputs)
+
                 """ Apply changes """
+
                 self.w1 -= w1ds
                 self.w2 -= w2ds
                 self.b1 -= b1ds
@@ -121,8 +127,6 @@ class NeuralNetwork(object):
                         errors = mini_batch_errors
                     else:
                         errors = np.append(errors, mini_batch_errors, 0 )
-
-
 
             mse = np.mean(np.square(errors) )
             mae = np.mean(np.abs(errors))
@@ -335,8 +339,8 @@ if __name__ == "__main__":
     ]
     xs = np.array(xs)
 
-    #activation_fn = "linear"
-    activation_fn = "relu"
+    activation_fn = "linear"
+    #activation_fn = "relu"
     #activation_fn = "sigmoid"
     #activation_fn = "tanh"
 
@@ -375,4 +379,3 @@ if __name__ == "__main__":
     #print np.round(ae.prop_up(xs, xs)[0] * 3.0) * 0.3
     print np.round(ae.prop_up(xs, xs)[0])
     pass
-

@@ -64,6 +64,8 @@ import matutils
 
 
 try:
+    #raise Exception("For python version to test")
+
     # try to compile and use the faster cython version
     import pyximport
     pyximport.install(setup_args={"include_dirs": get_include()})
@@ -608,7 +610,7 @@ if __name__ == "__main__":
     seterr(all='raise')  # don't ignore numpy errors
 
     # model = Word2Vec(LineSentence(infile), size=200, min_count=5, workers=4)
-    model = Word2Vec(Text8Corpus(infile), size=100, window=5, min_count=5, workers=4)
+    model = Word2Vec(Text8Corpus(infile), size=100, window=5, min_count=5, workers=1)
 
     if len(sys.argv) > 3:
         outfile = sys.argv[3]

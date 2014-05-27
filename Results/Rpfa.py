@@ -23,7 +23,7 @@ class rpfa(object):
             str(int(self.num_codes)).rjust(5))
 
 
-def mean_rpfa( metrics):
+def mean_rpfa(metrics):
     tr, tp, tf, ta = 0.0, 0.0, 0.0, 0.0
     for metric in metrics:
         tr += metric.recall

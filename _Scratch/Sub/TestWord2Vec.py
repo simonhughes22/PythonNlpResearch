@@ -8,10 +8,11 @@ import WordTokenizer
 
 data = GwData.GwData()
 
-tokenized_docs = WordTokenizer.tokenize(data.documents, min_word_count=5, stem=True, lemmatize=False)
+tokenized_docs = WordTokenizer.tokenize(data.documents[:1000], min_word_count=5, stem=True, lemmatize=False)
+#tokenized_docs = WordTokenizer.tokenize(data.documents, min_word_count=5, stem=True, lemmatize=False)
 tokenized_docs = [t for t in tokenized_docs if len(t) > 0]
 
-w = py_word2vec.Word2vec(tokenized_docs,  size=100, window=5, min_count=5)
+w = py_word2vec.Word2Vec(tokenized_docs,  size=100, window=5, min_count=5, workers=1)
 
 """ Large Corpus """
 
