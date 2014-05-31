@@ -43,7 +43,7 @@ class RecursiveAutoEncoder(object):
         self.parent_vector_size = parent_vector_size
         num_classes = len(ys[0])
         
-        self.ae = nnet.NeuralNetwork(input_vector_size, parent_vector_size, input_vector_size, learning_rate = self.learning_rate, activation_fn = self.activation_fn,
+        self.ae = nnet.NeuralNetwork(input_vector_size, parent_vector_size, input_vector_size, learning_rate = self.learning_rate, activation_fns= self.activation_fn,
                                 initial_wt_max = self.initial_wt_max, weight_decay = self.weight_decay, desired_sparsity = self.desired_sparsity,
                                 sparsity_wt = self.sparsity_wt, w1_b1 = None, w2_b2 = None)
         
@@ -52,7 +52,7 @@ class RecursiveAutoEncoder(object):
         """ DON'T share second set of weights """
         
         """ Initialize with a different learning rate, based on relative weighting """
-        self.nnet = nnet.NeuralNetwork(input_vector_size, parent_vector_size, num_classes, learning_rate = self.learning_rate, activation_fn = self.activation_fn,
+        self.nnet = nnet.NeuralNetwork(input_vector_size, parent_vector_size, num_classes, learning_rate = self.learning_rate, activation_fns= self.activation_fn,
                                 initial_wt_max = self.initial_wt_max, weight_decay = self.weight_decay, desired_sparsity = self.desired_sparsity,
                                 sparsity_wt = self.sparsity_wt, w1_b1 = w1_b1, w2_b2 = None)
         

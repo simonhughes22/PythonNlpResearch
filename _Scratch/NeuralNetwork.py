@@ -319,10 +319,10 @@ if __name__ == "__main__":
     num_hidden = int(round(np.log2(num_inputs)))
     
     """ Note that the range of inputs for tanh is 2* sigmoid, and so the MAE should be 2* """
-    ae = NeuralNetwork(num_inputs, num_hidden, len(ys[0]),  learning_rate = 0.1, activation_fn = activation_fn, 
+    ae = NeuralNetwork(num_inputs, num_hidden, len(ys[0]),  learning_rate = 0.01, activation_fn = activation_fn,
                      weight_decay=0.0, desired_sparsity=0.05, sparsity_wt=0.0)
     
-    ae.train(xs, ys, 1000, batch_size = 4)
+    ae.train(xs, ys, 100, batch_size = 4)
    
     xs_T = np.array(xs).T
     activations = ae.__activate__(xs_T)
@@ -343,6 +343,9 @@ if __name__ == "__main__":
     print "Predictions (rounded to 0 decimals)"
     print np.round(ae.prop_up(xs, xs)[0])
     pass
+
+    """ NOTE THIS IS THE SCRATCH VERSION.....
+    """
 
     """ TODO
      allow different activation functions per layer. Normally hidden layer uses RELU and dropout (http://fastml.com/deep-learning-these-days/)

@@ -13,7 +13,7 @@ class NeuralNetwork(object):
     classdocs
     '''
 
-    def __init__(self, num_inputs, num_hidden, num_outputs, learning_rate = 0.1, activation_fn = "sigmoid", 
+    def __init__(self, num_inputs, num_hidden, num_outputs, learning_rate = 0.1, activation_fns = ("relu", "tanh"),
                  initial_wt_max = 0.01, weight_decay = 0.0, desired_sparsity = 0.05, sparsity_wt = 0.00,
                  w1_b1 = None, w2_b2 = None):
         '''
@@ -30,7 +30,7 @@ class NeuralNetwork(object):
         '''
         """ Properties """
         self.learning_rate = learning_rate
-        self.activation_fn = activation_fn
+        self.activation_fns = activation_fns
         self.num_inputs = num_inputs
         self.num_hidden = num_hidden
         self.np_type = type(np.array([]))
@@ -157,11 +157,11 @@ class NeuralNetwork(object):
         min_inp = np.min(inputs)
         max_inp = np.max(inputs)
         
-        if self.activation_fn == "sigmoid":
+        if self.activation_fns == "sigmoid":
             self.__in_range__(min_inp, max_inp,  0.0, 1.0)
-        elif self.activation_fn == "tanh":
+        elif self.activation_fns == "tanh":
             self.__in_range__(min_inp, max_inp, -1.0, 1.0)
-        elif self.activation_fn == "relu":
+        elif self.activation_fns == "relu":
             self.__in_range__(min_inp, max_inp, 0.0, np.inf)
         else:
             pass
@@ -173,17 +173,24 @@ class NeuralNetwork(object):
     def hidden_activations(self, inputs):
         np_inputs_T = np.array(inputs).T
         z2 = self.__compute_z__(np_inputs_T, self.w1, self.b1)
-        a2 = self.__activate__(z2)
+        a2 = self.__activate__(z2, 0)
         return a2.T
-    
+
+    def __prop_up__(self, inputs_T, wts, bias, layer):
+
+        """ Compute activations """
+        z = self.__compute_z__(inputs_T, wts, bias)
+        a = self.__activate__(z, layer)
+        return (z, a)
+
     def prop_up(self, inputs, outputs):
         inputs_T = np.array(inputs).T
         outputs_T = np.array(outputs).T
         
         """ Compute activations """
-        z2, a2 = self.__prop_up__(inputs_T, self.w1, self.b1)
-        z3, a3 = self.__prop_up__(a2, self.w2, self.b2)
-        
+        z2, a2 = self.__prop_up__(inputs_T, self.w1, self.b1, 0)
+        z3, a3 = self.__prop_up__(a2, self.w2, self.b2, 1)
+
         """ errors """
         errors = (outputs_T - a3)
         return (a3.T, a2.T, errors.T)
@@ -192,33 +199,27 @@ class NeuralNetwork(object):
         inputs_T = np.array(inputs).T
 
         """ Compute activations """
-        z2, a2 = self.__prop_up__(inputs_T, self.w1, self.b1)
-        z3, a3 = self.__prop_up__(a2, self.w2, self.b2)
+        z2, a2 = self.__prop_up__(inputs_T, self.w1, self.b1, 0)
+        z3, a3 = self.__prop_up__(a2, self.w2, self.b2, 1)
 
         return a3.T
 
-    def __prop_up__(self, inputs_T, wts, bias):
-        
-        """ Compute activations """
-        z = self.__compute_z__(inputs_T, wts, bias)
-        a = self.__activate__(z)
-        return (z, a)
-                 
+
     def __train_mini_batch__(self, input_vectors, outputs):
         rows = input_vectors.shape[0]
         inputs_T = input_vectors.T
         outputs_T = outputs.T
         
         """ Compute activations """
-        z2, a2 = self.__prop_up__(inputs_T, self.w1, self.b1)
-        z3, a3 = self.__prop_up__(a2, self.w2, self.b2)
+        z2, a2 = self.__prop_up__(inputs_T, self.w1, self.b1, 0)
+        z3, a3 = self.__prop_up__(a2, self.w2, self.b2, 1)
         
         """ errors = mean( 0.5 sum squared error)  """
         assert outputs_T.shape == a3.shape
         errors = (outputs_T - a3)
          
-        deriv3 = self.__derivative__(a3)
-        deriv2 = self.__derivative__(a2)
+        deriv3 = self.__derivative__(a3, 0)
+        deriv2 = self.__derivative__(a2, 1)
         
         """ Note: multiply does an element wise product, NOT a dot product (Hadambard product)
             inputs_T must have same shape
@@ -272,30 +273,34 @@ class NeuralNetwork(object):
         #Can we speed this up by making the bias a column vector?
         return np.dot(weights, inputs) + bias.T
     
-    def __activate__(self, z):
-        if self.activation_fn == "sigmoid":
+    def __activate__(self, z, layer):
+        activation_fn = self.activation_fns[layer]
+
+        if activation_fn == "sigmoid":
             return 1/ (1 + np.exp(-z))
-        elif self.activation_fn == "tanh":
+        elif activation_fn == "tanh":
             return np.tanh(z)
-        elif self.activation_fn == "linear":
+        elif activation_fn == "linear":
             return z
-        elif self.activation_fn == "relu":
+        elif activation_fn == "relu":
             copy = z.copy()
             copy[copy < 0] = 0
             return copy
         else:
             raise NotImplementedError("Only sigmoid, tanh, linear and relu currently implemented")
     
-    def __derivative__(self, activations):
-        if self.activation_fn == "sigmoid": 
+    def __derivative__(self, activations, layer):
+        activation_fn = self.activation_fns[layer]
+
+        if activation_fn == "sigmoid":
             """ f(z)(1 - f(z)) """
             return np.multiply(activations, (1 - activations))
-        elif self.activation_fn == "tanh":
+        elif activation_fn == "tanh":
             """ 1 - f(z)^2 """
             return 1 - np.square(activations)
-        elif self.activation_fn == "linear":
+        elif activation_fn == "linear":
             return activations
-        elif self.activation_fn == "relu":
+        elif activation_fn == "relu":
             copy = activations.copy()
             copy[copy < 0] = 0
             return copy
@@ -339,13 +344,13 @@ if __name__ == "__main__":
     ]
     xs = np.array(xs)
 
-    activation_fn = "linear"
+    activation_fns = ("linear", "sigmoid")
     #activation_fn = "relu"
     #activation_fn = "sigmoid"
     #activation_fn = "tanh"
 
-    #if activation_fn == "tanh":
-        #xs = (xs + 1.0) / 2.0
+    if activation_fns[0] == "tanh":
+        xs = (xs - 0.5) * 2.0
 
     ys  = np.sum(xs, axis=1, keepdims = True) * 1.0
     ys = (ys - np.min(ys)) / (np.max(ys) - np.min(ys))
@@ -353,20 +358,23 @@ if __name__ == "__main__":
     """ Test as an Auto Encoder """
     ys = xs
 
+    if activation_fns[1] == "tanh" and np.min(ys.flatten()) == 0.0:
+        ys = (ys - 0.5) * 2.0
+
     num_inputs = len(xs[0])
     num_hidden = int(round(np.log2(num_inputs)))
 
     """ Note that the range of inputs for tanh is 2* sigmoid, and so the MAE should be 2* """
-    ae = NeuralNetwork(num_inputs, num_hidden, len(ys[0]),  learning_rate = 0.02,
-                       activation_fn = activation_fn,
+    ae = NeuralNetwork(num_inputs, num_hidden, len(ys[0]),  learning_rate = 0.3,
+                       activation_fns= activation_fns,
                        weight_decay=0.0, desired_sparsity=0.05, sparsity_wt=0.0)
 
     ae.train(xs, ys, 10000)
 
     xs_T = np.array(xs).T
-    activations = ae.__activate__(xs_T)
+    activations = ae.hidden_activations(xs)
 
-    print ""
+    """print ""
     print ae.w1
     print ae.w2
     print ""
@@ -375,7 +383,20 @@ if __name__ == "__main__":
     print ""
     print ys
     print ae.prop_up(xs, xs)[0]
-    print ys
+    """
+    print "ys"
+    print np.round(ys, 1)
+    print "predictions"
     #print np.round(ae.prop_up(xs, xs)[0] * 3.0) * 0.3
-    print np.round(ae.prop_up(xs, xs)[0])
+    print np.round(ae.feed_forward(xs), 1)
+    print np.round(ae.feed_forward(xs), 0)
     pass
+
+    """ TODO
+    allow different activation functions per layer. Normally hidden layer uses RELU and dropout (http://fastml.com/deep-learning-these-days/)
+       don't use RELU for output layer as you cannot correct for erors (i.e. gradient is 0 for negative updates!)
+    implement momentum (refer to early parts of this https://www.cs.toronto.edu/~hinton/csc2515/notes/lec6tutorial.pdf)
+    implement adaptive learning rate adjustments (see link above)
+    implement DROPOUT
+
+    """
