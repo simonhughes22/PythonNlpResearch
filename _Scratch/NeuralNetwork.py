@@ -343,3 +343,12 @@ if __name__ == "__main__":
     print "Predictions (rounded to 0 decimals)"
     print np.round(ae.prop_up(xs, xs)[0])
     pass
+
+    """ TODO
+     allow different activation functions per layer. Normally hidden layer uses RELU and dropout (http://fastml.com/deep-learning-these-days/)
+        don't use RELU for output layer as you cannot correct for erors (i.e. gradient is 0 for negative updates!)
+     implement momentum (refer to early parts of this https://www.cs.toronto.edu/~hinton/csc2515/notes/lec6tutorial.pdf)
+     implement adaptive learning rate adjustments (see link above)
+     implement DROPOUT
+
+    """

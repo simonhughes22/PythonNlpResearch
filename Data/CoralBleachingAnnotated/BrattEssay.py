@@ -269,7 +269,9 @@ def load_bratt_essays(directory = None):
     if not bratt_root_folder:
         import Settings
         settings = Settings.Settings()
-        bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/Merged/"
+        #bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/Merged/"
+        bratt_root_folder = settings.data_directory + "GlobalWarming/BrattFiles/globwarm20/"
+        #/Users/simon.hughes/Dropbox/PhD/Data/GlobalWarming/BrattFiles/globwarm20
 
     files = find_files(bratt_root_folder, "\.ann$", remove_empty=True)
     print len(files), "files found"
@@ -288,6 +290,7 @@ def load_bratt_essays(directory = None):
 if __name__ == "__main__":
 
     load_bratt_essays()
+    print "Done"
 
 
 
