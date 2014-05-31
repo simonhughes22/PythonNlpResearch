@@ -2,9 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9643b290-4022-45ff-b8a9-41737414cadc" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py" afterPath="$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/_Scratch/NeuralNetwork.py" afterPath="$PROJECT_DIR$/_Scratch/NeuralNetwork.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py" afterPath="$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py" />
     </list>
     <ignored path="NlpResearch.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -27,38 +26,25 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="NeuralNetwork.py" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="NeuralNetwork.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="346" column="29" selection-start="12397" selection-end="12397" vertical-scroll-proportion="0.20950966" vertical-offset="5034" max-vertical-offset="6105">
-              <folding />
+            <state line="219" column="38" selection-start="7828" selection-end="7828" vertical-scroll-proportion="0.0" vertical-offset="2957" max-vertical-offset="5895">
+              <folding>
+                <element signature="e#171#189#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="_methods.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/numpy/core/_methods.py">
+      <file leaf-file-name="DeepNeuralNetwork.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="24" column="0" selection-start="790" selection-end="790" vertical-scroll-proportion="0.0" vertical-offset="27" max-vertical-offset="1935">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="fromnumeric.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/numpy/core/fromnumeric.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="1713" column="0" selection-start="52845" selection-end="52845" vertical-scroll-proportion="0.0" vertical-offset="25359" max-vertical-offset="43755">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="NeuralNetwork.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/_Scratch/NeuralNetwork.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="321" column="79" selection-start="11838" selection-end="11838" vertical-scroll-proportion="0.0" vertical-offset="4727" max-vertical-offset="5400">
-              <folding />
+            <state line="197" column="88" selection-start="7207" selection-end="7207" vertical-scroll-proportion="0.6225854" vertical-offset="2311" max-vertical-offset="5220">
+              <folding>
+                <element signature="e#171#189#0" expanded="true" />
+                <element signature="e#4523#5084#0" expanded="false" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -130,6 +116,7 @@
         <option value="$PROJECT_DIR$/VectorSpace/WordVectors/Word2Vec/py_word2vec.py" />
         <option value="$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py" />
         <option value="$PROJECT_DIR$/_Scratch/NeuralNetwork.py" />
+        <option value="$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py" />
         <option value="$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py" />
       </list>
     </option>
@@ -153,7 +140,7 @@
     <option name="STATE" value="0" />
   </component>
   <component name="ProjectView">
-    <navigator proportions="" version="1" splitterProportion="0.5">
+    <navigator currentView="ProjectPane" proportions="" version="1" splitterProportion="0.5">
       <flattenPackages />
       <showMembers />
       <showModules />
@@ -164,7 +151,12 @@
       <autoscrollFromSource />
       <sortByType />
     </navigator>
-    <panes />
+    <panes>
+      <pane id="Scope" />
+      <pane id="ProjectPane">
+        <subPane />
+      </pane>
+    </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="GoToFile.includeJavaFiles" value="false" />
@@ -192,11 +184,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/DeepLearning/MyCode" />
       <recent name="$PROJECT_DIR$/DeepLearning" />
       <recent name="C:\Users\simon.hughes\Dropbox\PhD\Code\PyCharmProjects\NlpResearch\Experiments\CoralBleaching" />
       <recent name="C:\Users\simon.hughes\Dropbox\PhD\Code\PyCharmProjects\NlpResearch\Experiments\GlobalWarming" />
       <recent name="C:\Users\simon.hughes\Dropbox\PhD\Code\PyCharmProjects\NlpResearch\Results\GlobalWarming" />
-      <recent name="C:\Users\simon.hughes\Dropbox\PhD\Code\PyCharmProjects\NlpResearch\_Scratch\Sub" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/DeepLearning/MyCode" />
@@ -207,42 +199,6 @@
     </key>
   </component>
   <component name="RunManager" selected="Python.NeuralNetwork">
-    <configuration default="false" name="TestWord2Vec" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/_Scratch/Sub" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="NlpResearch" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/_Scratch/Sub/TestWord2Vec.py" />
-      <option name="PARAMETERS" value="" />
-      <RunnerSettings RunnerId="PyDebugRunner" />
-      <ConfigurationWrapper RunnerId="PyDebugRunner" />
-      <method />
-    </configuration>
-    <configuration default="false" name="CBWindowBasedClassifier" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/_Scratch" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="NlpResearch" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/_Scratch/CBWindowBasedClassifier.py" />
-      <option name="PARAMETERS" value="" />
-      <RunnerSettings RunnerId="PyDebugRunner" />
-      <ConfigurationWrapper RunnerId="PyDebugRunner" />
-      <method />
-    </configuration>
     <configuration default="false" name="BrattEssay" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -294,6 +250,42 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="NlpResearch" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/_Scratch/NeuralNetwork.py" />
+      <option name="PARAMETERS" value="" />
+      <RunnerSettings RunnerId="PythonRunner" />
+      <ConfigurationWrapper RunnerId="PythonRunner" />
+      <method />
+    </configuration>
+    <configuration default="false" name="deepnet" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/DeepLearning/DeepBeliefNetwork" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="NlpResearch" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/DeepLearning/DeepBeliefNetwork/deepnet.py" />
+      <option name="PARAMETERS" value="" />
+      <RunnerSettings RunnerId="PythonRunner" />
+      <ConfigurationWrapper RunnerId="PythonRunner" />
+      <method />
+    </configuration>
+    <configuration default="false" name="DeepNeuralNetwork" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/DeepLearning/MyCode" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="NlpResearch" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py" />
       <option name="PARAMETERS" value="" />
       <RunnerSettings RunnerId="PythonRunner" />
       <ConfigurationWrapper RunnerId="PythonRunner" />
@@ -442,19 +434,19 @@
     </configuration>
     <list size="6">
       <item index="0" class="java.lang.String" itemvalue="Python.LoadCrAnnotatedData" />
-      <item index="1" class="java.lang.String" itemvalue="Python.TestWord2Vec" />
-      <item index="2" class="java.lang.String" itemvalue="Python.CBWindowBasedClassifier" />
-      <item index="3" class="java.lang.String" itemvalue="Python.BrattEssay" />
-      <item index="4" class="java.lang.String" itemvalue="Python.NeuralNetwork" />
-      <item index="5" class="java.lang.String" itemvalue="Python.NeuralNetwork (1)" />
+      <item index="1" class="java.lang.String" itemvalue="Python.BrattEssay" />
+      <item index="2" class="java.lang.String" itemvalue="Python.NeuralNetwork" />
+      <item index="3" class="java.lang.String" itemvalue="Python.NeuralNetwork (1)" />
+      <item index="4" class="java.lang.String" itemvalue="Python.deepnet" />
+      <item index="5" class="java.lang.String" itemvalue="Python.DeepNeuralNetwork" />
     </list>
     <recent_temporary>
       <list size="5">
         <item index="0" class="java.lang.String" itemvalue="Python.NeuralNetwork" />
-        <item index="1" class="java.lang.String" itemvalue="Python.NeuralNetwork (1)" />
-        <item index="2" class="java.lang.String" itemvalue="Python.BrattEssay" />
-        <item index="3" class="java.lang.String" itemvalue="Python.TestWord2Vec" />
-        <item index="4" class="java.lang.String" itemvalue="Python.CBWindowBasedClassifier" />
+        <item index="1" class="java.lang.String" itemvalue="Python.DeepNeuralNetwork" />
+        <item index="2" class="java.lang.String" itemvalue="Python.deepnet" />
+        <item index="3" class="java.lang.String" itemvalue="Python.NeuralNetwork (1)" />
+        <item index="4" class="java.lang.String" itemvalue="Python.BrattEssay" />
       </list>
     </recent_temporary>
   </component>
@@ -493,11 +485,11 @@
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.43061516" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24947146" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.20436928" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.20243205" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.58154505" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.16216215" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32871014" sideWeight="0.5" order="6" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.4599428" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.4806867" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Documentation" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="92" y="92" width="1416" height="676" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -741,12 +733,12 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py</url>
-          <line>390</line>
+          <line>375</line>
           <option name="timeStamp" value="441" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py</url>
-          <line>384</line>
+          <line>369</line>
           <option name="timeStamp" value="442" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
@@ -786,7 +778,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py</url>
-          <line>360</line>
+          <line>345</line>
           <option name="timeStamp" value="468" />
         </line-breakpoint>
       </breakpoints>
@@ -797,33 +789,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/_Scratch/ez_setup.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="4335" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/_Scratch/GenerateDataForJsRegExTool.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="4" column="18" selection-start="81" selection-end="81" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1425" />
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/nltk/tag/crf.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="118" column="0" selection-start="4310" selection-end="4310" vertical-scroll-proportion="0.0" vertical-offset="1333" max-vertical-offset="11265">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/nltk/tag/hmm.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="207" column="21" selection-start="9885" selection-end="9892" vertical-scroll-proportion="0.0" vertical-offset="3105" max-vertical-offset="19140" />
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/pystruct-0.2-py2.7-macosx-10.6-x86_64.egg/pystruct/inference/linear_programming.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="29" column="27" selection-start="1074" selection-end="1074" vertical-scroll-proportion="0.6744186" vertical-offset="0" max-vertical-offset="2070" />
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/pystruct-0.2-py2.7-macosx-10.6-x86_64.egg/pystruct/learners/n_slack_ssvm.py">
       <provider selected="true" editor-type-id="text-editor">
         <state line="3" column="1" selection-start="102" selection-end="102" vertical-scroll-proportion="0.0" vertical-offset="45" max-vertical-offset="6480" />
@@ -1086,15 +1051,63 @@
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/numpy/core/fromnumeric.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="1713" column="0" selection-start="52845" selection-end="52845" vertical-scroll-proportion="0.0" vertical-offset="25359" max-vertical-offset="43755">
+        <state line="1713" column="0" selection-start="52845" selection-end="52845" vertical-scroll-proportion="0.3148688" vertical-offset="25359" max-vertical-offset="43755">
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DeepLearning/Examples/neurolab_autoencoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="673">
+          <folding>
+            <element signature="e#0#21#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DeepLearning/DeepBeliefNetwork/autoencoder_from_dbn.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2820">
+          <folding>
+            <element signature="e#0#18#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DeepLearning/DeepBeliefNetwork/backprop.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="391" column="29" selection-start="15414" selection-end="15414" vertical-scroll-proportion="0.0" vertical-offset="5515" max-vertical-offset="6165">
+          <folding>
+            <element signature="e#0#10#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DeepLearning/DeepBeliefNetwork/deepnet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="325" column="34" selection-start="11595" selection-end="11595" vertical-scroll-proportion="0.0" vertical-offset="555" max-vertical-offset="5175">
+          <folding>
+            <element signature="e#0#10#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="346" column="29" selection-start="12397" selection-end="12397" vertical-scroll-proportion="0.20950966" vertical-offset="5034" max-vertical-offset="6105">
-          <folding />
+        <state line="219" column="38" selection-start="7828" selection-end="7828" vertical-scroll-proportion="0.0" vertical-offset="2957" max-vertical-offset="5895">
+          <folding>
+            <element signature="e#171#189#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="197" column="88" selection-start="7207" selection-end="7207" vertical-scroll-proportion="0.6225854" vertical-offset="2311" max-vertical-offset="5220">
+          <folding>
+            <element signature="e#171#189#0" expanded="true" />
+            <element signature="e#4523#5084#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>

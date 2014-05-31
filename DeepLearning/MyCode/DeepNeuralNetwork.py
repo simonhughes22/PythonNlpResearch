@@ -6,7 +6,15 @@ Auto-encoder implementation. Can be used to implement a denoising auto-encoder, 
 '''
 
 import numpy as np
+import gnumpy as gp
 from numpy import matlib
+
+USE_GPU = False
+
+def get_array(a):
+    if USE_GPU:
+        return gp.garray(a)
+    return np.array(a)
 
 class NeuralNetwork(object):
     '''
@@ -66,9 +74,7 @@ class NeuralNetwork(object):
         pass
 
     def __ensure_np__(self, a):
-        if type(a) != np.array:
-            a = np.array(a)
-        return a
+        return get_array(a)
     
     def train(self, xs, ys, epochs = 100, batch_size = 100):
         inputs  = self.__ensure_np__(xs)
@@ -121,19 +127,6 @@ class NeuralNetwork(object):
             print "MSE for epoch {0} is {1}".format(epoch, mse),
             print "\tMAE for epoch {0} is {1}".format(epoch, mae)
         return (mse, mae)
-
-    def get_training_errors(self, xs, ys):
-
-        inputs = self.__ensure_np__(xs)
-        outputs = self.__ensure_np__(ys)
-        
-        num_rows = inputs.shape[0]
-        """ Number of rows in inputs should match outputs """
-        assert num_rows == outputs.shape[0]
-        
-        """ Check outputs match the range for the activation function """
-        self.__validate__(outputs)
-        return self.__train_mini_batch__(inputs, outputs)
      
     def __validate__(self, inputs, layer):
         activation_fn = self.activation_fns[layer]
@@ -156,40 +149,23 @@ class NeuralNetwork(object):
         assert actual_min >= exp_min
         assert actual_max <= exp_max
 
-    def hidden_activations(self, inputs):
-        np_inputs_T = np.array(inputs).T
-        z2 = self.__compute_z__(np_inputs_T, self.w1, self.b1)
-        a2 = self.__activate__(z2, 0)
-        return a2.T
-
     def __prop_up__(self, inputs_T, wts, bias, layer):
 
         """ Compute activations """
         z = self.__compute_z__(inputs_T, wts, bias)
-        a = self.__activate__(z, layer)
+        a = self.__activate__(z, self.activation_fns[layer])
         return (z, a)
 
-    def prop_up(self, inputs, outputs):
-        inputs_T = np.array(inputs).T
-        outputs_T = np.array(outputs).T
-        
-        """ Compute activations """
-        z2, a2 = self.__prop_up__(inputs_T, self.w1, self.b1, 0)
-        z3, a3 = self.__prop_up__(a2, self.w2, self.b2, 1)
-
-        """ errors """
-        errors = (outputs_T - a3)
-        return (a3.T, a2.T, errors.T)
-
     def feed_forward(self, inputs):
-        inputs_T = np.array(inputs).T
+        raise Exception("TODO")
+        """ TODO allow user to pass in a layer number here so hidden activations can be returned """
 
         """ Compute activations """
+        inputs_T = get_array(inputs).T
         z2, a2 = self.__prop_up__(inputs_T, self.w1, self.b1, 0)
         z3, a3 = self.__prop_up__(a2, self.w2, self.b2, 1)
 
         return a3.T
-
 
     def __train_mini_batch__(self, input_vectors, outputs):
         rows = input_vectors.shape[0]
@@ -204,8 +180,8 @@ class NeuralNetwork(object):
         assert outputs_T.shape == a3.shape
         errors = (outputs_T - a3)
          
-        deriv3 = self.__derivative__(a3, 0)
-        deriv2 = self.__derivative__(a2, 1)
+        deriv3 = self.__derivative__(a3, self.activation_fns[0])
+        deriv2 = self.__derivative__(a2, self.activation_fns[1])
         
         """ Note: multiply does an element wise product, NOT a dot product (Hadambard product)
             inputs_T must have same shape
@@ -215,8 +191,7 @@ class NeuralNetwork(object):
         
         if self.sparsity_wt > 0.0:
             """ SPARSITY PENALTY """
-            if self.activation_fns[1] != "sigmoid":
-                raise Exception("This is correct if activation function is not sigmoid")
+            raise Exception("This is correct if activation function is not sigmoid")
             pj = np.mean(a2, axis = 1)
             p = self.desired_sparsity
             sparsity_penalty = self.sparsity_wt * ( -p/pj + (1 - p)/(1 - pj) )
@@ -261,8 +236,7 @@ class NeuralNetwork(object):
         #Can we speed this up by making the bias a column vector?
         return np.dot(weights, inputs) + bias.T
     
-    def __activate__(self, z, layer):
-        activation_fn = self.activation_fns[layer]
+    def __activate__(self, z, activation_fn):
 
         if activation_fn == "sigmoid":
             return 1/ (1 + np.exp(-z))
@@ -277,8 +251,7 @@ class NeuralNetwork(object):
         else:
             raise NotImplementedError("Only sigmoid, tanh, linear and relu currently implemented")
     
-    def __derivative__(self, activations, layer):
-        activation_fn = self.activation_fns[layer]
+    def __derivative__(self, activations, activation_fn):
 
         if activation_fn == "sigmoid":
             """ f(z)(1 - f(z)) """
@@ -298,6 +271,7 @@ class NeuralNetwork(object):
 if __name__ == "__main__":
 
     """
+    # Test Sum
     xs = [
           [1,    0,     0.5,    0.1],
           [0,    1,     1.0,    0.5],
@@ -308,7 +282,9 @@ if __name__ == "__main__":
           [1,    0.5,   0.65,   0  ],
           [0.7,  0.9,   0,      1  ]
     ]
-    """
+
+
+    # Identity - can memorize inputs ?
     xs = [
         [1, 0, 0, 0, 0, 0, 0, 0],
         [0, 1, 0, 0, 0, 0, 0, 0],
@@ -319,6 +295,7 @@ if __name__ == "__main__":
         [0, 0, 0, 0, 0, 0, 1, 0],
         [0, 0, 0, 0, 0, 0, 0, 1]
     ]
+    """
 
     xs = [
         [1, 0, 0, 0, 0, 0, 0, 0],
@@ -332,16 +309,16 @@ if __name__ == "__main__":
     ]
     xs = np.array(xs)
 
-    activation_fns = ("sigmoid", "sigmoid")
+    activation_fns = ("tanh", "tanh")
 
     if activation_fns[0] == "tanh":
         xs = (xs - 0.5) * 2.0
 
     ys  = np.sum(xs, axis=1, keepdims = True) * 1.0
     ys = (ys - np.min(ys)) / (np.max(ys) - np.min(ys))
-    ys = np.array(ys)
+    ys = get_array(ys)
     """ Test as an Auto Encoder """
-    ys = xs
+    #ys = xs
 
     if activation_fns[1] == "tanh" and np.min(ys.flatten()) == 0.0:
         ys = (ys - 0.5) * 2.0
@@ -352,23 +329,13 @@ if __name__ == "__main__":
     """ Note that the range of inputs for tanh is 2* sigmoid, and so the MAE should be 2* """
     ae = NeuralNetwork(num_inputs, num_hidden, len(ys[0]),  learning_rate = 0.3,
                        activation_fns= activation_fns,
-                       weight_decay=0.0, desired_sparsity=0.01, sparsity_wt=0.0)
+                       weight_decay=0.0, desired_sparsity=0.05, sparsity_wt=0.0)
 
-    ae.train(xs, ys, 10000, 1)
+    ae.train(xs, ys, 1000, 1)
 
-    xs_T = np.array(xs).T
+    xs_T = get_array(xs).T
     activations = ae.hidden_activations(xs)
 
-    """print ""
-    print ae.w1
-    print ae.w2
-    print ""
-    print ae.hidden_activations(xs)
-    print np.round(ae.hidden_activations(xs))
-    print ""
-    print ys
-    print ae.prop_up(xs, xs)[0]
-    """
     print "ys"
     print np.round(ys, 1)
     print "predictions"
@@ -378,6 +345,9 @@ if __name__ == "__main__":
     pass
 
     """ TODO
+
+    *** Use finite gradients method to verify gradient descent calc. Bake into code as a flag ***
+
     allow different activation functions per layer. Normally hidden layer uses RELU and dropout (http://fastml.com/deep-learning-these-days/)
        don't use RELU for output layer as you cannot correct for erors (i.e. gradient is 0 for negative updates!)
     implement momentum (refer to early parts of this https://www.cs.toronto.edu/~hinton/csc2515/notes/lec6tutorial.pdf)
