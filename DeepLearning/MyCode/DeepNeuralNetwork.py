@@ -11,235 +11,89 @@ from numpy import matlib
 
 USE_GPU = False
 
+
 def get_array(a):
     if USE_GPU:
+        if type(a) == gp.garray:
+            return a
         return gp.garray(a)
+
+    #ELSE NP
+    if type(a) == np.array:
+        return a
     return np.array(a)
 
-class NeuralNetwork(object):
-    '''
-    classdocs
-    '''
-
-    def __init__(self, num_inputs, num_hidden, num_outputs, learning_rate = 0.1,
-                 activation_fns = ("relu", "tanh"),
-                 initial_wt_max = 0.01, weight_decay = 0.0, desired_sparsity = 0.05, sparsity_wt = 0.00,
-                 w1_b1 = None, w2_b2 = None):
-        '''
-        num_inputs = number of inputs \ outputs
-        num_hidden = size of the hidden layer
-        activation_fn = activation function to use ("sigmoid" | "tanh" | "linear" | "relu")
-        initial_wt_max = the initial weights will be set to random weights in the range -initial_wt_max to +initial_wt_max
-        weight_decay = a regularization term to stop over-fitting. Only turn on if network converges too fast or overfits the data
-        
-        w1_b1 are a tuple of weight matrix 1 and bias 1
-        w2_b2 are a tuple of weight matrix 2 and bias 2
-            This allows weight sharing between networks
-        
-        '''
-        """ Properties """
-        self.learning_rate = learning_rate
-        self.activation_fns = activation_fns
-        self.num_inputs = num_inputs
-        self.num_hidden = num_hidden
-
-        """ An auto-encoder """
+class Layer(object):
+    def __init__(self, num_inputs, num_outputs, activation_fn="tanh", initial_wt_max=0.01, weights=None, bias=None):
+        self.activation_fn = activation_fn
         self.num_outputs = num_outputs
+        self.num_inputs = num_inputs
+
+        if weights is None:
+            weights = get_array(matlib.rand((num_outputs, num_inputs)) * initial_wt_max)
+
+        if bias is None:
+            bias = get_array(matlib.rand((1, num_outputs)) * initial_wt_max)
+
         self.initial_wt_max = initial_wt_max
-        self.weight_decay = weight_decay
-        self.desired_sparsity = desired_sparsity
-        self.sparsity_wt = sparsity_wt
-        """ END Properties """
-        
-        if w1_b1 == None:
-            self.w1 = matlib.rand((num_hidden, num_inputs)) * initial_wt_max
-            self.b1 = matlib.rand((1,num_hidden)) * initial_wt_max
-        else:
-            self.w1 = w1_b1[0]
-            self.b1 = w1_b1[1]
-        
-        assert self.w1.shape == (num_hidden, num_inputs)
-        assert self.b1.shape == (1, num_hidden)
-        
-        if w2_b2 == None:
-            self.w2 = matlib.rand((num_outputs, num_hidden)) * initial_wt_max
-            self.b2 = matlib.rand((1, num_outputs)) * initial_wt_max
-        else:
-            self.w2 = w2_b2[0]
-            self.b2 = w2_b2[1]
-        
-        assert self.w2.shape == (num_outputs, num_hidden)
-        assert self.b2.shape == (1, num_outputs)
+        self.weights        = weights
+        self.bias           = bias
+        self.save_state()
 
-        pass
+        assert self.num_inputs == self.weights.shape[1]
+        assert self.num_outputs == self.weights.shape[0]
+        assert self.num_outputs == self.bias.shape[1]
 
-    def __ensure_np__(self, a):
-        return get_array(a)
-    
-    def train(self, xs, ys, epochs = 100, batch_size = 100):
-        inputs  = self.__ensure_np__(xs)
-        outputs = self.__ensure_np__(ys)
+    def save_state(self):
+        self.best_weights   = self.weights.copy()
+        self.best_bias      = self.bias.copy()
 
-        num_rows = inputs.shape[0]
-        
-        """ Number of rows in inputs should match outputs """
-        assert num_rows == outputs.shape[0]
-        
-        """ Check outputs match the range for the activation function for the layer """
-        self.__validate__(inputs, 0)
-        self.__validate__(outputs, 1)
-        
-        num_batches = num_rows / batch_size
-        if num_rows % batch_size > 0:
-            num_batches += 1
-        
-        mse = -1.0
-        mae = -1.0
-        for epoch in range(epochs):
+    def revert_state(self):
+        self.weights        = self.best_weights.copy()
+        self.bias           = self.best_bias.copy()
 
-            """ Note that the error may start increasing exponentially at some point
-                if so, halt training
-            """
+    # for prediction (for case like dropout where we need to do something different
+    # here by overriding this function
+    def feed_forward(self, inputs_T):
+        return self.prop_up(inputs_T)
 
-            errors = None
-            for batch in range(num_batches):
-                start = batch * batch_size
-                end = start + batch_size
-                mini_batch_in = inputs[start:end]
-                mini_batch_out = outputs[start:end]
-                if len(mini_batch_in) == 0:
-                    continue
-
-                w1ds, w2ds, b1ds, b2ds, mini_batch_errors = self.__train_mini_batch__(mini_batch_in, mini_batch_out)
-                """ Apply changes """
-                self.w1 -= w1ds
-                self.w2 -= w2ds
-                self.b1 -= b1ds
-                self.b2 -= b2ds
-
-                if errors == None:
-                    errors = mini_batch_errors
-                else:
-                    errors = np.append(errors, mini_batch_errors, 0 )
-
-            mse = np.mean(np.square(errors) )
-            mae = np.mean(np.abs(errors))
-            print "MSE for epoch {0} is {1}".format(epoch, mse),
-            print "\tMAE for epoch {0} is {1}".format(epoch, mae)
-        return (mse, mae)
-     
-    def __validate__(self, inputs, layer):
-        activation_fn = self.activation_fns[layer]
-
-        min_inp = np.min(inputs)
-        max_inp = np.max(inputs)
-        
-        if activation_fn == "sigmoid":
-            self.__in_range__(min_inp, max_inp,  0.0, 1.0)
-        elif activation_fn == "tanh":
-            self.__in_range__(min_inp, max_inp, -1.0, 1.0)
-        elif activation_fn == "relu":
-            self.__in_range__(min_inp, max_inp, 0.0, np.inf)
-        elif activation_fn == "linear":
-            pass
-        else:
-            raise Exception("Unknown activation function %s" % activation_fn)
-   
-    def __in_range__(self, actual_min, actual_max, exp_min, exp_max):
-        assert actual_min >= exp_min
-        assert actual_max <= exp_max
-
-    def __prop_up__(self, inputs_T, wts, bias, layer):
+    # for training
+    def prop_up(self, inputs_T):
 
         """ Compute activations """
-        z = self.__compute_z__(inputs_T, wts, bias)
-        a = self.__activate__(z, self.activation_fns[layer])
+        z = self.__compute_z__(inputs_T, self.weights, self.bias)
+        a = self.__activate__(z, self.activation_fn)
         return (z, a)
 
-    def feed_forward(self, inputs):
-        raise Exception("TODO")
-        """ TODO allow user to pass in a layer number here so hidden activations can be returned """
+    def derivative(self, activations):
 
-        """ Compute activations """
-        inputs_T = get_array(inputs).T
-        z2, a2 = self.__prop_up__(inputs_T, self.w1, self.b1, 0)
-        z3, a3 = self.__prop_up__(a2, self.w2, self.b2, 1)
-
-        return a3.T
-
-    def __train_mini_batch__(self, input_vectors, outputs):
-        rows = input_vectors.shape[0]
-        inputs_T = input_vectors.T
-        outputs_T = outputs.T
-        
-        """ Compute activations """
-        z2, a2 = self.__prop_up__(inputs_T, self.w1, self.b1, 0)
-        z3, a3 = self.__prop_up__(a2, self.w2, self.b2, 1)
-        
-        """ errors = mean( 0.5 sum squared error)  """
-        assert outputs_T.shape == a3.shape
-        errors = (outputs_T - a3)
-         
-        deriv3 = self.__derivative__(a3, self.activation_fns[0])
-        deriv2 = self.__derivative__(a2, self.activation_fns[1])
-        
-        """ Note: multiply does an element wise product, NOT a dot product (Hadambard product)
-            inputs_T must have same shape
-        """
-        delta3 = np.multiply(-(errors), deriv3) # d3 is - errors multiplied by derivative of activation function
-        """ THIS IS BACK PROP OF WEIGHTS TO HIDDEN LAYER"""
-        
-        if self.sparsity_wt > 0.0:
-            """ SPARSITY PENALTY """
-            raise Exception("This is correct if activation function is not sigmoid")
-            pj = np.mean(a2, axis = 1)
-            p = self.desired_sparsity
-            sparsity_penalty = self.sparsity_wt * ( -p/pj + (1 - p)/(1 - pj) )
-            delta2 = np.multiply( np.dot(self.w2.T, delta3) + sparsity_penalty, deriv2 )
+        if self.activation_fn == "sigmoid":
+            """ f(z)(1 - f(z)) """
+            return np.multiply(activations, (1 - activations))
+        elif self.activation_fn == "tanh":
+            """ 1 - f(z)^2 """
+            return 1 - np.square(activations)
+        elif self.activation_fn == "linear":
+            return activations
+        elif self.activation_fn == "relu":
+            copy = activations.copy()
+            copy[copy < 0] = 0
+            return copy
         else:
-            delta2 = np.multiply( np.dot(self.w2.T, delta3), deriv2 )
+            raise NotImplementedError("Only sigmoid, tanh, linear and relu currently implemented")
 
-        """ Delta for weights is the dot product of the delta3 (error deltas for output) and activations for that layer"""
-        frows = float(rows)
-        
-        w1delta = np.dot(delta2, inputs_T.T) / frows
-        w2delta = np.dot(delta3, a2.T) / frows
-        
-        """ For each weight in the weight matrix, update it using the input activation * output delta.
-            Compute a mean over all examples in the batch. 
-            
-            The dot product is used here in a very clever  way to compute the activation * the delta 
-            for each input and hidden layer node (taking the dot product of each weight over all input_vectors 
-            (adding up the weight deltas) and then dividing this by num rows to get the mean
-         """
-        b1delta = (np.sum(delta2, 1) / frows).T
-        b2delta = (np.sum(delta3, 1) / frows).T
-        
-        if self.weight_decay > 0.0:
-            w1ds = self.learning_rate * (w1delta + self.weight_decay * self.w1 )
-            w2ds = self.learning_rate * (w2delta + self.weight_decay * self.w2 )
-        else:
-            w1ds = self.learning_rate * (w1delta )
-            w2ds = self.learning_rate * (w2delta )
-        
-        b1ds = self.learning_rate * b1delta
-        b2ds = self.learning_rate * b2delta
-        
-        """ return a list of errors (one item per row in mini batch) """
-        
-        """ Compute Mean errors across all training examples in mini batch """
+    def update(self, wtdiffs, biasdiff):
+        self.weights -= wtdiffs
+        self.bias    -= biasdiff
 
-        errors = np.nan_to_num(errors)
-        return (w1ds, w2ds, b1ds, b2ds, errors.T)
-   
     def __compute_z__(self, inputs, weights, bias):
         #Can we speed this up by making the bias a column vector?
         return np.dot(weights, inputs) + bias.T
-    
+
     def __activate__(self, z, activation_fn):
 
         if activation_fn == "sigmoid":
-            return 1/ (1 + np.exp(-z))
+            return 1 / (1 + np.exp(-z))
         elif activation_fn == "tanh":
             return np.tanh(z)
         elif activation_fn == "linear":
@@ -250,24 +104,207 @@ class NeuralNetwork(object):
             return copy
         else:
             raise NotImplementedError("Only sigmoid, tanh, linear and relu currently implemented")
-    
-    def __derivative__(self, activations, activation_fn):
 
-        if activation_fn == "sigmoid":
-            """ f(z)(1 - f(z)) """
-            return np.multiply(activations, (1 - activations))
-        elif activation_fn == "tanh":
-            """ 1 - f(z)^2 """
-            return 1 - np.square(activations)
-        elif activation_fn == "linear":
-            return activations
-        elif activation_fn == "relu":
-            copy = activations.copy()
-            copy[copy < 0] = 0
-            return copy
+
+class MLP(object):
+    '''
+    classdocs
+    '''
+
+    def __init__(self, layers, learning_rate=0.1, weight_decay=0.0, epochs = 50, batch_size = 32,
+                 lr_increase_multiplier = 1.0, lr_decrease_multiplier = 1.0):
+        '''
+        learning_rate           = the learning rate
+        weight_decay            = a regularization term to stop over-fitting. Only turn on if network converges too fast or overfits the data
+        epochs                  = number of epochs to train for. Can be overridden when calling fit
+        batch_size              = mini batch size. Can be overridden when calling fit
+        lr_increase_multiplier  = factor used to multiply the learning rate by if error decreeases
+        lr_decrease_multiplier  = factor used to multiply the learning rate by if error increases
+        '''
+
+        """ Properties """
+        self.layers = layers
+        self.learning_rate = learning_rate
+        self.weight_decay = weight_decay
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.lr_increase_multiplier = lr_increase_multiplier
+        self.lr_decrease_multiplier = lr_decrease_multiplier
+        """ END Properties """
+
+    def predict(self, inputs, layer_ix = np.inf):
+        a = self.__ensure_vector_format__(inputs).T
+        for i, layer in enumerate(self.layers):
+            z, a = layer.feed_forward(a)
+            if i == layer_ix:
+                break
+        return a.T
+
+    def fit(self, xs, ys, epochs = None, batch_size = None):
+
+        if epochs is None:
+            epochs = self.epochs
+        if batch_size is None:
+            batch_size = self.batch_size
+
+        inputs  = self.__ensure_vector_format__(xs)
+        outputs = self.__ensure_vector_format__(ys)
+
+        num_rows = inputs.shape[0]
+
+        """ Number of rows in inputs should match those in outputs """
+        assert inputs.shape[0] == outputs.shape[0], "Xs and Ys do not have the same row count"
+
+        assert inputs.shape[1]  == self.layers[0].weights.shape[1],  "The input layer does not match the Xs column count"
+        assert outputs.shape[1] == self.layers[-1].weights.shape[0], "The output layer does not match the Ys column count"
+
+        """ Check outputs match the range for the activation function for the layer """
+        self.__validate__(outputs, self.layers[-1])
+
+        num_batches = num_rows / batch_size
+        if num_rows % batch_size > 0:
+            num_batches += 1
+
+        mse = -1.0
+        mae = -1.0
+
+        lst_mse = []
+        lst_mae = []
+        for epoch in range(epochs):
+
+            """ Note that the error may start increasing exponentially at some point
+                if so, halt training
+            """
+
+            errors = []
+            for batch in range(num_batches):
+                start = batch * batch_size
+                end = start + batch_size
+                mini_batch_in = inputs[start:end]
+                mini_batch_out = outputs[start:end]
+                if len(mini_batch_in) == 0:
+                    continue
+
+                mini_batch_errors = self.__train_mini_batch__(mini_batch_in, mini_batch_out)
+                errors.append(mini_batch_errors)
+
+            errors = get_array(errors)
+            mse = np.mean(np.square(errors))
+            mae = np.mean(np.abs(errors))
+
+            DIGITS = 6
+            print "MSE for epoch {0} is {1}".format(epoch, np.round(mse,DIGITS)),
+            print "\tMAE for epoch {0} is {1}".format(epoch, np.round(mae,DIGITS)),
+            print "\tlearning rate is {0}".format(self.learning_rate)
+
+            if epoch > 0:
+                self.__adjust_learning_rate__(lst_mae[-1], mae)
+            lst_mse.append(mse)
+            lst_mae.append(mae)
+        return (mse, mae)
+
+    def __train_mini_batch__(self, input_vectors, outputs):
+        rows = input_vectors.shape[0]
+        inputs_T = input_vectors.T
+        outputs_T = outputs.T
+
+        aas = []
+        zzs = []
+        derivatives = []
+
+        a = inputs_T
+        for layer in self.layers:
+            z, a = layer.prop_up(a)
+            deriv = layer.derivative(a)
+            aas.append(a)
+            zzs.append(z)
+            derivatives.append(deriv)
+
+        top_layer_output = aas[-1]
+        """ errors = mean( 0.5 sum squared error)  """
+        assert outputs_T.shape == top_layer_output.shape
+        errors = (outputs_T - top_layer_output)
+
+        # Compute weight updates
+        delta = -(errors) * derivatives[-1]
+
+        deltas = [delta.copy()]
+        for i in range(len(self.layers) -1):
+            ix = -(i + 1)
+            layer = self.layers[ix]
+            """ THIS IS BACK PROP OF ERRORS TO HIDDEN LAYERS"""
+            delta = np.dot(layer.weights.T, delta) * derivatives[ix-1]
+            deltas.insert(0, delta.copy())
+
+        #TODO Sparsity
+        frows = float(rows)
+        for i, layer in enumerate(self.layers):
+            delta = deltas[i]
+            activation = input_vectors if i == 0 else aas[i-1].T
+
+            """ Delta for weights is the dot product of the layer delta (error deltas for output)
+                and activations for that layer
+
+                For each weight in the weight matrix, update it using the input activation * output delta.
+                Compute a mean over all examples in the batch.
+
+                The dot product is used here in a very clever  way to compute the activation * the delta
+                for each input and hidden layer node (taking the dot product of each weight over all input_vectors
+                (adding up the weight deltas) and then dividing this by num rows to get the mean
+             """
+            wtdelta   = (np.dot(delta, activation)) / frows
+            biasdelta = (np.sum(delta, 1) / frows).T
+
+            if self.weight_decay > 0.0:
+                wds = self.learning_rate * (wtdelta + self.weight_decay * layer.weights)
+            else:
+                wds = self.learning_rate *  wtdelta
+
+            bds = self.learning_rate * biasdelta
+            layer.update(wds, bds)
+
+        """ return a list of errors (one item per row in mini batch) """
+        errors = np.nan_to_num(errors)
+        return errors.T
+
+    def __adjust_learning_rate__(self, previous_mae, mae):
+        # error improved on the training data?
+        if mae <= previous_mae:
+            self.learning_rate *= self.lr_increase_multiplier
+            for layer in self.layers:
+                layer.save_state()
         else:
-            raise NotImplementedError("Only sigmoid, tanh, linear and relu currently implemented")
-        
+            #print "MAE increased from %s to %s. Decreasing learning rate from %s to %s" % \
+            #      (str(previous_mae), str(mae),
+            #       str(self.learning_rate), str(self.learning_rate * self.lr_decrease_multiplier))
+            self.learning_rate *=  self.lr_decrease_multiplier
+            self.learning_rate = max(0.001, self.learning_rate)
+            for layer in self.layers:
+                layer.revert_state()
+
+    def __ensure_vector_format__(self, a):
+        return get_array(a)
+
+    def __validate__(self, inputs, layer):
+
+        min_inp = np.min(inputs)
+        max_inp = np.max(inputs)
+
+        if layer.activation_fn == "sigmoid":
+            self.__in_range__(min_inp, max_inp, 0.0, 1.0)
+        elif layer.activation_fn == "tanh":
+            self.__in_range__(min_inp, max_inp, -1.0, 1.0)
+        elif layer.activation_fn == "relu":
+            self.__in_range__(min_inp, max_inp, 0.0, np.inf)
+        elif layer.activation_fn == "linear":
+            pass
+        else:
+            raise Exception("Unknown activation function %s" % layer.activation_fn)
+
+    def __in_range__(self, actual_min, actual_max, exp_min, exp_max):
+        assert actual_min >= exp_min
+        assert actual_max <= exp_max
+
 if __name__ == "__main__":
 
     """
@@ -309,39 +346,45 @@ if __name__ == "__main__":
     ]
     xs = np.array(xs)
 
-    activation_fns = ("tanh", "tanh")
+    input_activation_fn  = "relu"
+    output_activation_fn = "sigmoid"
 
-    if activation_fns[0] == "tanh":
+    if input_activation_fn == "tanh":
         xs = (xs - 0.5) * 2.0
 
-    ys  = np.sum(xs, axis=1, keepdims = True) * 1.0
+    ys = np.sum(xs, axis=1, keepdims=True) * 1.0
     ys = (ys - np.min(ys)) / (np.max(ys) - np.min(ys))
     ys = get_array(ys)
     """ Test as an Auto Encoder """
     #ys = xs
 
-    if activation_fns[1] == "tanh" and np.min(ys.flatten()) == 0.0:
+    if output_activation_fn == "tanh" and np.min(ys.flatten()) == 0.0:
         ys = (ys - 0.5) * 2.0
 
-    num_inputs = len(xs[0])
-    num_hidden = int(round(np.log2(num_inputs)))
+    num_hidden = int(round(np.log2(xs.shape[1])))
+
+    layers = [
+        Layer(xs.shape[1], num_hidden,  activation_fn = input_activation_fn),
+        #Layer(num_hidden, num_hidden,  activation_fn = input_activation_fn),
+        Layer(num_hidden,  ys.shape[1], activation_fn = output_activation_fn),
+    ]
 
     """ Note that the range of inputs for tanh is 2* sigmoid, and so the MAE should be 2* """
-    ae = NeuralNetwork(num_inputs, num_hidden, len(ys[0]),  learning_rate = 0.3,
-                       activation_fns= activation_fns,
-                       weight_decay=0.0, desired_sparsity=0.05, sparsity_wt=0.0)
+    nn = MLP(layers,
+             learning_rate=0.5, weight_decay=0.0, epochs=10000, batch_size=4,
+             lr_increase_multiplier=1.05, lr_decrease_multiplier=0.95)
 
-    ae.train(xs, ys, 1000, 1)
-
-    xs_T = get_array(xs).T
-    activations = ae.hidden_activations(xs)
+    nn.fit(xs, ys)
+    hidden_activations = nn.predict(xs, 0)
+    predictions = nn.predict(xs)
 
     print "ys"
     print np.round(ys, 1)
     print "predictions"
     #print np.round(ae.prop_up(xs, xs)[0] * 3.0) * 0.3
-    print np.round(ae.feed_forward(xs), 1)
-    print np.round(ae.feed_forward(xs), 0)
+    print predictions
+    print np.round(predictions, 1)
+    print np.round(predictions, 0)
     pass
 
     """ TODO

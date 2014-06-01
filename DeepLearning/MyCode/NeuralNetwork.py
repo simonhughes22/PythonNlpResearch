@@ -204,8 +204,8 @@ class NeuralNetwork(object):
         assert outputs_T.shape == a3.shape
         errors = (outputs_T - a3)
          
-        deriv3 = self.__derivative__(a3, 0)
-        deriv2 = self.__derivative__(a2, 1)
+        deriv3 = self.__derivative__(a3, 1)
+        deriv2 = self.__derivative__(a2, 0)
         
         """ Note: multiply does an element wise product, NOT a dot product (Hadambard product)
             inputs_T must have same shape
@@ -332,7 +332,7 @@ if __name__ == "__main__":
     ]
     xs = np.array(xs)
 
-    activation_fns = ("sigmoid", "sigmoid")
+    activation_fns = ("relu", "sigmoid")
 
     if activation_fns[0] == "tanh":
         xs = (xs - 0.5) * 2.0
@@ -354,7 +354,7 @@ if __name__ == "__main__":
                        activation_fns= activation_fns,
                        weight_decay=0.0, desired_sparsity=0.01, sparsity_wt=0.0)
 
-    ae.train(xs, ys, 10000, 1)
+    ae.train(xs, ys, 1000, 1)
 
     xs_T = np.array(xs).T
     activations = ae.hidden_activations(xs)
