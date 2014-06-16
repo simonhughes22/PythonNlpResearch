@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="9643b290-4022-45ff-b8a9-41737414cadc" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py" afterPath="$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py" afterPath="$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py" />
     </list>
     <ignored path="NlpResearch.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -26,21 +25,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="NeuralNetwork.py" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="224" column="18" selection-start="8061" selection-end="8067" vertical-scroll-proportion="0.0" vertical-offset="3047" max-vertical-offset="5895">
-              <folding>
-                <element signature="e#171#189#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="DeepNeuralNetwork.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="372" column="20" selection-start="12894" selection-end="12894" vertical-scroll-proportion="0.44279346" vertical-offset="5282" max-vertical-offset="6090">
+            <state vertical-scroll-proportion="0.37741455" vertical-offset="7636" max-vertical-offset="8400">
+              <caret line="526" column="0" selection-start-line="526" selection-start-column="0" selection-end-line="526" selection-end-column="0" />
               <folding>
                 <element signature="e#171#189#0" expanded="true" />
               </folding>
@@ -139,7 +128,7 @@
     <option name="STATE" value="0" />
   </component>
   <component name="ProjectView">
-    <navigator currentView="ProjectPane" proportions="" version="1" splitterProportion="0.5">
+    <navigator proportions="" version="1">
       <flattenPackages />
       <showMembers />
       <showModules />
@@ -150,12 +139,7 @@
       <autoscrollFromSource />
       <sortByType />
     </navigator>
-    <panes>
-      <pane id="Scope" />
-      <pane id="ProjectPane">
-        <subPane />
-      </pane>
-    </panes>
+    <panes />
   </component>
   <component name="PropertiesComponent">
     <property name="GoToFile.includeJavaFiles" value="false" />
@@ -452,22 +436,8 @@
     </recent_temporary>
   </component>
   <component name="ShelveChangesManager" show_recycled="false" />
-  <component name="SvnConfiguration" maxAnnotateRevisions="500" myUseAcceleration="nothing" myAutoUpdateAfterCommit="false" cleanupOnStartRun="false" SSL_PROTOCOLS="all">
-    <option name="USER" value="" />
-    <option name="PASSWORD" value="" />
-    <option name="mySSHConnectionTimeout" value="30000" />
-    <option name="mySSHReadTimeout" value="30000" />
-    <option name="LAST_MERGED_REVISION" />
-    <option name="MERGE_DRY_RUN" value="false" />
-    <option name="MERGE_DIFF_USE_ANCESTRY" value="true" />
-    <option name="UPDATE_LOCK_ON_DEMAND" value="false" />
-    <option name="IGNORE_SPACES_IN_MERGE" value="false" />
-    <option name="CHECK_NESTED_FOR_QUICK_MERGE" value="false" />
-    <option name="IGNORE_SPACES_IN_ANNOTATE" value="true" />
-    <option name="SHOW_MERGE_SOURCES_IN_ANNOTATE" value="true" />
-    <option name="FORCE_UPDATE" value="false" />
-    <option name="IGNORE_EXTERNALS" value="false" />
-    <myIsUseDefaultProxy>false</myIsUseDefaultProxy>
+  <component name="SvnConfiguration" myUseAcceleration="nothing" SSL_PROTOCOLS="all">
+    <configuration />
   </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -484,13 +454,13 @@
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32913166" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32918397" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.43061516" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32904148" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24947146" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.20243205" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.50143063" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.481402" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.16216215" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32871014" sideWeight="0.5" order="6" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.4914163" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.5178827" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Documentation" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="92" y="92" width="1416" height="676" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -523,6 +493,9 @@
   </component>
   <component name="Vcs.Log.UiProperties">
     <option name="RECENTLY_FILTERED_USER_GROUPS">
+      <collection />
+    </option>
+    <option name="RECENTLY_FILTERED_BRANCH_GROUPS">
       <collection />
     </option>
   </component>
@@ -786,325 +759,377 @@
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="471" />
+      <option name="time" value="514" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/pystruct-0.2-py2.7-macosx-10.6-x86_64.egg/pystruct/learners/n_slack_ssvm.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="3" column="1" selection-start="102" selection-end="102" vertical-scroll-proportion="0.0" vertical-offset="45" max-vertical-offset="6480" />
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/pystruct-0.2-py2.7-macosx-10.6-x86_64.egg/pystruct/inference/inference_methods.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="280" column="0" selection-start="10076" selection-end="10076" vertical-scroll-proportion="0.0" vertical-offset="1590" max-vertical-offset="7245" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="1590" max-vertical-offset="7245">
+          <caret line="280" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/pystruct-0.2-py2.7-macosx-10.6-x86_64.egg/pystruct/models/crf.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="9" column="8" selection-start="220" selection-end="220" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2445" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2445">
+          <caret line="9" column="8" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/pystruct-0.2-py2.7-macosx-10.6-x86_64.egg/pystruct/models/multilabel_svm.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="36" column="8" selection-start="1231" selection-end="1231" vertical-scroll-proportion="0.74963397" vertical-offset="13" max-vertical-offset="1635" />
+        <state vertical-scroll-proportion="0.74963397" vertical-offset="13" max-vertical-offset="1635">
+          <caret line="36" column="8" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/pystruct-0.2-py2.7-macosx-10.6-x86_64.egg/pystruct/learners/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="683" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="683">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingRandomForest.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="19" column="37" selection-start="541" selection-end="541" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="540" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="540">
+          <caret line="19" column="37" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Caches/PyCharm30/python_stubs/-1214748750/__builtin__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="4162" column="8" selection-start="142538" selection-end="142538" vertical-scroll-proportion="0.0" vertical-offset="62106" max-vertical-offset="76080" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="62106" max-vertical-offset="76080">
+          <caret line="4162" column="8" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/sklearn/externals/joblib/parallel.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="295" column="30" selection-start="11382" selection-end="11382" vertical-scroll-proportion="0.83434653" vertical-offset="3756" max-vertical-offset="8055" />
+        <state vertical-scroll-proportion="0.83434653" vertical-offset="3756" max-vertical-offset="8055">
+          <caret line="295" column="30" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/sklearn/ensemble/forest.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="292" column="23" selection-start="9603" selection-end="9603" vertical-scroll-proportion="0.0" vertical-offset="3711" max-vertical-offset="19845" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="3711" max-vertical-offset="19845">
+          <caret line="292" column="23" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/LoadCrAnnotatedXmlData.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="75" column="36" selection-start="2125" selection-end="2125" vertical-scroll-proportion="0.0" vertical-offset="869" max-vertical-offset="2430">
+        <state vertical-scroll-proportion="0.0" vertical-offset="869" max-vertical-offset="2430">
+          <caret line="75" column="36" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/FeatureExtraction/Text/WindowFeatures.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="20" column="58" selection-start="611" selection-end="611" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="720" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="720">
+          <caret line="20" column="58" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingLsaNearestNeighbor.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2025" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2025">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingLsaNearestNeighbor_OnSourceText.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="390" max-vertical-offset="2310" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="390" max-vertical-offset="2310">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Caches/PyCharm30/python_stubs/-1214748750/numpy/core/multiarray.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="452" column="4" selection-start="16751" selection-end="16751" vertical-scroll-proportion="0.0" vertical-offset="6641" max-vertical-offset="82395" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="6641" max-vertical-offset="82395">
+          <caret line="452" column="4" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/LanguageModel/NgramGenerator.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="22" column="23" selection-start="610" selection-end="610" vertical-scroll-proportion="0.0" vertical-offset="48" max-vertical-offset="660" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="48" max-vertical-offset="660">
+          <caret line="22" column="23" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingSVM_WithBinaryValues.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="21" column="28" selection-start="636" selection-end="636" vertical-scroll-proportion="0.0" vertical-offset="15" max-vertical-offset="930" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="15" max-vertical-offset="930">
+          <caret line="21" column="28" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/sklearn/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="56" column="4" selection-start="1825" selection-end="1825" vertical-scroll-proportion="0.33333334" vertical-offset="636" max-vertical-offset="1320" />
+        <state vertical-scroll-proportion="0.33333334" vertical-offset="636" max-vertical-offset="1320">
+          <caret line="56" column="4" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingAuto_Encoder_WithSVM.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="18" column="12" selection-start="483" selection-end="483" vertical-scroll-proportion="0.0" vertical-offset="210" max-vertical-offset="1845" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="210" max-vertical-offset="1845">
+          <caret line="18" column="12" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/numpy/matrixlib/defmatrix.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="340" column="0" selection-start="9353" selection-end="9353" vertical-scroll-proportion="0.0" vertical-offset="4878" max-vertical-offset="16500" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="4878" max-vertical-offset="16500">
+          <caret line="340" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/numpy/lib/function_base.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="3554" column="0" selection-start="113746" selection-end="113746" vertical-scroll-proportion="0.0" vertical-offset="52770" max-vertical-offset="53415" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="52770" max-vertical-offset="53415">
+          <caret line="3554" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../cudamat/gnumpy.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="1138" column="0" selection-start="64861" selection-end="64861" vertical-scroll-proportion="0.0" vertical-offset="16837" max-vertical-offset="17505" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="16837" max-vertical-offset="17505">
+          <caret line="1138" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/nltk/corpus/util.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="70" column="0" selection-start="2755" selection-end="2755" vertical-scroll-proportion="0.0" vertical-offset="624" max-vertical-offset="1200" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="624" max-vertical-offset="1200">
+          <caret line="70" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetworkGPU.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="43" column="38" selection-start="1570" selection-end="1570" vertical-scroll-proportion="0.0" vertical-offset="645" max-vertical-offset="5940" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="645" max-vertical-offset="5940">
+          <caret line="43" column="38" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Data/WordTokenizer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="28" column="0" selection-start="901" selection-end="901" vertical-scroll-proportion="0.0" vertical-offset="205" max-vertical-offset="3030" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="205" max-vertical-offset="3030">
+          <caret line="28" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/stanford_parser/parser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="75" column="0" selection-start="2203" selection-end="2203" vertical-scroll-proportion="1.6133721" vertical-offset="0" max-vertical-offset="2730" />
+        <state vertical-scroll-proportion="1.6133721" vertical-offset="0" max-vertical-offset="2730">
+          <caret line="75" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/numpy/random/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1770" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="1770">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/_Scratch/DemoStanfordParser.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="6" column="17" selection-start="108" selection-end="108" vertical-scroll-proportion="0.13533835" vertical-offset="0" max-vertical-offset="665">
+        <state vertical-scroll-proportion="0.13533835" vertical-offset="0" max-vertical-offset="665">
+          <caret line="6" column="17" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Data/GlobalWarming/GwLargeCorpus.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="26" column="0" selection-start="622" selection-end="622" vertical-scroll-proportion="0.0" vertical-offset="83" max-vertical-offset="1035">
-          <folding />
+        <state vertical-scroll-proportion="0.0" vertical-offset="83" max-vertical-offset="1035">
+          <caret line="26" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/numpy/core/numeric.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="965" column="4" selection-start="28828" selection-end="28828" vertical-scroll-proportion="0.33284885" vertical-offset="14111" max-vertical-offset="40905">
-          <folding />
+        <state vertical-scroll-proportion="0.33284885" vertical-offset="14111" max-vertical-offset="40905">
+          <caret line="965" column="4" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Results/CrossValidation.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="42" column="11" selection-start="1081" selection-end="1081" vertical-scroll-proportion="0.0" vertical-offset="240" max-vertical-offset="3030" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="240" max-vertical-offset="3030">
+          <caret line="42" column="11" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Results/Rpfa.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="25" column="13" selection-start="652" selection-end="661" vertical-scroll-proportion="0.0" vertical-offset="131" max-vertical-offset="840">
-          <folding />
+        <state vertical-scroll-proportion="0.0" vertical-offset="131" max-vertical-offset="840">
+          <caret line="25" column="13" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/FeatureExtraction/Text/WindowSplitter.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="41" column="0" selection-start="1205" selection-end="1205" vertical-scroll-proportion="0.0" vertical-offset="387" max-vertical-offset="1230">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/pydevd.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="1538" column="0" selection-start="60694" selection-end="60694" vertical-scroll-proportion="0.0" vertical-offset="21527" max-vertical-offset="22200">
-          <folding />
+        <state vertical-scroll-proportion="0.0" vertical-offset="387" max-vertical-offset="1230">
+          <caret line="41" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Data/IdGenerator.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="18" column="0" selection-start="467" selection-end="467" vertical-scroll-proportion="0.0" vertical-offset="42" max-vertical-offset="1365">
-          <folding />
+        <state vertical-scroll-proportion="0.0" vertical-offset="42" max-vertical-offset="1365">
+          <caret line="18" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/_Scratch/Sub/TestWord2Vec.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="0" selection-start="444" selection-end="444" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="540">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="540">
+          <caret line="14" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/_Scratch/CBWindowBasedClassifier.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="374" column="0" selection-start="10996" selection-end="10996" vertical-scroll-proportion="0.39941692" vertical-offset="5336" max-vertical-offset="6045">
+        <state vertical-scroll-proportion="0.39941692" vertical-offset="5336" max-vertical-offset="6045">
+          <caret line="374" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#17#52#0" expanded="true" />
+            <element signature="e#17#52#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Data/MoveFiles.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="705">
-          <folding>
-            <element signature="e#0#9#0" expanded="false" />
-          </folding>
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="705">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/VectorSpace/WordVectors/Word2Vec/py_word2vec.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="66" column="5" selection-start="2044" selection-end="2044" vertical-scroll-proportion="0.0" vertical-offset="8626" max-vertical-offset="9315">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="187" column="55" selection-start="6200" selection-end="6222" vertical-scroll-proportion="0.0" vertical-offset="199" max-vertical-offset="4530">
+        <state vertical-scroll-proportion="0.0" vertical-offset="8626" max-vertical-offset="9315">
+          <caret line="66" column="5" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="308" column="30" selection-start="12381" selection-end="12381" vertical-scroll-proportion="0.33333334" vertical-offset="4424" max-vertical-offset="7305">
-          <folding />
+        <state vertical-scroll-proportion="0.33333334" vertical-offset="4424" max-vertical-offset="7305">
+          <caret line="308" column="30" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/_Scratch/NeuralNetwork.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="321" column="79" selection-start="11838" selection-end="11838" vertical-scroll-proportion="0.0" vertical-offset="4234" max-vertical-offset="5400">
-          <folding />
+        <state vertical-scroll-proportion="0.0" vertical-offset="4234" max-vertical-offset="5400">
+          <caret line="321" column="79" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/numpy/core/_methods.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="24" column="0" selection-start="790" selection-end="790" vertical-scroll-proportion="0.0" vertical-offset="27" max-vertical-offset="1935">
-          <folding />
+        <state vertical-scroll-proportion="0.0" vertical-offset="27" max-vertical-offset="1935">
+          <caret line="24" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/numpy/core/fromnumeric.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="1713" column="0" selection-start="52845" selection-end="52845" vertical-scroll-proportion="0.3148688" vertical-offset="25359" max-vertical-offset="43755">
+        <state vertical-scroll-proportion="0.3148688" vertical-offset="25359" max-vertical-offset="43755">
+          <caret line="1713" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/DeepLearning/Examples/neurolab_autoencoder.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="673">
-          <folding>
-            <element signature="e#0#21#0" expanded="false" />
-          </folding>
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="673">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/DeepLearning/DeepBeliefNetwork/autoencoder_from_dbn.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2820">
-          <folding>
-            <element signature="e#0#18#0" expanded="false" />
-          </folding>
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="2820">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/DeepLearning/DeepBeliefNetwork/backprop.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="391" column="29" selection-start="15414" selection-end="15414" vertical-scroll-proportion="0.0" vertical-offset="5515" max-vertical-offset="6165">
-          <folding>
-            <element signature="e#0#10#0" expanded="false" />
-          </folding>
+        <state vertical-scroll-proportion="0.0" vertical-offset="5515" max-vertical-offset="6165">
+          <caret line="391" column="29" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/DeepLearning/DeepBeliefNetwork/deepnet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="325" column="34" selection-start="11595" selection-end="11595" vertical-scroll-proportion="0.0" vertical-offset="555" max-vertical-offset="5175">
-          <folding>
-            <element signature="e#0#10#0" expanded="false" />
-          </folding>
+        <state vertical-scroll-proportion="0.0" vertical-offset="555" max-vertical-offset="5175">
+          <caret line="325" column="34" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/pystruct-0.2-py2.7-macosx-10.6-x86_64.egg/pystruct/learners/one_slack_ssvm.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="130" column="28" selection-start="4517" selection-end="4522" vertical-scroll-proportion="1.3372957" vertical-offset="915" max-vertical-offset="7935">
-          <folding />
+        <state vertical-scroll-proportion="1.3372957" vertical-offset="915" max-vertical-offset="7935">
+          <caret line="130" column="28" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/_Scratch/TryPyStruct.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="78" column="0" selection-start="2483" selection-end="2483" vertical-scroll-proportion="0.0" vertical-offset="837" max-vertical-offset="1545">
+        <state vertical-scroll-proportion="0.0" vertical-offset="837" max-vertical-offset="1545">
+          <caret line="78" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/NeuralNetwork.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="224" column="18" selection-start="8061" selection-end="8067" vertical-scroll-proportion="0.0" vertical-offset="3047" max-vertical-offset="5895">
-          <folding>
-            <element signature="e#171#189#0" expanded="true" />
-          </folding>
+        <state vertical-scroll-proportion="0.0" vertical-offset="3737" max-vertical-offset="5895">
+          <caret line="224" column="18" selection-start-line="224" selection-start-column="18" selection-end-line="224" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Data/CoralBleachingAnnotated/BrattEssay.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="0" max-vertical-offset="4530">
+          <caret line="187" column="55" selection-start-line="187" selection-start-column="55" selection-end-line="187" selection-end-column="55" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/pydevd.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.33283803" vertical-offset="1471" max-vertical-offset="25110">
+          <caret line="178" column="0" selection-start-line="178" selection-start-column="0" selection-end-line="178" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/pydevd_comm.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.33283803" vertical-offset="3436" max-vertical-offset="15720">
+          <caret line="246" column="0" selection-start-line="246" selection-start-column="0" selection-end-line="246" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="372" column="20" selection-start="12894" selection-end="12894" vertical-scroll-proportion="0.44279346" vertical-offset="5282" max-vertical-offset="6090">
+        <state vertical-scroll-proportion="0.37741455" vertical-offset="7636" max-vertical-offset="8400">
+          <caret line="526" column="0" selection-start-line="526" selection-start-column="0" selection-end-line="526" selection-end-column="0" />
           <folding>
             <element signature="e#171#189#0" expanded="true" />
           </folding>
