@@ -222,7 +222,7 @@ class MLP(object):
                 if np.any(np.isnan(mini_batch_errors)):
                     print "Nans in errors. Stopping"
                     return (mse, mae)
-                errors.append(mini_batch_errors)
+                errors.extend(mini_batch_errors)
 
                 # apply weight updates
                 for layer, gradient in zip(self.layers, gradients):
@@ -440,8 +440,8 @@ class MLP(object):
             raise Exception("Unknown activation function %s" % layer.activation_fn)
 
     def __in_range__(self, actual_min, actual_max, exp_min, exp_max):
-        assert actual_min >= exp_min
         assert actual_max <= exp_max
+        assert actual_min >= exp_min
 
 
 if __name__ == "__main__":
@@ -486,7 +486,7 @@ if __name__ == "__main__":
     xs = np.array(xs)
 
     input_activation_fn  = "relu"
-    output_activation_fn = "tanh"
+    output_activation_fn = "sigmoid"
 
     if input_activation_fn == "tanh":
         xs = (xs - 0.5) * 2.0
@@ -495,7 +495,7 @@ if __name__ == "__main__":
     ys = (ys - np.min(ys)) / (np.max(ys) - np.min(ys))
     ys = get_array(ys)
     """ Test as an Auto Encoder """
-    #ys = xs
+    ys = xs
 
     if output_activation_fn == "tanh" and np.min(ys.flatten()) == 0.0:
         ys = (ys - 0.5) * 2.0
@@ -512,10 +512,10 @@ if __name__ == "__main__":
 
     """ Note that the range of inputs for tanh is 2* sigmoid, and so the MAE should be 2* """
     nn = MLP(layers,
-             learning_rate=0.5, weight_decay=0.01, epochs=100, batch_size=2,
+             learning_rate=0.5, weight_decay=0.0, epochs=100, batch_size=4,
              lr_increase_multiplier=1.1, lr_decrease_multiplier=0.9)
 
-    nn.fit(     xs, ys, epochs=10000,)
+    nn.fit(     xs, ys, epochs=1000,)
 
     """ Verift Gradient Calculation """
     errors, grad = nn.__compute_gradient__(xs, ys, xs.shape[0], nn.layers, 1.0, nn.weight_decay)
@@ -530,7 +530,7 @@ if __name__ == "__main__":
         predictions = predictions / 2.0 + 0.5
 
     print "ys"
-    print np.round(ys, 1)
+    print np.round(ys, 1) * 1.0
     print "predictions"
     #print np.round(ae.prop_up(xs, xs)[0] * 3.0) * 0.3
     print np.round(predictions, 1)
@@ -542,7 +542,6 @@ if __name__ == "__main__":
     pass
 
     """ TODO
-    *** Use finite gradients method to verify gradient descent calc. Bake into code as a flag ***
     implement momentum (refer to early parts of this https://www.cs.toronto.edu/~hinton/csc2515/notes/lec6tutorial.pdf)
     implement DROPOUT
     use LBFGS or conjugate gradient descent to optimize the parameters instead as supposedly faster
@@ -550,5 +549,5 @@ if __name__ == "__main__":
     >>>> DONE allow different activation functions per layer. Normally hidden layer uses RELU and dropout (http://fastml.com/deep-learning-these-days/)
           don't use RELU for output layer as you cannot correct for errors (i.e. gradient is 0 for negative updates!)
     >>>> DONE implement adaptive learning rate adjustments (see link above)
-
+    >>>> DONE Use finite gradients method to verify gradient descent calc. Bake into code as a flag ***
     """
