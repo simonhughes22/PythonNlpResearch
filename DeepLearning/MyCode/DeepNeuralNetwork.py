@@ -98,10 +98,11 @@ class Layer(object):
             """ 1 - f(z)^2 """
             return 1.0 - np.square(activations)
         elif self.activation_fn == "linear":
-            return activations
+            return 1.0
         elif self.activation_fn == "relu":
             copy = activations.copy() # don't modify vector
             copy[copy < 0] = 0
+            copy[copy > 0] = 1.0
             return copy
         else:
             raise NotImplementedError("Only sigmoid, tanh, linear and relu currently implemented")
@@ -167,7 +168,6 @@ class MLP(object):
             if i == layer_ix:
                 break
         return a.T
-
 
     def fit(self, xs, ys, epochs = None, batch_size = None):
 
@@ -485,7 +485,7 @@ if __name__ == "__main__":
     ]
     xs = np.array(xs)
 
-    input_activation_fn  = "tanh"
+    input_activation_fn  = "relu"
     output_activation_fn = "tanh"
 
     if input_activation_fn == "tanh":
@@ -515,7 +515,7 @@ if __name__ == "__main__":
              learning_rate=0.5, weight_decay=0.01, epochs=100, batch_size=2,
              lr_increase_multiplier=1.1, lr_decrease_multiplier=0.9)
 
-    nn.fit(     xs, ys, epochs=100,)
+    nn.fit(     xs, ys, epochs=10000,)
 
     """ Verift Gradient Calculation """
     errors, grad = nn.__compute_gradient__(xs, ys, xs.shape[0], nn.layers, 1.0, nn.weight_decay)
