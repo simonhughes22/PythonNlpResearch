@@ -4,6 +4,8 @@ import GwData
 import WordTokenizer
 from Apriori import apriori, print_rules
 
+from sklearn.ensemble import GradientBoostingClassifier
+
 code = "50"
 
 data = GwData.GwData()

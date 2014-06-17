@@ -94,6 +94,10 @@ class Layer(object):
         if self.activation_fn == "sigmoid":
             """ f(z)(1 - f(z)) """
             return np.multiply(activations, (1.0 - activations))
+        elif self.activation_fn == "softmax":
+            # So long as we correctly compute the soft max output, derivative is linear
+            return 1.0
+
         elif self.activation_fn == "tanh":
             """ 1 - f(z)^2 """
             return 1.0 - np.square(activations)
@@ -115,20 +119,27 @@ class Layer(object):
         #Can we speed this up by making the bias a column vector?
         return np.dot(weights, inputs_T) + bias
 
-    def __activate__(self, z, activation_fn):
+    def __activate__(self, zs, activation_fn):
 
         if activation_fn == "sigmoid":
-            return 1 / (1 + np.exp(-z))
+            return 1 / (1 + np.exp(-zs))
+
+        elif activation_fn == "softmax":
+            exponents = np.exp(zs)
+            totals = exponents.sum(axis=0)
+            totals = totals.reshape((1, len(totals)))
+            return exponents / totals
+
         elif activation_fn == "tanh":
-            return np.tanh(z)
+            return np.tanh(zs)
         elif activation_fn == "linear":
-            return z
+            return zs
         elif activation_fn == "relu":
-            copy = z.copy()
+            copy = zs.copy()
             copy[copy < 0] = 0
             return copy
         else:
-            raise NotImplementedError("Only sigmoid, tanh, linear and relu currently implemented")
+            raise NotImplementedError("Only sigmoid, tanh, softmax, linear and relu currently implemented")
 
 
 class MLP(object):
@@ -250,6 +261,11 @@ class MLP(object):
         if layers is None:
             layers = self.layers[::]
 
+
+        loss_type = "mse"
+        if layers[-1].activation_fn == "softmax":
+            loss_type = "crossentropy"
+
         layer_gradient = []
         for ix,l in enumerate(layers):
             wgrad = np.zeros(l.best_weights.shape)
@@ -272,8 +288,9 @@ class MLP(object):
                     p_clone.best_weights[i,j] += epsilon
                     n_clone.best_weights[i,j] -= epsilon
 
-                    p_loss = self.loss(xs, ys, p_layers )
-                    n_loss = self.loss(xs, ys, n_layers )
+
+                    p_loss = self.loss(xs, ys, p_layers, loss_type=loss_type )
+                    n_loss = self.loss(xs, ys, n_layers, loss_type=loss_type)
                     wgrad[i,j] = ((p_loss - n_loss) / (2*epsilon)).sum()
 
             for i in range(len(l.best_bias)):
@@ -289,30 +306,38 @@ class MLP(object):
                 p_clone.best_bias[i] += epsilon
                 n_clone.best_bias[i] -= epsilon
 
-                p_loss = self.loss(xs, ys, p_layers)
-                n_loss = self.loss(xs, ys, n_layers)
+                p_loss = self.loss(xs, ys, p_layers, loss_type=loss_type)
+                n_loss = self.loss(xs, ys, n_layers, loss_type=loss_type)
                 bgrad[i] = ((p_loss - n_loss) / (2 * epsilon)).sum()
 
         return layer_gradient
 
-    def loss(self, input_vectors, outputs, layers = None):
+    def loss(self, input_vectors, outputs, layers = None, loss_type="mse"):
 
+        # Note that this function does not transpose the inputs or outputs
+        # Each row is a separate example \ label (i.e. row not column vectors)
         if layers is None:
             layers = self.layers
 
         predictions = self.predict(input_vectors, layers=layers)
 
-        errors = predictions - outputs
+        # error loss
+        if loss_type == "mse":
+            errors = predictions - outputs
+            error_loss = (0.5 * ((errors) ** 2.0)).mean(axis=0)
+        elif loss_type == "crossentropy":
+            error_loss = -((outputs * np.log(predictions)).sum(axis=1).mean())
+        else:
+            raise Exception("Unknown loss type: " + loss_type)
 
         # weight decay loss
         sum_wts = 0.0
         for l in layers:
             sum_wts += (l.best_weights ** 2.0).sum()
-
-        mean_squared_loss = (0.5 * ((errors) ** 2.0)).mean(axis=0)
         weight_decay_loss = (self.weight_decay / 2.0) * sum_wts
 
-        return mean_squared_loss + weight_decay_loss
+        # return combined loss function
+        return error_loss + weight_decay_loss
 
     def verify_gradient(self, xs, ys):
 
@@ -430,6 +455,10 @@ class MLP(object):
 
         if layer.activation_fn == "sigmoid":
             self.__in_range__(min_outp, max_outp, 0.0, 1.0)
+        elif layer.activation_fn == "softmax":
+            unique = set(outputs.flatten())
+            assert len(unique) == 2,                     "Wrong number of outputs. Outputs for softmax must be 0's and 1's"
+            assert min(unique) == 0 and max(unique) ==1, "Outputs for softmax must be 0's and 1's only"
         elif layer.activation_fn == "tanh":
             self.__in_range__(min_outp, max_outp, -1.0, 1.0)
         elif layer.activation_fn == "relu":
@@ -486,7 +515,7 @@ if __name__ == "__main__":
     xs = np.array(xs)
 
     input_activation_fn  = "relu"
-    output_activation_fn = "sigmoid"
+    output_activation_fn = "softmax"
 
     if input_activation_fn == "tanh":
         xs = (xs - 0.5) * 2.0
@@ -495,7 +524,15 @@ if __name__ == "__main__":
     ys = (ys - np.min(ys)) / (np.max(ys) - np.min(ys))
     ys = get_array(ys)
     """ Test as an Auto Encoder """
-    ys = xs
+    soft_max_ys = []
+    for x in xs:
+        l = [0 for i in x]
+        l[sum(x) - 1] = 1
+        soft_max_ys.append(l)
+    soft_max_ys = get_array(soft_max_ys)
+
+    #ys = xs
+    ys = soft_max_ys
 
     if output_activation_fn == "tanh" and np.min(ys.flatten()) == 0.0:
         ys = (ys - 0.5) * 2.0
@@ -510,9 +547,10 @@ if __name__ == "__main__":
         Layer(num_hidden,  ys.shape[1], activation_fn = output_activation_fn, initial_wt_max=0.01),
     ]
 
+
     """ Note that the range of inputs for tanh is 2* sigmoid, and so the MAE should be 2* """
     nn = MLP(layers,
-             learning_rate=0.5, weight_decay=0.0, epochs=100, batch_size=4,
+             learning_rate=0.5, weight_decay=0.0, epochs=100, batch_size=2,
              lr_increase_multiplier=1.1, lr_decrease_multiplier=0.9)
 
     nn.fit(     xs, ys, epochs=1000,)
