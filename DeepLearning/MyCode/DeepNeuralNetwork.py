@@ -47,10 +47,14 @@ class Layer(object):
         self.num_inputs = num_inputs
 
         if weights is None:
-            weights = get_array(matlib.rand((num_outputs, num_inputs)) * initial_wt_max)
+            weights = get_array(matlib.rand((num_outputs, num_inputs)) * 2 * initial_wt_max) - initial_wt_max
 
         if bias is None:
-            bias = get_array(matlib.rand((num_outputs, 1)) * initial_wt_max)
+            if self.activation_fn == "relu":
+                # enforce positive
+                bias = np.ones((num_outputs, 1)) * initial_wt_max
+            else:
+                bias = get_array(matlib.rand((num_outputs, 1)) * 2 * initial_wt_max) - initial_wt_max
 
         self.initial_wt_max = initial_wt_max
         self.weights        = weights
@@ -89,6 +93,10 @@ class Layer(object):
         a = self.__activate__(z, self.activation_fn)
         return (z, a)
 
+    def update(self, wtdiffs, biasdiff):
+        self.weights -= wtdiffs
+        self.bias    -= biasdiff
+
     def derivative(self, activations):
 
         if self.activation_fn == "sigmoid":
@@ -110,10 +118,6 @@ class Layer(object):
             return copy
         else:
             raise NotImplementedError("Only sigmoid, tanh, linear and relu currently implemented")
-
-    def update(self, wtdiffs, biasdiff):
-        self.weights -= wtdiffs
-        self.bias    -= biasdiff
 
     def __compute_z__(self, inputs_T, weights, bias):
         #Can we speed this up by making the bias a column vector?
@@ -232,7 +236,9 @@ class MLP(object):
                                                                          self.layers, self.learning_rate, self.weight_decay)
                 if np.any(np.isnan(mini_batch_errors)):
                     print "Nans in errors. Stopping"
+                    self.__reset_layers__()
                     return (mse, mae)
+
                 errors.extend(mini_batch_errors)
 
                 # apply weight updates
@@ -427,6 +433,10 @@ class MLP(object):
         """ return a list of errors (one item per row in mini batch) """
         return (errors.T, gradients)
 
+    def __reset_layers__(self):
+        for layer in self.layers:
+            layer.revert_state()
+
     def __adjust_learning_rate__(self, previous_mae, mae):
         # error improved on the training data?
         if mae <= previous_mae:
@@ -438,9 +448,7 @@ class MLP(object):
             #      (str(previous_mae), str(mae),
             #       str(self.learning_rate), str(self.learning_rate * self.lr_decrease_multiplier))
             self.learning_rate *=  self.lr_decrease_multiplier
-            for layer in self.layers:
-                layer.revert_state()
-
+            self.__reset_layers__()
         # restrict learning rate to sensible bounds
         self.learning_rate = max(0.001, self.learning_rate)
         self.learning_rate = min(1.000, self.learning_rate)
@@ -457,8 +465,10 @@ class MLP(object):
             self.__in_range__(min_outp, max_outp, 0.0, 1.0)
         elif layer.activation_fn == "softmax":
             unique = set(outputs.flatten())
-            assert len(unique) == 2,                     "Wrong number of outputs. Outputs for softmax must be 0's and 1's"
-            assert min(unique) == 0 and max(unique) ==1, "Outputs for softmax must be 0's and 1's only"
+            assert len(unique) == 2,                                "Wrong number of outputs. Outputs for softmax must be 0's and 1's"
+            assert min(unique) == 0 and max(unique) ==1,            "Outputs for softmax must be 0's and 1's only"
+            assert np.all(outputs.sum(axis=1) == 1.0), "Outputs for a softmax layer must sum to 1."
+
         elif layer.activation_fn == "tanh":
             self.__in_range__(min_outp, max_outp, -1.0, 1.0)
         elif layer.activation_fn == "relu":
@@ -531,8 +541,8 @@ if __name__ == "__main__":
         soft_max_ys.append(l)
     soft_max_ys = get_array(soft_max_ys)
 
-    #ys = xs
-    ys = soft_max_ys
+    ys = xs
+    #ys = soft_max_ys
 
     if output_activation_fn == "tanh" and np.min(ys.flatten()) == 0.0:
         ys = (ys - 0.5) * 2.0
@@ -553,7 +563,7 @@ if __name__ == "__main__":
              learning_rate=0.5, weight_decay=0.0, epochs=100, batch_size=2,
              lr_increase_multiplier=1.1, lr_decrease_multiplier=0.9)
 
-    nn.fit(     xs, ys, epochs=1000,)
+    nn.fit(     xs, ys, epochs=10,)
 
     """ Verift Gradient Calculation """
     errors, grad = nn.__compute_gradient__(xs, ys, xs.shape[0], nn.layers, 1.0, nn.weight_decay)

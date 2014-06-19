@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9643b290-4022-45ff-b8a9-41737414cadc" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/_Scratch/AprioriOnGwData.py" afterPath="$PROJECT_DIR$/_Scratch/AprioriOnGwData.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py" afterPath="$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py" />
     </list>
     <ignored path="NlpResearch.iws" />
@@ -29,8 +28,8 @@
       <file leaf-file-name="DeepNeuralNetwork.py" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-0.936107" vertical-offset="7635" max-vertical-offset="8955">
-              <caret line="467" column="13" selection-start-line="467" selection-start-column="13" selection-end-line="467" selection-end-column="13" />
+            <state vertical-scroll-proportion="-9.252187" vertical-offset="8297" max-vertical-offset="9105">
+              <caret line="130" column="40" selection-start-line="130" selection-start-column="40" selection-end-line="130" selection-end-column="40" />
               <folding>
                 <element signature="e#171#189#0" expanded="true" />
               </folding>
@@ -524,10 +523,10 @@
       <window_info id="Find" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32904148" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24947146" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.20243205" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
-      <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4549356" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.5665236" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.16216215" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32871014" sideWeight="0.5" order="6" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.472103" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.5393419" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Documentation" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="92" y="92" width="1416" height="676" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -822,11 +821,26 @@
           <line>345</line>
           <option name="timeStamp" value="468" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py</url>
+          <line>237</line>
+          <option name="timeStamp" value="534" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py</url>
+          <line>324</line>
+          <option name="timeStamp" value="535" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py</url>
+          <line>466</line>
+          <option name="timeStamp" value="536" />
+        </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="532" />
+      <option name="time" value="537" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
@@ -1199,8 +1213,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-0.936107" vertical-offset="7635" max-vertical-offset="8955">
-          <caret line="467" column="13" selection-start-line="467" selection-start-column="13" selection-end-line="467" selection-end-column="13" />
+        <state vertical-scroll-proportion="-9.252187" vertical-offset="8297" max-vertical-offset="9105">
+          <caret line="130" column="40" selection-start-line="130" selection-start-column="40" selection-end-line="130" selection-end-column="40" />
           <folding>
             <element signature="e#171#189#0" expanded="true" />
           </folding>
