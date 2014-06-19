@@ -41,22 +41,22 @@ def reverse_layers(layers):
     return rev_layers
 
 class Layer(object):
-    def __init__(self, num_inputs, num_outputs, activation_fn="tanh", initial_wt_max=0.01, weights=None, bias=None):
+    def __init__(self, num_inputs, num_outputs, activation_fn="tanh", initial_wt_variance=0.01, weights=None, bias=None):
         self.activation_fn = activation_fn
         self.num_outputs = num_outputs
         self.num_inputs = num_inputs
 
         if weights is None:
-            weights = get_array(matlib.rand((num_outputs, num_inputs)) * 2 * initial_wt_max) - initial_wt_max
+            weights = get_array(matlib.randn((num_outputs, num_inputs)) * 2 * initial_wt_variance) - initial_wt_variance
 
         if bias is None:
             if self.activation_fn == "relu":
                 # enforce positive
-                bias = np.ones((num_outputs, 1)) * initial_wt_max
+                bias = np.ones((num_outputs, 1)) * initial_wt_variance
             else:
-                bias = get_array(matlib.rand((num_outputs, 1)) * 2 * initial_wt_max) - initial_wt_max
+                bias = get_array(matlib.randn((num_outputs, 1)) * 2 * initial_wt_variance) - initial_wt_variance
 
-        self.initial_wt_max = initial_wt_max
+        self.initial_wt_max = initial_wt_variance
         self.weights        = weights
         self.bias           = bias
 
@@ -131,7 +131,8 @@ class Layer(object):
         elif activation_fn == "softmax":
             exponents = np.exp(zs)
             totals = exponents.sum(axis=0)
-            totals = totals.reshape((1, len(totals)))
+            if len(totals.shape) == 1:
+                totals = totals.reshape((1, len(totals)))
             return exponents / totals
 
         elif activation_fn == "tanh":
@@ -145,6 +146,41 @@ class Layer(object):
         else:
             raise NotImplementedError("Only sigmoid, tanh, softmax, linear and relu currently implemented")
 
+class DropOutLayer(Layer):
+
+    def __init__(self, num_inputs, num_outputs, activation_fn="tanh", drop_out_prob = 0.5, initial_wt_variance=0.01, weights=None, bias=None):
+        Layer.__init__(self, num_inputs, num_outputs, activation_fn, initial_wt_variance, weights, bias)
+        self.drop_out_prob = drop_out_prob
+        self.mask = None
+
+    def __compute_z__(self, inputs_T, weights, bias, dropout = True):
+
+        if dropout:
+            # compute a binary mask to zero out some of the inputs
+            mask = np.matlib.rand((inputs_T.shape[0],1))
+            mask[ mask >= self.drop_out_prob ] = 1.0
+            mask[ mask <  self.drop_out_prob ] = 0.0
+
+            self.mask = mask
+            masked_inputs = np.multiply( inputs_T, mask )
+            return np.dot(weights, masked_inputs) + bias
+        else:
+            # reduce the weights by the drop out ratio
+            wts = weights * (1.0 - self.drop_out_prob)
+            return np.dot(wts, inputs_T) + bias
+
+    def feed_forward(self, inputs_T):
+        z = self.__compute_z__(inputs_T, self.best_weights, self.best_bias, dropout=False)
+        a = self.__activate__(z, self.activation_fn)
+        return (z, a)
+
+    def update(self, wtdiffs, biasdiff):
+        #need to zero out updates coming from deactivated neurons
+        wtdiffs_adj  = np.multiply(wtdiffs, self.mask.T)
+        biasdiff_adj = np.multiply(biasdiff, self.mask)
+
+        self.weights -= wtdiffs_adj
+        self.bias -= biasdiff_adj
 
 class MLP(object):
     '''
@@ -332,7 +368,7 @@ class MLP(object):
             errors = predictions - outputs
             error_loss = (0.5 * ((errors) ** 2.0)).mean(axis=0)
         elif loss_type == "crossentropy":
-            error_loss = -((outputs * np.log(predictions)).sum(axis=1).mean())
+            error_loss = -((np.multiply(  outputs , np.log(predictions)).sum(axis=1).mean()))
         else:
             raise Exception("Unknown loss type: " + loss_type)
 
@@ -385,14 +421,14 @@ class MLP(object):
         errors = (outputs_T - top_layer_output)
 
         # Compute weight updates
-        delta = -(errors) * derivatives[-1]
+        delta = np.multiply( -(errors) , derivatives[-1])
 
         deltas = [delta]
         for i in range(len(layers) -1):
             ix = -(i + 1)
             layer = layers[ix]
             """ THIS IS BACK PROP OF ERRORS TO HIDDEN LAYERS"""
-            delta = np.dot(layer.weights.T, delta) * derivatives[ix-1]
+            delta = np.multiply( np.dot(layer.weights.T, delta), derivatives[ix-1])
             deltas.insert(0, delta)
 
         #TODO Sparsity
@@ -524,8 +560,8 @@ if __name__ == "__main__":
     ]
     xs = np.array(xs)
 
-    input_activation_fn  = "relu"
-    output_activation_fn = "softmax"
+    input_activation_fn  = "tanh"
+    output_activation_fn = "tanh"
 
     if input_activation_fn == "tanh":
         xs = (xs - 0.5) * 2.0
@@ -537,12 +573,12 @@ if __name__ == "__main__":
     soft_max_ys = []
     for x in xs:
         l = [0 for i in x]
-        l[sum(x) - 1] = 1
+        l[int(sum(x)) - 1] = 1
         soft_max_ys.append(l)
     soft_max_ys = get_array(soft_max_ys)
 
-    ys = xs
-    #ys = soft_max_ys
+    #ys = xs
+    ys = soft_max_ys
 
     if output_activation_fn == "tanh" and np.min(ys.flatten()) == 0.0:
         ys = (ys - 0.5) * 2.0
@@ -551,10 +587,9 @@ if __name__ == "__main__":
     #num_hidden = int(round((xs.shape[1] / 2.0)))
 
     layers = [
-        Layer(xs.shape[1], num_hidden,  activation_fn = input_activation_fn,  initial_wt_max=0.01),
-        #Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  initial_wt_max=0.01),
-        #Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  initial_wt_max=0.01),
-        Layer(num_hidden,  ys.shape[1], activation_fn = output_activation_fn, initial_wt_max=0.01),
+        Layer(xs.shape[1], num_hidden,  activation_fn = input_activation_fn, initial_wt_variance=0.01),
+        DropOutLayer(num_hidden,  num_hidden,  activation_fn = input_activation_fn, drop_out_prob=0.5,  initial_wt_variance=0.01),
+        Layer(num_hidden,  ys.shape[1], activation_fn = output_activation_fn, initial_wt_variance=0.01),
     ]
 
 
@@ -563,12 +598,15 @@ if __name__ == "__main__":
              learning_rate=0.5, weight_decay=0.0, epochs=100, batch_size=2,
              lr_increase_multiplier=1.1, lr_decrease_multiplier=0.9)
 
-    nn.fit(     xs, ys, epochs=10,)
+    nn.fit(     xs, ys, epochs=10000,)
 
-    """ Verift Gradient Calculation """
+
+    """ Verify Gradient Calculation """
     errors, grad = nn.__compute_gradient__(xs, ys, xs.shape[0], nn.layers, 1.0, nn.weight_decay)
     grad_est = nn.estimate_gradient(xs, ys)
-    nn.verify_gradient(xs, ys)
+
+    if not any([type(l) == DropOutLayer for l in layers]):
+        nn.verify_gradient(xs, ys)
 
     hidden_activations = nn.predict(xs, 0)
     predictions = nn.predict(xs)
