@@ -102,15 +102,18 @@ class Layer(object):
         if self.activation_fn == "sigmoid":
             """ f(z)(1 - f(z)) """
             return np.multiply(activations, (1.0 - activations))
+
         elif self.activation_fn == "softmax":
             # So long as we correctly compute the soft max output, derivative is linear
-            return 1.0
+            return np.ones(activations.shape)
 
         elif self.activation_fn == "tanh":
             """ 1 - f(z)^2 """
             return 1.0 - np.square(activations)
+
         elif self.activation_fn == "linear":
-            return 1.0
+            return np.ones(activations.shape)
+
         elif self.activation_fn == "relu":
             copy = activations.copy() # don't modify vector
             copy[copy < 0] = 0
@@ -166,6 +169,9 @@ class DropOutLayer(Layer):
         z = self.__compute_z__(inputs_T, wts, self.best_bias)
         a = self.__activate__(z, self.activation_fn)
         return (z, a)
+
+    def revert_state(self):
+        pass
 
 class MLP(object):
     '''
@@ -391,17 +397,19 @@ class MLP(object):
         inputs_T = input_vectors.T
         outputs_T = outputs.T
 
-        activations =   [] # f(Wt.x)
         derivatives =   [] #f'(Wt.x)
         layer_inputs =  []
 
+        masks = []
         a = inputs_T
-
         for ix, layer in enumerate(layers):
             layer_input = a
             if type(layer) == DropOutLayer:
                 mask = dropout_mask(layer_input, layer.drop_out_prob)
                 layer_input = np.multiply(mask, layer_input)
+                masks.append(mask)
+            else:
+                masks.append(None)
             layer_inputs.append(layer_input)
             z, a = layer.prop_up(layer_input)
 
@@ -423,6 +431,8 @@ class MLP(object):
             layer = layers[ix]
             """ THIS IS BACK PROP OF ERRORS TO HIDDEN LAYERS"""
             delta = np.multiply( np.dot(layer.weights.T, delta), derivatives[ix-1])
+            if masks[ix] is not None:
+                delta = np.multiply(delta, masks[ix])
             deltas.insert(0, delta)
 
         #TODO Sparsity
@@ -554,8 +564,8 @@ if __name__ == "__main__":
     ]
     xs = np.array(xs)
 
-    input_activation_fn  = "relu"
-    output_activation_fn = "softmax"
+    input_activation_fn  = "tanh"
+    output_activation_fn = "tanh"
 
     if input_activation_fn == "tanh":
         xs = (xs - 0.5) * 2.0
@@ -571,20 +581,20 @@ if __name__ == "__main__":
         soft_max_ys.append(l)
     soft_max_ys = get_array(soft_max_ys)
 
-    #ys = xs
-    ys = soft_max_ys
+    ys = xs
+    #ys = soft_max_ys
 
     if output_activation_fn == "tanh" and np.min(ys.flatten()) == 0.0:
         ys = (ys - 0.5) * 2.0
 
-    num_hidden = int(round(np.log2(xs.shape[1]))) + 1
-    #num_hidden = int(round((xs.shape[1] / 2.0)))
+    #num_hidden = int(round(np.log2(xs.shape[1]))) + 1
+    num_hidden = int(round((xs.shape[1])) * 1.1)
 
     layers = [
         Layer(xs.shape[1], num_hidden,  activation_fn = input_activation_fn,  initial_wt_variance=0.01),
         #Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  initial_wt_variance=0.01),
         #Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  initial_wt_variance=0.01),
-        Layer(num_hidden,  ys.shape[1], activation_fn = output_activation_fn, initial_wt_variance=0.01),
+        DropOutLayer(num_hidden,  ys.shape[1], activation_fn = output_activation_fn, initial_wt_variance=0.01),
     ]
 
 
