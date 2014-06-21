@@ -23,8 +23,8 @@ class Settings(object):
         self.root_path = root_path
         self.public_data_dir = self.root_path + "Data/PublicDatasets/"
 
-        self.results_directory = "/Users/simon.hughes/Dropbox/Phd/Results/"
-        self.data_directory    = "/Users/simon.hughes/Dropbox/Phd/Data/"
+        self.results_directory = "/Users/simon.hughes/Google Drive/Phd/Results/"
+        self.data_directory    = "/Users/simon.hughes/Google Drive/Phd/Data/"
 
         print "Results Dir: "   + self.results_directory
         print "Data Dir:    "   + self.data_directory

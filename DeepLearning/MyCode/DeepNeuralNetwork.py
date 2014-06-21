@@ -146,41 +146,26 @@ class Layer(object):
         else:
             raise NotImplementedError("Only sigmoid, tanh, softmax, linear and relu currently implemented")
 
+    def __repr__(self):
+        return str(self.weights.shape[1]) + "->" + str(self.weights.shape[0]) + " : " + self.activation_fn
+
+def dropout_mask(inputs_T, drop_out_prob):
+    mask = np.matlib.rand(inputs_T.shape)
+    mask[mask >= drop_out_prob] = 1.0
+    mask[mask <  drop_out_prob] = 0.0
+    return mask
+
 class DropOutLayer(Layer):
 
     def __init__(self, num_inputs, num_outputs, activation_fn="tanh", drop_out_prob = 0.5, initial_wt_variance=0.01, weights=None, bias=None):
         Layer.__init__(self, num_inputs, num_outputs, activation_fn, initial_wt_variance, weights, bias)
         self.drop_out_prob = drop_out_prob
-        self.mask = None
-
-    def __compute_z__(self, inputs_T, weights, bias, dropout = True):
-
-        if dropout:
-            # compute a binary mask to zero out some of the inputs
-            mask = np.matlib.rand((inputs_T.shape[0],1))
-            mask[ mask >= self.drop_out_prob ] = 1.0
-            mask[ mask <  self.drop_out_prob ] = 0.0
-
-            self.mask = mask
-            masked_inputs = np.multiply( inputs_T, mask )
-            return np.dot(weights, masked_inputs) + bias
-        else:
-            # reduce the weights by the drop out ratio
-            wts = weights * (1.0 - self.drop_out_prob)
-            return np.dot(wts, inputs_T) + bias
 
     def feed_forward(self, inputs_T):
-        z = self.__compute_z__(inputs_T, self.best_weights, self.best_bias, dropout=False)
+        wts = self.best_weights * (1.0 - self.drop_out_prob)
+        z = self.__compute_z__(inputs_T, wts, self.best_bias)
         a = self.__activate__(z, self.activation_fn)
         return (z, a)
-
-    def update(self, wtdiffs, biasdiff):
-        #need to zero out updates coming from deactivated neurons
-        wtdiffs_adj  = np.multiply(wtdiffs, self.mask.T)
-        biasdiff_adj = np.multiply(biasdiff, self.mask)
-
-        self.weights -= wtdiffs_adj
-        self.bias -= biasdiff_adj
 
 class MLP(object):
     '''
@@ -286,10 +271,13 @@ class MLP(object):
             mse = np.mean(np.square(errors))
             mae = np.mean(np.abs(errors))
 
-            DIGITS = 6
+            DIGITS = 8
             print "MSE for epoch {0} is {1}".format(epoch, np.round(mse,DIGITS)),
             print "\tMAE for epoch {0} is {1}".format(epoch, np.round(mae,DIGITS)),
             print "\tlearning rate is {0}".format(self.learning_rate)
+            if mse == 0.0001:
+                print "MSE is 0.0. Stopping"
+                return (mse, mae)
 
             if len(self.lst_mae) > 0:
                 self.__adjust_learning_rate__(self.lst_mae[-1], mae)
@@ -403,19 +391,25 @@ class MLP(object):
         inputs_T = input_vectors.T
         outputs_T = outputs.T
 
-        activations = [] # f(Wt.x)
-        zs = []          # Wt.x
-        derivatives = [] #f'(Wt.x)
+        activations =   [] # f(Wt.x)
+        derivatives =   [] #f'(Wt.x)
+        layer_inputs =  []
 
         a = inputs_T
-        for layer in layers:
-            z, a = layer.prop_up(a)
-            deriv = layer.derivative(a)
-            activations.append(a)
-            zs.append(z)
-            derivatives.append(deriv)
 
-        top_layer_output = activations[-1]
+        for ix, layer in enumerate(layers):
+            layer_input = a
+            if type(layer) == DropOutLayer:
+                mask = dropout_mask(layer_input, layer.drop_out_prob)
+                layer_input = np.multiply(mask, layer_input)
+            layer_inputs.append(layer_input)
+            z, a = layer.prop_up(layer_input)
+
+        top_layer_output = a
+        activations = layer_inputs[1:] + [top_layer_output]
+        for ix, activation in enumerate(activations):
+            derivatives.append(layers[ix].derivative(activation))
+
         """ errors = mean( 0.5 sum squared error)  """
         assert outputs_T.shape == top_layer_output.shape
         errors = (outputs_T - top_layer_output)
@@ -438,7 +432,7 @@ class MLP(object):
         gradients = []
         for i, layer in enumerate(layers):
             delta = deltas[i]
-            activation_T = input_vectors if i == 0 else activations[i-1].T
+            layer_input_T = layer_inputs[i].T
 
             """ Delta for weights is the dot product of the layer delta (error deltas for output)
                 and activations for that layer
@@ -450,7 +444,7 @@ class MLP(object):
                 for each input and hidden layer node (taking the dot product of each weight over all input_vectors
                 (adding up the weight deltas) and then dividing this by num rows to get the mean
              """
-            wtdelta   = ((np.dot(delta, activation_T))         / (frows))
+            wtdelta   = ((np.dot(delta, layer_input_T))         / (frows))
 
             """ As the inputs are always 1 then the activations are omitted for the bias """
             biasdelta = ((np.sum(delta, axis=1, keepdims=True) / (frows)))
@@ -560,8 +554,8 @@ if __name__ == "__main__":
     ]
     xs = np.array(xs)
 
-    input_activation_fn  = "tanh"
-    output_activation_fn = "tanh"
+    input_activation_fn  = "relu"
+    output_activation_fn = "softmax"
 
     if input_activation_fn == "tanh":
         xs = (xs - 0.5) * 2.0
@@ -587,8 +581,9 @@ if __name__ == "__main__":
     #num_hidden = int(round((xs.shape[1] / 2.0)))
 
     layers = [
-        Layer(xs.shape[1], num_hidden,  activation_fn = input_activation_fn, initial_wt_variance=0.01),
-        DropOutLayer(num_hidden,  num_hidden,  activation_fn = input_activation_fn, drop_out_prob=0.5,  initial_wt_variance=0.01),
+        Layer(xs.shape[1], num_hidden,  activation_fn = input_activation_fn,  initial_wt_variance=0.01),
+        #Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  initial_wt_variance=0.01),
+        #Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  initial_wt_variance=0.01),
         Layer(num_hidden,  ys.shape[1], activation_fn = output_activation_fn, initial_wt_variance=0.01),
     ]
 
