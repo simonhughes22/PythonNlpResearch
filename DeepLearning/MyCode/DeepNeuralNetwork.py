@@ -7,7 +7,7 @@ Auto-encoder implementation. Can be used to implement a denoising auto-encoder, 
 
 import numpy as np
 import gnumpy as gp
-from numpy import matlib
+from numpy import random
 
 USE_GPU = False
 
@@ -41,34 +41,51 @@ def reverse_layers(layers):
     return rev_layers
 
 class Layer(object):
-    def __init__(self, num_inputs, num_outputs, activation_fn="tanh", initial_wt_variance=0.01, weights=None, bias=None):
+    def __init__(self, num_inputs, num_outputs, activation_fn="tanh", momentum=0.5, weight_decay=0.0, weights=None, bias=None):
         self.activation_fn = activation_fn
         self.num_outputs = num_outputs
         self.num_inputs = num_inputs
+        self.weight_decay = weight_decay
+        self.momentum = momentum
+
+        init_min, init_max = self.__initial_weights_min_max__()
 
         if weights is None:
-            weights = get_array(matlib.randn((num_outputs, num_inputs)) * 2 * initial_wt_variance) - initial_wt_variance
+            weights = np.random.uniform(low=init_min, high=init_max, size=(self.num_outputs, self.num_inputs))
 
         if bias is None:
             if self.activation_fn == "relu":
                 # enforce positive
-                bias = np.ones((num_outputs, 1)) * initial_wt_variance
+                bias = np.ones((num_outputs, 1))
             else:
-                bias = get_array(matlib.randn((num_outputs, 1)) * 2 * initial_wt_variance) - initial_wt_variance
+                bias = np.zeros((num_outputs, 1))
 
-        self.initial_wt_max = initial_wt_variance
         self.weights        = weights
         self.bias           = bias
 
         #Force creation of best weights\bias
         self.save_state()
+        #Moving Average of weights update
+        self.ma_weights = None
 
         assert self.num_inputs == self.weights.shape[1]
         assert self.num_outputs == self.weights.shape[0]
         assert self.num_outputs == self.bias.shape[0]
 
+    def __initial_weights_min_max__(self):
+        if self.activation_fn == "tanh":
+            val = np.sqrt(6.0 / (self.num_inputs + self.num_inputs))
+            return (-val, val)
+        elif self.activation_fn == "sigmoid" or self.activation_fn == "softmax":
+            val = np.sqrt(4 * (6.0 / (self.num_inputs + self.num_inputs)))
+            return (-val, val)
+        elif self.activation_fn == "linear":
+            return (-0.001, 0.001)
+        elif self.activation_fn == "relu":
+            return (0, 0.001)
+
     def clone(self):
-        return Layer( self.num_inputs, self.num_outputs, self.activation_fn, self.initial_wt_max, self.best_weights.copy(), self.best_bias.copy())
+        return Layer( self.num_inputs, self.num_outputs, self.activation_fn, self.momentum, self.weight_decay, self.best_weights.copy(), self.best_bias.copy())
 
     def save_state(self):
         self.best_weights   = self.weights.copy()
@@ -94,8 +111,16 @@ class Layer(object):
         return (z, a)
 
     def update(self, wtdiffs, biasdiff):
-        self.weights -= wtdiffs
+
+        if self.ma_weights is None:
+            momentum_update = wtdiffs
+        else:
+            momentum_update = self.momentum * self.ma_weights + (1.0-self.momentum) * wtdiffs
+
+        self.weights -= momentum_update
         self.bias    -= biasdiff
+
+        self.ma_weights = momentum_update
 
     def derivative(self, activations):
 
@@ -160,8 +185,8 @@ def dropout_mask(inputs_T, drop_out_prob):
 
 class DropOutLayer(Layer):
 
-    def __init__(self, num_inputs, num_outputs, activation_fn="tanh", drop_out_prob = 0.5, initial_wt_variance=0.01, weights=None, bias=None):
-        Layer.__init__(self, num_inputs, num_outputs, activation_fn, initial_wt_variance, weights, bias)
+    def __init__(self, num_inputs, num_outputs, activation_fn="tanh", drop_out_prob = 0.5, weight_decay=0.0, weights=None, bias=None):
+        Layer.__init__(self, num_inputs, num_outputs, activation_fn, weight_decay, weights, bias)
         self.drop_out_prob = drop_out_prob
 
     def feed_forward(self, inputs_T):
@@ -169,6 +194,11 @@ class DropOutLayer(Layer):
         z = self.__compute_z__(inputs_T, wts, self.best_bias)
         a = self.__activate__(z, self.activation_fn)
         return (z, a)
+
+    def clone(self):
+        return DropOutLayer(self.num_inputs, self.num_outputs,
+                            self.activation_fn, self.drop_out_prob,
+                            self.best_weights.copy(), self.best_bias.copy())
 
     def revert_state(self):
         pass
@@ -211,7 +241,7 @@ class MLP(object):
                 break
         return a.T
 
-    def fit(self, xs, ys, epochs = None, batch_size = None):
+    def fit(self, xs, ys, min_error=0.000001, epochs = None, batch_size = None):
 
         if epochs is None:
             epochs = self.epochs
@@ -281,22 +311,20 @@ class MLP(object):
             print "MSE for epoch {0} is {1}".format(epoch, np.round(mse,DIGITS)),
             print "\tMAE for epoch {0} is {1}".format(epoch, np.round(mae,DIGITS)),
             print "\tlearning rate is {0}".format(self.learning_rate)
-            if mse == 0.0001:
-                print "MSE is 0.0. Stopping"
-                return (mse, mae)
-
             if len(self.lst_mae) > 0:
                 self.__adjust_learning_rate__(self.lst_mae[-1], mae)
+            if mse <= min_error:
+                print "MSE is %s. Stopping" % str(mse)
+                return (mse, mae)
             self.lst_mse.append(mse)
             self.lst_mae.append(mae)
         return (mse, mae)
 
     """ Gradient Checking """
-    def estimate_gradient(self, xs, ys, layers = None, epsilon = 0.0001):
+    def estimate_gradient(self, xs, ys, layers = None, epsilon = 0.0001, input_masks = None):
 
         if layers is None:
             layers = self.layers[::]
-
 
         loss_type = "mse"
         if layers[-1].activation_fn == "softmax":
@@ -325,8 +353,8 @@ class MLP(object):
                     n_clone.best_weights[i,j] -= epsilon
 
 
-                    p_loss = self.loss(xs, ys, p_layers, loss_type=loss_type )
-                    n_loss = self.loss(xs, ys, n_layers, loss_type=loss_type)
+                    p_loss = self.loss(xs, ys, p_layers, loss_type=loss_type, input_masks=input_masks )
+                    n_loss = self.loss(xs, ys, n_layers, loss_type=loss_type, input_masks=input_masks)
                     wgrad[i,j] = ((p_loss - n_loss) / (2*epsilon)).sum()
 
             for i in range(len(l.best_bias)):
@@ -342,56 +370,94 @@ class MLP(object):
                 p_clone.best_bias[i] += epsilon
                 n_clone.best_bias[i] -= epsilon
 
-                p_loss = self.loss(xs, ys, p_layers, loss_type=loss_type)
-                n_loss = self.loss(xs, ys, n_layers, loss_type=loss_type)
+                p_loss = self.loss(xs, ys, p_layers, loss_type=loss_type, input_masks=input_masks)
+                n_loss = self.loss(xs, ys, n_layers, loss_type=loss_type, input_masks=input_masks)
                 bgrad[i] = ((p_loss - n_loss) / (2 * epsilon)).sum()
 
         return layer_gradient
 
-    def loss(self, input_vectors, outputs, layers = None, loss_type="mse"):
+    def loss(self, input_vectors, outputs, layers = None, loss_type="mse", input_masks = None):
 
         # Note that this function does not transpose the inputs or outputs
         # Each row is a separate example \ label (i.e. row not column vectors)
         if layers is None:
             layers = self.layers
 
-        predictions = self.predict(input_vectors, layers=layers)
+        # Predict
+        a = self.__ensure_vector_format__(input_vectors).T
+        for i, layer in enumerate(layers):
+            if input_masks is not None \
+                and input_masks[i] is not None:
+                a = np.multiply(a, input_masks[i])
+
+            # Ensure method called on layer not drop out layer
+            z, a = Layer.feed_forward(layer, a)
+        predictions = a.T
 
         # error loss
         if loss_type == "mse":
             errors = predictions - outputs
-            error_loss = (0.5 * ((errors) ** 2.0)).mean(axis=0)
+            error_loss = (0.5 * ( np.multiply(errors, errors))  ).mean(axis=0)
         elif loss_type == "crossentropy":
             error_loss = -((np.multiply(  outputs , np.log(predictions)).sum(axis=1).mean()))
         else:
             raise Exception("Unknown loss type: " + loss_type)
 
         # weight decay loss
-        sum_wts = 0.0
+        weight_decay_loss = 0.0
         for l in layers:
-            sum_wts += (l.best_weights ** 2.0).sum()
-        weight_decay_loss = (self.weight_decay / 2.0) * sum_wts
+            if l.weight_decay > 0.0:
+                weight_decay_loss += (l.weight_decay / 2.0) * (l.best_weights ** 2.0).sum()
 
         # return combined loss function
         return error_loss + weight_decay_loss
 
     def verify_gradient(self, xs, ys):
 
-        epsilon = 0.0001
-        errors, grad = self.__compute_gradient__(xs, ys, len(xs), self.layers, 1.0, self.weight_decay)
-        grad_est = self.estimate_gradient(xs, ys, self.layers, epsilon)
+        epsilon = 0.00001
+        input_masks = []
+        rows = xs.shape[0]
+
+        momentums = [l.momentum for l in self.layers]
+
+        for l in self.layers:
+            l.momentum = 0.0
+            if type(l) == DropOutLayer:
+                input_masks.append( dropout_mask(np.ones((l.weights.shape[1],rows)), l.drop_out_prob) )
+            else:
+                input_masks.append(None)
+
+        errors, grad = self.__compute_gradient__(xs, ys, len(xs), self.layers, 1.0, self.weight_decay, input_masks)
+        grad_est = self.estimate_gradient(xs, ys, self.layers, epsilon, input_masks)
 
         for i in range(len(grad)):
             wdelta, bdelta = grad[i]
             est_wdelta, est_bdelta = grad_est[i]
 
-            assert np.max(np.abs( wdelta - est_wdelta )) <= epsilon, "Significant Difference in estimated versus computed weights gradient"
-            assert np.max(np.abs( bdelta - est_bdelta )) <= epsilon, "Significant Difference in estimated versus computed bias gradient"
+            max_wts_diff  = np.max(np.abs( wdelta - est_wdelta ))
+            max_bias_diff = np.max(np.abs( bdelta - est_bdelta ))
+            if max_wts_diff  > epsilon:
+                print "Estimated"
+                print est_wdelta
+                print "Actual"
+                print wdelta
+                assert 1==2, "Significant Difference in estimated versus computed weights gradient: " + str(max_wts_diff)
 
+            if max_bias_diff > epsilon:
+                print "Estimated"
+                print est_bdelta
+                print "Actual"
+                print bdelta
+                assert 1==2, "Significant Difference in estimated versus computed bias gradient :" + str(max_bias_diff)
+
+            print i, "Max Wt Diff:", str(max_wts_diff), "Max Bias Diff:", max_bias_diff
+
+        for i, l in enumerate(self.layers):
+            l.momentum = momentums[i]
         print "Gradient is correct"
 
     """ END Gradient Checking """
-    def __compute_gradient__(self, input_vectors, outputs, total_rows, layers, learning_rate, weight_decay):
+    def __compute_gradient__(self, input_vectors, outputs, total_rows, layers, learning_rate, weight_decay, input_masks=None):
 
         rows = input_vectors.shape[0]
         inputs_T = input_vectors.T
@@ -402,16 +468,21 @@ class MLP(object):
 
         masks = []
         a = inputs_T
+        outputs = []
         for ix, layer in enumerate(layers):
             layer_input = a
             if type(layer) == DropOutLayer:
-                mask = dropout_mask(layer_input, layer.drop_out_prob)
+                if input_masks is None:
+                    mask = dropout_mask(layer_input, layer.drop_out_prob)
+                else:
+                    mask = input_masks[ix]
                 layer_input = np.multiply(mask, layer_input)
                 masks.append(mask)
             else:
                 masks.append(None)
             layer_inputs.append(layer_input)
             z, a = layer.prop_up(layer_input)
+            outputs.append(a)
 
         top_layer_output = a
         activations = layer_inputs[1:] + [top_layer_output]
@@ -459,11 +530,11 @@ class MLP(object):
             """ As the inputs are always 1 then the activations are omitted for the bias """
             biasdelta = ((np.sum(delta, axis=1, keepdims=True) / (frows)))
 
-            if weight_decay > 0.0:
+            if layer.weight_decay > 0.0:
                 """ Weight decay is typically not done for the bias as this is known
                     to have marginal effect.
                 """
-                wds = learning_rate * batch_proportion * (wtdelta + weight_decay * layer.weights)
+                wds = learning_rate * batch_proportion * (wtdelta + layer.weight_decay * layer.weights)
             else:
                 wds = learning_rate * batch_proportion * wtdelta
 
@@ -565,7 +636,9 @@ if __name__ == "__main__":
     xs = np.array(xs)
 
     input_activation_fn  = "tanh"
-    output_activation_fn = "tanh"
+
+    # Having a linear output layer seems to work REALLY well
+    output_activation_fn = "linear"
 
     if input_activation_fn == "tanh":
         xs = (xs - 0.5) * 2.0
@@ -591,32 +664,30 @@ if __name__ == "__main__":
     num_hidden = int(round((xs.shape[1])) * 1.1)
 
     layers = [
-        Layer(xs.shape[1], num_hidden,  activation_fn = input_activation_fn,  initial_wt_variance=0.01),
-        #Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  initial_wt_variance=0.01),
-        #Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  initial_wt_variance=0.01),
-        DropOutLayer(num_hidden,  ys.shape[1], activation_fn = output_activation_fn, initial_wt_variance=0.01),
+        Layer(xs.shape[1], num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
+        Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
+        Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
+        Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
+        Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
+        Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
+        Layer(num_hidden,  ys.shape[1], activation_fn = output_activation_fn, momentum=0.5),
     ]
 
 
     """ Note that the range of inputs for tanh is 2* sigmoid, and so the MAE should be 2* """
     nn = MLP(layers,
-             learning_rate=0.5, weight_decay=0.0, epochs=100, batch_size=2,
+             learning_rate=0.5, weight_decay=0.0, epochs=100, batch_size=3,
              lr_increase_multiplier=1.1, lr_decrease_multiplier=0.9)
 
     nn.fit(     xs, ys, epochs=10000,)
 
-
     """ Verify Gradient Calculation """
-    errors, grad = nn.__compute_gradient__(xs, ys, xs.shape[0], nn.layers, 1.0, nn.weight_decay)
-    grad_est = nn.estimate_gradient(xs, ys)
-
-    if not any([type(l) == DropOutLayer for l in layers]):
-        nn.verify_gradient(xs, ys)
+    nn.verify_gradient(xs, ys)
 
     hidden_activations = nn.predict(xs, 0)
     predictions = nn.predict(xs)
 
-    if output_activation_fn == "tanh":
+    if np.min(ys) == -1 and np.max(ys) == 1:
         ys = ys / 2.0 + 0.5
         predictions = predictions / 2.0 + 0.5
 
@@ -626,11 +697,15 @@ if __name__ == "__main__":
     #print np.round(ae.prop_up(xs, xs)[0] * 3.0) * 0.3
     print np.round(predictions, 1)
     print predictions
+
+    """
     print "Weights"
     print nn.layers[0].weights
     print ""
     print nn.layers[1].weights
     pass
+    """
+
 
     """ TODO
     implement momentum (refer to early parts of this https://www.cs.toronto.edu/~hinton/csc2515/notes/lec6tutorial.pdf)
