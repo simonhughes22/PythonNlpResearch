@@ -500,11 +500,11 @@ class MLP(object):
         deltas = [delta]
         for i in range(len(layers) -1):
             ix = -(i + 1)
-            layer = layers[ix]
-
-            lower_layer_deriv = layers[ix-1].derivative(activations[ix-1])
+            upper_layer = layers[ix]
+            layer = layers[ix-1]
+            deriv = layer.derivative(activations[ix-1])
             """ THIS IS BACK PROP OF ERRORS TO HIDDEN LAYERS"""
-            delta = np.multiply( np.dot(layer.weights.T, delta), lower_layer_deriv)
+            delta = np.multiply( np.dot(upper_layer.weights.T, delta), deriv)
             if masks[ix] is not None:
                 delta = np.multiply(delta, masks[ix])
             deltas.insert(0, delta)
