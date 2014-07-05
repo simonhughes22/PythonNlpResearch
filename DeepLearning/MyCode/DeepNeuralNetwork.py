@@ -79,10 +79,9 @@ class Layer(object):
         elif self.activation_fn == "sigmoid" or self.activation_fn == "softmax":
             val = np.sqrt(4 * (6.0 / (self.num_inputs + self.num_inputs)))
             return (-val, val)
-        elif self.activation_fn == "linear":
+        elif self.activation_fn == "linear" or self.activation_fn == "relu":
+            #for relu we set the bias' to 1, ensuring activations on positive inputs
             return (-0.001, 0.001)
-        elif self.activation_fn == "relu":
-            return (0, 0.001)
 
     def clone(self):
         return Layer( self.num_inputs, self.num_outputs, self.activation_fn, self.momentum, self.weight_decay, self.best_weights.copy(), self.best_bias.copy())
@@ -260,7 +259,7 @@ class MLP(object):
         assert outputs.shape[1] == self.layers[-1].weights.shape[0], "The output layer does not match the Ys column count"
 
         """ Check outputs match the range for the activation function for the layer """
-        self.__validate__(outputs, self.layers[-1])
+        self.__validate_outputs__(outputs, self.layers[-1])
 
         num_batches = num_rows / batch_size
         if num_rows % batch_size > 0:
@@ -290,7 +289,7 @@ class MLP(object):
                     continue
 
                 mini_batch_errors, gradients = self.__compute_gradient__(mini_batch_in, mini_batch_out, len(xs),
-                                                                         self.layers, self.learning_rate, self.weight_decay)
+                                                                         self.layers, self.learning_rate)
                 if np.any(np.isnan(mini_batch_errors)):
                     print "Nans in errors. Stopping"
                     self.__reset_layers__()
@@ -427,7 +426,7 @@ class MLP(object):
             else:
                 input_masks.append(None)
 
-        errors, grad = self.__compute_gradient__(xs, ys, len(xs), self.layers, 1.0, self.weight_decay, input_masks)
+        errors, grad = self.__compute_gradient__(xs, ys, len(xs), self.layers, 1.0, input_masks)
         grad_est = self.estimate_gradient(xs, ys, self.layers, epsilon, input_masks)
 
         for i in range(len(grad)):
@@ -455,15 +454,26 @@ class MLP(object):
         for i, l in enumerate(self.layers):
             l.momentum = momentums[i]
         print "Gradient is correct"
-
     """ END Gradient Checking """
-    def __compute_gradient__(self, input_vectors, outputs, total_rows, layers, learning_rate, weight_decay, input_masks=None):
+
+
+    def __get_masked_input__(self, layer_input, input_masks, layer, ix):
+        if type(layer) == DropOutLayer:
+            if input_masks is None:
+                mask = dropout_mask(layer_input, layer.drop_out_prob)
+            else:
+                mask = input_masks[ix]
+            masked_input = np.multiply(mask, layer_input)
+            return (mask, masked_input)
+        else:
+            return (None, layer_input)
+
+    def __compute_gradient__(self, input_vectors, outputs, total_rows, layers, learning_rate, input_masks=None):
 
         rows = input_vectors.shape[0]
         inputs_T = input_vectors.T
         outputs_T = outputs.T
 
-        derivatives =   [] #f'(Wt.x)
         layer_inputs =  []
 
         masks = []
@@ -471,37 +481,30 @@ class MLP(object):
         outputs = []
         for ix, layer in enumerate(layers):
             layer_input = a
-            if type(layer) == DropOutLayer:
-                if input_masks is None:
-                    mask = dropout_mask(layer_input, layer.drop_out_prob)
-                else:
-                    mask = input_masks[ix]
-                layer_input = np.multiply(mask, layer_input)
-                masks.append(mask)
-            else:
-                masks.append(None)
-            layer_inputs.append(layer_input)
+            mask, layer_input = self.__get_masked_input__(layer_input, input_masks, layer, ix)
             z, a = layer.prop_up(layer_input)
+
+            masks.append(None)
+            layer_inputs.append(layer_input)
             outputs.append(a)
 
         top_layer_output = a
         activations = layer_inputs[1:] + [top_layer_output]
-        for ix, activation in enumerate(activations):
-            derivatives.append(layers[ix].derivative(activation))
 
-        """ errors = mean( 0.5 sum squared error)  """
+        """ errors = mean( 0.5 sum squared error) (but gradient w.r.t. weights is sum(errors) """
         assert outputs_T.shape == top_layer_output.shape
         errors = (outputs_T - top_layer_output)
 
         # Compute weight updates
-        delta = np.multiply( -(errors) , derivatives[-1])
-
+        delta = np.multiply( -(errors), layers[-1].derivative(activations[-1]))
         deltas = [delta]
         for i in range(len(layers) -1):
             ix = -(i + 1)
             layer = layers[ix]
+
+            lower_layer_deriv = layers[ix-1].derivative(activations[ix-1])
             """ THIS IS BACK PROP OF ERRORS TO HIDDEN LAYERS"""
-            delta = np.multiply( np.dot(layer.weights.T, delta), derivatives[ix-1])
+            delta = np.multiply( np.dot(layer.weights.T, delta), lower_layer_deriv)
             if masks[ix] is not None:
                 delta = np.multiply(delta, masks[ix])
             deltas.insert(0, delta)
@@ -514,30 +517,22 @@ class MLP(object):
         for i, layer in enumerate(layers):
             delta = deltas[i]
             layer_input_T = layer_inputs[i].T
+            wtdelta = ((np.dot(delta, layer_input_T)) / (frows))
 
-            """ Delta for weights is the dot product of the layer delta (error deltas for output)
-                and activations for that layer
-
-                For each weight in the weight matrix, update it using the input activation * output delta.
-                Compute a mean over all examples in the batch.
+            """ For each weight, update it using the input activation * output delta. Compute a mean over all examples in the batch.
 
                 The dot product is used here in a very clever  way to compute the activation * the delta
-                for each input and hidden layer node (taking the dot product of each weight over all input_vectors
-                (adding up the weight deltas) and then dividing this by num rows to get the mean
-             """
-            wtdelta   = ((np.dot(delta, layer_input_T))         / (frows))
+                for each input and hidden layer node and then dividing this by num rows to get the mean
 
-            """ As the inputs are always 1 then the activations are omitted for the bias """
+                As the inputs are always 1, the activations are omitted for the bias
+            """
             biasdelta = ((np.sum(delta, axis=1, keepdims=True) / (frows)))
 
             if layer.weight_decay > 0.0:
-                """ Weight decay is typically not done for the bias as this is known
-                    to have marginal effect.
-                """
-                wds = learning_rate * batch_proportion * (wtdelta + layer.weight_decay * layer.weights)
-            else:
-                wds = learning_rate * batch_proportion * wtdelta
+                """ Weight decay is typically not done for the bias as has marginal effect."""
+                wtdelta += (layer.weight_decay * layer.weights)
 
+            wds = learning_rate * batch_proportion * wtdelta
             bds = learning_rate * biasdelta
             gradients.append((wds, bds))
 
@@ -567,7 +562,7 @@ class MLP(object):
     def __ensure_vector_format__(self, a):
         return get_array(a)
 
-    def __validate__(self, outputs, layer):
+    def __validate_outputs__(self, outputs, layer):
 
         min_outp = np.min(outputs)
         max_outp = np.max(outputs)
@@ -593,35 +588,7 @@ class MLP(object):
         assert actual_max <= exp_max
         assert actual_min >= exp_min
 
-
 if __name__ == "__main__":
-
-    """
-    # Test Sum
-    xs = [
-          [1,    0,     0.5,    0.1],
-          [0,    1,     1.0,    0.5],
-          [1,    0.5,   1,      0  ],
-          [0,    0.9,   0,      1  ],
-          [0.25, 0,     0.5,    0.1],
-          [0.1,  1,     1.0,    0.5],
-          [1,    0.5,   0.65,   0  ],
-          [0.7,  0.9,   0,      1  ]
-    ]
-
-
-    # Identity - can memorize inputs ?
-    xs = [
-        [1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 0, 0, 0],
-        [0, 0, 0, 0, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0, 0, 1, 0],
-        [0, 0, 0, 0, 0, 0, 0, 1]
-    ]
-    """
 
     xs = [
         [1, 0, 0, 0, 0, 0, 0, 0],
@@ -635,10 +602,10 @@ if __name__ == "__main__":
     ]
     xs = np.array(xs)
 
-    input_activation_fn  = "tanh"
+    input_activation_fn  = "relu"
 
     # Having a linear output layer seems to work REALLY well
-    output_activation_fn = "linear"
+    output_activation_fn = "tanh"
 
     if input_activation_fn == "tanh":
         xs = (xs - 0.5) * 2.0
@@ -655,7 +622,8 @@ if __name__ == "__main__":
     soft_max_ys = get_array(soft_max_ys)
 
     ys = xs
-    #ys = soft_max_ys
+    if output_activation_fn == "softmax":
+        ys = soft_max_ys
 
     if output_activation_fn == "tanh" and np.min(ys.flatten()) == 0.0:
         ys = (ys - 0.5) * 2.0
@@ -666,10 +634,6 @@ if __name__ == "__main__":
     layers = [
         Layer(xs.shape[1], num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
         Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
-        Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
-        Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
-        Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
-        Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
         Layer(num_hidden,  ys.shape[1], activation_fn = output_activation_fn, momentum=0.5),
     ]
 
@@ -679,7 +643,7 @@ if __name__ == "__main__":
              learning_rate=0.5, weight_decay=0.0, epochs=100, batch_size=3,
              lr_increase_multiplier=1.1, lr_decrease_multiplier=0.9)
 
-    nn.fit(     xs, ys, epochs=10000,)
+    nn.fit(     xs, ys, epochs=10,)
 
     """ Verify Gradient Calculation """
     nn.verify_gradient(xs, ys)
@@ -706,14 +670,18 @@ if __name__ == "__main__":
     pass
     """
 
-
     """ TODO
-    implement momentum (refer to early parts of this https://www.cs.toronto.edu/~hinton/csc2515/notes/lec6tutorial.pdf)
-    implement DROPOUT
+    can we use a clustering algorithm to initialize the weights for hidden layer neurons? Normalize the data.
+        learn k clusters. Implement a 3 layer NN with k hidden neurons, whose weights are initialized to the values for
+        the cluster centroid (as that maximizes cosine similarity). Adjust weights for a non linearity such that centroid
+        input values would cause it to fire (which means just scaling up the weight vector, probably 6x for sigmoid). Train
+        network as normal (top layer has random initial weights). cf regular initialization of nnet.
     use LBFGS or conjugate gradient descent to optimize the parameters instead as supposedly faster
 
     >>>> DONE allow different activation functions per layer. Normally hidden layer uses RELU and dropout (http://fastml.com/deep-learning-these-days/)
           don't use RELU for output layer as you cannot correct for errors (i.e. gradient is 0 for negative updates!)
-    >>>> DONE implement adaptive learning rate adjustments (see link above)
-    >>>> DONE Use finite gradients method to verify gradient descent calc. Bake into code as a flag ***
+    >>>> DONE  Implement adaptive learning rate adjustments (see link above)
+    >>>> DONE  Use finite gradients method to verify gradient descent calc. Bake into code as a flag ***
+    >>>> DONE  Implement momentum (refer to early parts of this https://www.cs.toronto.edu/~hinton/csc2515/notes/lec6tutorial.pdf)
+    >>>> ~DONE implement DROPOUT
     """
