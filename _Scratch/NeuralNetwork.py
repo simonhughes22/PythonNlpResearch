@@ -354,4 +354,9 @@ if __name__ == "__main__":
      implement adaptive learning rate adjustments (see link above)
      implement DROPOUT
 
+     sentence vector learning: learn a sentence vector in a similar manner to an RAE. However, train it as follows. For each word embedding, combine
+        it with the adjacent word, and use the underlying vector to predict the remaining words in the sentence (maybe with higher weights associated
+        with closer words). Use this to parse the sentence in an iterative manner (unlike the RAE), by picking the word pairs that minimize the
+        prediction error.
+
     """
