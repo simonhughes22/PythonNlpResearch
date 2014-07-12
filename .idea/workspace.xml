@@ -2,9 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="9643b290-4022-45ff-b8a9-41737414cadc" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/DeepLearning/MyCode/Layers.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/DeepLearning/MyCode/GradientChecking.py" />
+      <change type="MOVED" beforePath="$PROJECT_DIR$/DeepLearning/MyCode/AutoEncoder.py" afterPath="$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/AutoEncoder.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py" afterPath="$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/_Scratch/NeuralNetwork.py" afterPath="$PROJECT_DIR$/_Scratch/NeuralNetwork.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py" afterPath="$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py" />
     </list>
     <ignored path="NlpResearch.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -27,20 +28,48 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="DeepNeuralNetwork.py" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="DeepNeuralNetwork.py" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.2888889" vertical-offset="4020" max-vertical-offset="5100">
-              <caret line="455" column="8" selection-start-line="455" selection-start-column="8" selection-end-line="455" selection-end-column="8" />
+            <state vertical-scroll-proportion="0.0" vertical-offset="1500" max-vertical-offset="2400">
+              <caret line="334" column="0" selection-start-line="334" selection-start-column="0" selection-end-line="334" selection-end-column="0" />
               <folding>
                 <element signature="e#171#189#0" expanded="true" />
-                <element signature="e#8149#9970#0" expanded="false" />
-                <element signature="e#10077#11371#0" expanded="false" />
-                <element signature="e#11421#13031#0" expanded="false" />
-                <element signature="e#13148#13493#0" expanded="false" />
-                <element signature="e#13535#13593#0" expanded="false" />
-                <element signature="e#13662#14394#0" expanded="false" />
-                <element signature="e#14529#15511#0" expanded="false" />
+                <element signature="e#780#1784#0" expanded="false" />
+                <element signature="e#1859#2117#0" expanded="false" />
+                <element signature="e#2209#5235#0" expanded="false" />
+                <element signature="e#5359#8059#0" expanded="false" />
+                <element signature="e#8142#8487#0" expanded="false" />
+                <element signature="e#8529#8587#0" expanded="false" />
+                <element signature="e#8656#9388#0" expanded="false" />
+                <element signature="e#9523#10505#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="GradientChecking.py" pinned="false" current="true" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/GradientChecking.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.54505813" vertical-offset="0" max-vertical-offset="688">
+              <caret line="108" column="44" selection-start-line="108" selection-start-column="44" selection-end-line="108" selection-end-column="44" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+                <element signature="e#464#2223#0" expanded="false" />
+                <element signature="e#2321#3667#0" expanded="false" />
+                <element signature="e#3723#5372#0" expanded="false" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="RecursiveAutoEncoder.py" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0" vertical-offset="15" max-vertical-offset="7380">
+              <caret line="309" column="30" selection-start-line="309" selection-start-column="30" selection-end-line="309" selection-end-column="30" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -74,7 +103,6 @@
   <component name="IdeDocumentHistory">
     <option name="changedFiles">
       <list>
-        <option value="$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingNaiveBayes.py" />
         <option value="$PROJECT_DIR$/Experiments/GlobalWarming/Causal/CR_ClassifyUsingSVM.py" />
         <option value="$PROJECT_DIR$/Experiments/ExperimentBase.py" />
         <option value="$PROJECT_DIR$/CollectionsHelper/IterableFP.py" />
@@ -110,7 +138,6 @@
         <option value="$PROJECT_DIR$/DeepLearning/NeuralNetwork.py" />
         <option value="$PROJECT_DIR$/DeepLearning/NeuralNetworkGPU.py" />
         <option value="$PROJECT_DIR$/Data/WordTokenizer.py" />
-        <option value="$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py" />
         <option value="$PROJECT_DIR$/_Scratch/DemoStanfordParser.py" />
         <option value="$PROJECT_DIR$/_Scratch/Sub/TestWord2Vec.py" />
         <option value="$PROJECT_DIR$/Results/Rpfa.py" />
@@ -124,7 +151,9 @@
         <option value="$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork2.py" />
         <option value="$PROJECT_DIR$/_Scratch/NeuralNetwork.py" />
         <option value="$PROJECT_DIR$/DeepLearning/MyCode/Layers.py" />
+        <option value="$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py" />
         <option value="$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py" />
+        <option value="$PROJECT_DIR$/DeepLearning/MyCode/GradientChecking.py" />
       </list>
     </option>
   </component>
@@ -247,11 +276,11 @@
       <recent name="C:\Users\simon.hughes\Dropbox\PhD\Code\PyCharmProjects\NlpResearch\Results\GlobalWarming" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder" />
       <recent name="$PROJECT_DIR$/_Scratch" />
       <recent name="$PROJECT_DIR$/DeepLearning/MyCode" />
       <recent name="$PROJECT_DIR$/FeatureExtraction/Text" />
       <recent name="C:\Users\simon.hughes\Dropbox\PhD\Code\PyCharmProjects\NlpResearch\Data\GlobalWarmingAnnotated" />
-      <recent name="C:\Users\simon.hughes\Dropbox\AI EDU For Peter\Code\PyCharmProjects\NlpResearch\DeepLearning\WordVectors" />
     </key>
   </component>
   <component name="RunManager" selected="Python.DeepNeuralNetwork">
@@ -267,7 +296,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="NlpResearch" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/DeepLearning/MyCode/AutoEncoder.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/AutoEncoder.py" />
       <option name="PARAMETERS" value="" />
       <RunnerSettings RunnerId="PyDebugRunner" />
       <RunnerSettings RunnerId="PythonRunner" />
@@ -530,11 +559,11 @@
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32918397" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24947146" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24665257" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.24606581" sideWeight="0.778086" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.46852645" sideWeight="0.52420473" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.16216215" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.32871014" sideWeight="0.5" order="6" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.43776825" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.38841203" sideWeight="0.53587115" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Documentation" active="true" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="92" y="92" width="1416" height="676" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -781,12 +810,12 @@
           <option name="timeStamp" value="412" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/DeepLearning/MyCode/AutoEncoder.py</url>
+          <url>file://$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/AutoEncoder.py</url>
           <line>371</line>
           <option name="timeStamp" value="441" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/DeepLearning/MyCode/AutoEncoder.py</url>
+          <url>file://$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/AutoEncoder.py</url>
           <line>365</line>
           <option name="timeStamp" value="442" />
         </line-breakpoint>
@@ -826,13 +855,13 @@
           <option name="timeStamp" value="467" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/DeepLearning/MyCode/AutoEncoder.py</url>
+          <url>file://$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/AutoEncoder.py</url>
           <line>341</line>
           <option name="timeStamp" value="468" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py</url>
-          <line>114</line>
+          <line>115</line>
           <option name="timeStamp" value="534" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
@@ -841,7 +870,7 @@
           <option name="timeStamp" value="552" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/DeepLearning/MyCode/AutoEncoder.py</url>
+          <url>file://$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/AutoEncoder.py</url>
           <line>156</line>
           <option name="timeStamp" value="577" />
         </line-breakpoint>
@@ -875,26 +904,14 @@
           <line>180</line>
           <option name="timeStamp" value="622" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py</url>
-          <line>466</line>
-          <option name="timeStamp" value="628" />
-        </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
-      <option name="time" value="636" />
+      <option name="time" value="639" />
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/Experiments/GlobalWarming/Codes_ClassifyUsingLsaNearestNeighbor_OnSourceText.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="390" max-vertical-offset="2310">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/LanguageModel/NgramGenerator.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="48" max-vertical-offset="660">
@@ -1176,20 +1193,13 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/AutoEncoder.py">
+    <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/AutoEncoder.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.4" vertical-offset="4935" max-vertical-offset="5790">
           <caret line="350" column="80" selection-start-line="350" selection-start-column="80" selection-end-line="350" selection-end-column="80" />
           <folding>
             <element signature="e#247#272#1" expanded="false" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0" vertical-offset="5895" max-vertical-offset="7305">
-          <caret line="308" column="30" selection-start-line="308" selection-start-column="30" selection-end-line="308" selection-end-column="30" />
         </state>
       </provider>
     </entry>
@@ -1235,6 +1245,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0" vertical-offset="24435" max-vertical-offset="25110">
           <caret line="1732" column="0" selection-start-line="1732" selection-start-column="0" selection-end-line="1733" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1254,19 +1265,43 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/RecursiveAutoEncoder/RecursiveAutoEncoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0" vertical-offset="15" max-vertical-offset="7380">
+          <caret line="309" column="30" selection-start-line="309" selection-start-column="30" selection-end-line="309" selection-end-column="30" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/DeepNeuralNetwork.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.2888889" vertical-offset="4020" max-vertical-offset="5100">
-          <caret line="455" column="8" selection-start-line="455" selection-start-column="8" selection-end-line="455" selection-end-column="8" />
+        <state vertical-scroll-proportion="0.0" vertical-offset="1500" max-vertical-offset="2400">
+          <caret line="334" column="0" selection-start-line="334" selection-start-column="0" selection-end-line="334" selection-end-column="0" />
           <folding>
             <element signature="e#171#189#0" expanded="true" />
-            <element signature="e#8149#9970#0" expanded="false" />
-            <element signature="e#10077#11371#0" expanded="false" />
-            <element signature="e#11421#13031#0" expanded="false" />
-            <element signature="e#13148#13493#0" expanded="false" />
-            <element signature="e#13535#13593#0" expanded="false" />
-            <element signature="e#13662#14394#0" expanded="false" />
-            <element signature="e#14529#15511#0" expanded="false" />
+            <element signature="e#780#1784#0" expanded="false" />
+            <element signature="e#1859#2117#0" expanded="false" />
+            <element signature="e#2209#5235#0" expanded="false" />
+            <element signature="e#5359#8059#0" expanded="false" />
+            <element signature="e#8142#8487#0" expanded="false" />
+            <element signature="e#8529#8587#0" expanded="false" />
+            <element signature="e#8656#9388#0" expanded="false" />
+            <element signature="e#9523#10505#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/DeepLearning/MyCode/GradientChecking.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.54505813" vertical-offset="0" max-vertical-offset="688">
+          <caret line="108" column="44" selection-start-line="108" selection-start-column="44" selection-end-line="108" selection-end-column="44" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+            <element signature="e#464#2223#0" expanded="false" />
+            <element signature="e#2321#3667#0" expanded="false" />
+            <element signature="e#3723#5372#0" expanded="false" />
           </folding>
         </state>
       </provider>

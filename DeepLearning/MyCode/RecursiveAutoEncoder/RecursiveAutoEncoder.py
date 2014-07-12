@@ -4,6 +4,7 @@ from sklearn import svm, metrics
 import Metrics
 import AutoEncoder as nnet
 
+
 class RecursiveAutoEncoder(object):
     
     def __init__(self, projector, learning_rate = 0.1, activation_fn = "sigmoid", supervised_wt = 0.2,
