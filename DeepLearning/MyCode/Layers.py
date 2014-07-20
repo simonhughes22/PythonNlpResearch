@@ -91,10 +91,10 @@ class Layer(object):
         if self.ma_weights is None:
             momentum_update = wtdiffs
         else:
-            momentum_update = self.momentum * self.ma_weights + (1.0-self.momentum) * wtdiffs
+            momentum_update = self.momentum * self.ma_weights + (1.0 - self.momentum) * wtdiffs
 
         self.weights -= momentum_update
-        self.bias    -= biasdiff
+        self.bias -= biasdiff
 
         self.ma_weights = momentum_update
 
@@ -123,8 +123,27 @@ class Layer(object):
         else:
             raise NotImplementedError("Only sigmoid, tanh, linear and relu currently implemented")
 
-    def weight_deltas(self, delta):
+    def backprop_deltas(self, delta):
         return np.dot(self.weights.T, delta)
+
+    def gradients(self, delta, inputs):
+        frows = float(inputs.shape[1])
+        wtdelta = ((np.dot(delta, inputs.T)) / (frows))
+
+        """ For each weight, update it using the input activation * output delta. Compute a mean over all examples in the batch.
+
+            The dot product is used here in a very clever  way to compute the activation * the delta
+            for each input and hidden layer node and then dividing this by num rows to get the mean
+
+            As the inputs are always 1, the activations are omitted for the bias
+        """
+        biasdelta = ((np.sum(delta, axis=1, keepdims=True) / (frows)))
+
+        if self.weight_decay > 0.0:
+            """ Weight decay is typically not done for the bias as has marginal effect."""
+            wtdelta += (self.weight_decay * self.weights)
+        return (wtdelta, biasdelta)
+
 
     def __compute_z__(self, inputs_T, weights, bias):
         #Can we speed this up by making the bias a column vector?
@@ -177,9 +196,42 @@ class ConvolutionalLayer(Layer):
             zs.append(conv_z)
         return np.vstack(zs)
 
+    def backprop_deltas(self, delta):
+        in_rows = self.weights.shape[0]
+        dotprods = []
+        for c in range(self.convolutions):
+            con_delta = delta[c * in_rows: (c + 1) * in_rows, :]
+            conv_z = np.dot(self.weights.T, con_delta)
+            # Stack results
+            dotprods.append(conv_z)
+        return np.vstack(dotprods)
+
+
     def __repr__(self):
         conv = str(self.convolutions) + " * ["
         return conv + str(self.weights.shape[1]) + "->" + str(self.weights.shape[0]) + "] : " + self.activation_fn
+
+
+"""
+    def update(self, wtdiffs, biasdiff):
+
+        in_cols  = self.weights.shape[1]
+        out_cols = self.weights.shape[0]
+        con_wt_diffs =  wtdiffs[:,  0: in_cols]
+        con_bias     = biasdiff[0: out_cols,:]
+
+        for c in range(1, self.convolutions):
+            con_wt_diffs += wtdiffs[:,  c * in_cols: (c + 1) * in_cols]
+            con_bias     += biasdiff[c * out_cols: (c + 1) * out_cols,:]
+
+        if self.ma_weights is None:
+            momentum_update = con_wt_diffs
+        else:
+            momentum_update = self.momentum * self.ma_weights + (1.0 - self.momentum) * con_wt_diffs
+        self.weights -= momentum_update
+        self.bias -= biasdiff
+        self.ma_weights = momentum_update
+"""
 
 def dropout_mask(inputs_T, drop_out_prob):
     mask = np.matlib.rand(inputs_T.shape)

@@ -121,8 +121,8 @@ class GradientChecker(object):
             else:
                 input_masks.append(None)
 
-        errors, grad = nnet.__compute_gradient__(xs, ys, len(xs), nnet.layers, 1.0, input_masks)
         grad_est = self.estimate_gradient(xs, ys, nnet.layers, epsilon, input_masks)
+        errors, grad = nnet.__compute_gradient__(xs, ys, nnet.layers, 1.0, input_masks)
 
         for i in range(len(grad)):
             wdelta, bdelta = grad[i]

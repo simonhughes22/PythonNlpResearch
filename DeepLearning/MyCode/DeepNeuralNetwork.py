@@ -110,15 +110,13 @@ class MLP(object):
                 if len(mini_batch_in) == 0:
                     continue
 
-                mini_batch_errors, gradients = self.__compute_gradient__(mini_batch_in, mini_batch_out, len(xs),
+                mini_batch_errors, gradients = self.__compute_gradient__(mini_batch_in, mini_batch_out,
                                                                          self.layers, self.learning_rate)
                 if np.any(np.isnan(mini_batch_errors)):
                     print "Nans in errors. Stopping"
                     self.__reset_layers__()
                     return (mse, mae)
-
                 errors.extend(mini_batch_errors)
-
                 # apply weight updates
                 for layer, gradient in zip(self.layers, gradients):
                     wds, bds = gradient
@@ -141,9 +139,8 @@ class MLP(object):
             self.lst_mae.append(mae)
         return (mse, mae)
 
-    def __compute_gradient__(self, input_vectors, outputs, total_rows, layers, learning_rate, input_masks=None):
+    def __compute_gradient__(self, input_vectors, outputs, layers, learning_rate, input_masks=None):
 
-        rows = input_vectors.shape[0]
         inputs_T = input_vectors.T
         outputs_T = outputs.T
 
@@ -157,7 +154,7 @@ class MLP(object):
             mask, layer_input = self.__get_masked_input__(layer_input, input_masks, layer, ix)
             z, a = layer.prop_up(layer_input)
 
-            masks.append(None)
+            masks.append(mask)
             layer_inputs.append(layer_input)
             outputs.append(a)
 
@@ -171,46 +168,26 @@ class MLP(object):
         # Compute weight updates
         delta = np.multiply( -(errors), layers[-1].derivative(activations[-1]))
         deltas = [delta]
-        for i in range(len(layers) -1):
+        for i in range(len(layers) - 1):
             ix = -(i + 1)
-            upper_layer = layers[ix]
-            layer = layers[ix-1]
-            layer_deriv = layer.derivative(activations[ix-1])
+            layer = layers[ix - 1]
+            layer_deriv = layer.derivative(activations[ix - 1])
+
             """ THIS IS BACK PROP OF ERRORS TO HIDDEN LAYERS"""
-            delta = np.multiply( upper_layer.weight_deltas(delta), layer_deriv)
+            upper_layer = layers[ix]
+            delta = np.multiply(upper_layer.backprop_deltas(delta), layer_deriv)
             if masks[ix] is not None:
                 delta = np.multiply(delta, masks[ix])
             deltas.insert(0, delta)
 
-        #TODO Sparsity
-        frows = float(rows)
-        batch_proportion = frows / float(total_rows)
-
+        # TODO Sparsity
         gradients = []
-        for i, layer in enumerate(layers):
-            delta = deltas[i]
-            layer_input_T = layer_inputs[i].T
-            wtdelta = ((np.dot(delta, layer_input_T)) / (frows))
-
-            """ For each weight, update it using the input activation * output delta. Compute a mean over all examples in the batch.
-
-                The dot product is used here in a very clever  way to compute the activation * the delta
-                for each input and hidden layer node and then dividing this by num rows to get the mean
-
-                As the inputs are always 1, the activations are omitted for the bias
-            """
-            biasdelta = ((np.sum(delta, axis=1, keepdims=True) / (frows)))
-
-            if layer.weight_decay > 0.0:
-                """ Weight decay is typically not done for the bias as has marginal effect."""
-                wtdelta += (layer.weight_decay * layer.weights)
-
-            wds = learning_rate * batch_proportion * wtdelta
-            bds = learning_rate * biasdelta
-            gradients.append((wds, bds))
-
+        for i in range(len(layers)):
+            wtdelta, biasdelta = layers[i].gradients(deltas[i], layer_inputs[i])
+            gradients.append( (learning_rate * wtdelta, learning_rate * biasdelta) )
         """ return a list of errors (one item per row in mini batch) """
         return (errors.T, gradients)
+
 
     def __get_masked_input__(self, layer_input, input_masks, layer, ix):
         if type(layer) == DropOutLayer:
@@ -282,7 +259,7 @@ if __name__ == "__main__":
         [1, 0, 0, 0, 1, 0, 1, 0],
         [0, 0, 0, 0, 0, 1, 0, 0],
         [0, 1, 0, 0, 1, 0, 1, 0],
-        [1, 0, 1, 0, 1, 0, 0, 1]
+        #[1, 0, 1, 0, 1, 0, 0, 1]
     ]
     xs = np.array(xs)
 
@@ -312,12 +289,16 @@ if __name__ == "__main__":
     if output_activation_fn == "tanh" and np.min(ys.flatten()) == 0.0:
         ys = (ys - 0.5) * 2.0
 
-    num_hidden = int(round(np.log2(xs.shape[1]))) + 1
+    #num_hidden = int(round(np.log2(xs.shape[1]))) + 1
+    num_hidden = 4
     #num_hidden = int(round((xs.shape[1])) * 1.1)
 
     layers = [
-        #ConvolutionalLayer(xs.shape[1], num_hidden, convolutions=4, activation_fn = input_activation_fn,  momentum=0.5),
-        Layer(xs.shape[1], num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
+        Layer(xs.shape[1], num_hidden-1,  activation_fn = input_activation_fn,  momentum=0.5),
+        Layer(num_hidden-1, num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
+
+        #ConvolutionalLayer(6, num_hidden, convolutions=2, activation_fn = input_activation_fn,  momentum=0.5),
+        #Layer(xs.shape[1], num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
         #Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
         Layer(num_hidden,  ys.shape[1], activation_fn = output_activation_fn, momentum=0.5),
     ]
@@ -325,7 +306,7 @@ if __name__ == "__main__":
 
     """ Note that the range of inputs for tanh is 2* sigmoid, and so the MAE should be 2* """
     nn = MLP(layers,
-             learning_rate=0.5, weight_decay=0.0, epochs=100, batch_size=3,
+             learning_rate=0.5, weight_decay=0.0, epochs=100, batch_size=8,
              lr_increase_multiplier=1.1, lr_decrease_multiplier=0.9)
 
     nn.fit(     xs, ys, epochs=10,)
