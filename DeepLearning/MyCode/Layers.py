@@ -44,6 +44,7 @@ class Layer(object):
         self.save_state()
         #Moving Average of weights update
         self.ma_weights = None
+        self.ma_bias    = None
 
         assert self.num_inputs == self.weights.shape[1]
         assert self.num_outputs == self.weights.shape[0]
@@ -89,14 +90,17 @@ class Layer(object):
     def update(self, wtdiffs, biasdiff):
 
         if self.ma_weights is None:
-            momentum_update = wtdiffs
+            momentum_wt_update   = wtdiffs
+            momentum_bias_update = biasdiff
         else:
-            momentum_update = self.momentum * self.ma_weights + (1.0 - self.momentum) * wtdiffs
+            momentum_wt_update   = self.momentum * self.ma_weights + (1.0 - self.momentum) * wtdiffs
+            momentum_bias_update = self.momentum * self.ma_bias    + (1.0 - self.momentum) * biasdiff
 
-        self.weights -= momentum_update
-        self.bias -= biasdiff
+        self.weights -= momentum_wt_update
+        self.bias    -= momentum_bias_update
 
-        self.ma_weights = momentum_update
+        self.ma_weights = momentum_wt_update
+        self.ma_bias    = momentum_bias_update
 
     def derivative(self, activations):
 

@@ -296,6 +296,7 @@ if __name__ == "__main__":
     layers = [
         Layer(xs.shape[1], num_hidden-1,  activation_fn = input_activation_fn,  momentum=0.5),
         Layer(num_hidden-1, num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
+        Layer(num_hidden, num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
 
         #ConvolutionalLayer(6, num_hidden, convolutions=2, activation_fn = input_activation_fn,  momentum=0.5),
         #Layer(xs.shape[1], num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
