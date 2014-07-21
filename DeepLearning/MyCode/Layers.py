@@ -210,6 +210,34 @@ class ConvolutionalLayer(Layer):
             dotprods.append(conv_z)
         return np.vstack(dotprods)
 
+    def gradients(self, delta, inputs):
+        frows = float(inputs.shape[1])
+        in_rows = self.weights.shape[0]
+        in_cols = self.weights.shape[1]
+        inputs_T = inputs.T
+
+
+        wtgrad = None
+        biasgrad = None
+        full_bias = ((np.sum(delta, axis=1, keepdims=True) / (frows)))
+        for c in range(self.convolutions):
+            con_inputs_T = inputs_T[:,c * in_cols: (c + 1) * in_cols]
+            con_delta = delta[c * in_rows: (c+1) * in_rows,:]
+
+            wtg = (np.dot(con_delta, con_inputs_T) / frows)
+            bg = full_bias[c * in_rows: (c+1) * in_rows,:]
+
+            if wtgrad is None:
+                wtgrad = wtg
+                biasgrad =  bg
+            else:
+                wtgrad += wtg
+                biasgrad += bg
+
+        if self.weight_decay > 0.0:
+            """ Weight decay is typically not done for the bias as has marginal effect."""
+            wtgrad += (self.weight_decay * self.weights)
+        return (wtgrad, biasgrad)
 
     def __repr__(self):
         conv = str(self.convolutions) + " * ["

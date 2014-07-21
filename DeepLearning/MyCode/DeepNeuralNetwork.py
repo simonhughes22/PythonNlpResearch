@@ -294,11 +294,12 @@ if __name__ == "__main__":
     #num_hidden = int(round((xs.shape[1])) * 1.1)
 
     layers = [
-        Layer(xs.shape[1], num_hidden-1,  activation_fn = input_activation_fn,  momentum=0.5),
-        Layer(num_hidden-1, num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
-        Layer(num_hidden, num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
+        Layer(xs.shape[1], 12,  activation_fn = input_activation_fn,  momentum=0.5),
+        #Layer(num_hidden-1, num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
+        #Layer(num_hidden, num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
 
-        #ConvolutionalLayer(6, num_hidden, convolutions=2, activation_fn = input_activation_fn,  momentum=0.5),
+        ConvolutionalLayer(12, 8,         convolutions=4, activation_fn = input_activation_fn,  momentum=0.5),
+        ConvolutionalLayer(8, num_hidden, convolutions=2, activation_fn = input_activation_fn,  momentum=0.5),
         #Layer(xs.shape[1], num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
         #Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
         Layer(num_hidden,  ys.shape[1], activation_fn = output_activation_fn, momentum=0.5),
