@@ -12,7 +12,7 @@ workspace.xml
 
 *.pydevproject
 .project
-.metadata
+.metadata 
 bin/
 tmp/
 *.tmp
