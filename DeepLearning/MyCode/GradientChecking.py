@@ -1,15 +1,16 @@
 import numpy as np
-import gnumpy as gp
+#import gnumpy as gp
 
-from Layers import Layer, DropOutLayer, dropout_mask
+from MLPLayers import Layer, DropOutLayer, dropout_mask
 
 USE_GPU = False
 
 def get_array(a):
     if USE_GPU:
-        if type(a) == gp.garray:
+        """if type(a) == gp.garray:
             return a
         return gp.garray(a)
+        """
 
     #ELSE NP
     if type(a) == np.array:

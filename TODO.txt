@@ -13,6 +13,7 @@ predicted codes
 	See the Python libraries (parsing, chunking, tagging, n grams):
 		natural
 		TextBlob
+		Pattern
 6. Examine other vector composition models
 		Read Socher paper on parsing using vector composition models
 7. Add bi-gram features - adds some knowledge of word ordering

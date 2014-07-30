@@ -6,18 +6,20 @@ Auto-encoder implementation. Can be used to implement a denoising auto-encoder, 
 '''
 
 import numpy as np
-import gnumpy as gp
+#import gnumpy as gp
 
-from Layers import Layer, ConvolutionalLayer, DropOutLayer, dropout_mask
+from MLPLayers import Layer, ConvolutionalLayer, DropOutLayer, dropout_mask
 from GradientChecking import GradientChecker
 
 USE_GPU = False
 
 def get_array(a):
     if USE_GPU:
+        """
         if type(a) == gp.garray:
             return a
         return gp.garray(a)
+        """
 
     #ELSE NP
     if type(a) == np.array:
@@ -217,7 +219,7 @@ class MLP(object):
             self.learning_rate *=  self.lr_decrease_multiplier
             self.__reset_layers__()
         # restrict learning rate to sensible bounds
-        self.learning_rate = max(0.001, self.learning_rate)
+        self.learning_rate = max(0.000000001, self.learning_rate)
         self.learning_rate = min(1.000, self.learning_rate)
 
     def __ensure_vector_format__(self, a):
@@ -263,7 +265,7 @@ if __name__ == "__main__":
     ]
     xs = np.array(xs)
 
-    input_activation_fn  = "sigmoid"
+    input_activation_fn  = "tanh"
 
     # Having a linear output layer seems to work REALLY well
     output_activation_fn = "tanh"
@@ -294,12 +296,12 @@ if __name__ == "__main__":
     #num_hidden = int(round((xs.shape[1])) * 1.1)
 
     layers = [
-        Layer(xs.shape[1], 12,  activation_fn = input_activation_fn,  momentum=0.5),
+        Layer(xs.shape[1], num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
         #Layer(num_hidden-1, num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
-        #Layer(num_hidden, num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
+        Layer(num_hidden, num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
 
-        ConvolutionalLayer(12, 8,         convolutions=4, activation_fn = input_activation_fn,  momentum=0.5),
-        ConvolutionalLayer(8, num_hidden, convolutions=2, activation_fn = input_activation_fn,  momentum=0.5),
+        #ConvolutionalLayer(12, 8,         convolutions=4, activation_fn = input_activation_fn,  momentum=0.5),
+        #ConvolutionalLayer(8, num_hidden, convolutions=2, activation_fn = input_activation_fn,  momentum=0.5),
         #Layer(xs.shape[1], num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
         #Layer(num_hidden,  num_hidden,  activation_fn = input_activation_fn,  momentum=0.5),
         Layer(num_hidden,  ys.shape[1], activation_fn = output_activation_fn, momentum=0.5),
@@ -311,7 +313,7 @@ if __name__ == "__main__":
              learning_rate=0.5, weight_decay=0.0, epochs=100, batch_size=8,
              lr_increase_multiplier=1.1, lr_decrease_multiplier=0.9)
 
-    nn.fit(     xs, ys, epochs=10,)
+    nn.fit(     xs, ys, epochs=1000,)
 
     """ Verify Gradient Calculation """
     grad_checker = GradientChecker()
