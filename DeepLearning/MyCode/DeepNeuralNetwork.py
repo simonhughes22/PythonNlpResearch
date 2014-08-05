@@ -41,6 +41,7 @@ class MLP(object):
         lr_increase_multiplier  = factor used to multiply the learning rate by if error decreeases
         lr_decrease_multiplier  = factor used to multiply the learning rate by if error increases
         '''
+        raise Exception("Switch to using cross entropy loss for output neurons if sigmoid")
 
         """ Properties """
         self.layers = layers
