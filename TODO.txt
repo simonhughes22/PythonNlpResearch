@@ -2,13 +2,12 @@
 Deep Learning (for the talk and for Peter's research):
 1. Tinker with the Theano implementations
 2. See if you can read thru and understand Socher's code
-3. Build your own neural network, and then your own auto-encoder (and then recursive auto-encoder)
 
-Classification \ RE
+Classification \ RE (Relationship Extraction)
 Pre-Req - Re watch Stanford NLP videos on RE, and re-read NLTK book sections on RECreate a confusion matrix
-3. Build a multi-step classifier. First stage - classify codes one by one
-4. Second stage, build a classifier on top that includes data about the sentence before and after's codes, along with current sentence's
+3. Second stage, build a classifier on top of the current that includes data about the sentence before and after's codes, along with current sentence's
 predicted codes
+4. Handle anaphora references (using stanford NLP library)
 5. Apply some of the relationship extraction techniques
 	See the Python libraries (parsing, chunking, tagging, n grams):
 		natural
@@ -16,9 +15,9 @@ predicted codes
 		Pattern
 6. Examine other vector composition models
 		Read Socher paper on parsing using vector composition models
-7. Add bi-gram features - adds some knowledge of word ordering
-8. Add selected parse features e.g. Object - Climate Change (see NLP lectures on distributed representations)
-
-Train a different algo and set of feature selections per code
+7. Add selected parse features e.g. Object - Climate Change (see NLP lectures on distributed representations)
+8. Train a different algo and set of feature selections per code
     Different algos do better on different codes
     Let's find and pick the best performer per code
+9. Try some IOBE encoding scheme for training the sequence labelling
+10. *** replace infrequent words with UNKNOWN rather than removing them - preserves sentence structure, or with their POS (better)

@@ -11,7 +11,7 @@ from MatrixHelper import numpy_to_gensim_format
 
 class WordCluster(object):
     
-    def __init__(self, tokenized_docs, num_topics = 100, min_doc_freq = 5, remove_stop_words = True, projector_fn = None, aggregation_method="doc"):
+    def __init__(self, tokenized_docs, num_topics = 100, min_doc_freq = 5, projector_fn = None, aggregation_method="doc"):
 
         """ PRE PROCESSING """
         """ Temporary functions """

@@ -1,6 +1,9 @@
 
 import os
+
 from FindFiles import find_files
+import Settings
+
 from collections import defaultdict
 
 class AnnotationBase(object):
@@ -267,11 +270,8 @@ class Essay(object):
 def load_bratt_essays(directory = None):
     bratt_root_folder = directory
     if not bratt_root_folder:
-        import Settings
         settings = Settings.Settings()
-        #bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/Merged/"
-        bratt_root_folder = settings.data_directory + "GlobalWarming/BrattFiles/globwarm20/"
-        #/Users/simon.hughes/Dropbox/PhD/Data/GlobalWarming/BrattFiles/globwarm20
+        bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/Merged/"
 
     files = find_files(bratt_root_folder, "\.ann$", remove_empty=True)
     print len(files), "files found"
@@ -287,12 +287,8 @@ def load_bratt_essays(directory = None):
     print "%s essays processed" % str(len(essays))
     return essays
 
+
 if __name__ == "__main__":
 
     load_bratt_essays()
     print "Done"
-
-
-
-
-
