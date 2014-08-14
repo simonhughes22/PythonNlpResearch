@@ -23,3 +23,10 @@ class Lsa(object):
     def to_lsa_matrix(self, tokenized_docs):
         tfidf_matrix = self.tfidf.to_tfidf_matrix(tokenized_docs)
         return self.__lsa__[tfidf_matrix]
+
+
+import gensim
+
+from gensim import matutils
+
+matutils.corpus2dense()
