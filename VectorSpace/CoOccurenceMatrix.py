@@ -133,7 +133,12 @@ class CoOccurenceMatrix(object):
 
     def get_gensim_row(self, val):
         return self.__get_item__(val, rows = True, sparse = True, use_ids = True)
-    
+
+
+    def get_row_with_values_from_values(self, rowval):
+        rowid = self.row_id_gen.get_id(rowval)
+        return self.__get_item__(rowid, rows=True, sparse=True, use_ids=False)
+
     def get_row_with_values(self, val):
         return self.__get_item__(val, rows = True, sparse = True, use_ids = False)
     
@@ -142,6 +147,10 @@ class CoOccurenceMatrix(object):
     
     def get_col_with_values(self, val):
         return self.__get_item__(val, rows = False, sparse = True, use_ids = False)
+
+    def get_col_with_values_from_values(self, colval):
+        colid = self.col_id_gen.get_id(colval)
+        return self.__get_item__(colid, rows = False, sparse = True, use_ids = False)
     
     def get_row(self, val):
         return self.__get_item__(val, rows = True, sparse = False, use_ids = True)
@@ -177,4 +186,18 @@ class CoOccurenceMatrix(object):
         if not rows:
             return mat.T
         return mat
-    
+
+if __name__ == "__main__":
+    mat = CoOccurenceMatrix(row_items=[
+        ["a", "b", "c"],
+        ["a", "d", "e"]
+    ], column_items=[
+        ["KK"],
+        ["LL"]
+    ], default_val=1)
+
+    rows = mat.get_row_with_values_from_values("a")
+    print rows
+    cols = mat.get_col_with_values_from_values("KK")
+    print cols
+    pass

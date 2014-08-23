@@ -103,3 +103,4 @@ print("Training loss full model: %f"
       % hamming_loss(y_train, np.vstack(full_ssvm.predict(X_train))))
 print("Test loss full model: %f"
       % hamming_loss(y_test, np.vstack(full_ssvm.predict(X_test))))
+

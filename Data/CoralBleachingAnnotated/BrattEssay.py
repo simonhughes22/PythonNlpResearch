@@ -5,6 +5,7 @@ from FindFiles import find_files
 import Settings
 
 from collections import defaultdict
+from nltk.tokenize import sent_tokenize
 
 class AnnotationBase(object):
     def __init__(self, line):
@@ -167,6 +168,7 @@ class Essay(object):
         self.tagged_words = []
         self.tagged_sentences = []
         self.id2annotation = {}
+        self.split_sents = []
 
         with open(full_path, "r+") as f:
             lines = f.readlines()
@@ -238,7 +240,7 @@ class Essay(object):
                 pair = (current_word.lower(), codes)
                 current_sentence.append(pair)
                 self.tagged_words.append(pair)
-            if ch.strip() != "":
+            if ch.strip() != "" and ch != "/":
                 if ix in codes_start:
                     pair2 = (ch, codes_start[ix])
                 else:
@@ -246,15 +248,63 @@ class Essay(object):
                 current_sentence.append(pair2)
                 self.tagged_words.append(pair2)
 
+        def add_sentence(sentence, str_sent):
+
+            sents = filter(lambda s: len(s) > 1, sent_tokenize(str_sent.strip()))
+            if len(sents) > 1:
+                processed = []
+                partitions = []
+                for i, sent in enumerate(sents):
+                    # last but one only
+                    if i < (len(sents) - 1):
+                        last = sent.split(" ")[-1].lower()
+                        if last == "temp.":
+                            continue
+                        if last[-1] in {".", "?", "?", "\n"}:
+                            last = last[-1]
+                        first = sents[i+1].split()[0].lower()
+                        partitions.append((last, first))
+
+                if len(partitions) == 0:
+                    # handle the temp. error from above (one sentence where there is a temp. Increase)
+                    self.tagged_sentences.append(sentence)
+                    return
+                current = []
+                for j in range(0, len(sentence)-1):
+                    wd,tag = sentence[j]
+                    current.append((wd, tag))
+                    if len(partitions) > 0:
+                        last, first = partitions[0]
+                        if last == wd:
+                            nextWd, nextTg = sentence[j + 1]
+                            if first.startswith(nextWd):
+                                self.tagged_sentences.append(current)
+                                processed.append(zip(*current)[0])
+                                current = []
+                current.append(sentence[-1])
+                self.tagged_sentences.append(current)
+                processed.append(zip(*current)[0])
+                assert len(processed) >= 2
+                self.split_sents.append(processed)
+            else:
+                self.tagged_sentences.append(sentence)
+
+        str_sent = ""
         for ix, ch in enumerate(self.txt):
 
             if ch.isalnum() or ch == "'":
                 current_word += ch
             else:
                 add_pair(current_word, current_sentence, codes.copy(), ch, ix)
-                if ch == "\n" and len(current_sentence) > 0:
-                    self.tagged_sentences.append(current_sentence)
+                str_sent += current_word + ch
+                # don't always split on periods, as not all periods terminate sentences (e.g. acronyms)
+                if len(current_sentence) > 0 and \
+                        ((ch in {"\n", "!", "?"}) or
+                         (ch == "/" and ix > 0 and self.txt[ix-1] in {"\n", ".", "!", "?"})
+                        ):
+                    add_sentence(current_sentence, str_sent)
                     current_sentence = []
+                    str_sent = ""
                 current_word = ""
 
             if ix in codes_start:
@@ -290,5 +340,14 @@ def load_bratt_essays(directory = None):
 
 if __name__ == "__main__":
 
-    load_bratt_essays()
+    essays = load_bratt_essays()
+
+    for essay in essays:
+        if essay.split_sents:
+            print essay.full_path
+            for splt_sent in essay.split_sents:
+                for splt in splt_sent:
+                    print " ".join(splt)
+                print ""
+
     print "Done"

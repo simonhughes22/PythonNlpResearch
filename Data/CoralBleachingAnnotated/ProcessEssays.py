@@ -3,12 +3,19 @@ from collections import defaultdict
 from SpellingCorrector import SpellingCorrector
 from Decorators import memoize
 from nltk import PorterStemmer
+from nltk.corpus import stopwords
 
-def process_sentences(essays, min_df = 5, spelling_correct = True, replace_nums = True, stem = False):
+def process_sentences(essays, min_df = 5,
+                      remove_infrequent = False, spelling_correct = True,
+                      replace_nums = True, stem = False, remove_stop_words = False,
+                      remove_punctuation = True):
 
+    INFREQUENT = "INFREQUENT"
     all_words = []
     wd_sent_freq = defaultdict(int)
     VALID_CHARS = {".", "?", "!", "=", "/", ":", ";", "&", "+", "-", "=", "%", "'", ",", "\\", "(", ")", "\""}
+    if remove_stop_words:
+        stop_wds = stopwords.words("english")
 
     if stem:
         stemmer = PorterStemmer()
@@ -48,7 +55,24 @@ def process_sentences(essays, min_df = 5, spelling_correct = True, replace_nums 
 
     @memoize
     def process_word(w):
-        if spelling_correct:
+
+        # Remove quotes at the start and end
+        w = w.strip()
+        if len(w) == 0:
+            return None
+        if w[0] == "\"":
+            w = w[1:]
+            if len(w) == 0:
+                return None
+        if w[-1] == "\"":
+            w = w[:-1]
+        if remove_stop_words and w in stop_wds:
+            return None
+
+        if remove_punctuation and not w.isalpha() and not w.isalnum() and not w.isdigit():
+            return None
+
+        if spelling_correct == True:
             cw = correct_word(w)
             if cw != w:
                 corrections[(w, cw)] += 1
@@ -65,18 +89,20 @@ def process_sentences(essays, min_df = 5, spelling_correct = True, replace_nums 
                 if stem:
                     cwstemmed = stemmer.stem(cw)
                     if wd_sent_freq[cwstemmed] < min_df:
-                        cw = "INFREQUENT"
+                        cw = INFREQUENT
                     else:
                         cw = cwstemmed
                         # could now also be all digits
                         if replace_nums and cw.isdigit():
                             cw = "0" * len(cw)
                 else:
-                    cw = "INFREQUENT"
+                    cw = INFREQUENT
             elif stem:
                 cw = stemmer.stem(cw)
                 if replace_nums and cw.isdigit():
                     cw = "0" * len(cw)
+        if remove_stop_words and cw in stop_wds:
+            return None
         return cw
 
     sentences = []
@@ -87,8 +113,12 @@ def process_sentences(essays, min_df = 5, spelling_correct = True, replace_nums 
                 # remove bad single chars
                 if not is_valid_wd(w):
                     continue
-                new_sentence.append((process_word(w), tags))
-            sentences.append( new_sentence )
+                cw = process_word(w)
+                if cw is None or cw == "" or (remove_infrequent and cw == INFREQUENT):
+                    continue
+                new_sentence.append((cw, tags))
+            if len(new_sentence) > 0:
+                sentences.append( new_sentence )
     return sentences
 
 if __name__ == "__main__":

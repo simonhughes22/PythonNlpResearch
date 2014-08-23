@@ -25,8 +25,3 @@ class Lsa(object):
         return self.__lsa__[tfidf_matrix]
 
 
-import gensim
-
-from gensim import matutils
-
-matutils.corpus2dense()
