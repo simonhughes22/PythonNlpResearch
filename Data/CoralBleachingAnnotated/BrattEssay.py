@@ -248,9 +248,18 @@ class Essay(object):
                 current_sentence.append(pair2)
                 self.tagged_words.append(pair2)
 
+        def onlyascii(s):
+            out = ""
+            for char in s:
+                if ord(char) < 48 or ord(char) > 127:
+                    out += " "
+                else:
+                    out += char
+            return out
+
         def add_sentence(sentence, str_sent):
 
-            sents = filter(lambda s: len(s) > 1, sent_tokenize(str_sent.strip()))
+            sents = filter(lambda s: len(s) > 1, sent_tokenize(onlyascii(str_sent.strip())))
             if len(sents) > 1:
                 processed = []
                 partitions = []

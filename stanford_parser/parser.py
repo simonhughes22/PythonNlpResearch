@@ -10,10 +10,6 @@ def standoffFromToken(txt, token):
     return TextStandoff(txt, (token.beginPosition(), token.endPosition()))
 
 
-                   
-           
-
-
 class Dependencies:
     def __init__(self, sentence, tokens, posTags, dependencies):
         self.sentence = sentence
@@ -130,6 +126,7 @@ class Parser:
         print "Test parameters"
         self.parser.op.tlpParams.display();
         self.package_lexparser.Test.display()
+
     def parse(self, sentence):
         """
         Parses the sentence string, returning the tokens, and the parse tree as a tuple.
