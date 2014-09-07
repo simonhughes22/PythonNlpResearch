@@ -42,7 +42,7 @@ if __name__ == "__main__":
     user = os.environ["USER"]
 
     """ Writes a path.txt file to the profile dir. Copy into the ~/bash_profile """
-    path = ("/Users/%s/GitHub/NlpResearch" % user)
+    path = ("/Users/%s/GitHub/NlpResearch/PythonNlpResearch" % user)
     fname = path + "/launch_notbook.sh"
 
     folders = get_source_folders(path)

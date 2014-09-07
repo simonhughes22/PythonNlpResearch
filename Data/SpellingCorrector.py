@@ -11,7 +11,7 @@ class SpellingCorrector(object):
     def __init__(self, words = None):
 
         #settings = Settings.Settings()
-        dir = "/Users/simon.hughes/GitHub/NlpResearch/Data/PublicDataSets/"
+        dir = "/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Data/PublicDataSets/"
         dictionary_file = dir + "words.lst"
 
         if not words:
