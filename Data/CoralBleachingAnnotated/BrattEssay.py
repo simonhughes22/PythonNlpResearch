@@ -251,8 +251,8 @@ class Essay(object):
         def onlyascii(s):
             out = ""
             for char in s:
-                if ord(char) < 48 or ord(char) > 127:
-                    out += " "
+                if ord(char) > 127:
+                    out += ""
                 else:
                     out += char
             return out
@@ -261,6 +261,11 @@ class Essay(object):
 
             sents = filter(lambda s: len(s) > 1, sent_tokenize(onlyascii(str_sent.strip())))
             if len(sents) > 1:
+                # filter to # of full sentences, and we should get at least this many out
+                expected_min_sents = len([s for s in sents if s.strip().split(" ") > 1])
+
+                unique_wds = set(zip(*sentence)[0])
+
                 processed = []
                 partitions = []
                 for i, sent in enumerate(sents):
@@ -268,10 +273,24 @@ class Essay(object):
                     if i < (len(sents) - 1):
                         last = sent.split(" ")[-1].lower()
                         if last == "temp.":
+                            expected_min_sents -= 1
                             continue
                         if last[-1] in {".", "?", "?", "\n"}:
                             last = last[-1]
+                        elif last not in unique_wds:
+                            last = last[-1]
+
+                        assert last in unique_wds
+
                         first = sents[i+1].split()[0].lower()
+                        if first not in unique_wds:
+                            if not first[-1].isalnum():
+                                first = first[:-1]
+                            elif not first[0].isalnum():
+                                first = first[0]
+
+                        assert first in unique_wds
+
                         partitions.append((last, first))
 
                 if len(partitions) == 0:
@@ -290,10 +309,11 @@ class Essay(object):
                                 self.tagged_sentences.append(current)
                                 processed.append(zip(*current)[0])
                                 current = []
+                                partitions = partitions[1:]
                 current.append(sentence[-1])
                 self.tagged_sentences.append(current)
                 processed.append(zip(*current)[0])
-                assert len(processed) >= 2
+                assert len(processed) >= max(2,expected_min_sents)
                 self.split_sents.append(processed)
             else:
                 self.tagged_sentences.append(sentence)
