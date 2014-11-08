@@ -237,7 +237,7 @@ class Essay(object):
 
         def add_pair(current_word, current_sentence, codes, ch, ix):
             if current_word.strip() != "":
-                pair = (current_word.lower(), codes)
+                pair = (current_word, codes)
                 current_sentence.append(pair)
                 self.tagged_words.append(pair)
             if ch.strip() != "" and ch != "/":
@@ -264,32 +264,32 @@ class Essay(object):
                 # filter to # of full sentences, and we should get at least this many out
                 expected_min_sents = len([s for s in sents if s.strip().split(" ") > 1])
 
-                unique_wds = set(zip(*sentence)[0])
+                unique_wds = set(map(lambda s: s.lower(), zip(*sentence)[0]))
 
                 processed = []
                 partitions = []
                 for i, sent in enumerate(sents):
                     # last but one only
                     if i < (len(sents) - 1):
-                        last = sent.split(" ")[-1].lower()
-                        if last == "temp.":
+                        last = sent.split(" ")[-1]
+                        if last.lower() == "temp.":
                             expected_min_sents -= 1
                             continue
                         if last[-1] in {".", "?", "?", "\n"}:
                             last = last[-1]
-                        elif last not in unique_wds:
+                        elif last.lower() not in unique_wds:
                             last = last[-1]
 
-                        assert last in unique_wds
+                        assert last.lower() in unique_wds
 
-                        first = sents[i+1].split()[0].lower()
-                        if first not in unique_wds:
+                        first = sents[i+1].split()[0]
+                        if first.lower() not in unique_wds:
                             if not first[-1].isalnum():
                                 first = first[:-1]
                             elif not first[0].isalnum():
                                 first = first[0]
 
-                        assert first in unique_wds
+                        assert first.lower() in unique_wds
 
                         partitions.append((last, first))
 

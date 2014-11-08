@@ -44,10 +44,11 @@
       <sourceFolder url="file://$MODULE_DIR$/stanford_parser" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Synonyms" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MontyLingua" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingAnnotated" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/Notebooks" />
     </content>
-    <orderEntry type="jdk" jdkName="EnthoughtDistro_DiceWork" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="EnthoughtDistro_PhDWork" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">

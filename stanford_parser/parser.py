@@ -168,7 +168,5 @@ class Parser:
                                govStandoff,
                                depStandoff))
 
-
-
         return Dependencies(sentence, standoffTokens, posTags, returnList)
                               

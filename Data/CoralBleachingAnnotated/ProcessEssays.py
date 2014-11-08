@@ -4,11 +4,15 @@ from SpellingCorrector import SpellingCorrector
 from Decorators import memoize
 from nltk import PorterStemmer
 from nltk.corpus import stopwords
+from IterableFP import flatten
 
-def process_sentences(essays, min_df = 5,
+def process_essays(essays, min_df = 5,
                       remove_infrequent = False, spelling_correct = True,
                       replace_nums = True, stem = False, remove_stop_words = False,
-                      remove_punctuation = True):
+                      remove_punctuation = True, lower_case=True):
+    """ returns a list of essays.
+        Each essay is a list of tuples of word : set pairs. The set contains all the tags for the word
+    """
 
     INFREQUENT = "INFREQUENT"
     all_words = []
@@ -24,6 +28,8 @@ def process_sentences(essays, min_df = 5,
         for sentence in essay.tagged_sentences:
             unique_wds = set()
             for w, tags in sentence:
+                if lower_case:
+                    w = w.lower()
                 all_words.append(w) # retain frequencies for spelling correction
                 if w not in unique_wds:
                     unique_wds.add(w)
@@ -58,6 +64,8 @@ def process_sentences(essays, min_df = 5,
 
         # Remove quotes at the start and end
         w = w.strip()
+        if lower_case:
+            w = w.lower()
         if len(w) == 0:
             return None
         if w[0] == "\"":
@@ -105,8 +113,10 @@ def process_sentences(essays, min_df = 5,
             return None
         return cw
 
-    sentences = []
+    processed_essays = []
     for essay in essays:
+        lst_sentences = []
+        processed_essays.append(lst_sentences)
         for i, sentence in enumerate(essay.tagged_sentences):
             new_sentence = []
             for j, (w, tags) in enumerate(sentence):
@@ -118,10 +128,26 @@ def process_sentences(essays, min_df = 5,
                     continue
                 new_sentence.append((cw, tags))
             if len(new_sentence) > 0:
-                sentences.append( new_sentence )
+                lst_sentences.append(new_sentence)
+    return processed_essays
+
+def process_sentences(essays, min_df=5,
+                      remove_infrequent=False, spelling_correct=True,
+                      replace_nums=True, stem=False, remove_stop_words=False,
+                      remove_punctuation=True, lower_case=True):
+
+    processed_essays = process_essays(essays, min_df=min_df,
+                                      remove_infrequent=remove_infrequent, spelling_correct=spelling_correct,
+                                      replace_nums=replace_nums, stem=stem, remove_stop_words=remove_stop_words,
+                                      remove_punctuation=remove_punctuation, lower_case=lower_case)
+    sentences = []
+    for essay in processed_essays:
+        for sentence in essay:
+            sentences.append(sentence)
     return sentences
 
 if __name__ == "__main__":
+
     from BrattEssay import load_bratt_essays
 
     essays = load_bratt_essays()
