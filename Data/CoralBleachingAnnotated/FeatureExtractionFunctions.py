@@ -30,7 +30,7 @@ def extract_positional_word_features(offset, input, val = 1):
     end = len(input.sentence) - 1
     for i in range(start, stop+1):
         offset_word = input.sentence[i]
-        relative_offset = str(start - input.wordix)
+        relative_offset = str(input.wordix - start)
         if i < 0:
             feats["SENT_START:" + relative_offset] = val
         elif i > end:

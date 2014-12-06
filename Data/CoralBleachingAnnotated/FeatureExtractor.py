@@ -12,25 +12,24 @@ class Word(object):
 
 class FeatureExtractorInput(object):
     """ Holds all the input needed for a feature extractor
-
-        word        :   Word class
-                            current word + tags + features
-        wordix      :   int
-                            index of word in the sentence
-        sentence    :   list of words
-                            sentence (words only)
-        sentenceix  :   int
-                            index of the sentence in the essay
-        essay       :   list of list of tuples
-                            list of sentences, which are lists of
-                            tuples of words and a set of tags
+        wordix              :   int
+                                    index of word in the sentence
+        tagged_sentence     :   list of words
+                                    sentence (words only)
+        sentenceix          :   int
+                                    index of the sentence in the essay
+        essay               :   list of list of tuples
+                                    list of sentences, which are lists of
+                                    tuples of words and a set of tags
     """
-    def __int__(self, word, wordix, sentence, sentenceix, essay):
-        self.word = word
+    def __int__(self, wordix, tagged_sentence, sentenceix, essay):
         self.wordix = wordix
-        self.sentence = sentence
+        self.tagged_sentence = tagged_sentence
         self.sentenceix = sentenceix
         self.essay = essay
+        # for convenience
+        self.sentence, self.tags = zip(*tagged_sentence)
+        self.word = self.sentence[sentenceix]
 
 class FeatureExtractor(object):
     def __int__(self, feature_extractor_fns):
@@ -47,10 +46,11 @@ class FeatureExtractor(object):
             transformed.append(t_essay)
             for sent_ix, taggged_sentence in enumerate(essay):
                 t_sentence = []
+                t_essay.append(t_sentence)
                 sentence = zip(*taggged_sentence)
                 for word_ix, (wd, tags) in taggged_sentence:
                     word = Word(wd, tags)
-                    input = FeatureExtractorInput(word, word_ix, sentence, sent_ix, essay)
+                    input = FeatureExtractorInput(word_ix, sentence, sent_ix, essay)
                     for fn in self.feature_extractor_fns:
                         d = fn(input)
                         word.features.update(d)

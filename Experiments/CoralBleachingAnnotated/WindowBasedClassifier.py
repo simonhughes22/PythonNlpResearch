@@ -11,6 +11,7 @@ from BrattEssay import load_bratt_essays
 from ProcessEssays import process_sentences, process_essays
 
 from WindowProcessor import WindowProcessor as WindowProc
+from FeatureExtractor import FeatureExtractor as FeatExtractor
 
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -32,6 +33,7 @@ MIN_FEAT_FREQ       = 15        # 15 best so far, and faster also
 
 # load from disk
 logger.info("Loading Essays")
+# parse bratt essays
 essays = load_bratt_essays()
 
 logger.info("Processing Essays")
@@ -46,6 +48,23 @@ tagged_essays = process_essays(essays,
                                remove_stop_words=REMOVE_STOP_WORDS,
                                remove_punctuation=REMOVE_PUNCTUATION,
                                lower_case=False)
+
+from FeatureExtractionFunctions import *
+
+unigram_window = fact_extract_positional_word_features(WINDOW_SIZE)
+biigram_window = fact_extract_ngram_features(WINDOW_SIZE, 2)
+#TODO - add POS TAGS (positional)
+#TODO - add dep parse feats
+#TODO - memoize features above for speed
+extractors = [unigram_window, biigram_window]
+
+feature_extractor = FeatExtractor(extractors)
+essay_feats = feature_extractor.transform(tagged_essays)
+#TODO Pickle essay_feats to save time
+
+#TODO CV validation loop
+#TODO CV split essays, then flatten to word level
+
 
 """
 # REWRITE - see FeatureExtractor and FeatureExtractor fns
