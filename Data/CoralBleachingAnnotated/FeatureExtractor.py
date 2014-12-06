@@ -5,7 +5,7 @@ import numpy as np
 class Word(object):
     """ Holds a word for a sequence tagger approach.
     """
-    def __int__(self, word, tags):
+    def __init__(self, word, tags):
         self.word = word
         self.tags = set(tags)
         self.features = {}
@@ -22,7 +22,7 @@ class FeatureExtractorInput(object):
                                     list of sentences, which are lists of
                                     tuples of words and a set of tags
     """
-    def __int__(self, wordix, tagged_sentence, sentenceix, essay):
+    def __init__(self, wordix, tagged_sentence, sentenceix, essay):
         self.wordix = wordix
         self.tagged_sentence = tagged_sentence
         self.sentenceix = sentenceix
@@ -32,7 +32,7 @@ class FeatureExtractorInput(object):
         self.word = self.sentence[sentenceix]
 
 class FeatureExtractor(object):
-    def __int__(self, feature_extractor_fns):
+    def __init__(self, feature_extractor_fns):
         """ feature_extractor_fns   :   list of fns
                                             fn: FeatureExtractorInput -> dict
         """
