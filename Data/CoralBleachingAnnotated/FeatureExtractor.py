@@ -1,7 +1,5 @@
 __author__ = 'simon.hughes'
 
-import numpy as np
-
 class Word(object):
     """ Holds a word for a sequence tagger approach.
     """
@@ -9,6 +7,9 @@ class Word(object):
         self.word = word
         self.tags = set(tags)
         self.features = {}
+
+    def __repr__(self):
+        return self.word + "->" + str(self.tags)[3:] + " - %s feats" % str(len(self.features))
 
 class FeatureExtractorInput(object):
     """ Holds all the input needed for a feature extractor
@@ -29,7 +30,7 @@ class FeatureExtractorInput(object):
         self.essay = essay
         # for convenience
         self.sentence, self.tags = zip(*tagged_sentence)
-        self.word = self.sentence[sentenceix]
+        self.word = self.sentence[wordix]
 
 class FeatureExtractor(object):
     def __init__(self, feature_extractor_fns):
@@ -47,10 +48,10 @@ class FeatureExtractor(object):
             for sent_ix, taggged_sentence in enumerate(essay):
                 t_sentence = []
                 t_essay.append(t_sentence)
-                sentence = zip(*taggged_sentence)
-                for word_ix, (wd, tags) in taggged_sentence:
+
+                for word_ix, (wd, tags) in enumerate(taggged_sentence):
                     word = Word(wd, tags)
-                    input = FeatureExtractorInput(word_ix, sentence, sent_ix, essay)
+                    input = FeatureExtractorInput(word_ix, taggged_sentence, sent_ix, essay)
                     for fn in self.feature_extractor_fns:
                         d = fn(input)
                         word.features.update(d)

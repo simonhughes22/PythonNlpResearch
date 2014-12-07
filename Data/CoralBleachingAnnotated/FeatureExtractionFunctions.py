@@ -3,6 +3,9 @@ from NgramGenerator import compute_ngrams
 """ POSITIONAL SINGLE WORDS
 """
 
+__START__ = "<START>"
+__END__   = "<END>"
+
 def fact_extract_positional_word_features(offset):
     """ offset      :   int
                             the number of words either side of the input to extract features from
@@ -29,13 +32,14 @@ def extract_positional_word_features(offset, input, val = 1):
 
     end = len(input.sentence) - 1
     for i in range(start, stop+1):
-        offset_word = input.sentence[i]
-        relative_offset = str(input.wordix - start)
+
         if i < 0:
-            feats["SENT_START:" + relative_offset] = val
+            feats[__START__ + ":" + str(i)] = val
         elif i > end:
-            feats["SENT_END:" + relative_offset] = val
+            feats[__END__ + ":" + str(i)] = val
         else:
+            relative_offset = str(i - input.wordix)
+            offset_word = input.sentence[i]
             feats["WD:" + relative_offset + "->" + offset_word] = val
     return feats
 
@@ -66,20 +70,30 @@ def extract_ngram_features(offset, ngram_size, input, val = 1):
     """
 
     feats = {}
-    end = len(input.sentence) - 1 - (ngram_size -1) # last ngram
+    end = len(input.sentence) - 1
 
     # fix to within bounds only
     start = max(0, input.wordix - offset)
     stop  = min(end, input.wordix + offset)
 
-    ngrams = compute_ngrams(input.sentence, ngram_size, ngram_size)
+    window = list(input.sentence[start:stop+1])
+    if input.wordix < offset:
+        diff = offset - input.wordix
+        for i in range(diff):
+            window.insert(0,__START__)
+    if input.wordix + offset > end:
+        diff = input.wordix + offset - end
+        for i in range(diff):
+            window.append(__END__)
+
+    ngrams = compute_ngrams(window, ngram_size, ngram_size)
     str_num_ngrams = str(ngram_size)
 
-    for i in range(start, stop+1):
-        offset_ngram = ngrams[i]
-        relative_offset = str(start - input.wordix)
+    for i, offset_ngram in enumerate(ngrams):
+        relative_offset = str(i - offset)
         str_ngram = ",".join(offset_ngram)
         feats["POS_" + str_num_ngrams + "GRAMS:" + relative_offset + "->" + str_ngram] = val
+
     return feats
 
 
