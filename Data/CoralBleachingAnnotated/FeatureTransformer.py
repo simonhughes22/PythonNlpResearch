@@ -43,8 +43,8 @@ class FeatureTransformer(BaseEstimator, TransformerMixin):
             for k, v in dct.items():
                 if k in self.frequent:
                     new_dct[k] = v
-            if len(new_dct) > 0:
-                filtered.append(new_dct)
+            #if len(new_dct) > 0: # need to keep to the same length as the ys array
+            filtered.append(new_dct)
         # vectorize
         return self.vectorizer.fit(filtered)
 

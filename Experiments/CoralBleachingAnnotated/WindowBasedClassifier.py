@@ -4,13 +4,27 @@ import numpy as np
 from Decorators import timeit, memoize
 from BrattEssay import load_bratt_essays
 from processessays import process_sentences, process_essays
-from helperfunctions import get_word_feat_tags, get_ys_by_code
+from wordtagginghelper import flatten_to_wordlevel_feat_tags, get_wordlevel_ys_by_code
 
 from featureextractor import FeatureExtractor
 from featuretransformer import FeatureTransformer
 from featureextractionfunctions import *
 from sklearn.cross_validation import train_test_split
-from helperfunctions import *
+from wordtagginghelper import *
+from IterableFP import flatten
+
+# Classifiers
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import RidgeClassifier
+from sklearn.linear_model import Ridge
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.svm import LinearSVC
+from sklearn.svm import SVC
+from sklearn.lda import LDA
+from sklearn.neighbors import KNeighborsClassifier
+# END Classifiers
 
 import pickle
 import Settings
@@ -83,17 +97,41 @@ essay_feats = feature_extractor.transform(tagged_essays)
 
 """ Data Partitioning and Training """
 TD, VD = train_test_split(essay_feats, test_size=PCT_VALIDATION)
-td_feats, td_tags = get_word_feat_tags(TD)
+td_feats, td_tags = flatten_to_wordlevel_feat_tags(TD)
+vd_feats, vd_tags = flatten_to_wordlevel_feat_tags(VD)
 
 feature_transformer = FeatureTransformer(min_feature_freq=MIN_FEAT_FREQ)
-td_X = feature_transformer.transform(td_feats)
-td_ys_bycode = get_ys_by_code(td_tags)
+td_X = feature_transformer.fit_transform(td_feats)
+vd_X = feature_transformer.transform(vd_feats)
+td_ys_bycode = get_wordlevel_ys_by_code(td_tags)
+vd_ys_bycode = get_wordlevel_ys_by_code(vd_tags)
 
+#fn_create_cls = lambda : LinearSVC(C=1.0)
+# LR seems to do better
+fn_create_cls = lambda : LogisticRegression()
+all_tags = set(flatten(td_tags))
 
-#TODO call FeatureTransformer and process VD AND TD into xs and ys_per_code
+# use more tags for training for sentence level classifier
+train_tags = [c for c in all_tags if c != "it"]
+test_tags  = [c for c in all_tags if c.isdigit() or c == "explicit"]
+""" TRAIN """
+tag2Classifier = train_wordlevel_classifier(td_X, td_ys_bycode, fn_create_cls, train_tags)
 
-#TODO CV validation loop
-#TODO CV split essays, then flatten to word level
+""" TEST """
+td_metricsByTag, td_wt_mean_prfa, td_mean_prfa = test_word_level_classifiers(td_X, td_ys_bycode, tag2Classifier, test_tags)
+vd_metricsByTag, vd_wt_mean_prfa, vd_mean_prfa = test_word_level_classifiers(vd_X, vd_ys_bycode, tag2Classifier, test_tags)
+
+print fn_create_cls()
+# print results for each code
+print_metrics_for_codes(td_metricsByTag, vd_metricsByTag)
+
+# print macro measures
+print "\nTraining   Performance"
+print "Weighted:" + str(td_wt_mean_prfa)
+print "Mean    :" + str(td_mean_prfa)
+print "\nValidation Performance"
+print "Weighted:" + str(vd_wt_mean_prfa)
+print "Mean    :" + str(vd_mean_prfa)
 
 """
 # REWRITE - see FeatureExtractor and FeatureExtractor fns
@@ -110,23 +148,6 @@ td_ys_bycode = get_ys_by_code(td_tags)
 #       function inputs to a filename in a supplied directory (via the decorator). Spelling correction is time consuming.
 #       Don't waste time re-executing.
 
-# OLD
-logger.info("Splitting Windows")
-winProc = WindowProc(tagged_essays, window_size=7)
-windows = winProc.get_word_windows()
-ysByCode    = winProc.get_tag_windows()
-
-from WindowFeatureExtractor import  WindowFeatureExtractor as WinExtractor
-from WindowFeatures import extract_word_features, extract_positional_word_features, positional_bigram_features
-
-#extract features
-extractor = WinExtractor(
-    [   extract_word_features,
-        extract_positional_word_features,
-        positional_bigram_features
-    ], MIN_FEAT_FREQ, False)
-
-xs = extractor.fit_transform(windows)
 
 #TODO Include dependency parse features
 """
