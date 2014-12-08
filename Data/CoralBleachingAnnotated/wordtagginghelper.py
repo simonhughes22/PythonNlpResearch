@@ -132,7 +132,7 @@ def print_metrics_for_codes(td_metricsByTag, vd_metricsByTag):
     for tag in sorted(td_metricsByTag.keys()):
         td_rpfa = td_metricsByTag[tag]
         vd_rpfa = vd_metricsByTag[tag]
-        print "TAG:      ", pad_str(tag)
+        print "TAG:       ", pad_str(tag)
         print "recall:    ", pad_str(td_rpfa.recall),       pad_str(vd_rpfa.recall)
         print "precision: ", pad_str(td_rpfa.precision),    pad_str(vd_rpfa.precision)
         print "f1:        ", pad_str(td_rpfa.f1_score),     pad_str(vd_rpfa.f1_score)

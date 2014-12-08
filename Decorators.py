@@ -3,6 +3,9 @@
 """
 
 import time
+import os
+import pickle
+from collections import defaultdict
 
 def timeit(method):
 
@@ -37,18 +40,46 @@ def timeit(method):
 
     return timed
 
+
+class __memodict_(dict):
+    def __init__(self, f):
+        self.f = f
+
+    def __call__(self, *args):
+        return self[args]
+
+    def __missing__(self, key):
+        ret = self[key] = self.f(*key)
+        return ret
+
 def memoize(f):
     """ Memoization decorator for functions taking one or more arguments. """
-    class memodict(dict):
-        def __init__(self, f):
-            self.f = f
-        def __call__(self, *args):
-            return self[args]
-        def __missing__(self, key):
-            ret = self[key] = self.f(*key)
-            return ret
-    return memodict(f)
+    return __memodict_(f)
 
+class memoize_to_disk(object):
+
+    def __init__(self, filename_prefix):
+        self.filename_prefix = filename_prefix
+
+    def __call__(self, f):
+        # decorate f
+        def wrapped_f(**kwargs):
+            pickle_key = "_".join(map(lambda (k, v): k + "_" + self.__value2str__(v), sorted(kwargs.items())))
+            pickle_file = self.filename_prefix + pickle_key
+            if os.path.exists(pickle_file):
+                return pickle.load(open(pickle_file, "r+"))
+            result = f(**kwargs)
+            pickle.dump(result, open(pickle_file, "w+"))
+            return result
+        return wrapped_f
+
+    def __value2str__(self, value):
+        if type(value) == list or type(value) == tuple \
+                or type(value) == dict or type(value) == defaultdict:
+            return "_".join(map(self.__value2str__, value))
+        elif hasattr(value, '__call__'):
+            return value.func_name
+        return str(value)
 
 if __name__ == "__main__":
 
