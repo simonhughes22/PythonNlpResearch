@@ -73,6 +73,8 @@ stanford_parser_home = None
 def startJvm():
     import os
     os.environ.setdefault("STANFORD_PARSER_HOME", "3rdParty/stanford-parser/stanford-parser-2010-08-20")
+    #SH modified to match my location
+
     global stanford_parser_home
     stanford_parser_home = os.environ["STANFORD_PARSER_HOME"]
     jpype.startJVM(jpype.getDefaultJVMPath(),
@@ -90,8 +92,6 @@ class Parser:
         else:
             self.pcfg_model_fname = pcfg_model_fname
 
-
-
         self.package_lexparser = jpype.JPackage("edu.stanford.nlp.parser.lexparser")
         
         self.parser = self.package_lexparser.LexicalizedParser(self.pcfg_model_fname)
@@ -101,11 +101,8 @@ class Parser:
         self.tokenizerFactory = tokenizerFactoryClass.newPTBTokenizerFactory(True, True)
 
         self.documentPreprocessor = self.package.process.DocumentPreprocessor(self.tokenizerFactory)
-        
-        
+
         self.parser.setOptionFlags(["-retainTmpSubcategories"])
-
-
 
 
     def printInfo(self):

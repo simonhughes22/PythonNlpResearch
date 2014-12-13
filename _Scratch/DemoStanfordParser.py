@@ -4,6 +4,8 @@ from stanford_parser import parser
 
 txt = "Pick up the tire pallet."
 p = parser.Parser()
+
+
 dependencies = p.parseToStanfordDependencies(txt)
 tupleResult= [(rel, (gov.text, gov.start, gov.end), (dep.text, dep.start, dep.end))
                     for rel, gov, dep in dependencies.dependencies]

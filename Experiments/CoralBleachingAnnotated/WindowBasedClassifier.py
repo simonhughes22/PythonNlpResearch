@@ -38,7 +38,7 @@ logger = logging.getLogger()
 MIN_SENTENCE_FREQ   = 2        # i.e. df. Note this is calculated BEFORE creating windows
 REMOVE_INFREQUENT   = False    # if false, infrequent words are replaced with "INFREQUENT"
 SPELLING_CORRECT    = True
-STEM                = True
+STEM                = False    # note this tends to improve matters, but is needed to be on for pos tagging and dep parsing
 REPLACE_NUMS        = True     # 1989 -> 0000, 10 -> 00
 MIN_SENTENCE_LENGTH = 3
 REMOVE_STOP_WORDS   = False
@@ -75,6 +75,7 @@ tagged_essays = load_and_process_essays(min_df=MIN_SENTENCE_FREQ, remove_infrequ
 
 # FEATURE SETTINGS
 WINDOW_SIZE         = 7
+POS_WINDOW_SIZE     = 1
 MIN_FEAT_FREQ       = 5        # 5 best so far
 CV_FOLDS            = 5
 # END FEATURE SETTINGS
@@ -82,28 +83,30 @@ CV_FOLDS            = 5
 offset = (WINDOW_SIZE-1) / 2
 unigram_window = fact_extract_positional_word_features(offset)
 biigram_window = fact_extract_ngram_features(offset, 2)
+pos_tag_window = fact_extract_positional_POS_features((POS_WINDOW_SIZE-1/2))
 #TODO - add POS TAGS (positional)
 #TODO - add dep parse feats
 #TODO - memoize features above for speed
-extractors = [unigram_window, biigram_window]
+#extractors = [unigram_window, biigram_window, pos_tag_window]
+extractors = [unigram_window, biigram_window, pos_tag_window]
 
 # most params below exist ONLY for the purposes of the hashing to and from disk
 @memoize_to_disk(filename_prefix=features_filename_prefix)
 def extract_features(min_df,
-                     remove_infrequent, spelling_correct,
-                     replace_nums, stem, remove_stop_words,
-                     remove_punctuation, lower_case,
-                     window_size, min_feature_freq,
+                     rem_infreq, spell_correct,
+                     replace_nos, stem, rem_stop_wds,
+                     rem_punc, l_case,
+                     win_size, pos_win_size, min_feat_freq,
                      extractors):
     feature_extractor = FeatureExtractor(extractors)
     return feature_extractor.transform(tagged_essays)
 
-essay_feats = extract_features(min_df=MIN_SENTENCE_FREQ, remove_infrequent=REMOVE_INFREQUENT,
-                               spelling_correct=SPELLING_CORRECT,
-                               replace_nums=REPLACE_NUMS, stem=STEM, remove_stop_words=REMOVE_STOP_WORDS,
-                               remove_punctuation=REMOVE_PUNCTUATION, lower_case=LOWER_CASE,
-
-                               window_size=WINDOW_SIZE, min_feature_freq=MIN_FEAT_FREQ, extractors=extractors)
+essay_feats = extract_features(min_df=MIN_SENTENCE_FREQ, rem_infreq=REMOVE_INFREQUENT,
+                               spell_correct=SPELLING_CORRECT,
+                               replace_nos=REPLACE_NUMS, stem=STEM, rem_stop_wds=REMOVE_STOP_WORDS,
+                               rem_punc=REMOVE_PUNCTUATION, l_case=LOWER_CASE,
+                               win_size=WINDOW_SIZE, pos_win_size=POS_WINDOW_SIZE,
+                               min_feat_freq=MIN_FEAT_FREQ, extractors=extractors)
 
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
 all_tags = set(flatten(lst_all_tags))
@@ -155,12 +158,12 @@ for i,(TD, VD) in enumerate(folds):
     merge_metrics(td_metricsByTag, td_all_metricsByTag)
     merge_metrics(vd_metricsByTag, vd_all_metricsByTag)
 
-print fn_create_cls()
 # print results for each code
 mean_td_metrics = agg_metrics(td_all_metricsByTag, mean_rpfa)
 mean_vd_metrics = agg_metrics(vd_all_metricsByTag, mean_rpfa)
 
 print_metrics_for_codes(mean_td_metrics, mean_vd_metrics)
+print fn_create_cls()
 # print macro measures
 print "\nTraining   Performance"
 print "Weighted:" + str(mean_rpfa(lst_td_wt_mean_prfa))
@@ -184,5 +187,29 @@ print "Mean    :" + str(mean_rpfa(lst_vd_mean_prfa))
 
 #TODO Include dependency parse features
 
-RESULTS (for params above:
+VD RESULTS (for params above:
+STEMMED
+    LinearSVC(C=1.0)
+    Weighted:Recall: 0.5933, Precision: 0.6711, F1: 0.6199, Accuracy: 0.9774, Codes:     5
+    Mean    :Recall: 0.5532, Precision: 0.6466, F1: 0.5747, Accuracy: 0.9862, Codes:     5
+
+NO STEM
+    LinearSVC(C=1.0)
+    Weighted:Recall: 0.5843, Precision: 0.6705, F1: 0.6140, Accuracy: 0.9773, Codes:     5
+    Mean    :Recall: 0.5425, Precision: 0.6426, F1: 0.5668, Accuracy: 0.9860, Codes:     5
+
+NO STEAM + POS (WINDOW 1)
+    Weighted:Recall: 0.5848, Precision: 0.6717, F1: 0.6146, Accuracy: 0.9775, Codes:     5
+    Mean    :Recall: 0.5447, Precision: 0.6463, F1: 0.5690, Accuracy: 0.9861, Codes:     5
+
+NO STEAM + POS (WINDOW 3)
+    Weighted:Recall: 0.5848, Precision: 0.6717, F1: 0.6146, Accuracy: 0.9775, Codes:     5
+    Mean    :Recall: 0.5447, Precision: 0.6463, F1: 0.5690, Accuracy: 0.9861, Codes:     5
+
+
+NO STEM + POS TAGS
+    LinearSVC(C=1.0)
+    Weighted:Recall: 0.5823, Precision: 0.6696, F1: 0.6124, Accuracy: 0.9772, Codes:     5
+    Mean    :Recall: 0.5436, Precision: 0.6414, F1: 0.5671, Accuracy: 0.9860, Codes:     5
+
 """

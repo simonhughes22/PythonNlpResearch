@@ -1,4 +1,6 @@
 from NgramGenerator import compute_ngrams
+from Decorators import memoize
+import PosTagger
 
 """ POSITIONAL SINGLE WORDS
 """
@@ -32,13 +34,12 @@ def extract_positional_word_features(offset, input, val = 1):
 
     end = len(input.sentence) - 1
     for i in range(start, stop+1):
-
+        relative_offset = str(i - input.wordix)
         if i < 0:
-            feats[__START__ + ":" + str(i)] = val
+            feats[__START__ + ":" + relative_offset] = val
         elif i > end:
-            feats[__END__ + ":" + str(i)] = val
+            feats[__END__ + ":" + relative_offset] = val
         else:
-            relative_offset = str(i - input.wordix)
             offset_word = input.sentence[i]
             feats["WD:" + relative_offset + "->" + offset_word] = val
     return feats
@@ -96,4 +97,46 @@ def extract_ngram_features(offset, ngram_size, input, val = 1):
 
     return feats
 
+__pos_tagger__ = PosTagger.PosTagger()
+@memoize
+def __tag__(tokens):
+    return __pos_tagger__.tag(tokens)
 
+def fact_extract_positional_POS_features(offset):
+    """ offset      :   int
+                            the number of words either side of the input to extract POS features from
+        returns     :   fn
+                            feature extractor function: FeatureExtactorInput -> dict
+    """
+    # curry offset
+    def fn_pos_POS_feats(input, val=1):
+        return extract_positional_POS_features(offset, input, val)
+    return fn_pos_POS_feats
+
+def extract_positional_POS_features(offset, input, val = 1):
+    """ offset      :   int
+                           the number of words either side of the input to extract features from
+        input      :    FeatureExtactorInput
+                            input to feature extractor
+        returns     :   dict
+                            dictionary of features
+    """
+
+    feats = {}
+    start = input.wordix - offset
+    stop  = input.wordix + offset
+
+    end = len(input.sentence) - 1
+    tag_pairs = __tag__(input.sentence)
+    tags = zip(*tag_pairs)[1]
+
+    for i in range(start, stop+1):
+        relative_offset = str(i - input.wordix)
+        if i < 0:
+            feats[__START__ + ":" + relative_offset] = val
+        elif i > end:
+            feats[__END__ + ":" + relative_offset] = val
+        else:
+            offset_word = tags[i]
+            feats["POS_TAG:" + relative_offset + "->" + offset_word] = val
+    return feats

@@ -30,6 +30,8 @@ class FeatureExtractorInput(object):
         self.essay = essay
         # for convenience
         self.sentence, self.tags = zip(*tagged_sentence)
+        # make hashable for memoization and immutable
+        self.sentence = tuple(self.sentence)
         self.word = self.sentence[wordix]
 
 class FeatureExtractor(object):

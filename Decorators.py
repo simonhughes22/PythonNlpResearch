@@ -4,8 +4,9 @@
 
 import time
 import os
-import pickle
+import cPickle as pickle
 from collections import defaultdict
+import hashlib
 
 def timeit(method):
 
