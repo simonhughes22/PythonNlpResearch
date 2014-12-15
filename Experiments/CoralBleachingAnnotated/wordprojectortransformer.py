@@ -16,7 +16,7 @@ class WordProjectorTransformer(object):
                     _ = self.idgen.get_id(wd)
 
         self.total_num_features = self.idgen.max_id() + 1
-        
+
         self.START = np.zeros(self.total_num_features)
         self.END   = np.zeros(self.total_num_features)
 
