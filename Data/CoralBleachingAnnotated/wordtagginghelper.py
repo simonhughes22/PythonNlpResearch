@@ -28,6 +28,29 @@ def flatten_to_wordlevel_feat_tags(essay_feats):
                 tags.append(wd.tags)
     return feats, tags
 
+def flatten_to_wordlevel_vectors_tags(essay_feats):
+    """
+    Splits the essay-level features into
+
+    Parameters
+    ----------
+    essay_feats : a list of lists of lists of Word objects
+        Tag level features for the essays
+
+    Returns
+    -------
+    feats, tags : a 2 tuple of a list of feature dictionaries and a list of sets of tags
+        The flattened features and tags from the essay words
+    """
+    tags = []
+    temp_features = []
+    for essay_ix, essay in enumerate(essay_feats):
+        for sent_ix, taggged_sentence in enumerate(essay):
+            for word_ix, (wd) in enumerate(taggged_sentence):
+                temp_features.append(wd.vector)
+                tags.append(wd.tags)
+    return np.asarray(temp_features), tags
+
 def get_wordlevel_ys_by_code(lst_tag_sets):
     """
     Convert a list of tagsets to a dictionary of ys values per tag label

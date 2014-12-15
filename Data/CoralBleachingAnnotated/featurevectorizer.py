@@ -4,7 +4,7 @@ from sklearn.feature_extraction import DictVectorizer
 from sklearn.base import TransformerMixin, BaseEstimator
 from collections import defaultdict
 
-class FeatureTransformer(BaseEstimator, TransformerMixin):
+class FeatureVectorizer(BaseEstimator, TransformerMixin):
     """ Class to filter features by frequency and vectorize
     """
     def __init__(self, min_feature_freq, sparse=False):

@@ -7,6 +7,7 @@ class Word(object):
         self.word = word
         self.tags = set(tags)
         self.features = {}
+        self.vector = None # for storing the final vector directly
 
     def __repr__(self):
         return self.word + "->" + str(self.tags)[3:] + " - %s feats" % str(len(self.features))
@@ -34,7 +35,7 @@ class FeatureExtractorInput(object):
         self.sentence = tuple(self.sentence)
         self.word = self.sentence[wordix]
 
-class FeatureExtractor(object):
+class FeatureExtractorTransformer(object):
     def __init__(self, feature_extractor_fns):
         """ feature_extractor_fns   :   list of fns
                                             fn: FeatureExtractorInput -> dict

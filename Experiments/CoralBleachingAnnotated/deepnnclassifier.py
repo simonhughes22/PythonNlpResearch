@@ -4,11 +4,10 @@ import numpy as np
 from Decorators import timeit, memoize, memoize_to_disk
 from BrattEssay import load_bratt_essays
 from processessays import process_sentences, process_essays
-from wordtagginghelper import flatten_to_wordlevel_feat_tags, get_wordlevel_ys_by_code
+from wordtagginghelper import flatten_to_wordlevel_vectors_tags, get_wordlevel_ys_by_code
 
-from featureextractortransformer import FeatureExtractorTransformer
+from wordprojectortransformer import WordProjectorTransformer
 from featurevectorizer import FeatureVectorizer
-from featureextractionfunctions import *
 from CrossValidation import cross_validation
 from wordtagginghelper import *
 from IterableFP import flatten
@@ -24,6 +23,8 @@ from sklearn.svm import LinearSVC
 from sklearn.svm import SVC
 from sklearn.lda import LDA
 from sklearn.neighbors import KNeighborsClassifier
+import graphlab
+
 # END Classifiers
 
 import pickle
@@ -49,7 +50,7 @@ LOWER_CASE          = False
 
 settings = Settings.Settings()
 processed_essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/proc_essays_pickled_"
-features_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/feats_pickled_"
+deepnnwordvectors_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/dnn_vectors_pickled_"
 
 @memoize_to_disk(filename_prefix=processed_essay_filename_prefix)
 def load_and_process_essays(min_df=5,
@@ -75,40 +76,30 @@ tagged_essays = load_and_process_essays(min_df=MIN_SENTENCE_FREQ, remove_infrequ
 
 # FEATURE SETTINGS
 WINDOW_SIZE         = 7
-POS_WINDOW_SIZE     = 1
-MIN_FEAT_FREQ       = 5        # 5 best so far
 CV_FOLDS            = 5
 # END FEATURE SETTINGS
 
 offset = (WINDOW_SIZE-1) / 2
-unigram_window = fact_extract_positional_word_features(offset)
-biigram_window = fact_extract_ngram_features(offset, 2)
-pos_tag_window = fact_extract_positional_POS_features((POS_WINDOW_SIZE-1/2))
-#TODO - add POS TAGS (positional)
-#TODO - add dep parse feats
-#TODO - memoize features above for speed
-#extractors = [unigram_window, biigram_window, pos_tag_window]
-extractors = [unigram_window, biigram_window, pos_tag_window]
 
 # most params below exist ONLY for the purposes of the hashing to and from disk
-@memoize_to_disk(filename_prefix=features_filename_prefix)
+@memoize_to_disk(filename_prefix=deepnnwordvectors_filename_prefix)
 def extract_features(min_df,
                      rem_infreq, spell_correct,
                      replace_nos, stem, rem_stop_wds,
                      rem_punc, l_case,
-                     win_size, pos_win_size, min_feat_freq,
-                     extractors):
-    feature_extractor = FeatureExtractorTransformer(extractors)
+                     offset):
+    feature_extractor = WordProjectorTransformer(offset)
     return feature_extractor.transform(tagged_essays)
 
+# note that a lot of these settings are not used in the feature extraction
+# but do influence the data stored by this step as are changed by the previous step
 essay_feats = extract_features(min_df=MIN_SENTENCE_FREQ, rem_infreq=REMOVE_INFREQUENT,
                                spell_correct=SPELLING_CORRECT,
                                replace_nos=REPLACE_NUMS, stem=STEM, rem_stop_wds=REMOVE_STOP_WORDS,
                                rem_punc=REMOVE_PUNCTUATION, l_case=LOWER_CASE,
-                               win_size=WINDOW_SIZE, pos_win_size=POS_WINDOW_SIZE,
-                               min_feat_freq=MIN_FEAT_FREQ, extractors=extractors)
+                               offset=offset)
 
-_, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
+_, lst_all_tags = flatten_to_wordlevel_vectors_tags(essay_feats)
 all_tags = set(flatten(lst_all_tags))
 
 # use more tags for training for sentence level classifier
@@ -137,12 +128,9 @@ fn_create_cls = lambda : LinearSVC(C=1.0)
 for i,(TD, VD) in enumerate(folds):
     print "\nFold %s" % i
     """ Data Partitioning and Training """
-    td_feats, td_tags = flatten_to_wordlevel_feat_tags(TD)
-    vd_feats, vd_tags = flatten_to_wordlevel_feat_tags(VD)
+    td_X, td_tags = flatten_to_wordlevel_vectors_tags(TD)
+    vd_X, vd_tags = flatten_to_wordlevel_vectors_tags(VD)
 
-    feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ)
-    td_X = feature_transformer.fit_transform(td_feats)
-    vd_X = feature_transformer.transform(vd_feats)
     td_ys_bycode = get_wordlevel_ys_by_code(td_tags)
     vd_ys_bycode = get_wordlevel_ys_by_code(vd_tags)
 
