@@ -72,7 +72,7 @@ def get_wordlevel_ys_by_code(lst_tag_sets):
         ys_bycode[k] = np.asarray(lst, dtype=np.int).reshape((len(lst), ))
     return ys_bycode
 
-def train_wordlevel_classifier(xs, ysByCode, fn_create_cls, tags=None):
+def train_classifier_per_code(xs, ysByCode, fn_create_cls, tags=None):
     """
     Trains an instance of the classifier per code in codes
 
@@ -111,7 +111,7 @@ def __test_for_tag__(tag, xs, ysByCode, codeToClassifier):
     r,p,f1,a = rpf1a(ys, pred_ys)
     return rpfa(r,p,f1,a,num_codes)
 
-def test_word_level_classifiers(xs, ysByCode, tagToClassifier, tags=None):
+def test_classifier_per_code(xs, ysByCode, tagToClassifier, tags=None):
     """
     Compute metrics over tagging data
 
@@ -138,7 +138,6 @@ def test_word_level_classifiers(xs, ysByCode, tagToClassifier, tags=None):
     lst_metrics = []
     metricsByTag = dict()
     for tag in sorted(tags):
-        cls = tagToClassifier[tag]
         metric = __test_for_tag__(tag, xs, ysByCode, tagToClassifier)
         metricsByTag[tag] = metric
         lst_metrics.append(metric)

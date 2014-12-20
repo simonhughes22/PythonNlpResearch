@@ -119,11 +119,11 @@ for i,(TD, VD) in enumerate(folds):
 
     """ TRAIN """
     #TODO DNN
-    tag2Classifier = train_wordlevel_classifier(td_X, td_ys_bycode, fn_create_cls, train_tags)
+    tag2Classifier = train_classifier_per_code(td_X, td_ys_bycode, fn_create_cls, train_tags)
 
     """ TEST """
-    td_metricsByTag, td_wt_mean_prfa, td_mean_prfa = test_word_level_classifiers(td_X, td_ys_bycode, tag2Classifier, test_tags)
-    vd_metricsByTag, vd_wt_mean_prfa, vd_mean_prfa = test_word_level_classifiers(vd_X, vd_ys_bycode, tag2Classifier, test_tags)
+    td_metricsByTag, td_wt_mean_prfa, td_mean_prfa = test_classifier_per_code(td_X, td_ys_bycode, tag2Classifier, test_tags)
+    vd_metricsByTag, vd_wt_mean_prfa, vd_mean_prfa = test_classifier_per_code(vd_X, vd_ys_bycode, tag2Classifier, test_tags)
 
     lst_td_wt_mean_prfa.append(td_wt_mean_prfa), lst_td_mean_prfa.append(td_mean_prfa)
     lst_vd_wt_mean_prfa.append(vd_wt_mean_prfa), lst_vd_mean_prfa.append(vd_mean_prfa)

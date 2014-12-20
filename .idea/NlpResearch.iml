@@ -45,6 +45,8 @@
       <sourceFolder url="file://$MODULE_DIR$/Synonyms" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/MontyLingua" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingAnnotated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingAnnotated/DeepNN" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingAnnotated/WindowBasedClassifier" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/Notebooks" />
     </content>
