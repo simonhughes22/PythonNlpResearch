@@ -156,6 +156,7 @@ class Essay(object):
     def __init__(self, full_path):
 
         self.full_path = full_path
+        self.file_name = full_path.split("/")[-1]
 
         txt_file = full_path[:-4] + ".txt"
 

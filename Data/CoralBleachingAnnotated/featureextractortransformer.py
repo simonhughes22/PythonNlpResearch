@@ -1,5 +1,7 @@
 __author__ = 'simon.hughes'
 
+from processessays import Essay
+
 class Word(object):
     """ Holds a word for a sequence tagger approach.
     """
@@ -20,9 +22,9 @@ class FeatureExtractorInput(object):
                                     sentence (words only)
         sentenceix          :   int
                                     index of the sentence in the essay
-        essay               :   list of list of tuples
-                                    list of sentences, which are lists of
-                                    tuples of words and a set of tags
+        essay               :   Essay class
+                                    An essay name, and a list of tagged sentences,
+                                    which are lists of tuples of words and a set of tags
     """
     def __init__(self, wordix, tagged_sentence, sentenceix, essay):
         self.wordix = wordix
@@ -39,6 +41,8 @@ class FeatureExtractorTransformer(object):
     def __init__(self, feature_extractor_fns):
         """ feature_extractor_fns   :   list of fns
                                             fn: FeatureExtractorInput -> dict
+
+            returns: a list of Essay objects
         """
         self.feature_extractor_fns = feature_extractor_fns
 
@@ -47,8 +51,8 @@ class FeatureExtractorTransformer(object):
         transformed = []
         for essay_ix, essay in enumerate(essays):
             t_essay = []
-            transformed.append(t_essay)
-            for sent_ix, taggged_sentence in enumerate(essay):
+            transformed.append(Essay(essay.name, t_essay))
+            for sent_ix, taggged_sentence in enumerate(essay.sentences):
                 t_sentence = []
                 t_essay.append(t_sentence)
 

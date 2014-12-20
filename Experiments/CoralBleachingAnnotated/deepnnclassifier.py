@@ -34,7 +34,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 logger = logging.getLogger()
 
 # Settings for essay pre-processing
-MIN_SENTENCE_FREQ   = 2        # i.e. df. Note this is calculated BEFORE creating windows
+MIN_SENTENCE_FREQ   = 5        # i.e. df. Note this is calculated BEFORE creating windows
 REMOVE_INFREQUENT   = False    # if false, infrequent words are replaced with "INFREQUENT"
 SPELLING_CORRECT    = True
 STEM                = False    # note this tends to improve matters, but is needed to be on for pos tagging and dep parsing
@@ -106,7 +106,7 @@ def agg_metrics(src, agg_fn):
 # Linear SVC seems to do better
 #fn_create_cls = lambda: LogisticRegression()
 #TODO DNN
-fn_create_cls = lambda : LinearSVC(C=1.0)
+fn_create_cls = lambda : SVC(C=1.0)
 
 for i,(TD, VD) in enumerate(folds):
     print "\nFold %s" % i
@@ -146,7 +146,6 @@ print "Weighted:" + str(mean_rpfa(lst_vd_wt_mean_prfa))
 print "Mean    :" + str(mean_rpfa(lst_vd_mean_prfa))
 
 """
-# REWRITE - see FeatureExtractor and FeatureExtractor fns
 # PLAN
 #   USE SPARSITY IF GL SUPPORTS IT
 #   LOAD RESULTS INTO A DB
@@ -154,5 +153,15 @@ print "Mean    :" + str(mean_rpfa(lst_vd_mean_prfa))
 #TODO Include dependency parse features
 
 VD RESULTS (for params above:
+***
+SVM, **ONE HOT FEATURES** i.e. word vectors, LOWER CASE, MIN SENT FREQ - 5, NO STEM, WITH STOP WORDS
+    Weighted:   Recall: 0.5925, Precision: 0.6785, F1: 0.6225, Accuracy: 0.9782, Codes:     5
+    Mean:       Recall: 0.5561, Precision: 0.6441, F1: 0.5759, Accuracy: 0.9865, Codes:     5
+**
+
+Log Reg, **ONE HOT FEATURES** i.e. word vectors, LOWER CASE, MIN SENT FREQ - 5, NO STEM, WITH STOP WORDS
+    Weighted:Recall: 0.5235, Precision: 0.7797, F1: 0.6031, Accuracy: 0.9802, Codes:     5
+    Mean    :Recall: 0.4499, Precision: 0.7684, F1: 0.5383, Accuracy: 0.9878, Codes:     5
+
 
 """

@@ -6,12 +6,20 @@ from nltk import PorterStemmer
 from nltk.corpus import stopwords
 from IterableFP import flatten
 
+class Essay(object):
+    def __init__(self, name, sentences):
+        self.name = name
+        self.sentences = sentences
+
 def process_essays(essays, min_df = 5,
                       remove_infrequent = False, spelling_correct = True,
                       replace_nums = True, stem = False, remove_stop_words = False,
                       remove_punctuation = True, lower_case=True):
+
     """ returns a list of essays.
-        Each essay is a list of tuples of word : set pairs. The set contains all the tags for the word
+
+        Each essay is an Essay class consisting of the essay name, and the sentences, which are
+        a list of tuples of word : set pairs. The set contains all the tags for the word.
     """
 
     INFREQUENT = "INFREQUENT"
@@ -116,7 +124,7 @@ def process_essays(essays, min_df = 5,
     processed_essays = []
     for essay in essays:
         lst_sentences = []
-        processed_essays.append(lst_sentences)
+        processed_essays.append(Essay(essay.file_name, lst_sentences))
         for i, sentence in enumerate(essay.tagged_sentences):
             new_sentence = []
             for j, (w, tags) in enumerate(sentence):
@@ -135,6 +143,9 @@ def process_sentences(essays, min_df=5,
                       remove_infrequent=False, spelling_correct=True,
                       replace_nums=True, stem=False, remove_stop_words=False,
                       remove_punctuation=True, lower_case=True):
+    """
+    Flattens the processed essays by extracting just the sentences from the esays
+    """
 
     processed_essays = process_essays(essays, min_df=min_df,
                                       remove_infrequent=remove_infrequent, spelling_correct=spelling_correct,
@@ -142,7 +153,7 @@ def process_sentences(essays, min_df=5,
                                       remove_punctuation=remove_punctuation, lower_case=lower_case)
     sentences = []
     for essay in processed_essays:
-        for sentence in essay:
+        for sentence in essay.sentences:
             sentences.append(sentence)
     return sentences
 

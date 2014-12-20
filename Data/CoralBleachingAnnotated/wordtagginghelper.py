@@ -22,7 +22,7 @@ def flatten_to_wordlevel_feat_tags(essay_feats):
     feats = []
     tags = []
     for essay_ix, essay in enumerate(essay_feats):
-        for sent_ix, taggged_sentence in enumerate(essay):
+        for sent_ix, taggged_sentence in enumerate(essay.sentences):
             for word_ix, (wd) in enumerate(taggged_sentence):
                 feats.append(wd.features)
                 tags.append(wd.tags)
@@ -152,13 +152,14 @@ def print_metrics_for_codes(td_metricsByTag, vd_metricsByTag):
     def pad_str(val):
         return str(val).ljust(20)
 
+    print " " * 11, pad_str("TD"),     pad_str("VD")
     for tag in sorted(td_metricsByTag.keys()):
         td_rpfa = td_metricsByTag[tag]
         vd_rpfa = vd_metricsByTag[tag]
         print "TAG:       ", pad_str(tag)
+        print "f1:        ", pad_str(td_rpfa.f1_score),     pad_str(vd_rpfa.f1_score)
         print "recall:    ", pad_str(td_rpfa.recall),       pad_str(vd_rpfa.recall)
         print "precision: ", pad_str(td_rpfa.precision),    pad_str(vd_rpfa.precision)
-        print "f1:        ", pad_str(td_rpfa.f1_score),     pad_str(vd_rpfa.f1_score)
         print "accuracy:  ", pad_str(td_rpfa.accuracy),     pad_str(vd_rpfa.accuracy)
         print "sentences: ", pad_str(td_rpfa.num_codes),    pad_str(vd_rpfa.num_codes)
         print ""

@@ -135,6 +135,8 @@ def agg_metrics(src, agg_fn):
 fn_create_cls = lambda : LinearSVC(C=1.0)
 
 for i,(TD, VD) in enumerate(folds):
+    # TD and VD are lists of Essay objects. The sentences are lists
+    # of featureextractortransformer.Word objects
     print "\nFold %s" % i
     """ Data Partitioning and Training """
     td_feats, td_tags = flatten_to_wordlevel_feat_tags(TD)
@@ -174,7 +176,6 @@ print "Weighted:" + str(mean_rpfa(lst_vd_wt_mean_prfa))
 print "Mean    :" + str(mean_rpfa(lst_vd_mean_prfa))
 
 """
-# REWRITE - see FeatureExtractor and FeatureExtractor fns
 # PLAN
 #   WORD LEVEL FEATURE EXTRACTION - use functions specific to the individual word, but that can look around at the
 #       previous and next words and sentences if needed. This can handle every scenario where I want to leverage features
@@ -212,4 +213,5 @@ NO STEM + POS TAGS
     Weighted:Recall: 0.5823, Precision: 0.6696, F1: 0.6124, Accuracy: 0.9772, Codes:     5
     Mean    :Recall: 0.5436, Precision: 0.6414, F1: 0.5671, Accuracy: 0.9860, Codes:     5
 
+ONE HOT FEATS DO BETTER!
 """
