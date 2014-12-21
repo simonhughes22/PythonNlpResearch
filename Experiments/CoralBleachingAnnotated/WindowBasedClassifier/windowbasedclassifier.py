@@ -41,19 +41,20 @@ MIN_SENTENCE_FREQ   = 2        # i.e. df. Note this is calculated BEFORE creatin
 REMOVE_INFREQUENT   = False    # if false, infrequent words are replaced with "INFREQUENT"
 SPELLING_CORRECT    = True
 STEM                = False    # note this tends to improve matters, but is needed to be on for pos tagging and dep parsing
+                               # makes tagging model better but causal model worse
 REPLACE_NUMS        = True     # 1989 -> 0000, 10 -> 00
 MIN_SENTENCE_LENGTH = 3
 REMOVE_STOP_WORDS   = False
 REMOVE_PUNCTUATION  = True
 LOWER_CASE          = False
-
 # construct unique key using settings for pickling
+SPARSE              = True
 
 settings = Settings.Settings()
 processed_essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/proc_essays_pickled_"
 features_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/feats_pickled_"
 
-@memoize_to_disk(filename_prefix=processed_essay_filename_prefix)
+#@memoize_to_disk(filename_prefix=processed_essay_filename_prefix)
 def load_and_process_essays(min_df=5,
                            remove_infrequent=False, spelling_correct=True,
                            replace_nums=True, stem=False, remove_stop_words=False,
@@ -85,9 +86,6 @@ def extract_features(min_df,
                      extractors):
     feature_extractor = FeatureExtractorTransformer(extractors)
     return feature_extractor.transform(tagged_essays)
-
-#TODO REMOVE ME
-tagged_essays = tagged_essays[0:100]
 
 # FEATURE SETTINGS
 WINDOW_SIZE         = 7
@@ -148,7 +146,7 @@ for i,(TD, VD) in enumerate(folds):
     td_feats, td_tags = flatten_to_wordlevel_feat_tags(TD)
     vd_feats, vd_tags = flatten_to_wordlevel_feat_tags(VD)
 
-    feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ)
+    feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ, sparse=SPARSE)
     td_X = feature_transformer.fit_transform(td_feats)
     vd_X = feature_transformer.transform(vd_feats)
     td_ys_bytag = get_wordlevel_ys_by_code(td_tags)
@@ -172,7 +170,7 @@ for i,(TD, VD) in enumerate(folds):
     sent_vd_xs, sent_vd_ys_bycode = get_sent_feature_for_stacking(train_tags, all_tags, VD, vd_X, vd_ys_bytag, tag2word_classifier)
 
     """ Train Stacked Classifier """
-    tag2sent_classifier = train_classifier_per_code(sent_td_xs, sent_td_ys_bycode , fn_create_sent_cls, train_tags)
+    tag2sent_classifier = train_classifier_per_code(sent_td_xs, sent_td_ys_bycode , fn_create_sent_cls, train_tags + causal_tags)
 
     s_td_metricsByTag, s_td_wt_mean_prfa, s_td_mean_prfa = test_classifier_per_code(sent_td_xs, sent_td_ys_bycode , tag2sent_classifier, test_tags + causal_tags)
     s_vd_metricsByTag, s_vd_wt_mean_prfa, s_vd_mean_prfa = test_classifier_per_code(sent_vd_xs, sent_vd_ys_bycode , tag2sent_classifier, test_tags + causal_tags)
@@ -186,6 +184,7 @@ for i,(TD, VD) in enumerate(folds):
 wd_mean_td_metrics = agg_metrics(wd_td_all_metricsByTag, mean_rpfa)
 wd_mean_vd_metrics = agg_metrics(wd_vd_all_metricsByTag, mean_rpfa)
 
+print "TAGGING"
 print_metrics_for_codes(wd_mean_td_metrics, wd_mean_vd_metrics)
 print fn_create_wd_cls()
 # print macro measures
@@ -201,6 +200,7 @@ print "Mean    :" + str(mean_rpfa(wd_vd_mean_prfa))
 sent_mean_td_metrics = agg_metrics(sent_td_all_metricsByTag, mean_rpfa)
 sent_mean_vd_metrics = agg_metrics(sent_vd_all_metricsByTag, mean_rpfa)
 
+print "\n\nSENTENCE"
 print_metrics_for_codes(sent_mean_td_metrics, sent_mean_vd_metrics)
 print fn_create_wd_cls()
 # print macro measures
@@ -225,7 +225,6 @@ print "Mean    :" + str(mean_rpfa(sent_vd_mean_prfa))
 #   LOAD RESULTS INTO A DB
 
 #TODO Include dependency parse features
-#TODO Use sparsity
 
 VD RESULTS (for params above:
 STEMMED
@@ -238,11 +237,11 @@ NO STEM
     Weighted:Recall: 0.5843, Precision: 0.6705, F1: 0.6140, Accuracy: 0.9773, Codes:     5
     Mean    :Recall: 0.5425, Precision: 0.6426, F1: 0.5668, Accuracy: 0.9860, Codes:     5
 
-NO STEAM + POS (WINDOW 1)
+NO STEM + POS (WINDOW 1)
     Weighted:Recall: 0.5848, Precision: 0.6717, F1: 0.6146, Accuracy: 0.9775, Codes:     5
     Mean    :Recall: 0.5447, Precision: 0.6463, F1: 0.5690, Accuracy: 0.9861, Codes:     5
 
-NO STEAM + POS (WINDOW 3)
+NO STEM + POS (WINDOW 3)
     Weighted:Recall: 0.5848, Precision: 0.6717, F1: 0.6146, Accuracy: 0.9775, Codes:     5
     Mean    :Recall: 0.5447, Precision: 0.6463, F1: 0.5690, Accuracy: 0.9861, Codes:     5
 

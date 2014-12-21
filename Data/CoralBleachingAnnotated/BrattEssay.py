@@ -6,6 +6,7 @@ import Settings
 
 from collections import defaultdict
 from nltk.tokenize import sent_tokenize
+import numpy as np
 
 class AnnotationBase(object):
     def __init__(self, line):
@@ -118,6 +119,10 @@ class EventAnnotation(AnnotationBase):
         self.__dependencies__ = None
         self.id2annotation = id2annotation
 
+    def __assign_code__(self, annotation, typ):
+        annotation.code = typ + ":" + annotation.code
+        annotation.dep_type = typ
+
     def dependencies(self):
         if self.__dependencies__ is None:
             self.__dependencies__ = []
@@ -131,18 +136,19 @@ class EventAnnotation(AnnotationBase):
                 dep = self.id2annotation[id]
                 if type(dep) == CompoundTextAnnotation:
                     clonea = dep.first_part.clone()
-                    clonea.code = typ
+                    self.__assign_code__(clonea, typ)
 
                     cloneb = dep.second_part.clone()
-                    cloneb.code = typ
+                    self.__assign_code__(cloneb, typ)
+
                     self.__dependencies__.append(clonea)
                     self.__dependencies__.append(cloneb)
                 else:
                     clone = dep.clone()
-                    clone.code = typ
+                    self.__assign_code__(clone, typ)
+                    # assign type as the code - explicit, causer, result
                     self.__dependencies__.append(clone)
         return self.__dependencies__
-
 
 class NoteAnnotation(AnnotationBase):
     def __init__(self, line):
@@ -167,7 +173,10 @@ class Essay(object):
             self.txt = f.read()
 
         self.tagged_words = []
+        #list of list of tuples (words and tags)
         self.tagged_sentences = []
+        # list of sets of tags
+        self.sentence_tags = []
         self.id2annotation = {}
         self.split_sents = []
 
@@ -177,11 +186,23 @@ class Essay(object):
         codes_start = defaultdict(set)
         codes_end = defaultdict(set)
 
+
+        def process_causal_relations(codes, start, end):
+            str_codes = "->".join(sorted(codes))
+            if start == end:
+                return False
+            codes_start[start].add(str_codes)
+            codes_end[end].add(str_codes)
+            return True
+
         def process_text_annotation(annotation):
             if annotation.start == annotation.end:
                 return False
             codes_start[annotation.start].add(annotation.code)
             codes_end[annotation.end].add(annotation.code)
+            if hasattr(annotation, "dep_type"):
+                codes_start[annotation.start].add(annotation.dep_type)
+                codes_end[annotation.end].add(annotation.dep_type)
             return True
 
         annotations_with_dependencies = []
@@ -229,8 +250,17 @@ class Essay(object):
             self.id2annotation[annotation.id] = annotation
 
         for annotation in annotations_with_dependencies:
-            for dependency in annotation.dependencies():
+            deps = annotation.dependencies()
+            start = 999999999999
+            end = -1
+            codes = []
+            for dependency in deps:
+                start = min(start,dependency.start)
+                end  =  max(end,dependency.end)
+                codes.append(dependency.code)
                 process_text_annotation(dependency)
+            if len(codes) > 1:
+                process_causal_relations(codes, start, end)
 
         codes = set()
         current_word = ""

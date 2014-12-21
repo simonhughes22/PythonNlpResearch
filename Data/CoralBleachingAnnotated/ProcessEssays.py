@@ -11,6 +11,11 @@ class Essay(object):
         self.name = name
         self.sentences = sentences
 
+class Sentence(object):
+    def __init__(self, tagged_words, sentence_tags):
+        self.sentence_tags = sentence_tags
+        self.tagged_words = tagged_words
+
 def process_essays(essays, min_df = 5,
                       remove_infrequent = False, spelling_correct = True,
                       replace_nums = True, stem = False, remove_stop_words = False,
