@@ -172,7 +172,13 @@ def print_metrics_for_codes(td_metricsByTag, vd_metricsByTag):
         return str(val).ljust(20)
 
     print " " * 11, pad_str("TD"),     pad_str("VD")
-    for tag in sorted(td_metricsByTag.keys()):
+
+    def sort_key(code):
+        if code.isdigit():
+            return (int(code), len(code), code)
+        return (9999999, len(code), (code))
+
+    for tag in sorted(td_metricsByTag.keys(), key= sort_key):
         td_rpfa = td_metricsByTag[tag]
         vd_rpfa = vd_metricsByTag[tag]
         print "TAG:       ", pad_str(tag)
@@ -180,5 +186,5 @@ def print_metrics_for_codes(td_metricsByTag, vd_metricsByTag):
         print "recall:    ", pad_str(td_rpfa.recall),       pad_str(vd_rpfa.recall)
         print "precision: ", pad_str(td_rpfa.precision),    pad_str(vd_rpfa.precision)
         print "accuracy:  ", pad_str(td_rpfa.accuracy),     pad_str(vd_rpfa.accuracy)
-        print "sentences: ", pad_str(td_rpfa.num_codes),    pad_str(vd_rpfa.num_codes)
+        print "sentences: ", pad_str(""),                   pad_str(vd_rpfa.num_codes)
         print ""

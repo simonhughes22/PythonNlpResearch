@@ -2,9 +2,9 @@ from collections import defaultdict
 import numpy as np
 import scipy
 
-CAUSAL_REL   = "CRel"
-RESULT_REL   = "RRel"
-CAUSE_RESULT = "C->R"
+CAUSAL_REL   = "_CRel"
+RESULT_REL   = "_RRel"
+CAUSE_RESULT = "_C->R"
 
 def extract_ys_by_code(tags, all_codes, ysByCode):
     for code in all_codes:
@@ -14,7 +14,7 @@ def extract_ys_by_code(tags, all_codes, ysByCode):
     ysByCode[RESULT_REL].append(  1 if  "Result" in tags and "explicit" in tags else 0)
     ysByCode[CAUSE_RESULT].append(1 if ("Result" in tags and "explicit" in tags and "Causer" in tags) else 0)
 
-def get_sent_feature_for_stacking(feat_tags, interaction_tags, essays, word_feats, ys_bytag, tag2Classifier, sparse=False):
+def get_sent_feature_for_stacking(feat_tags, interaction_tags, essays, word_feats, ys_bytag, tag2Classifier, sparse=False, look_back=0):
 
     real_num_predictions_bytag = dict()
     predictions_bytag = dict()
@@ -34,9 +34,12 @@ def get_sent_feature_for_stacking(feat_tags, interaction_tags, essays, word_feat
     td_sent_feats = []
     ys_by_code = defaultdict(list)
     ix = 0
+    lst_look_back = range(look_back)
     for essay_ix, essay in enumerate(essays):
+
+        tmp_essays_xs = []
         for sent_ix, taggged_sentence in enumerate(essay.sentences):
-            tmp_xs = []
+            tmp_sentence_xs = []
 
             # unique
             un_tags = set()
@@ -56,34 +59,44 @@ def get_sent_feature_for_stacking(feat_tags, interaction_tags, essays, word_feat
                 mx = np.max(real_pred, axis=0)
                 mn = np.min(real_pred, axis=0)
 
-                tmp_xs.append(mx)
-                tmp_xs.append(mn)
-                # for val in mx:
-                #tmp_xs.append(val)
-                #tmp_xs.append(mx[-1])
-
-                #for val in mn:
-                #tmp_xs.append(val)
-                #tmp_xs.append(mn[-1])
+                tmp_sentence_xs.append(mx)
+                tmp_sentence_xs.append(mn)
 
                 yes_no = np.max(pred)
-                tmp_xs.append(yes_no)
+                tmp_sentence_xs.append(yes_no)
 
                 if yes_no > 0.0:
                     un_pred_tags.add(tag)
-                    # add 2 way feature combos
+                    # for adding 2-way feature combos
 
-            #pairwise interactions
+            #pairwise interactions (2 way interactions of predicted tags)
             for a in interaction_tags:
                 for b in interaction_tags:
                     if b < a:
                         if a in un_pred_tags and b in un_pred_tags:
-                            tmp_xs.append(1)
+                            tmp_sentence_xs.append(1)
                         else:
-                            tmp_xs.append(0)
+                            tmp_sentence_xs.append(0)
 
             extract_ys_by_code(un_tags, feat_tags, ys_by_code)
-            td_sent_feats.append(tmp_xs)
+            tmp_essays_xs.append(tmp_sentence_xs)
+            # end sentence processing
+
+        feats_per_sentence = len(tmp_essays_xs[0])
+        blank = [0] * feats_per_sentence
+
+        for i, sent_feats in enumerate(tmp_essays_xs):
+            concat_feats = list(sent_feats)
+            offset = -1
+            for j in lst_look_back:
+                ix = i + offset
+                if ix < 0:
+                    to_add = blank
+                else:
+                    to_add = tmp_essays_xs[ix]
+                concat_feats.extend(to_add)
+                offset -= 1
+            td_sent_feats.append(concat_feats)
 
     for k in ys_by_code.keys():
         ys_by_code[k] = np.asarray(ys_by_code[k])

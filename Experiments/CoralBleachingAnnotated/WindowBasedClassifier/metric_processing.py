@@ -23,3 +23,15 @@ def cv_mean_rpfa(metrics):
 
     l = float(len(metrics))
     return rpfa(tr / l, tp / l, tf / l, ta / l, num_codes / l)
+
+def cv_mean_rpfa_total_codes(metrics):
+    tr, tp, tf, ta, num_codes = 0.0, 0.0, 0.0, 0.0, 0.0
+    for metric in metrics:
+        tr += metric.recall
+        tp += metric.precision
+        tf += metric.f1_score
+        ta += metric.accuracy
+        num_codes += metric.num_codes
+
+    l = float(len(metrics))
+    return rpfa(tr / l, tp / l, tf / l, ta / l, num_codes)
