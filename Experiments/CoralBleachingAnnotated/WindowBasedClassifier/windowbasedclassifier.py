@@ -88,7 +88,7 @@ CV_FOLDS            = 5
 
 # not hashed as don't affect persistence of feature processing
 SPARSE_WD_FEATS     = True
-SPARSE_SENT_FEATS   = True
+SPARSE_SENT_FEATS   = False
 MIN_TAG_FREQ        = 5
 LOOK_BACK           = 1     # how many sentences to look back when predicting tags
 # end not hashed
@@ -151,6 +151,7 @@ sent_td_all_metricsByTag , sent_vd_all_metricsByTag = defaultdict(list), default
 #fn_create_cls = lambda: LogisticRegression()
 fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
 fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
+#fn_create_sent_cls  = lambda : GradientBoostingClassifier() #F1 = 0.5312 on numeric + 5b + casual codes for sentences
 
 #TODO Parallelize
 for i,(essays_TD, essays_VD) in enumerate(folds):
