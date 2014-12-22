@@ -26,6 +26,8 @@ from sklearn.svm import LinearSVC
 from sklearn.svm import SVC
 from sklearn.lda import LDA
 from sklearn.neighbors import KNeighborsClassifier
+
+from Rpfa import mean_rpfa, weighted_mean_rpfa
 from metric_processing import *
 # END Classifiers
 
@@ -82,7 +84,7 @@ def extract_features(min_df,
 WINDOW_SIZE         = 7
 POS_WINDOW_SIZE     = 1
 MIN_FEAT_FREQ       = 5        # 5 best so far
-CV_FOLDS            = 5
+CV_FOLDS            = 2
 # END FEATURE SETTINGS
 
 offset = (WINDOW_SIZE-1) / 2
@@ -104,29 +106,30 @@ essay_feats = extract_features(min_df=MIN_SENTENCE_FREQ, rem_infreq=REMOVE_INFRE
 MIN_TAG_FREQ = 5
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
 """ Get all tags above the frequency above """
+""" NOTE WHEN OUTPUTING RESULTS WE NEED TO USE ALL TAGS, NOT HIGHER FREQ TAGS """
 flt_lst_tags = flatten(lst_all_tags)
 tally_tags = tally_items(flt_lst_tags, freq_threshold=MIN_TAG_FREQ)
-all_tags = set(tally_tags.keys())
-if "it" in all_tags:
-    all_tags.remove("it")
+all_tags_above_threshold = set(tally_tags.keys())
+if "it" in all_tags_above_threshold:
+    all_tags_above_threshold.remove("it")
 
 # use more tags for training for sentence level classifier
 """ TAGS """
 causal_tags = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]
 
-wd_train_tags = list(all_tags)
+wd_train_tags = list(all_tags_above_threshold)
 #wd_test_tags  = [tag for tag in all_tags if tag.isdigit() or tag == "explicit"]
 wd_test_tags  = wd_train_tags
 
 # tags from tagging model used to train the stacked model
 sent_feat_tags = wd_train_tags
-sent_interaction_tags = [tag for tag in all_tags if tag.isdigit() or tag in set(("Causer", "Result", "explicit")) ]
+sent_interaction_tags = [tag for tag in all_tags_above_threshold if tag.isdigit() or tag in set(("Causer", "Result", "explicit")) ]
+sent_train_test_tags = wd_train_tags + causal_tags
 
 assert "Causer" in sent_feat_tags   , "To extract causal relations, we need Causer tags"
 assert "Result" in sent_feat_tags   , "To extract causal relations, we need Result tags"
 assert "explicit" in sent_feat_tags , "To extract causal relations, we need explicit tags"
 # tags to evaluate against
-sent_train_test_tags = wd_train_tags + causal_tags
 
 folds = cross_validation(essay_feats, CV_FOLDS)
 """Word level metrics """
@@ -189,11 +192,11 @@ for i,(TD, VD) in enumerate(folds):
     merge_metrics(s_vd_metricsByTag, sent_vd_all_metricsByTag)
 
 # print results for each code
-wd_mean_td_metrics = agg_metrics(wd_td_all_metricsByTag, mean_rpfa)
-wd_mean_vd_metrics = agg_metrics(wd_vd_all_metricsByTag, mean_rpfa)
+wd_mean_td_metrics = agg_metrics(wd_td_all_metricsByTag, cv_mean_rpfa)
+wd_mean_vd_metrics = agg_metrics(wd_vd_all_metricsByTag, cv_mean_rpfa)
 
-sent_mean_td_metrics = agg_metrics(sent_td_all_metricsByTag, mean_rpfa)
-sent_mean_vd_metrics = agg_metrics(sent_vd_all_metricsByTag, mean_rpfa)
+sent_mean_td_metrics = agg_metrics(sent_td_all_metricsByTag, cv_mean_rpfa)
+sent_mean_vd_metrics = agg_metrics(sent_vd_all_metricsByTag, cv_mean_rpfa)
 
 print "TAGGING"
 print_metrics_for_codes(wd_mean_td_metrics, wd_mean_vd_metrics)
@@ -205,24 +208,24 @@ print fn_create_wd_cls()
 # print macro measures
 print "\nTAGGING"
 print "\nTraining   Performance"
-print "Weighted:" + str(mean_rpfa(wd_td_wt_mean_prfa))
-print "Mean    :" + str(mean_rpfa(wd_td_mean_prfa))
+print "Weighted:" + str(cv_mean_rpfa(wd_td_wt_mean_prfa))
+print "Mean    :" + str(cv_mean_rpfa(wd_td_mean_prfa))
 
 print "\nValidation Performance"
-print "Weighted:" + str(mean_rpfa(wd_vd_wt_mean_prfa))
-print "Mean    :" + str(mean_rpfa(wd_vd_mean_prfa))
+print "Weighted:" + str(cv_mean_rpfa(wd_vd_wt_mean_prfa))
+print "Mean    :" + str(cv_mean_rpfa(wd_vd_mean_prfa))
 
 print "\n\n"
 print fn_create_wd_cls()
 # print macro measures
 print "\nSENTENCE"
 print "\nTraining   Performance"
-print "Weighted:" + str(mean_rpfa(sent_td_wt_mean_prfa))
-print "Mean    :" + str(mean_rpfa(sent_td_mean_prfa))
+print "Weighted:" + str(cv_mean_rpfa(sent_td_wt_mean_prfa))
+print "Mean    :" + str(cv_mean_rpfa(sent_td_mean_prfa))
 
 print "\nValidation Performance"
-print "Weighted:" + str(mean_rpfa(sent_vd_wt_mean_prfa))
-print "Mean    :" + str(mean_rpfa(sent_vd_mean_prfa))
+print "Weighted:" + str(cv_mean_rpfa(sent_vd_wt_mean_prfa))
+print "Mean    :" + str(cv_mean_rpfa(sent_vd_mean_prfa))
 
 """
 # PLAN

@@ -7,6 +7,7 @@ import Settings
 from collections import defaultdict
 from nltk.tokenize import sent_tokenize
 import numpy as np
+from IterableFP import flatten
 
 class AnnotationBase(object):
     def __init__(self, line):
@@ -419,6 +420,9 @@ class Essay(object):
         add_pair(current_word, current_sentence, codes.copy(), "", ix)
         if len(current_sentence) > 0:
             self.tagged_sentences.append(current_sentence)
+        for sent in self.tagged_sentences:
+            tags = zip(*sent)[1]
+            self.sentence_tags.append(set(flatten(tags)))
 
 def load_bratt_essays(directory = None):
     bratt_root_folder = directory
