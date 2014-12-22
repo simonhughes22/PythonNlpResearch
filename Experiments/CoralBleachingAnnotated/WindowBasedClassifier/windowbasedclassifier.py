@@ -88,9 +88,9 @@ CV_FOLDS            = 5
 
 # not hashed as don't affect persistence of feature processing
 SPARSE_WD_FEATS     = True
-SPARSE_SENT_FEATS   = False
+SPARSE_SENT_FEATS   = True
 MIN_TAG_FREQ        = 5
-LOOK_BACK           = 1     # how many sentences to look back when predicting tags
+LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 # end not hashed
 
 offset = (WINDOW_SIZE-1) / 2
