@@ -13,6 +13,7 @@ from featureextractionfunctions import *
 from CrossValidation import cross_validation
 from wordtagginghelper import *
 from IterableFP import flatten
+from DictionaryHelper import tally_items
 
 # Classifiers
 from sklearn.tree import DecisionTreeClassifier
@@ -51,30 +52,20 @@ LOWER_CASE          = False
 SPARSE              = True
 
 settings = Settings.Settings()
-processed_essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/proc_essays_pickled_"
-features_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/feats_pickled_"
+essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_pickled_"
+processed_essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
+features_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/feats_pickled_"
 
-#@memoize_to_disk(filename_prefix=processed_essay_filename_prefix)
-def load_and_process_essays(min_df=5,
-                           remove_infrequent=False, spelling_correct=True,
-                           replace_nums=True, stem=False, remove_stop_words=False,
-                           remove_punctuation=True, lower_case=True):
+logger.info("Loading Essays")
+mem_load_brat_essays = memoize_to_disk(filename_prefix=essay_filename_prefix)(load_bratt_essays)
+essays = mem_load_brat_essays()
 
-    logger.info("Loading Essays")
-    essays = load_bratt_essays()
-    logger.info("Processing Essays")
-    return process_essays(essays,
-                                   min_df=min_df,
-                                   remove_infrequent=remove_infrequent,
-                                   spelling_correct=spelling_correct,
-                                   replace_nums=replace_nums,
-                                   stem=stem,
-                                   remove_stop_words=remove_stop_words,
-                                   remove_punctuation=remove_punctuation,
-                                   lower_case=lower_case)
-
-tagged_essays = load_and_process_essays(min_df=MIN_SENTENCE_FREQ, remove_infrequent= REMOVE_INFREQUENT, spelling_correct= SPELLING_CORRECT,
-                        replace_nums= REPLACE_NUMS, stem=STEM, remove_stop_words= REMOVE_STOP_WORDS, remove_punctuation= REMOVE_PUNCTUATION, lower_case=LOWER_CASE)
+logger.info("Processing Essays")
+mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_prefix)(process_essays)
+tagged_essays = mem_process_essays(min_df=MIN_SENTENCE_FREQ, remove_infrequent=REMOVE_INFREQUENT,
+                                       spelling_correct=SPELLING_CORRECT,
+                                       replace_nums=REPLACE_NUMS, stem=STEM, remove_stop_words=REMOVE_STOP_WORDS,
+                                       remove_punctuation=REMOVE_PUNCTUATION, lower_case=LOWER_CASE)
 
 # most params below exist ONLY for the purposes of the hashing to and from disk
 @memoize_to_disk(filename_prefix=features_filename_prefix)
@@ -100,10 +91,8 @@ biigram_window = fact_extract_ngram_features(offset, 2)
 pos_tag_window = fact_extract_positional_POS_features((POS_WINDOW_SIZE-1/2))
 #TODO - add POS TAGS (positional)
 #TODO - add dep parse feats
-#TODO - memoize features above for speed
 #extractors = [unigram_window, biigram_window, pos_tag_window]
-extractors = [unigram_window, biigram_window, pos_tag_window]
-
+extractors = [unigram_window, biigram_window]
 
 essay_feats = extract_features(min_df=MIN_SENTENCE_FREQ, rem_infreq=REMOVE_INFREQUENT,
                                spell_correct=SPELLING_CORRECT,
@@ -112,14 +101,32 @@ essay_feats = extract_features(min_df=MIN_SENTENCE_FREQ, rem_infreq=REMOVE_INFRE
                                win_size=WINDOW_SIZE, pos_win_size=POS_WINDOW_SIZE,
                                min_feat_freq=MIN_FEAT_FREQ, extractors=extractors)
 
+MIN_TAG_FREQ = 5
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
-all_tags = set(flatten(lst_all_tags))
+""" Get all tags above the frequency above """
+flt_lst_tags = flatten(lst_all_tags)
+tally_tags = tally_items(flt_lst_tags, freq_threshold=MIN_TAG_FREQ)
+all_tags = set(tally_tags.keys())
+if "it" in all_tags:
+    all_tags.remove("it")
 
 # use more tags for training for sentence level classifier
 """ TAGS """
-train_tags = [c for c in all_tags if c != "it"]
-test_tags  = [c for c in all_tags if c.isdigit() or c == "explicit"]
 causal_tags = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]
+
+wd_train_tags = list(all_tags)
+#wd_test_tags  = [tag for tag in all_tags if tag.isdigit() or tag == "explicit"]
+wd_test_tags  = wd_train_tags
+
+# tags from tagging model used to train the stacked model
+sent_feat_tags = wd_train_tags
+sent_interaction_tags = [tag for tag in all_tags if tag.isdigit() or tag in set(("Causer", "Result", "explicit")) ]
+
+assert "Causer" in sent_feat_tags   , "To extract causal relations, we need Causer tags"
+assert "Result" in sent_feat_tags   , "To extract causal relations, we need Result tags"
+assert "explicit" in sent_feat_tags , "To extract causal relations, we need explicit tags"
+# tags to evaluate against
+sent_train_test_tags = wd_train_tags + causal_tags
 
 folds = cross_validation(essay_feats, CV_FOLDS)
 """Word level metrics """
@@ -135,9 +142,9 @@ sent_td_all_metricsByTag , sent_vd_all_metricsByTag = defaultdict(list), default
 fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
 fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
 
+#TODO Parallelize
 for i,(TD, VD) in enumerate(folds):
 
-    TD = TD
     # TD and VD are lists of Essay objects. The sentences are lists
     # of featureextractortransformer.Word objects
     print "\nFold %s" % i
@@ -149,15 +156,15 @@ for i,(TD, VD) in enumerate(folds):
     feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ, sparse=SPARSE)
     td_X = feature_transformer.fit_transform(td_feats)
     vd_X = feature_transformer.transform(vd_feats)
-    td_ys_bytag = get_wordlevel_ys_by_code(td_tags)
-    vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags)
+    td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
+    vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
 
-    """ TRAIN """
-    tag2word_classifier = train_classifier_per_code(td_X, td_ys_bytag, fn_create_wd_cls, train_tags)
+    """ TRAIN Tagger """
+    tag2word_classifier = train_classifier_per_code(td_X, td_ys_bytag, fn_create_wd_cls, wd_train_tags)
 
-    """ TEST """
-    td_metricsByTag, td_wt_mean_prfa, td_mean_prfa = test_classifier_per_code(td_X, td_ys_bytag, tag2word_classifier, test_tags)
-    vd_metricsByTag, vd_wt_mean_prfa, vd_mean_prfa = test_classifier_per_code(vd_X, vd_ys_bytag, tag2word_classifier, test_tags)
+    """ TEST Tagger """
+    td_metricsByTag, td_wt_mean_prfa, td_mean_prfa = test_classifier_per_code(td_X, td_ys_bytag, tag2word_classifier, wd_test_tags)
+    vd_metricsByTag, vd_wt_mean_prfa, vd_mean_prfa = test_classifier_per_code(vd_X, vd_ys_bytag, tag2word_classifier, wd_test_tags)
 
     wd_td_wt_mean_prfa.append(td_wt_mean_prfa), wd_td_mean_prfa.append(td_mean_prfa)
     wd_vd_wt_mean_prfa.append(vd_wt_mean_prfa), wd_vd_mean_prfa.append(vd_mean_prfa)
@@ -166,14 +173,15 @@ for i,(TD, VD) in enumerate(folds):
 
     print "Training Sentence Model"
     """ SENTENCE LEVEL PREDICTIONS FROM STACKING """
-    sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking(train_tags, all_tags, TD, td_X, td_ys_bytag, tag2word_classifier)
-    sent_vd_xs, sent_vd_ys_bycode = get_sent_feature_for_stacking(train_tags, all_tags, VD, vd_X, vd_ys_bytag, tag2word_classifier)
+    sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking(sent_feat_tags, sent_interaction_tags, TD, td_X, td_ys_bytag, tag2word_classifier, SPARSE)
+    sent_vd_xs, sent_vd_ys_bycode = get_sent_feature_for_stacking(sent_feat_tags, sent_interaction_tags, VD, vd_X, vd_ys_bytag, tag2word_classifier, SPARSE)
 
     """ Train Stacked Classifier """
-    tag2sent_classifier = train_classifier_per_code(sent_td_xs, sent_td_ys_bycode , fn_create_sent_cls, train_tags + causal_tags)
+    tag2sent_classifier = train_classifier_per_code(sent_td_xs, sent_td_ys_bycode , fn_create_sent_cls, sent_train_test_tags)
 
-    s_td_metricsByTag, s_td_wt_mean_prfa, s_td_mean_prfa = test_classifier_per_code(sent_td_xs, sent_td_ys_bycode , tag2sent_classifier, test_tags + causal_tags)
-    s_vd_metricsByTag, s_vd_wt_mean_prfa, s_vd_mean_prfa = test_classifier_per_code(sent_vd_xs, sent_vd_ys_bycode , tag2sent_classifier, test_tags + causal_tags)
+    """ Test Stack Classifier """
+    s_td_metricsByTag, s_td_wt_mean_prfa, s_td_mean_prfa = test_classifier_per_code(sent_td_xs, sent_td_ys_bycode , tag2sent_classifier, sent_train_test_tags )
+    s_vd_metricsByTag, s_vd_wt_mean_prfa, s_vd_mean_prfa = test_classifier_per_code(sent_vd_xs, sent_vd_ys_bycode , tag2sent_classifier, sent_train_test_tags )
 
     sent_td_wt_mean_prfa.append(s_td_wt_mean_prfa), sent_td_mean_prfa.append(s_td_mean_prfa)
     sent_vd_wt_mean_prfa.append(s_vd_wt_mean_prfa), sent_vd_mean_prfa.append(s_vd_mean_prfa)
@@ -184,11 +192,18 @@ for i,(TD, VD) in enumerate(folds):
 wd_mean_td_metrics = agg_metrics(wd_td_all_metricsByTag, mean_rpfa)
 wd_mean_vd_metrics = agg_metrics(wd_vd_all_metricsByTag, mean_rpfa)
 
+sent_mean_td_metrics = agg_metrics(sent_td_all_metricsByTag, mean_rpfa)
+sent_mean_vd_metrics = agg_metrics(sent_vd_all_metricsByTag, mean_rpfa)
+
 print "TAGGING"
 print_metrics_for_codes(wd_mean_td_metrics, wd_mean_vd_metrics)
+
+print "\n\nSENTENCE"
+print_metrics_for_codes(sent_mean_td_metrics, sent_mean_vd_metrics)
+
 print fn_create_wd_cls()
 # print macro measures
-print "TAGGING"
+print "\nTAGGING"
 print "\nTraining   Performance"
 print "Weighted:" + str(mean_rpfa(wd_td_wt_mean_prfa))
 print "Mean    :" + str(mean_rpfa(wd_td_mean_prfa))
@@ -197,14 +212,10 @@ print "\nValidation Performance"
 print "Weighted:" + str(mean_rpfa(wd_vd_wt_mean_prfa))
 print "Mean    :" + str(mean_rpfa(wd_vd_mean_prfa))
 
-sent_mean_td_metrics = agg_metrics(sent_td_all_metricsByTag, mean_rpfa)
-sent_mean_vd_metrics = agg_metrics(sent_vd_all_metricsByTag, mean_rpfa)
-
-print "\n\nSENTENCE"
-print_metrics_for_codes(sent_mean_td_metrics, sent_mean_vd_metrics)
+print "\n\n"
 print fn_create_wd_cls()
 # print macro measures
-print "SENTENCE"
+print "\nSENTENCE"
 print "\nTraining   Performance"
 print "Weighted:" + str(mean_rpfa(sent_td_wt_mean_prfa))
 print "Mean    :" + str(mean_rpfa(sent_td_mean_prfa))
@@ -225,6 +236,7 @@ print "Mean    :" + str(mean_rpfa(sent_vd_mean_prfa))
 #   LOAD RESULTS INTO A DB
 
 #TODO Include dependency parse features
+#TODO Parallelize the cross fold validation
 
 VD RESULTS (for params above:
 STEMMED

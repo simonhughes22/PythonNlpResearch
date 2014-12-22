@@ -24,7 +24,7 @@ def tally_items(lst_objects, fn_extract_prop = None, freq_threshold = 0, sort = 
 
     # Convert from defaultdict to a dict, to prevent confusion when accessing values
     if freq_threshold > 1:
-        retVal = dict([(k,v) for k,v in tally if v >= freq_threshold])
+        retVal = dict([(k,v) for k,v in tally.items() if v >= freq_threshold])
     else:
         retVal = dict(tally.items())
     if sort:

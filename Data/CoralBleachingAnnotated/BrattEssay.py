@@ -120,8 +120,11 @@ class EventAnnotation(AnnotationBase):
         self.id2annotation = id2annotation
 
     def __assign_code__(self, annotation, typ):
+        meta_type = typ #Causer, Result
+        if typ[-1].isdigit():
+            meta_type = typ[:-1]
         annotation.code = typ + ":" + annotation.code
-        annotation.dep_type = typ
+        annotation.dep_type = meta_type
 
     def dependencies(self):
         if self.__dependencies__ is None:
@@ -130,8 +133,6 @@ class EventAnnotation(AnnotationBase):
                 typ, id = annotation.split(":")
                 if typ.strip().startswith("explicit"):
                     continue
-                if typ[-1].isdigit():
-                    typ = typ[:-1]
 
                 dep = self.id2annotation[id]
                 if type(dep) == CompoundTextAnnotation:
@@ -187,19 +188,31 @@ class Essay(object):
         codes_end = defaultdict(set)
 
 
-        def process_causal_relations(codes, start, end):
-            str_codes = "->".join(sorted(codes))
+        def get_code(annotation):
+            if ":" not in annotation.code:
+                return annotation.code
+
+            typ, id = annotation.code.split(":")
+            """ strip off the trailing digit (e.g. Causer1:50) """
+            if typ[-1].isdigit():
+                typ = typ[:-1]
+            return typ + ":" + id
+
+        def process_causal_relations(causer, result):
+            start = min(causer.start, result.start)
+            end = max(causer.end, result.end)
             if start == end:
                 return False
-            codes_start[start].add(str_codes)
-            codes_end[end].add(str_codes)
+            cr_code = get_code(causer) + "->" + get_code(result)
+            codes_start[start].add(cr_code)
+            codes_end[end].add(cr_code)
             return True
 
         def process_text_annotation(annotation):
             if annotation.start == annotation.end:
                 return False
-            codes_start[annotation.start].add(annotation.code)
-            codes_end[annotation.end].add(annotation.code)
+            codes_end[annotation.end].add(get_code(annotation))
+            codes_start[annotation.start].add(get_code(annotation))
             if hasattr(annotation, "dep_type"):
                 codes_start[annotation.start].add(annotation.dep_type)
                 codes_end[annotation.end].add(annotation.dep_type)
@@ -251,16 +264,46 @@ class Essay(object):
 
         for annotation in annotations_with_dependencies:
             deps = annotation.dependencies()
-            start = 999999999999
-            end = -1
-            codes = []
+            # group items
+            grp_causer = dict()
+            grp_result = dict()
             for dependency in deps:
-                start = min(start,dependency.start)
-                end  =  max(end,dependency.end)
-                codes.append(dependency.code)
                 process_text_annotation(dependency)
-            if len(codes) > 1:
-                process_causal_relations(codes, start, end)
+
+                code = dependency.code
+                splt = code.split(":")
+                typ = splt[0]
+                grp_key = 0
+                if typ[-1].isdigit():
+                    grp_key = typ[-1]
+                if code.startswith("Cause"):
+                    grp_causer[grp_key] = dependency
+                elif code.startswith("Result"):
+                    grp_result[grp_key]= dependency
+                else:
+                    pass
+
+            if len(grp_causer) > 0 and len(grp_result) > 0:
+                if len(grp_causer) == 1 and len(grp_result) == 1:
+                    causer = grp_causer.values()[0]
+                    result = grp_result.values()[0]
+                    process_causal_relations(causer, result)
+                elif len(grp_causer) == len(grp_result):
+                    for key in grp_causer.keys():
+                        causer = grp_causer[key]
+                        result = grp_result[key]
+                        process_causal_relations(causer, result)
+                elif len(grp_causer) == 1:
+                    causer = grp_causer.values()[0]
+                    for key, result in grp_result.items():
+                        process_causal_relations(causer, result)
+                elif len(grp_result) == 1:
+                    result = grp_result.values()[0]
+                    for key, causer in grp_causer.items():
+                        process_causal_relations(causer, result)
+                else:
+                    raise Exception("Unbalanced CR codes")
+
 
         codes = set()
         current_word = ""

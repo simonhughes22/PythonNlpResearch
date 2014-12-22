@@ -1,5 +1,5 @@
 __author__ = 'simon.hughes'
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 from IterableFP import flatten
 from Metrics import rpf1a
 from Rpfa import rpfa, weighted_mean_rpfa, mean_rpfa
@@ -51,7 +51,7 @@ def flatten_to_wordlevel_vectors_tags(essay_feats):
                 tags.append(wd.tags)
     return np.asarray(temp_features), tags
 
-def get_wordlevel_ys_by_code(lst_tag_sets):
+def get_wordlevel_ys_by_code(lst_tag_sets, expected_tags):
     """
     Convert a list of tagsets to a dictionary of ys values per tag label
 
@@ -68,10 +68,26 @@ def get_wordlevel_ys_by_code(lst_tag_sets):
             tmp_ys_bycode[y].append(1 if y in tag_set else 0)
 
     ys_bycode = dict()
-    for k, lst in tmp_ys_bycode.items():
-        ys_bycode[k] = np.asarray(lst, dtype=np.int).reshape((len(lst), ))
+    for tag in expected_tags:
+        if tag in tmp_ys_bycode:
+            lst = tmp_ys_bycode[tag]
+            ys_bycode[tag] = np.asarray(lst, dtype=np.int).reshape((len(lst), ))
+        else:
+            ys_bycode[tag] = np.zeros(shape=(len(tmp_ys_bycode.values()[0]), ), dtype=np.int)
     return ys_bycode
 
+
+class always_false(object):
+    def fit(self, x, y):
+        pass
+
+    def predict(self, x):
+        return np.zeros((x.shape[0],), dtype=np.int)
+
+    def predict_proba(self, x):
+        return np.zeros((x.shape[0],), dtype=np.float64)
+
+#TODO Parallelize
 def train_classifier_per_code(xs, ysByCode, fn_create_cls, tags=None):
     """
     Trains an instance of the classifier per code in codes
@@ -93,15 +109,19 @@ def train_classifier_per_code(xs, ysByCode, fn_create_cls, tags=None):
         A dictionary mapping each tag to a classifier trained on that tag
 
     """
+
     if tags == None:
         tags = ysByCode.keys()
-    tag2classifier = {}
+    tag2classifier = OrderedDict()
     for code in sorted(tags):
         print "Training for :", code
-        cls = fn_create_cls()
-        tag2classifier[code] = cls
         ys = np.asarray(ysByCode[code])
-        cls.fit(xs, ys)
+        if max(ys) == 0:
+            cls = always_false()
+        else:
+            cls = fn_create_cls()
+            cls.fit(xs, ys)
+        tag2classifier[code] = cls
     return tag2classifier
 
 def __test_for_tag__(tag, xs, ysByCode, codeToClassifier):

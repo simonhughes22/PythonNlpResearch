@@ -1,5 +1,6 @@
 from collections import defaultdict
 import numpy as np
+import scipy
 
 CAUSAL_REL   = "CRel"
 RESULT_REL   = "RRel"
@@ -13,11 +14,11 @@ def extract_ys_by_code(tags, all_codes, ysByCode):
     ysByCode[RESULT_REL].append(  1 if  "Result" in tags and "explicit" in tags else 0)
     ysByCode[CAUSE_RESULT].append(1 if ("Result" in tags and "explicit" in tags and "Causer" in tags) else 0)
 
-def get_sent_feature_for_stacking(training_tags, all_tags, essays, word_feats, ys_bytag, tag2Classifier):
+def get_sent_feature_for_stacking(feat_tags, interaction_tags, essays, word_feats, ys_bytag, tag2Classifier, sparse=False):
 
     real_num_predictions_bytag = dict()
     predictions_bytag = dict()
-    for tag in training_tags:
+    for tag in feat_tags:
 
         cls = tag2Classifier[tag]
         if hasattr(cls, "decision_function"):
@@ -43,7 +44,7 @@ def get_sent_feature_for_stacking(training_tags, all_tags, essays, word_feats, y
 
             ixs = range(ix, ix + len(taggged_sentence))
             ix += len(taggged_sentence)
-            for tag in training_tags:
+            for tag in feat_tags:
                 ys = ys_bytag[tag][ixs]
                 if np.max(ys, axis=0) > 0:
                     un_tags.add(tag)
@@ -73,19 +74,23 @@ def get_sent_feature_for_stacking(training_tags, all_tags, essays, word_feats, y
                     # add 2 way feature combos
 
             #pairwise interactions
-            for a in training_tags:
-                for b in training_tags:
+            for a in interaction_tags:
+                for b in interaction_tags:
                     if b < a:
                         if a in un_pred_tags and b in un_pred_tags:
                             tmp_xs.append(1)
                         else:
                             tmp_xs.append(0)
 
-            extract_ys_by_code(un_tags, all_tags, ys_by_code)
-            td_sent_feats.append(np.array(tmp_xs))
+            extract_ys_by_code(un_tags, feat_tags, ys_by_code)
+            td_sent_feats.append(tmp_xs)
 
     for k in ys_by_code.keys():
         ys_by_code[k] = np.asarray(ys_by_code[k])
 
     assert len(td_sent_feats) == len(ys_by_code[ys_by_code.keys()[0]])
-    return np.asarray(td_sent_feats), ys_by_code
+    if sparse:
+        xs = scipy.sparse.csr_matrix(td_sent_feats)
+    else:
+        xs = np.asarray(td_sent_feats)
+    return xs, ys_by_code
