@@ -129,7 +129,7 @@ def __test_for_tag__(tag, xs, ysByCode, codeToClassifier):
     pred_ys = codeToClassifier[tag].predict(xs)
     num_codes = len([y for y in ys if y == 1])
     r,p,f1,a = rpf1a(ys, pred_ys)
-    return rpfa(r,p,f1,a,num_codes)
+    return rpfa(r,p,f1,a,num_codes), pred_ys
 
 def test_classifier_per_code(xs, ysByCode, tagToClassifier, tags=None):
     """
@@ -157,14 +157,16 @@ def test_classifier_per_code(xs, ysByCode, tagToClassifier, tags=None):
         tags = ysByCode.keys()
     lst_metrics = []
     metricsByTag = dict()
+    predictions_by_code = dict()
     for tag in sorted(tags):
-        metric = __test_for_tag__(tag, xs, ysByCode, tagToClassifier)
+        metric, pred_ys = __test_for_tag__(tag, xs, ysByCode, tagToClassifier)
         metricsByTag[tag] = metric
         lst_metrics.append(metric)
+        predictions_by_code[tag] = pred_ys
 
     td_wt_mean_prfa   = weighted_mean_rpfa(lst_metrics)
     td_mean_prfa      = mean_rpfa(lst_metrics)
-    return (metricsByTag, td_wt_mean_prfa, td_mean_prfa)
+    return (metricsByTag, td_wt_mean_prfa, td_mean_prfa, predictions_by_code)
 
 def print_metrics_for_codes(td_metricsByTag, vd_metricsByTag):
 

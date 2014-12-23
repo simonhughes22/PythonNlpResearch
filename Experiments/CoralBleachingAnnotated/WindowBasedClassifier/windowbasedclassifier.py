@@ -14,6 +14,9 @@ from CrossValidation import cross_validation
 from wordtagginghelper import *
 from IterableFP import flatten
 from DictionaryHelper import tally_items
+from Rpfa import mean_rpfa, weighted_mean_rpfa
+from metric_processing import *
+from predictions_to_file import predictions_to_file
 
 # Classifiers
 from sklearn.tree import DecisionTreeClassifier
@@ -27,8 +30,6 @@ from sklearn.svm import SVC
 from sklearn.lda import LDA
 from sklearn.neighbors import KNeighborsClassifier
 
-from Rpfa import mean_rpfa, weighted_mean_rpfa
-from metric_processing import *
 # END Classifiers
 
 import pickle
@@ -56,6 +57,7 @@ settings = Settings.Settings()
 essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_pickled_"
 processed_essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
 features_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/feats_pickled_"
+output_file = settings.data_directory + "CoralBleaching/Results/predictions.txt"
 
 logger.info("Loading Essays")
 mem_load_brat_essays = memoize_to_disk(filename_prefix=essay_filename_prefix)(load_bratt_essays)
@@ -120,18 +122,22 @@ if "it" in all_tags_above_threshold:
 
 # use more tags for training for sentence level classifier
 """ TAGS """
-causal_tags = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]
+regular_tags = [t for t in all_tags_above_threshold if t[0].isdigit()]
+cause_tags = ["Causer", "Result", "explicit"]
+causal_rel_tags = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]
 
-wd_train_tags = list(all_tags_above_threshold)
+#wd_train_tags = list(all_tags_above_threshold)
+wd_train_tags = list(all_tags_above_threshold) + cause_tags
 #wd_test_tags  = [tag for tag in all_tags if tag.isdigit() or tag == "explicit"]
 wd_test_tags  = wd_train_tags
 
 # tags from tagging model used to train the stacked model
 sent_input_feat_tags = wd_train_tags
 # find interactions between these predicted tags from the word tagger to feed to the sentence tagger
-sent_input_interaction_tags = [tag for tag in all_tags_above_threshold if tag.isdigit() or tag in set(("Causer", "Result", "explicit")) ]
+#sent_input_interaction_tags = [tag for tag in all_tags_above_threshold if tag.isdigit() or tag in set(("Causer", "Result", "explicit")) ]
+sent_input_interaction_tags = wd_train_tags
 # tags to train (as output) for the sentence based classifier
-sent_output_train_test_tags = [t for t in all_tags_above_threshold if t[0].isdigit()] + causal_tags
+sent_output_train_test_tags = regular_tags + causal_rel_tags
 
 assert "Causer" in sent_input_feat_tags   , "To extract causal relations, we need Causer tags"
 assert "Result" in sent_input_feat_tags   , "To extract causal relations, we need Result tags"
@@ -153,6 +159,11 @@ fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
 fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
 #fn_create_sent_cls  = lambda : GradientBoostingClassifier() #F1 = 0.5312 on numeric + 5b + casual codes for sentences
 
+if type(fn_create_sent_cls()) == GradientBoostingClassifier:
+    SPARSE_SENT_FEATS = False
+
+f_output_file = open(output_file, "w+")
+f_output_file.write("Essay|Sent Number|Processed Sentence|Concept Codes|Predictions\n")
 #TODO Parallelize
 for i,(essays_TD, essays_VD) in enumerate(folds):
 
@@ -174,8 +185,8 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     tag2word_classifier = train_classifier_per_code(td_X, td_ys_bytag, fn_create_wd_cls, wd_train_tags)
 
     """ TEST Tagger """
-    td_metricsByTag, td_wt_mean_prfa, td_mean_prfa = test_classifier_per_code(td_X, td_ys_bytag, tag2word_classifier, wd_test_tags)
-    vd_metricsByTag, vd_wt_mean_prfa, vd_mean_prfa = test_classifier_per_code(vd_X, vd_ys_bytag, tag2word_classifier, wd_test_tags)
+    td_metricsByTag, td_wt_mean_prfa, td_mean_prfa, td_wd_predictions_by_code = test_classifier_per_code(td_X, td_ys_bytag, tag2word_classifier, wd_test_tags)
+    vd_metricsByTag, vd_wt_mean_prfa, vd_mean_prfa, vd_wd_predictions_by_code = test_classifier_per_code(vd_X, vd_ys_bytag, tag2word_classifier, wd_test_tags)
 
     wd_td_wt_mean_prfa.append(td_wt_mean_prfa), wd_td_mean_prfa.append(td_mean_prfa)
     wd_vd_wt_mean_prfa.append(vd_wt_mean_prfa), wd_vd_mean_prfa.append(vd_mean_prfa)
@@ -191,14 +202,20 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     tag2sent_classifier = train_classifier_per_code(sent_td_xs, sent_td_ys_bycode , fn_create_sent_cls, sent_output_train_test_tags)
 
     """ Test Stack Classifier """
-    s_td_metricsByTag, s_td_wt_mean_prfa, s_td_mean_prfa = test_classifier_per_code(sent_td_xs, sent_td_ys_bycode , tag2sent_classifier, sent_output_train_test_tags )
-    s_vd_metricsByTag, s_vd_wt_mean_prfa, s_vd_mean_prfa = test_classifier_per_code(sent_vd_xs, sent_vd_ys_bycode , tag2sent_classifier, sent_output_train_test_tags )
+    s_td_metricsByTag, s_td_wt_mean_prfa, s_td_mean_prfa, td_sent_predictions_by_code \
+        = test_classifier_per_code(sent_td_xs, sent_td_ys_bycode , tag2sent_classifier, sent_output_train_test_tags )
+
+    s_vd_metricsByTag, s_vd_wt_mean_prfa, s_vd_mean_prfa, vd_sent_predictions_by_code \
+        = test_classifier_per_code(sent_vd_xs, sent_vd_ys_bycode , tag2sent_classifier, sent_output_train_test_tags )
 
     sent_td_wt_mean_prfa.append(s_td_wt_mean_prfa), sent_td_mean_prfa.append(s_td_mean_prfa)
     sent_vd_wt_mean_prfa.append(s_vd_wt_mean_prfa), sent_vd_mean_prfa.append(s_vd_mean_prfa)
     merge_metrics(s_td_metricsByTag, sent_td_all_metricsByTag)
     merge_metrics(s_vd_metricsByTag, sent_vd_all_metricsByTag)
 
+    predictions_to_file(f_output_file, sent_vd_ys_bycode, vd_sent_predictions_by_code, essays_VD, list(all_tags_above_threshold) + causal_rel_tags)
+
+f_output_file.close()
 # print results for each code
 wd_mean_td_metrics = agg_metrics(wd_td_all_metricsByTag, cv_mean_rpfa)
 wd_mean_vd_metrics = agg_metrics(wd_vd_all_metricsByTag, cv_mean_rpfa_total_codes)
