@@ -168,25 +168,3 @@ def test_classifier_per_code(xs, ysByCode, tagToClassifier, tags=None):
     td_mean_prfa      = mean_rpfa(lst_metrics)
     return (metricsByTag, td_wt_mean_prfa, td_mean_prfa, predictions_by_code)
 
-def print_metrics_for_codes(td_metricsByTag, vd_metricsByTag):
-
-    def pad_str(val):
-        return str(val).ljust(20)
-
-    print " " * 11, pad_str("TD"),     pad_str("VD")
-
-    def sort_key(code):
-        if code.isdigit():
-            return (int(code), len(code), code)
-        return (9999999, len(code), (code))
-
-    for tag in sorted(td_metricsByTag.keys(), key= sort_key):
-        td_rpfa = td_metricsByTag[tag]
-        vd_rpfa = vd_metricsByTag[tag]
-        print "TAG:       ", pad_str(tag)
-        print "f1:        ", pad_str(td_rpfa.f1_score),     pad_str(vd_rpfa.f1_score)
-        print "recall:    ", pad_str(td_rpfa.recall),       pad_str(vd_rpfa.recall)
-        print "precision: ", pad_str(td_rpfa.precision),    pad_str(vd_rpfa.precision)
-        print "accuracy:  ", pad_str(td_rpfa.accuracy),     pad_str(vd_rpfa.accuracy)
-        print "sentences: ", pad_str(""),                   pad_str(vd_rpfa.num_codes)
-        print ""

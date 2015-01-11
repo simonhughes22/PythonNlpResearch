@@ -13,6 +13,7 @@ class AnnotationBase(object):
     def __init__(self, line):
         self.split = line.strip().split("\t")
         self.id = self.split[0]
+        # first char of the id
         self.type = self.id[0]
 
         self.contents = self.split[1].replace("  ", " ").split(" ")
@@ -107,6 +108,9 @@ class AttributeAnnotation(AnnotationBase):
         AnnotationBase.__init__(self, line)
         self.child_annotations = []
         self.child_annotation_ids = self.contents[1:]
+        del self.code
+        self.attribute = self.contents[0]
+        self.target_id = self.contents[1]
 
 class RelationshipAnnotation(AnnotationBase):
     def __init__(self, line):
@@ -161,7 +165,10 @@ class NoteAnnotation(AnnotationBase):
 
 class Essay(object):
 
-    def __init__(self, full_path):
+    def __init__(self, full_path, include_vague = True, include_normal = True):
+
+        self.include_normal = include_normal
+        self.include_vague = include_vague
 
         self.full_path = full_path
         self.file_name = full_path.split("/")[-1]
@@ -220,6 +227,9 @@ class Essay(object):
             return True
 
         annotations_with_dependencies = []
+        text_annotations = []
+        vague_ids = set()
+        normal_ids = set()
         for line in lines:
             if len(line.strip()) == 0:
                 continue
@@ -227,10 +237,10 @@ class Essay(object):
             if first_char == "T":
                 if is_compound(line):
                     annotation = CompoundTextAnnotation(line, self.txt)
-                    process_text_annotation(annotation.first_part)
-                    process_text_annotation(annotation.second_part)
+                    text_annotations.append(annotation.first_part)
+                    text_annotations.append(annotation.second_part)
 
-                    """
+                    """ DEBUGGING
                     print ""
                     print line.strip()
                     print annotation.txt
@@ -242,11 +252,17 @@ class Essay(object):
                 else:
                     annotation = TextAnnotation(line, self.txt)
                     #Bad annotation, ignore
-                    if not process_text_annotation(annotation):
+                    if annotation.start == annotation.end:
                         continue
+                    else:
+                        text_annotations.append(annotation)
 
             elif first_char == "A":
                 annotation = AttributeAnnotation(line)
+                if annotation.attribute == "Vague":
+                    vague_ids.add(annotation.target_id)
+                if annotation.attribute == "Normal":
+                    normal_ids.add(annotation.target_id)
                 for id in annotation.child_annotation_ids:
                     annotation.child_annotations.append(self.id2annotation[id])
             elif first_char == "R":
@@ -260,8 +276,15 @@ class Essay(object):
                     annotation.child_annotations.append(self.id2annotation[id])
             else:
                 raise Exception("Unknown annotation type")
-
             self.id2annotation[annotation.id] = annotation
+        #end process lines
+
+        for annotation in text_annotations:
+            if not include_vague and annotation.id in vague_ids:
+                continue
+            if not include_normal and annotation.id in normal_ids:
+                continue
+            process_text_annotation(annotation)
 
         for annotation in annotations_with_dependencies:
             deps = annotation.dependencies()
@@ -334,7 +357,8 @@ class Essay(object):
 
         def add_sentence(sentence, str_sent):
 
-            sents = filter(lambda s: len(s) > 1, sent_tokenize(onlyascii(str_sent.strip())))
+            sents = filter(lambda s: len(s) > 1 and s != '//', sent_tokenize(onlyascii(str_sent.strip())))
+            # the code below handles cases where the sentences are not properly split and we get multiple sentences here
             if len(sents) > 1:
                 # filter to # of full sentences, and we should get at least this many out
                 expected_min_sents = len([s for s in sents if s.strip().split(" ") > 1])
@@ -361,7 +385,7 @@ class Essay(object):
                         if first.lower() not in unique_wds:
                             if not first[-1].isalnum():
                                 first = first[:-1]
-                            elif not first[0].isalnum():
+                            if not first[0].isalnum():
                                 first = first[0]
 
                         assert first.lower() in unique_wds
@@ -424,7 +448,7 @@ class Essay(object):
             tags = zip(*sent)[1]
             self.sentence_tags.append(set(flatten(tags)))
 
-def load_bratt_essays(directory = None):
+def load_bratt_essays(directory = None, include_vague = True, include_normal = True):
     bratt_root_folder = directory
     if not bratt_root_folder:
         settings = Settings.Settings()
@@ -436,7 +460,7 @@ def load_bratt_essays(directory = None):
     essays = []
     for f in files:
         #try:
-        essay = Essay(f)
+        essay = Essay(f, include_vague=include_vague, include_normal=include_normal)
         essays.append(essay)
         #except Exception, e:
         #    print "Error processing file: ", e.message, f
@@ -447,7 +471,7 @@ def load_bratt_essays(directory = None):
 
 if __name__ == "__main__":
 
-    essays = load_bratt_essays()
+    essays = load_bratt_essays(include_normal=False)
 
     for essay in essays:
         if essay.split_sents:

@@ -14,7 +14,7 @@ from CrossValidation import cross_validation
 from wordtagginghelper import *
 from IterableFP import flatten
 from DictionaryHelper import tally_items
-from Rpfa import mean_rpfa, weighted_mean_rpfa
+
 from metric_processing import *
 from predictions_to_file import predictions_to_file
 from result_processing import get_results
@@ -34,22 +34,22 @@ from sklearn.neighbors import KNeighborsClassifier
 # END Classifiers
 
 import pickle
-import Settings
 import os
+import Settings
 
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
 # Settings for loading essays
-INCLUDE_VAGUE       = True
-INCLUDE_NORMAL      = True
+INCLUDE_VAGUE       = False
+INCLUDE_NORMAL      = False
 
 # Settings for essay pre-processing
 MIN_SENTENCE_FREQ   = 2        # i.e. df. Note this is calculated BEFORE creating windows
 REMOVE_INFREQUENT   = False    # if false, infrequent words are replaced with "INFREQUENT"
 SPELLING_CORRECT    = True
-STEM                = True    # note this tends to improve matters, but is needed to be on for pos tagging and dep parsing
+STEM                = False    # note this tends to improve matters, but is needed to be on for pos tagging and dep parsing
                                # makes tagging model better but causal model worse
 REPLACE_NUMS        = True     # 1989 -> 0000, 10 -> 00
 MIN_SENTENCE_LENGTH = 3
@@ -59,15 +59,18 @@ LOWER_CASE          = False
 # construct unique key using settings for pickling
 
 settings = Settings.Settings()
-folder = settings.data_directory + "CoralBleaching/BrattData/Merged/"
-essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_pickled_"
-processed_essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
-features_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/feats_pickled_"
+essay_filename_prefix = settings.data_directory + "SkinCancer/Pickled/essays_pickled_"
+processed_essay_filename_prefix = settings.data_directory + "SkinCancer/Pickled/essays_proc_pickled_"
+features_filename_prefix = settings.data_directory + "SkinCancer/Pickled/feats_pickled_"
 
-out_metrics_file     = settings.data_directory + "CoralBleaching/Results/metrics.txt"
-out_predictions_file = settings.data_directory + "CoralBleaching/Results/predictions.txt"
+out_metrics_file        = settings.data_directory + "SkinCancer/Results/metrics.txt"
+out_predictions_file    = settings.data_directory + "SkinCancer/Results/predictions.txt"
 
 logger.info("Loading Essays")
+
+settings = Settings.Settings()
+folder = settings.data_directory + "SkinCancer/Merged/"
+
 @memoize_to_disk(filename_prefix=essay_filename_prefix)
 def load_essays(include_vague=INCLUDE_VAGUE, include_normal=INCLUDE_NORMAL):
     return load_bratt_essays(directory=folder, include_vague=include_vague, include_normal=include_normal)
@@ -142,26 +145,27 @@ _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
 """ NOTE WHEN OUTPUTING RESULTS WE NEED TO USE ALL TAGS, NOT HIGHER FREQ TAGS """
 flt_lst_tags = flatten(lst_all_tags)
 tally_tags = tally_items(flt_lst_tags, freq_threshold=MIN_TAG_FREQ)
-all_tags_above_threshold = set(tally_tags.keys())
-if "it" in all_tags_above_threshold:
-    all_tags_above_threshold.remove("it")
+set_all_tags_above_threshold = set(tally_tags.keys())
+if "it" in set_all_tags_above_threshold:
+    set_all_tags_above_threshold.remove("it")
 
 # use more tags for training for sentence level classifier
 """ TAGS """
-regular_tags = [t for t in all_tags_above_threshold if t[0].isdigit()]
+regular_tags = [t for t in set_all_tags_above_threshold if t[0].isdigit()]
 cause_tags = ["Causer", "Result", "explicit"]
 causal_rel_tags = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]
 
-#wd_train_tags = list(all_tags_above_threshold)
-wd_train_tags = list(all_tags_above_threshold) + cause_tags
-#wd_test_tags  = [tag for tag in all_tags if tag.isdigit() or tag == "explicit"]
+wd_train_tags = list(set_all_tags_above_threshold)
+#wd_train_tags = regular_tags + cause_tags
+#wd_test_tags  = [tag for tag in set_all_tags_above_threshold if tag.isdigit() or tag == "explicit"]
+#wd_test_tags  = wd_train_tags
 wd_test_tags  = wd_train_tags
 
 # tags from tagging model used to train the stacked model
 sent_input_feat_tags = wd_train_tags
 # find interactions between these predicted tags from the word tagger to feed to the sentence tagger
 #sent_input_interaction_tags = [tag for tag in all_tags_above_threshold if tag.isdigit() or tag in set(("Causer", "Result", "explicit")) ]
-sent_input_interaction_tags = wd_train_tags
+sent_input_interaction_tags = regular_tags
 # tags to train (as output) for the sentence based classifier
 sent_output_train_test_tags = regular_tags + causal_rel_tags
 
@@ -239,12 +243,12 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     merge_metrics(s_td_metricsByTag, sent_td_all_metricsByTag)
     merge_metrics(s_vd_metricsByTag, sent_vd_all_metricsByTag)
 
-    predictions_to_file(f_output_file, sent_vd_ys_bycode, vd_sent_predictions_by_code, essays_VD, list(all_tags_above_threshold) + causal_rel_tags)
+    predictions_to_file(f_output_file, sent_vd_ys_bycode, vd_sent_predictions_by_code, essays_VD, list(set_all_tags_above_threshold) + causal_rel_tags)
 
 f_output_file.close()
 # print results for each code
-s_results = get_results(wd_td_all_metricsByTag, wd_vd_all_metricsByTag, sent_td_all_metricsByTag,
-                        sent_vd_all_metricsByTag,
+
+s_results = get_results(wd_td_all_metricsByTag, wd_vd_all_metricsByTag, sent_td_all_metricsByTag,sent_vd_all_metricsByTag,
                         wd_td_wt_mean_prfa, wd_td_mean_prfa, wd_vd_wt_mean_prfa, wd_vd_mean_prfa,
                         sent_td_wt_mean_prfa, sent_td_mean_prfa, sent_vd_wt_mean_prfa, sent_vd_mean_prfa,
                         fn_create_wd_cls, fn_create_sent_cls)
@@ -252,6 +256,7 @@ s_results = get_results(wd_td_all_metricsByTag, wd_vd_all_metricsByTag, sent_td_
 print s_results
 with open(out_metrics_file, "w+") as f:
     f.write(s_results)
+
 """
 # PLAN
 #   WORD LEVEL FEATURE EXTRACTION - use functions specific to the individual word, but that can look around at the
