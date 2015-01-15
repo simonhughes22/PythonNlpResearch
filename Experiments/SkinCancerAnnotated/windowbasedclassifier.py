@@ -42,7 +42,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 logger = logging.getLogger()
 
 # Settings for loading essays
-INCLUDE_VAGUE       = False
+INCLUDE_VAGUE       = True
 INCLUDE_NORMAL      = False
 
 # Settings for essay pre-processing

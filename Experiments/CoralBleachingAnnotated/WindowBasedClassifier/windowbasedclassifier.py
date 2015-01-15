@@ -43,13 +43,13 @@ logger = logging.getLogger()
 
 # Settings for loading essays
 INCLUDE_VAGUE       = True
-INCLUDE_NORMAL      = True
+INCLUDE_NORMAL      = False
 
 # Settings for essay pre-processing
 MIN_SENTENCE_FREQ   = 2        # i.e. df. Note this is calculated BEFORE creating windows
 REMOVE_INFREQUENT   = False    # if false, infrequent words are replaced with "INFREQUENT"
 SPELLING_CORRECT    = True
-STEM                = True    # note this tends to improve matters, but is needed to be on for pos tagging and dep parsing
+STEM                = True     # note this tends to improve matters, but is needed to be on for pos tagging and dep parsing
                                # makes tagging model better but causal model worse
 REPLACE_NUMS        = True     # 1989 -> 0000, 10 -> 00
 MIN_SENTENCE_LENGTH = 3
@@ -150,7 +150,7 @@ if "it" in all_tags_above_threshold:
 """ TAGS """
 regular_tags = [t for t in all_tags_above_threshold if t[0].isdigit()]
 cause_tags = ["Causer", "Result", "explicit"]
-causal_rel_tags = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]
+causal_rel_tags = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 
 #wd_train_tags = list(all_tags_above_threshold)
 wd_train_tags = list(all_tags_above_threshold) + cause_tags
@@ -163,7 +163,7 @@ sent_input_feat_tags = wd_train_tags
 #sent_input_interaction_tags = [tag for tag in all_tags_above_threshold if tag.isdigit() or tag in set(("Causer", "Result", "explicit")) ]
 sent_input_interaction_tags = wd_train_tags
 # tags to train (as output) for the sentence based classifier
-sent_output_train_test_tags = regular_tags + causal_rel_tags
+sent_output_train_test_tags = list(set(regular_tags + causal_rel_tags))
 
 assert "Causer" in sent_input_feat_tags   , "To extract causal relations, we need Causer tags"
 assert "Result" in sent_input_feat_tags   , "To extract causal relations, we need Result tags"

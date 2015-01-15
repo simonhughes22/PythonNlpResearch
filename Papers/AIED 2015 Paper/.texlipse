@@ -1,0 +1,14 @@
+#TeXlipse project settings
+#Sun Jan 11 21:33:34 CST 2015
+markTmpDer=true
+builderNum=2
+outputDir=output/
+makeIndSty=
+bibrefDir=
+outputFormat=pdf
+tempDir=tmp
+mainTexFile=aied2015.tex
+outputFile=aied2015.pdf
+langSpell=en
+markDer=true
+srcDir=

@@ -13,6 +13,8 @@ from GradientChecking import GradientChecker
 
 USE_GPU = False
 
+raise Exception("read this http://yyue.blogspot.ca/2015/01/a-brief-overview-of-deep-learning.html")
+
 def get_array(a):
     if USE_GPU:
         """
