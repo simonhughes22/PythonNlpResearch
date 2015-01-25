@@ -5,7 +5,7 @@ from Decorators import timeit, memoize, memoize_to_disk
 from BrattEssay import load_bratt_essays
 from processessays import process_sentences, process_essays
 from wordtagginghelper import flatten_to_wordlevel_feat_tags, get_wordlevel_ys_by_code
-from sent_feats_for_stacking import get_sent_feature_for_stacking, CAUSAL_REL, CAUSE_RESULT, RESULT_REL
+from sent_feats_for_stacking import *
 
 from featureextractortransformer import FeatureExtractorTransformer
 from featurevectorizer import FeatureVectorizer
@@ -49,9 +49,9 @@ INCLUDE_NORMAL      = False
 MIN_SENTENCE_FREQ   = 2        # i.e. df. Note this is calculated BEFORE creating windows
 REMOVE_INFREQUENT   = False    # if false, infrequent words are replaced with "INFREQUENT"
 SPELLING_CORRECT    = True
-STEM                = False    # note this tends to improve matters, but is needed to be on for pos tagging and dep parsing
-                               # makes tagging model better but causal model worse
-REPLACE_NUMS        = True     # 1989 -> 0000, 10 -> 00
+STEM                = False     # better as False for SC
+
+REPLACE_NUMS        = True
 MIN_SENTENCE_LENGTH = 3
 REMOVE_STOP_WORDS   = False
 REMOVE_PUNCTUATION  = True
@@ -150,14 +150,17 @@ if "it" in set_all_tags_above_threshold:
     set_all_tags_above_threshold.remove("it")
 
 # use more tags for training for sentence level classifier
-""" TAGS """
+""" !!! LIST OF TAGS USED !!! """
 regular_tags = [t for t in set_all_tags_above_threshold if t[0].isdigit()]
 cause_tags = ["Causer", "Result", "explicit"]
 causal_rel_tags = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]
 
-wd_train_tags = list(set_all_tags_above_threshold)
-#wd_train_tags = regular_tags + cause_tags
+#wd_train_tags = list(set_all_tags_above_threshold)
+
+""" works best with just the regular codes """
+wd_train_tags = regular_tags + cause_tags
 #wd_test_tags  = [tag for tag in set_all_tags_above_threshold if tag.isdigit() or tag == "explicit"]
+#wd_test_tags  = wd_train_tags
 #wd_test_tags  = wd_train_tags
 wd_test_tags  = wd_train_tags
 
@@ -168,6 +171,7 @@ sent_input_feat_tags = wd_train_tags
 sent_input_interaction_tags = regular_tags
 # tags to train (as output) for the sentence based classifier
 sent_output_train_test_tags = regular_tags + causal_rel_tags
+#sent_output_train_test_tags = regular_tags
 
 assert "Causer" in sent_input_feat_tags   , "To extract causal relations, we need Causer tags"
 assert "Result" in sent_input_feat_tags   , "To extract causal relations, we need Result tags"
@@ -225,8 +229,10 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
     print "Training Sentence Model"
     """ SENTENCE LEVEL PREDICTIONS FROM STACKING """
-    sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_TD, td_X, td_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
-    sent_vd_xs, sent_vd_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_VD, vd_X, vd_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
+    #sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_TD, td_X, td_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
+    sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking2(sent_input_feat_tags, sent_input_interaction_tags, essays_TD, td_X, td_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
+    #sent_vd_xs, sent_vd_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_VD, vd_X, vd_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
+    sent_vd_xs, sent_vd_ys_bycode = get_sent_feature_for_stacking2(sent_input_feat_tags, sent_input_interaction_tags, essays_VD, vd_X, vd_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
 
     """ Train Stacked Classifier """
     tag2sent_classifier = train_classifier_per_code(sent_td_xs, sent_td_ys_bycode , fn_create_sent_cls, sent_output_train_test_tags)

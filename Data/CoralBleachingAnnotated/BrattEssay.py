@@ -447,8 +447,12 @@ class Essay(object):
         for sent in self.tagged_sentences:
             tags = zip(*sent)[1]
             self.sentence_tags.append(set(flatten(tags)))
+        #if len(self.tagged_sentences) > 60:
+        #    raise Exception("Too many sentences (%s) in essay %s" % (str(len(self.sentence_tags)), self.file_name))
 
 def load_bratt_essays(directory = None, include_vague = True, include_normal = True):
+    import warnings
+
     bratt_root_folder = directory
     if not bratt_root_folder:
         settings = Settings.Settings()
@@ -461,7 +465,11 @@ def load_bratt_essays(directory = None, include_vague = True, include_normal = T
     for f in files:
         #try:
         essay = Essay(f, include_vague=include_vague, include_normal=include_normal)
-        essays.append(essay)
+        if len(essay.tagged_sentences) > 60:
+            warnings.warn("Too many sentences (%s) in essay %s" % (str(len(essay.sentence_tags)), essay.file_name))
+            print "Too many sentences (%s) in essay %s" % (str(len(essay.sentence_tags)), essay.file_name)
+        else:
+            essays.append(essay)
         #except Exception, e:
         #    print "Error processing file: ", e.message, f
 

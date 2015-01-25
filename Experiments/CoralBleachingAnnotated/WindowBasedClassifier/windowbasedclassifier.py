@@ -5,7 +5,7 @@ from Decorators import timeit, memoize, memoize_to_disk
 from BrattEssay import load_bratt_essays
 from processessays import process_sentences, process_essays
 from wordtagginghelper import flatten_to_wordlevel_feat_tags, get_wordlevel_ys_by_code
-from sent_feats_for_stacking import get_sent_feature_for_stacking, CAUSAL_REL, CAUSE_RESULT, RESULT_REL
+from sent_feats_for_stacking import *
 
 from featureextractortransformer import FeatureExtractorTransformer
 from featurevectorizer import FeatureVectorizer
@@ -59,7 +59,8 @@ LOWER_CASE          = False
 # construct unique key using settings for pickling
 
 settings = Settings.Settings()
-folder = settings.data_directory + "CoralBleaching/BrattData/Merged/"
+folder = settings.data_directory + "CoralBleaching/BrattData/EBA_Pre_Post_Merged/"
+#folder = settings.data_directory + "CoralBleaching/BrattData/Merged/"
 essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_pickled_"
 processed_essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
 features_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/feats_pickled_"
@@ -147,23 +148,27 @@ if "it" in all_tags_above_threshold:
     all_tags_above_threshold.remove("it")
 
 # use more tags for training for sentence level classifier
-""" TAGS """
+""" !!! THE TAGS USED TO RUN !!! """
 regular_tags = [t for t in all_tags_above_threshold if t[0].isdigit()]
 cause_tags = ["Causer", "Result", "explicit"]
 causal_rel_tags = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 
 #wd_train_tags = list(all_tags_above_threshold)
-wd_train_tags = list(all_tags_above_threshold) + cause_tags
+""" works best with all the pair-wise causal relation codes """
+wd_train_tags = list(all_tags_above_threshold.union(cause_tags))
+#wd_train_tags = regular_tags
+#wd_train_tags = regular_tags + cause_tags
 #wd_test_tags  = [tag for tag in all_tags if tag.isdigit() or tag == "explicit"]
-wd_test_tags  = wd_train_tags
+wd_test_tags  = regular_tags
 
 # tags from tagging model used to train the stacked model
 sent_input_feat_tags = wd_train_tags
 # find interactions between these predicted tags from the word tagger to feed to the sentence tagger
 #sent_input_interaction_tags = [tag for tag in all_tags_above_threshold if tag.isdigit() or tag in set(("Causer", "Result", "explicit")) ]
-sent_input_interaction_tags = wd_train_tags
+sent_input_interaction_tags = regular_tags + cause_tags
 # tags to train (as output) for the sentence based classifier
 sent_output_train_test_tags = list(set(regular_tags + causal_rel_tags))
+#sent_output_train_test_tags = list(set(regular_tags))
 
 assert "Causer" in sent_input_feat_tags   , "To extract causal relations, we need Causer tags"
 assert "Result" in sent_input_feat_tags   , "To extract causal relations, we need Result tags"
@@ -263,8 +268,13 @@ with open(out_metrics_file, "w+") as f:
 #       for word tagging and also for sentence classifying. Suggest do k fold cross validation at the essay level.
 #   LOAD RESULTS INTO A DB
 
+#TODO Feed into the sentence classifier the number of words tagged with each category, the proportion of words (to control for sentence length variations) and
+    also the number of contiguous segments of each in case some codes occur more than once (in separate segments - probably with > 1 word gaps in between)
+#TODO Switch to micro and macro-average F1 scores as described in http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.104.8244&rep=rep1&type=pdf, page 6.
+#TODO Look at using the StructureLINK relations (related to anaphora and other devices, see ReadMe.txt in the CoralBleaching folder).
 #TODO Include dependency parse features
 #TODO Parallelize the cross fold validation
+
 
 VD RESULTS (for params above:
 STEMMED
