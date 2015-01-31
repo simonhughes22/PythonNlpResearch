@@ -3,6 +3,7 @@ from collections import defaultdict, OrderedDict
 from IterableFP import flatten
 from Metrics import rpf1a
 from Rpfa import rpfa, weighted_mean_rpfa, mean_rpfa
+import scipy
 import numpy as np
 
 def flatten_to_wordlevel_feat_tags(essay_feats):
@@ -28,7 +29,7 @@ def flatten_to_wordlevel_feat_tags(essay_feats):
                 tags.append(wd.tags)
     return feats, tags
 
-def flatten_to_wordlevel_vectors_tags(essay_feats):
+def flatten_to_wordlevel_vectors_tags(essay_feats, sparse=True):
     """
     Splits the essay-level features into
 
@@ -36,6 +37,7 @@ def flatten_to_wordlevel_vectors_tags(essay_feats):
     ----------
     essay_feats : a list of lists of lists of Word objects
         Tag level features for the essays
+    sparse      : boolean - return sparse vectors or not?
 
     Returns
     -------
@@ -49,7 +51,11 @@ def flatten_to_wordlevel_vectors_tags(essay_feats):
             for word_ix, (wd) in enumerate(taggged_sentence):
                 temp_features.append(wd.vector)
                 tags.append(wd.tags)
-    return np.asarray(temp_features), tags
+
+    if sparse:
+        return scipy.sparse.csr_matrix(temp_features), tags
+    else:
+        return np.asarray(temp_features), tags
 
 def get_wordlevel_ys_by_code(lst_tag_sets, expected_tags):
     """

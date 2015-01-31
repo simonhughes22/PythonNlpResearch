@@ -187,11 +187,11 @@ wd_td_all_metricsByTag, wd_vd_all_metricsByTag = defaultdict(list), defaultdict(
 sent_td_wt_mean_prfa, sent_vd_wt_mean_prfa, sent_td_mean_prfa, sent_vd_mean_prfa = [], [], [], []
 sent_td_all_metricsByTag , sent_vd_all_metricsByTag = defaultdict(list), defaultdict(list)
 
-# Linear SVC seems to do better
-#fn_create_cls = lambda: LogisticRegression()
-fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
-fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
-#fn_create_sent_cls  = lambda : GradientBoostingClassifier() #F1 = 0.5312 on numeric + 5b + casual codes for sentences
+""" Log Reg + GBT is best """
+fn_create_wd_cls = lambda: LogisticRegression()
+#fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
+#fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
+fn_create_sent_cls  = lambda : GradientBoostingClassifier()
 
 if type(fn_create_sent_cls()) == GradientBoostingClassifier:
     SPARSE_SENT_FEATS = False

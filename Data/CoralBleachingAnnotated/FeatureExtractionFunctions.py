@@ -1,6 +1,28 @@
 from NgramGenerator import compute_ngrams
 from Decorators import memoize
+from spacy.en import English
 import PosTagger
+
+# initialize spaCy parser
+# http://honnibal.github.io/spaCy/quickstart.html#install
+nlp = English()
+
+@memoize
+def spacy_parse(text):
+    return list(nlp(unicode(text)))
+
+"""
+TODO - SpaCy - Try brown cluster labels
+               Try pos tags tok.pos_
+               Try the 2nd tag type tok.tag_
+               Try the dep parse tag
+               Try the full dep parse relation as features e.g. p3. https://levyomer.files.wordpress.com/2014/04/dependency-based-word-embeddings-acl-2014.pdf
+               Try the dep word embedding
+
+     >>>>>>> DO for target word ONLY, and for positional features !!!!
+"""
+
+
 
 """ POSITIONAL SINGLE WORDS
 """

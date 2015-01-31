@@ -17,7 +17,7 @@ class Word(object):
 class FeatureExtractorInput(object):
     """ Holds all the input needed for a feature extractor
         wordix              :   int
-                                    index of word in the sentence
+                                    index of the current word in the sentence
         tagged_sentence     :   list of words
                                     sentence (words only)
         sentenceix          :   int

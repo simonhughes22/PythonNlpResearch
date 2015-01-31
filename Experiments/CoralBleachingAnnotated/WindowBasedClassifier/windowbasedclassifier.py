@@ -155,9 +155,9 @@ causal_rel_tags = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 
 #wd_train_tags = list(all_tags_above_threshold)
 """ works best with all the pair-wise causal relation codes """
-wd_train_tags = list(all_tags_above_threshold.union(cause_tags))
+#wd_train_tags = list(all_tags_above_threshold.union(cause_tags))
 #wd_train_tags = regular_tags
-#wd_train_tags = regular_tags + cause_tags
+wd_train_tags = regular_tags + cause_tags
 #wd_test_tags  = [tag for tag in all_tags if tag.isdigit() or tag == "explicit"]
 wd_test_tags  = regular_tags
 
@@ -184,11 +184,12 @@ wd_td_all_metricsByTag, wd_vd_all_metricsByTag = defaultdict(list), defaultdict(
 sent_td_wt_mean_prfa, sent_vd_wt_mean_prfa, sent_td_mean_prfa, sent_vd_mean_prfa = [], [], [], []
 sent_td_all_metricsByTag , sent_vd_all_metricsByTag = defaultdict(list), defaultdict(list)
 
-# Linear SVC seems to do better
-#fn_create_cls = lambda: LogisticRegression()
-fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
-fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
-#fn_create_sent_cls  = lambda : GradientBoostingClassifier() #F1 = 0.5312 on numeric + 5b + casual codes for sentences
+""" Log Reg + GBT is best. """
+# NOTE - GBT is stochastic in the SPLITS, and so you will get non-deterministic results
+fn_create_wd_cls = lambda: LogisticRegression()
+#fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
+#fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
+fn_create_sent_cls  = lambda : GradientBoostingClassifier() #F1 = 0.5312 on numeric + 5b + casual codes for sentences
 
 if type(fn_create_sent_cls()) == GradientBoostingClassifier:
     SPARSE_SENT_FEATS = False

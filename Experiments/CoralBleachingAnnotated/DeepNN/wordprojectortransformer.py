@@ -11,7 +11,7 @@ class WordProjectorTransformer(object):
 
     def transform(self, essays):
         for essay_ix, essay in enumerate(essays):
-            for sent_ix, taggged_sentence in enumerate(essay):
+            for sent_ix, taggged_sentence in enumerate(essay.sentences):
                 for word_ix, (wd, tags) in enumerate(taggged_sentence):
                     _ = self.idgen.get_id(wd)
 
@@ -24,7 +24,7 @@ class WordProjectorTransformer(object):
         for essay_ix, essay in enumerate(essays):
             t_essay = []
             transformed.append(t_essay)
-            for sent_ix, taggged_sentence in enumerate(essay):
+            for sent_ix, taggged_sentence in enumerate(essay.sentences):
                 t_sentence = []
                 t_essay.append(t_sentence)
 
