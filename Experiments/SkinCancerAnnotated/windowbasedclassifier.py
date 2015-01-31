@@ -162,7 +162,7 @@ wd_train_tags = regular_tags + cause_tags
 #wd_test_tags  = [tag for tag in set_all_tags_above_threshold if tag.isdigit() or tag == "explicit"]
 #wd_test_tags  = wd_train_tags
 #wd_test_tags  = wd_train_tags
-wd_test_tags  = wd_train_tags
+wd_test_tags  = wd_train_tags + cause_tags
 
 # tags from tagging model used to train the stacked model
 sent_input_feat_tags = wd_train_tags
@@ -170,7 +170,7 @@ sent_input_feat_tags = wd_train_tags
 #sent_input_interaction_tags = [tag for tag in all_tags_above_threshold if tag.isdigit() or tag in set(("Causer", "Result", "explicit")) ]
 sent_input_interaction_tags = regular_tags
 # tags to train (as output) for the sentence based classifier
-sent_output_train_test_tags = regular_tags + causal_rel_tags
+sent_output_train_test_tags = regular_tags #+ causal_rel_tags
 #sent_output_train_test_tags = regular_tags
 
 assert "Causer" in sent_input_feat_tags   , "To extract causal relations, we need Causer tags"
@@ -191,6 +191,7 @@ sent_td_all_metricsByTag , sent_vd_all_metricsByTag = defaultdict(list), default
 fn_create_wd_cls = lambda: LogisticRegression()
 #fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
 #fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
+#fn_create_sent_cls  = lambda : LogisticRegression()
 fn_create_sent_cls  = lambda : GradientBoostingClassifier()
 
 if type(fn_create_sent_cls()) == GradientBoostingClassifier:
@@ -229,10 +230,8 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
     print "Training Sentence Model"
     """ SENTENCE LEVEL PREDICTIONS FROM STACKING """
-    #sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_TD, td_X, td_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
-    sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking2(sent_input_feat_tags, sent_input_interaction_tags, essays_TD, td_X, td_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
-    #sent_vd_xs, sent_vd_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_VD, vd_X, vd_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
-    sent_vd_xs, sent_vd_ys_bycode = get_sent_feature_for_stacking2(sent_input_feat_tags, sent_input_interaction_tags, essays_VD, vd_X, vd_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
+    sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_TD, td_X, td_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
+    sent_vd_xs, sent_vd_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_VD, vd_X, vd_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
 
     """ Train Stacked Classifier """
     tag2sent_classifier = train_classifier_per_code(sent_td_xs, sent_td_ys_bycode , fn_create_sent_cls, sent_output_train_test_tags)
@@ -277,30 +276,7 @@ with open(out_metrics_file, "w+") as f:
 #TODO Include dependency parse features
 #TODO Parallelize the cross fold validation
 
-VD RESULTS (for params above:
-STEMMED
-    LinearSVC(C=1.0)
-    Weighted:Recall: 0.5933, Precision: 0.6711, F1: 0.6199, Accuracy: 0.9774, Codes:     5
-    Mean    :Recall: 0.5532, Precision: 0.6466, F1: 0.5747, Accuracy: 0.9862, Codes:     5
-
-NO STEM
-    LinearSVC(C=1.0)
-    Weighted:Recall: 0.5843, Precision: 0.6705, F1: 0.6140, Accuracy: 0.9773, Codes:     5
-    Mean    :Recall: 0.5425, Precision: 0.6426, F1: 0.5668, Accuracy: 0.9860, Codes:     5
-
-NO STEM + POS (WINDOW 1)
-    Weighted:Recall: 0.5848, Precision: 0.6717, F1: 0.6146, Accuracy: 0.9775, Codes:     5
-    Mean    :Recall: 0.5447, Precision: 0.6463, F1: 0.5690, Accuracy: 0.9861, Codes:     5
-
-NO STEM + POS (WINDOW 3)
-    Weighted:Recall: 0.5848, Precision: 0.6717, F1: 0.6146, Accuracy: 0.9775, Codes:     5
-    Mean    :Recall: 0.5447, Precision: 0.6463, F1: 0.5690, Accuracy: 0.9861, Codes:     5
+>>> These results compute the mean across all regular tags (tagging model) and regular tags plus causal (sentence)
 
 
-NO STEM + POS TAGS
-    LinearSVC(C=1.0)
-    Weighted:Recall: 0.5823, Precision: 0.6696, F1: 0.6124, Accuracy: 0.9772, Codes:     5
-    Mean    :Recall: 0.5436, Precision: 0.6414, F1: 0.5671, Accuracy: 0.9860, Codes:     5
-
-ONE HOT FEATS DO BETTER!
 """

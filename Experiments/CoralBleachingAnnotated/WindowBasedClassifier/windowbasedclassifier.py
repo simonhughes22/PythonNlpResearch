@@ -159,7 +159,7 @@ causal_rel_tags = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 #wd_train_tags = regular_tags
 wd_train_tags = regular_tags + cause_tags
 #wd_test_tags  = [tag for tag in all_tags if tag.isdigit() or tag == "explicit"]
-wd_test_tags  = regular_tags
+wd_test_tags  = regular_tags + cause_tags
 
 # tags from tagging model used to train the stacked model
 sent_input_feat_tags = wd_train_tags
@@ -184,12 +184,13 @@ wd_td_all_metricsByTag, wd_vd_all_metricsByTag = defaultdict(list), defaultdict(
 sent_td_wt_mean_prfa, sent_vd_wt_mean_prfa, sent_td_mean_prfa, sent_vd_mean_prfa = [], [], [], []
 sent_td_all_metricsByTag , sent_vd_all_metricsByTag = defaultdict(list), defaultdict(list)
 
-""" Log Reg + GBT is best. """
+""" Log Reg + Log Reg is best!!! """
 # NOTE - GBT is stochastic in the SPLITS, and so you will get non-deterministic results
 fn_create_wd_cls = lambda: LogisticRegression()
 #fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
 #fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
-fn_create_sent_cls  = lambda : GradientBoostingClassifier() #F1 = 0.5312 on numeric + 5b + casual codes for sentences
+fn_create_sent_cls  = lambda : LogisticRegression()
+#fn_create_sent_cls  = lambda : GradientBoostingClassifier() #F1 = 0.5312 on numeric + 5b + casual codes for sentences
 
 if type(fn_create_sent_cls()) == GradientBoostingClassifier:
     SPARSE_SENT_FEATS = False
@@ -277,30 +278,77 @@ with open(out_metrics_file, "w+") as f:
 #TODO Parallelize the cross fold validation
 
 
-VD RESULTS (for params above:
-STEMMED
-    LinearSVC(C=1.0)
-    Weighted:Recall: 0.5933, Precision: 0.6711, F1: 0.6199, Accuracy: 0.9774, Codes:     5
-    Mean    :Recall: 0.5532, Precision: 0.6466, F1: 0.5747, Accuracy: 0.9862, Codes:     5
+>>> These results compute the mean across all regular tags (tagging model) and regular tags plus causal (sentence)
 
-NO STEM
-    LinearSVC(C=1.0)
-    Weighted:Recall: 0.5843, Precision: 0.6705, F1: 0.6140, Accuracy: 0.9773, Codes:     5
-    Mean    :Recall: 0.5425, Precision: 0.6426, F1: 0.5668, Accuracy: 0.9860, Codes:     5
-
-NO STEM + POS (WINDOW 1)
-    Weighted:Recall: 0.5848, Precision: 0.6717, F1: 0.6146, Accuracy: 0.9775, Codes:     5
-    Mean    :Recall: 0.5447, Precision: 0.6463, F1: 0.5690, Accuracy: 0.9861, Codes:     5
-
-NO STEM + POS (WINDOW 3)
-    Weighted:Recall: 0.5848, Precision: 0.6717, F1: 0.6146, Accuracy: 0.9775, Codes:     5
-    Mean    :Recall: 0.5447, Precision: 0.6463, F1: 0.5690, Accuracy: 0.9861, Codes:     5
+LogisticRegression(C=1.0, class_weight=None, dual=False, fit_intercept=True,
+          intercept_scaling=1, penalty='l2', random_state=None, tol=0.0001)
 
 
-NO STEM + POS TAGS
-    LinearSVC(C=1.0)
-    Weighted:Recall: 0.5823, Precision: 0.6696, F1: 0.6124, Accuracy: 0.9772, Codes:     5
-    Mean    :Recall: 0.5436, Precision: 0.6414, F1: 0.5671, Accuracy: 0.9860, Codes:     5
+TAGGING
 
-ONE HOT FEATS DO BETTER!
+Training   Performance
+Weighted:Recall: 0.8021, Precision: 0.9443, F1: 0.8617, Accuracy: 0.9933, Codes:  4175
+Mean    :Recall: 0.6790, Precision: 0.9194, F1: 0.7594, Accuracy: 0.9965, Codes:    13
+
+Validation Performance
+Weighted:Recall: 0.6375, Precision: 0.8561, F1: 0.7109, Accuracy: 0.9862, Codes:  5219
+Mean    :Recall: 0.5141, Precision: 0.7584, F1: 0.5745, Accuracy: 0.9931, Codes:    65
+
+
+GradientBoostingClassifier(init=None, learning_rate=0.1, loss='deviance',
+              max_depth=3, max_features=None, max_leaf_nodes=None,
+              min_samples_leaf=1, min_samples_split=2, n_estimators=100,
+              random_state=None, subsample=1.0, verbose=0,
+              warm_start=False)
+
+SENTENCE
+
+Training   Performance
+Weighted:Recall: 0.9924, Precision: 0.9875, F1: 0.9899, Accuracy: 0.9966, Codes:  2136
+Mean    :Recall: 0.9947, Precision: 0.9858, F1: 0.9900, Accuracy: 0.9984, Codes:    16
+
+Validation Performance
+Weighted:Recall: 0.7381, Precision: 0.8234, F1: 0.7679, Accuracy: 0.9359, Codes:  2670
+Mean    :Recall: 0.6790, Precision: 0.7513, F1: 0.6872, Accuracy: 0.9662, Codes:    80
+
+****************************************************************************************
+
+LR as the tagger (same tagging results)
+
+LinearSVC(C=1.0, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='l2', multi_class='ovr', penalty='l2',
+     random_state=None, tol=0.0001, verbose=0)
+
+
+SENTENCE
+
+Training   Performance
+Weighted:Recall: 0.9575, Precision: 0.9520, F1: 0.9533, Accuracy: 0.9823, Codes:  2136
+Mean    :Recall: 0.9788, Precision: 0.9660, F1: 0.9715, Accuracy: 0.9924, Codes:    16
+
+Validation Performance
+Weighted:Recall: 0.7399, Precision: 0.8122, F1: 0.7662, Accuracy: 0.9327, Codes:  2670
+Mean    :Recall: 0.6717, Precision: 0.7553, F1: 0.6885, Accuracy: 0.9650, Codes:    80
+
+
+****************************************************************************************
+BEST !!!!!
+
+LR as the tagger (same tagging results)
+LR as the sentence classifier
+
+LogisticRegression(C=1.0, class_weight=None, dual=False, fit_intercept=True,
+          intercept_scaling=1, penalty='l2', random_state=None, tol=0.0001)
+
+
+SENTENCE
+
+Training   Performance
+Weighted:Recall: 0.9560, Precision: 0.9586, F1: 0.9572, Accuracy: 0.9845, Codes:  2136
+Mean    :Recall: 0.9735, Precision: 0.9686, F1: 0.9708, Accuracy: 0.9932, Codes:    16
+
+Validation Performance
+Weighted:Recall: 0.7383, Precision: 0.8319, F1: 0.7749, Accuracy: 0.9365, Codes:  2670
+Mean    :Recall: 0.6726, Precision: 0.7843, F1: 0.7033, Accuracy: 0.9673, Codes:    80
+
 """
