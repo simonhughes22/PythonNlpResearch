@@ -40,6 +40,7 @@ def get_results(wd_td_all_metricsByTag, wd_vd_all_metricsByTag, sent_td_all_metr
     s_results += print_metrics_for_codes(wd_mean_td_metrics, wd_mean_vd_metrics)
     s_results += "\n\nSENTENCE"
     s_results += print_metrics_for_codes(sent_mean_td_metrics, sent_mean_vd_metrics)
+    s_results += "\n"
     s_results += str(fn_create_wd_cls())
     # print macro measures
     s_results += "\n\n\nTAGGING"

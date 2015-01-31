@@ -49,7 +49,7 @@ INCLUDE_NORMAL      = False
 MIN_SENTENCE_FREQ   = 2        # i.e. df. Note this is calculated BEFORE creating windows
 REMOVE_INFREQUENT   = False    # if false, infrequent words are replaced with "INFREQUENT"
 SPELLING_CORRECT    = True
-STEM                = True     # note this tends to improve matters, but is needed to be on for pos tagging and dep parsing
+STEM                = False     # note this tends to improve matters, but is needed to be on for pos tagging and dep parsing
                                # makes tagging model better but causal model worse
 REPLACE_NUMS        = True     # 1989 -> 0000, 10 -> 00
 MIN_SENTENCE_LENGTH = 3
@@ -121,11 +121,17 @@ LOOK_BACK           = 0     # how many sentences to look back when predicting ta
 offset = (WINDOW_SIZE-1) / 2
 unigram_window = fact_extract_positional_word_features(offset)
 biigram_window = fact_extract_ngram_features(offset, 2)
-pos_tag_window = fact_extract_positional_POS_features((POS_WINDOW_SIZE-1/2))
+
+unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
+biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
+
+pos_tag_window = fact_extract_positional_POS_features(offset)
+pos_tag_plus_wd_window = fact_extract_positional_POS_features_plus_word(offset)
+head_wd_window = fact_extract_positional_head_word_features(offset)
 #TODO - add POS TAGS (positional)
 #TODO - add dep parse feats
-#extractors = [unigram_window, biigram_window, pos_tag_window]
-extractors = [unigram_window, biigram_window]
+#extractors = [unigram_window, biigram_window, extract_POS_TAG_PLUS_WORD]
+extractors = [unigram_window_stemmed, biigram_window_stemmed, extract_POS_TAG_PLUS_WORD]
 
 if pos_tag_window in extractors and STEM:
     raise Exception("POS tagging won't work with stemming on")
@@ -189,7 +195,7 @@ sent_td_all_metricsByTag , sent_vd_all_metricsByTag = defaultdict(list), default
 fn_create_wd_cls = lambda: LogisticRegression()
 #fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
 #fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
-fn_create_sent_cls  = lambda : LogisticRegression()
+fn_create_sent_cls  = lambda : LogisticRegression(dual=True) # C around 1.0 seems pretty optimal
 #fn_create_sent_cls  = lambda : GradientBoostingClassifier() #F1 = 0.5312 on numeric + 5b + casual codes for sentences
 
 if type(fn_create_sent_cls()) == GradientBoostingClassifier:
@@ -350,5 +356,122 @@ Mean    :Recall: 0.9735, Precision: 0.9686, F1: 0.9708, Accuracy: 0.9932, Codes:
 Validation Performance
 Weighted:Recall: 0.7383, Precision: 0.8319, F1: 0.7749, Accuracy: 0.9365, Codes:  2670
 Mean    :Recall: 0.6726, Precision: 0.7843, F1: 0.7033, Accuracy: 0.9673, Codes:    80
+
+LR + LR
+# DEPENDENCIES:
+
+# head only
+Validation Performance
+Weighted:Recall: 0.7400, Precision: 0.8369, F1: 0.7776, Accuracy: 0.9370, Codes:  2670
+Mean    :Recall: 0.6743, Precision: 0.7897, F1: 0.7064, Accuracy: 0.9677, Codes:    80
+
+# head word only
+***Validation Performance
+Weighted:Recall: 0.7433, Precision: 0.8356, F1: 0.7787, Accuracy: 0.9383, Codes:  2670
+Mean    :Recall: 0.6688, Precision: 0.7854, F1: 0.6995, Accuracy: 0.9679, Codes:    80
+
+# head + target
+Validation Performance
+Weighted:Recall: 0.7382, Precision: 0.8313, F1: 0.7747, Accuracy: 0.9364, Codes:  2670
+Mean    :Recall: 0.6667, Precision: 0.7863, F1: 0.7015, Accuracy: 0.9672, Codes:    80
+
+# head only + child only
+Validation Performance
+Weighted:Recall: 0.7324, Precision: 0.8304, F1: 0.7703, Accuracy: 0.9358, Codes:  2670
+Mean    :Recall: 0.6632, Precision: 0.7859, F1: 0.6962, Accuracy: 0.9668, Codes:    80
+
+# child only
+Validation Performance
+Weighted:Recall: 0.7325, Precision: 0.8306, F1: 0.7714, Accuracy: 0.9359, Codes:  2670
+Mean    :Recall: 0.6658, Precision: 0.7843, F1: 0.6983, Accuracy: 0.9669, Codes:    80
+
+#child words only
+Validation Performance
+Weighted:Recall: 0.7316, Precision: 0.8343, F1: 0.7713, Accuracy: 0.9364, Codes:  2670
+Mean    :Recall: 0.6624, Precision: 0.7859, F1: 0.6959, Accuracy: 0.9670, Codes:    80
+
+
+# children + target
+Validation Performance
+Weighted:Recall: 0.7383, Precision: 0.8307, F1: 0.7744, Accuracy: 0.9362, Codes:  2670
+Mean    :Recall: 0.6680, Precision: 0.7847, F1: 0.7012, Accuracy: 0.9672, Codes:    80
+
+# head -> child
+Validation Performance
+Weighted:Recall: 0.7381, Precision: 0.8308, F1: 0.7745, Accuracy: 0.9356, Codes:  2670
+Mean    :Recall: 0.6736, Precision: 0.7841, F1: 0.7031, Accuracy: 0.9670, Codes:    80
+
+!!! FORGOT TO TURN OFF STEMMING !!!
+
+@@@ 0.7591 @@@@
+
+Regular NO STEM
+Validation Performance
+Weighted:Recall: 0.7198, Precision: 0.8226, F1: 0.7591, Accuracy: 0.9325, Codes:  2670
+Mean    :Recall: 0.6534, Precision: 0.7761, F1: 0.6860, Accuracy: 0.9652, Codes:    80
+
+#POSITIONAL HEAD
+Validation Performance
+Weighted:Recall: 0.7071, Precision: 0.8208, F1: 0.7517, Accuracy: 0.9309, Codes:  2670
+Mean    :Recall: 0.6204, Precision: 0.7653, F1: 0.6599, Accuracy: 0.9643, Codes:    80
+
+# DEP HEAD WORD ONLY
+Validation Performance
+Weighted:Recall: 0.7184, Precision: 0.8205, F1: 0.7579, Accuracy: 0.9324, Codes:  2670
+Mean    :Recall: 0.6496, Precision: 0.7714, F1: 0.6825, Accuracy: 0.9649, Codes:    80
+
+# NLTK POS TAGS
+Validation Performance
+Weighted:Recall: 0.7145, Precision: 0.8198, F1: 0.7538, Accuracy: 0.9316, Codes:  2670
+Mean    :Recall: 0.6430, Precision: 0.7808, F1: 0.6789, Accuracy: 0.9647, Codes:    80
+
+#NLT TAG ONLY (unary tag)
+**** Validation Performance
+Weighted:Recall: 0.7196, Precision: 0.8252, F1: 0.7596, Accuracy: 0.9330, Codes:  2670
+Mean    :Recall: 0.6452, Precision: 0.7770, F1: 0.6808, Accuracy: 0.9654, Codes:    80
+
+#NLTK POS + WORD
+*****Validation Performance
+Weighted:Recall: 0.7262, Precision: 0.8244, F1: 0.7636, Accuracy: 0.9338, Codes:  2670
+Mean    :Recall: 0.6611, Precision: 0.7780, F1: 0.6913, Accuracy: 0.9658, Codes:    80
+
+SWITCH TO STEMMING DURING FEAT EXTRACTION FOR THE MAIN INPUTS
+    - Leaving sentence untouched for dep parser
+
+STEMMED -
+
+LR + LR + main feats only
+Training   Performance
+Weighted:Recall: 0.9563, Precision: 0.9597, F1: 0.9579, Accuracy: 0.9846, Codes:  2136
+Mean    :Recall: 0.9745, Precision: 0.9704, F1: 0.9721, Accuracy: 0.9933, Codes:    16
+
+Validation Performance
+Weighted:Recall: 0.7378, Precision: 0.8306, F1: 0.7742, Accuracy: 0.9361, Codes:  2670
+Mean    :Recall: 0.6742, Precision: 0.7848, F1: 0.7058, Accuracy: 0.9672, Codes:    80
+
+add dual regularization to second LR
+Validation Performance
+Weighted:Recall: 0.7378, Precision: 0.8311, F1: 0.7744, Accuracy: 0.9362, Codes:  2670
+Mean    :Recall: 0.6742, Precision: 0.7851, F1: 0.7059, Accuracy: 0.9672, Codes:    80
+
+
+#NLTK POS + WD (worse with stemming on than stemming alone)
+Validation Performance
+Weighted:Recall: 0.7389, Precision: 0.8286, F1: 0.7737, Accuracy: 0.9353, Codes:  2670
+Mean    :Recall: 0.6770, Precision: 0.7804, F1: 0.7063, Accuracy: 0.9670, Codes:    80
+
+#NLTK Poisitional POS + WD
+Validation Performance
+Weighted:Recall: 0.7339, Precision: 0.8291, F1: 0.7696, Accuracy: 0.9345, Codes:  2670
+Mean    :Recall: 0.6716, Precision: 0.7869, F1: 0.7021, Accuracy: 0.9665, Codes:    80
+
+#Brown Cluster Only
+Training   Performance
+Weighted:Recall: 0.9593, Precision: 0.9621, F1: 0.9606, Accuracy: 0.9856, Codes:  2136
+Mean    :Recall: 0.9766, Precision: 0.9712, F1: 0.9737, Accuracy: 0.9937, Codes:    16
+
+Validation Performance
+Weighted:Recall: 0.7365, Precision: 0.8238, F1: 0.7703, Accuracy: 0.9344, Codes:  2670
+Mean    :Recall: 0.6712, Precision: 0.7806, F1: 0.7008, Accuracy: 0.9665, Codes:    80
 
 """

@@ -162,7 +162,7 @@ wd_train_tags = regular_tags + cause_tags
 #wd_test_tags  = [tag for tag in set_all_tags_above_threshold if tag.isdigit() or tag == "explicit"]
 #wd_test_tags  = wd_train_tags
 #wd_test_tags  = wd_train_tags
-wd_test_tags  = wd_train_tags + cause_tags
+wd_test_tags  = wd_train_tags #+ cause_tags
 
 # tags from tagging model used to train the stacked model
 sent_input_feat_tags = wd_train_tags
@@ -170,7 +170,7 @@ sent_input_feat_tags = wd_train_tags
 #sent_input_interaction_tags = [tag for tag in all_tags_above_threshold if tag.isdigit() or tag in set(("Causer", "Result", "explicit")) ]
 sent_input_interaction_tags = regular_tags
 # tags to train (as output) for the sentence based classifier
-sent_output_train_test_tags = regular_tags #+ causal_rel_tags
+sent_output_train_test_tags = regular_tags + causal_rel_tags
 #sent_output_train_test_tags = regular_tags
 
 assert "Causer" in sent_input_feat_tags   , "To extract causal relations, we need Causer tags"
@@ -187,11 +187,11 @@ wd_td_all_metricsByTag, wd_vd_all_metricsByTag = defaultdict(list), defaultdict(
 sent_td_wt_mean_prfa, sent_vd_wt_mean_prfa, sent_td_mean_prfa, sent_vd_mean_prfa = [], [], [], []
 sent_td_all_metricsByTag , sent_vd_all_metricsByTag = defaultdict(list), defaultdict(list)
 
-""" Log Reg + GBT is best """
+""" Log Reg + GBT is best, then LR + LR"""
 fn_create_wd_cls = lambda: LogisticRegression()
 #fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
 #fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
-#fn_create_sent_cls  = lambda : LogisticRegression()
+#fn_create_sent_cls  = lambda : LogisticRegression(dual=True)
 fn_create_sent_cls  = lambda : GradientBoostingClassifier()
 
 if type(fn_create_sent_cls()) == GradientBoostingClassifier:
@@ -277,6 +277,75 @@ with open(out_metrics_file, "w+") as f:
 #TODO Parallelize the cross fold validation
 
 >>> These results compute the mean across all regular tags (tagging model) and regular tags plus causal (sentence)
+
+LogisticRegression(C=1.0, class_weight=None, dual=False, fit_intercept=True,
+          intercept_scaling=1, penalty='l2', random_state=None, tol=0.0001)
+
+
+TAGGING
+
+Training   Performance
+Weighted:Recall: 0.6862, Precision: 0.8859, F1: 0.7675, Accuracy: 0.9730, Codes: 11789
+Mean    :Recall: 0.6870, Precision: 0.9100, F1: 0.7776, Accuracy: 0.9839, Codes:    12
+
+Validation Performance
+Weighted:Recall: 0.5184, Precision: 0.7528, F1: 0.5940, Accuracy: 0.9543, Codes: 14737
+Mean    :Recall: 0.5040, Precision: 0.7616, F1: 0.5859, Accuracy: 0.9728, Codes:    60
+
+
+GradientBoostingClassifier(init=None, learning_rate=0.1, loss='deviance',
+              max_depth=3, max_features=None, max_leaf_nodes=None,
+              min_samples_leaf=1, min_samples_split=2, n_estimators=100,
+              random_state=None, subsample=1.0, verbose=0,
+              warm_start=False)
+
+
+SENTENCE
+
+Training   Performance
+Weighted:Recall: 0.9841, Precision: 0.9782, F1: 0.9811, Accuracy: 0.9915, Codes:  3014
+Mean    :Recall: 0.9824, Precision: 0.9832, F1: 0.9826, Accuracy: 0.9946, Codes:    12
+
+Validation Performance
+Weighted:Recall: 0.7599, Precision: 0.8204, F1: 0.7771, Accuracy: 0.9079, Codes:  3768
+Mean    :Recall: 0.7413, Precision: 0.8082, F1: 0.7601, Accuracy: 0.9386, Codes:    60
+
+***************************************************************************************
+
+Tagging model - LR (same)
+
+LinearSVC(C=1.0, class_weight=None, dual=True, fit_intercept=True,
+     intercept_scaling=1, loss='l2', multi_class='ovr', penalty='l2',
+     random_state=None, tol=0.0001, verbose=0)
+
+
+SENTENCE
+
+Training   Performance
+Weighted:Recall: 0.9124, Precision: 0.9154, F1: 0.9066, Accuracy: 0.9583, Codes:  3014
+Mean    :Recall: 0.9342, Precision: 0.9310, F1: 0.9275, Accuracy: 0.9736, Codes:    12
+
+Validation Performance
+Weighted:Recall: 0.7523, Precision: 0.8003, F1: 0.7529, Accuracy: 0.8990, Codes:  3768
+Mean    :Recall: 0.7392, Precision: 0.7681, F1: 0.7337, Accuracy: 0.9316, Codes:    60
+
+***************************************************************************************
+
+Tagging model - LR (same)
+
+LogisticRegression(C=1.0, class_weight=None, dual=False, fit_intercept=True,
+          intercept_scaling=1, penalty='l2', random_state=None, tol=0.0001)
+
+
+SENTENCE
+
+Training   Performance
+Weighted:Recall: 0.9315, Precision: 0.9295, F1: 0.9304, Accuracy: 0.9687, Codes:  3014
+Mean    :Recall: 0.9397, Precision: 0.9433, F1: 0.9414, Accuracy: 0.9801, Codes:    12
+
+Validation Performance
+Weighted:Recall: 0.7559, Precision: 0.8178, F1: 0.7726, Accuracy: 0.9070, Codes:  3768
+Mean    :Recall: 0.7417, Precision: 0.8080, F1: 0.7596, Accuracy: 0.9376, Codes:    60
 
 
 """

@@ -19,19 +19,23 @@ class Relation(object):
         self.relation = relation
         self.head = head
         self.children = children
+        self.__binary_relns_ = None
 
     def __repr__(self):
         skids = ",".join(self.children)
         return "[%s]%s -> %s" % (self.relation, self.head, skids)
 
     def binary_relations(self):
+        if self.__binary_relns_ is not None:
+            return self.__binary_relns_
         rels = []
         if len(self.children) == 0:
             rels.append(BinaryRelation(self.head, self.relation, None))
         else:
             for ch in self.children:
                 rels.append(BinaryRelation(self.head, self.relation, ch))
-
+        self.__binary_relns_ = rels
+        return rels
 
 class Parser(object):
 
@@ -58,6 +62,16 @@ class Parser(object):
         stokens = unicode(" ".join(tokens))
         tokens = self.__tokenize_(stokens)
         return map(lambda t: t.pos_, tokens)
+
+    def pos_tag2(self, tokens):
+        stokens = unicode(" ".join(tokens))
+        tokens = self.__tokenize_(stokens)
+        return map(lambda t: t.tag_, tokens)
+
+    def brown_cluster(self, tokens):
+        stokens = unicode(" ".join(tokens))
+        tokens = self.__tokenize_(stokens)
+        return map(lambda t: str(t.cluster), tokens)
 
     @memoize
     def __tokenize_(self, sentence):
