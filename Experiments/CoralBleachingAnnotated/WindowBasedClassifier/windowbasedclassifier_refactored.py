@@ -1,11 +1,11 @@
 __author__ = 'simon.hughes'
 
 import numpy as np
-from Decorators import timeit, memoize, memoize_to_disk
+from Decorators import memoize_to_disk
 from BrattEssay import load_bratt_essays
 from processessays import process_sentences, process_essays
-from wordtagginghelper import flatten_to_wordlevel_feat_tags, get_wordlevel_ys_by_code
 from sent_feats_for_stacking import *
+from load_data import load_process_essays, extract_features
 
 from featureextractortransformer import FeatureExtractorTransformer
 from featurevectorizer import FeatureVectorizer
@@ -14,7 +14,6 @@ from CrossValidation import cross_validation
 from wordtagginghelper import *
 from IterableFP import flatten
 from DictionaryHelper import tally_items
-from Rpfa import mean_rpfa, weighted_mean_rpfa
 from metric_processing import *
 from predictions_to_file import predictions_to_file
 from result_processing import get_results
@@ -22,14 +21,11 @@ from result_processing import get_results
 # Classifiers
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.linear_model import RidgeClassifier
-from sklearn.linear_model import Ridge
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.svm import LinearSVC
 from sklearn.svm import SVC
 from sklearn.lda import LDA
-from sklearn.neighbors import KNeighborsClassifier
 
 # END Classifiers
 
@@ -61,48 +57,18 @@ LOWER_CASE          = False
 settings = Settings.Settings()
 folder = settings.data_directory + "CoralBleaching/BrattData/EBA_Pre_Post_Merged/"
 #folder = settings.data_directory + "CoralBleaching/BrattData/Merged/"
-essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_pickled_"
 processed_essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
 features_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/feats_pickled_"
 
 out_metrics_file     = settings.data_directory + "CoralBleaching/Results/metrics.txt"
 out_predictions_file = settings.data_directory + "CoralBleaching/Results/predictions.txt"
 
-logger.info("Loading Essays")
-@memoize_to_disk(filename_prefix=essay_filename_prefix)
-def load_essays(include_vague=INCLUDE_VAGUE, include_normal=INCLUDE_NORMAL):
-    return load_bratt_essays(directory=folder, include_vague=include_vague, include_normal=include_normal)
-
-essays = load_essays(include_vague=INCLUDE_VAGUE, include_normal=INCLUDE_NORMAL)
-
-logger.info("Processing Essays")
-@memoize_to_disk(filename_prefix=processed_essay_filename_prefix)
-def mem_process_essays(min_df=MIN_SENTENCE_FREQ, remove_infrequent=REMOVE_INFREQUENT,
-                    spelling_correct=SPELLING_CORRECT,
-                    replace_nums=REPLACE_NUMS, stem=STEM, remove_stop_words=REMOVE_STOP_WORDS,
-                    remove_punctuation=REMOVE_PUNCTUATION, lower_case=LOWER_CASE,
-                    include_vague=INCLUDE_VAGUE, include_normal=INCLUDE_NORMAL):
-    return process_essays(essays, min_df=min_df, remove_infrequent=remove_infrequent, spelling_correct=spelling_correct,
-                replace_nums=replace_nums, stem=stem, remove_stop_words=remove_stop_words,
-                remove_punctuation=remove_punctuation,lower_case=lower_case)
-
-tagged_essays = mem_process_essays(min_df=MIN_SENTENCE_FREQ, remove_infrequent=REMOVE_INFREQUENT,
+mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_prefix)(load_process_essays)
+tagged_essays = mem_process_essays(    folder=folder, min_df=MIN_SENTENCE_FREQ, remove_infrequent=REMOVE_INFREQUENT,
                                        spelling_correct=SPELLING_CORRECT,
                                        replace_nums=REPLACE_NUMS, stem=STEM, remove_stop_words=REMOVE_STOP_WORDS,
                                        remove_punctuation=REMOVE_PUNCTUATION, lower_case=LOWER_CASE,
                                        include_vague=INCLUDE_VAGUE, include_normal=INCLUDE_NORMAL)
-
-# most params below exist ONLY for the purposes of the hashing to and from disk
-@memoize_to_disk(filename_prefix=features_filename_prefix)
-def extract_features(min_df,
-                     rem_infreq, sp_crrct,
-                     replace_nos, stem, rem_stop_wds,
-                     rem_punc, lcase,
-                     win_size, pos_win_size, min_ft_freq,
-                     inc_vague, inc_normal,
-                     extractors):
-    feature_extractor = FeatureExtractorTransformer(extractors)
-    return feature_extractor.transform(tagged_essays)
 
 # FEATURE SETTINGS
 WINDOW_SIZE         = 7
@@ -128,20 +94,22 @@ biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
 pos_tag_window = fact_extract_positional_POS_features(offset)
 pos_tag_plus_wd_window = fact_extract_positional_POS_features_plus_word(offset)
 head_wd_window = fact_extract_positional_head_word_features(offset)
-#TODO - add POS TAGS (positional)
-#TODO - add dep parse feats
-#extractors = [unigram_window, biigram_window, extract_POS_TAG_PLUS_WORD]
+
 extractors = [unigram_window_stemmed, biigram_window_stemmed]
 
 if pos_tag_window in extractors and STEM:
     raise Exception("POS tagging won't work with stemming on")
 
-essay_feats = extract_features(min_df=MIN_SENTENCE_FREQ, rem_infreq=REMOVE_INFREQUENT,
+# most params below exist ONLY for the purposes of the hashing to and from disk
+mem_extract_features = memoize_to_disk(filename_prefix=features_filename_prefix)(extract_features)
+essay_feats = mem_extract_features(tagged_essays,
+                               folder=folder, extractors=extractors,
+                               min_df=MIN_SENTENCE_FREQ, rem_infreq=REMOVE_INFREQUENT,
                                sp_crrct=SPELLING_CORRECT,
                                replace_nos=REPLACE_NUMS, stem=STEM, rem_stop_wds=REMOVE_STOP_WORDS,
                                rem_punc=REMOVE_PUNCTUATION, lcase=LOWER_CASE,
                                win_size=WINDOW_SIZE, pos_win_size=POS_WINDOW_SIZE,
-                               min_ft_freq=MIN_FEAT_FREQ, extractors=extractors,
+                               min_ft_freq=MIN_FEAT_FREQ,
                                inc_vague=INCLUDE_VAGUE, inc_normal=INCLUDE_NORMAL)
 
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
