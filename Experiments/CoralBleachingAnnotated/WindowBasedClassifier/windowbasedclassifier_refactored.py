@@ -1,57 +1,46 @@
 __author__ = 'simon.hughes'
 
-import numpy as np
 from Decorators import memoize_to_disk
-from BrattEssay import load_bratt_essays
-from processessays import process_sentences, process_essays
 from sent_feats_for_stacking import *
 from load_data import load_process_essays, extract_features
 
-from featureextractortransformer import FeatureExtractorTransformer
 from featurevectorizer import FeatureVectorizer
 from featureextractionfunctions import *
 from CrossValidation import cross_validation
 from wordtagginghelper import *
 from IterableFP import flatten
 from DictionaryHelper import tally_items
-from metric_processing import *
 from predictions_to_file import predictions_to_file
-from result_processing import get_results
-
+from results_procesor import ResultsProcessor
+from argument_hasher import argument_hasher
 # Classifiers
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 from sklearn.svm import SVC
 from sklearn.lda import LDA
 
+from window_based_tagger_config import get_config
 # END Classifiers
 
-import pickle
 import Settings
-import os
-
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
-# Settings for loading essays
-INCLUDE_VAGUE       = True
-INCLUDE_NORMAL      = False
+# not hashed as don't affect persistence of feature processing
+SPARSE_WD_FEATS     = True
+SPARSE_SENT_FEATS   = True
 
-# Settings for essay pre-processing
-MIN_SENTENCE_FREQ   = 2        # i.e. df. Note this is calculated BEFORE creating windows
-REMOVE_INFREQUENT   = False    # if false, infrequent words are replaced with "INFREQUENT"
-SPELLING_CORRECT    = True
-STEM                = False     # note this tends to improve matters, but is needed to be on for pos tagging and dep parsing
-                               # makes tagging model better but causal model worse
-REPLACE_NUMS        = True     # 1989 -> 0000, 10 -> 00
-MIN_SENTENCE_LENGTH = 3
-REMOVE_STOP_WORDS   = False
-REMOVE_PUNCTUATION  = True
-LOWER_CASE          = False
+MIN_FEAT_FREQ       = 5        # 5 best so far
+CV_FOLDS            = 5
+
+MIN_TAG_FREQ        = 5
+LOOK_BACK           = 0     # how many sentences to look back when predicting tags
+# end not hashed
+
 # construct unique key using settings for pickling
 
 settings = Settings.Settings()
@@ -63,54 +52,30 @@ features_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/P
 out_metrics_file     = settings.data_directory + "CoralBleaching/Results/metrics.txt"
 out_predictions_file = settings.data_directory + "CoralBleaching/Results/predictions.txt"
 
-mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_prefix)(load_process_essays)
-tagged_essays = mem_process_essays(    folder=folder, min_df=MIN_SENTENCE_FREQ, remove_infrequent=REMOVE_INFREQUENT,
-                                       spelling_correct=SPELLING_CORRECT,
-                                       replace_nums=REPLACE_NUMS, stem=STEM, remove_stop_words=REMOVE_STOP_WORDS,
-                                       remove_punctuation=REMOVE_PUNCTUATION, lower_case=LOWER_CASE,
-                                       include_vague=INCLUDE_VAGUE, include_normal=INCLUDE_NORMAL)
+config = get_config(folder)
 
-# FEATURE SETTINGS
-WINDOW_SIZE         = 7
-POS_WINDOW_SIZE     = 1
-MIN_FEAT_FREQ       = 5        # 5 best so far
-CV_FOLDS            = 5
-# END FEATURE SETTINGS
+""" FEATURE EXTRACTION """
+offset = (config["window_size"] - 1) / 2
 
-# not hashed as don't affect persistence of feature processing
-SPARSE_WD_FEATS     = True
-SPARSE_SENT_FEATS   = True
-MIN_TAG_FREQ        = 5
-LOOK_BACK           = 0     # how many sentences to look back when predicting tags
-# end not hashed
-
-offset = (WINDOW_SIZE-1) / 2
-unigram_window = fact_extract_positional_word_features(offset)
-biigram_window = fact_extract_ngram_features(offset, 2)
+#unigram_window = fact_extract_positional_word_features(offset)
+#biigram_window = fact_extract_ngram_features(offset, 2)
 
 unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
 biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
 
-pos_tag_window = fact_extract_positional_POS_features(offset)
-pos_tag_plus_wd_window = fact_extract_positional_POS_features_plus_word(offset)
-head_wd_window = fact_extract_positional_head_word_features(offset)
+#pos_tag_window = fact_extract_positional_POS_features(offset)
+#pos_tag_plus_wd_window = fact_extract_positional_POS_features_plus_word(offset)
+#head_wd_window = fact_extract_positional_head_word_features(offset)
 
 extractors = [unigram_window_stemmed, biigram_window_stemmed]
+config["extractors"] = extractors
 
-if pos_tag_window in extractors and STEM:
-    raise Exception("POS tagging won't work with stemming on")
 
+mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_prefix)(load_process_essays)
+tagged_essays = mem_process_essays( **config )
 # most params below exist ONLY for the purposes of the hashing to and from disk
 mem_extract_features = memoize_to_disk(filename_prefix=features_filename_prefix)(extract_features)
-essay_feats = mem_extract_features(tagged_essays,
-                               folder=folder, extractors=extractors,
-                               min_df=MIN_SENTENCE_FREQ, rem_infreq=REMOVE_INFREQUENT,
-                               sp_crrct=SPELLING_CORRECT,
-                               replace_nos=REPLACE_NUMS, stem=STEM, rem_stop_wds=REMOVE_STOP_WORDS,
-                               rem_punc=REMOVE_PUNCTUATION, lcase=LOWER_CASE,
-                               win_size=WINDOW_SIZE, pos_win_size=POS_WINDOW_SIZE,
-                               min_ft_freq=MIN_FEAT_FREQ,
-                               inc_vague=INCLUDE_VAGUE, inc_normal=INCLUDE_NORMAL)
+essay_feats = mem_extract_features(tagged_essays, **config)
 
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
 """ Get all tags above the frequency above """
@@ -129,41 +94,28 @@ causal_rel_tags = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 
 #wd_train_tags = list(all_tags_above_threshold)
 """ works best with all the pair-wise causal relation codes """
-#wd_train_tags = list(all_tags_above_threshold.union(cause_tags))
-#wd_train_tags = regular_tags
 wd_train_tags = regular_tags + cause_tags
-#wd_test_tags  = [tag for tag in all_tags if tag.isdigit() or tag == "explicit"]
 wd_test_tags  = regular_tags + cause_tags
 
 # tags from tagging model used to train the stacked model
 sent_input_feat_tags = wd_train_tags
 # find interactions between these predicted tags from the word tagger to feed to the sentence tagger
-#sent_input_interaction_tags = [tag for tag in all_tags_above_threshold if tag.isdigit() or tag in set(("Causer", "Result", "explicit")) ]
 sent_input_interaction_tags = regular_tags + cause_tags
 # tags to train (as output) for the sentence based classifier
 sent_output_train_test_tags = list(set(regular_tags + causal_rel_tags))
-#sent_output_train_test_tags = list(set(regular_tags))
 
-assert "Causer" in sent_input_feat_tags   , "To extract causal relations, we need Causer tags"
-assert "Result" in sent_input_feat_tags   , "To extract causal relations, we need Result tags"
-assert "explicit" in sent_input_feat_tags , "To extract causal relations, we need explicit tags"
+assert "Causer"     in sent_input_feat_tags, "To extract causal relations, we need Causer tags"
+assert "Result"     in sent_input_feat_tags, "To extract causal relations, we need Result tags"
+assert "explicit"   in sent_input_feat_tags, "To extract causal relations, we need explicit tags"
 # tags to evaluate against
 
-folds = cross_validation(essay_feats, CV_FOLDS)
-"""Word level metrics """
-wd_td_wt_mean_prfa, wd_vd_wt_mean_prfa, wd_td_mean_prfa, wd_vd_mean_prfa = [], [], [], []
-wd_td_all_metricsByTag, wd_vd_all_metricsByTag = defaultdict(list), defaultdict(list)
-
-"""Sentence level metrics """
-sent_td_wt_mean_prfa, sent_vd_wt_mean_prfa, sent_td_mean_prfa, sent_vd_mean_prfa = [], [], [], []
-sent_td_all_metricsByTag , sent_vd_all_metricsByTag = defaultdict(list), defaultdict(list)
-
 """ Log Reg + Log Reg is best!!! """
-# NOTE - GBT is stochastic in the SPLITS, and so you will get non-deterministic results
 fn_create_wd_cls = lambda: LogisticRegression() # C=1, dual = False seems optimal
 #fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
+
 #fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
 fn_create_sent_cls  = lambda : LogisticRegression(dual=True) # C around 1.0 seems pretty optimal
+# NOTE - GBT is stochastic in the SPLITS, and so you will get non-deterministic results
 #fn_create_sent_cls  = lambda : GradientBoostingClassifier() #F1 = 0.5312 on numeric + 5b + casual codes for sentences
 
 if type(fn_create_sent_cls()) == GradientBoostingClassifier:
@@ -171,6 +123,12 @@ if type(fn_create_sent_cls()) == GradientBoostingClassifier:
 
 f_output_file = open(out_predictions_file, "w+")
 f_output_file.write("Essay|Sent Number|Processed Sentence|Concept Codes|Predictions\n")
+
+# Gather metrics per fold
+cv_wd_td_metrics_by_tag,    cv_wd_vd_metrics_by_tag     = [], []
+cv_sent_td_metrics_by_tag,  cv_sent_vd_metrics_by_tag   = [], []
+
+folds = cross_validation(essay_feats, CV_FOLDS)
 #TODO Parallelize
 for i,(essays_TD, essays_VD) in enumerate(folds):
 
@@ -183,8 +141,7 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     vd_feats, vd_tags = flatten_to_wordlevel_feat_tags(essays_VD)
 
     feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ, sparse=SPARSE_WD_FEATS)
-    td_X = feature_transformer.fit_transform(td_feats)
-    vd_X = feature_transformer.transform(vd_feats)
+    td_X, vd_X = feature_transformer.fit_transform(td_feats), feature_transformer.transform(vd_feats)
     td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
     vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
 
@@ -192,15 +149,10 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     tag2word_classifier = train_classifier_per_code(td_X, td_ys_bytag, fn_create_wd_cls, wd_train_tags)
 
     """ TEST Tagger """
-    td_metricsByTag, td_wt_mean_prfa, td_mean_prfa, td_wd_predictions_by_code = test_classifier_per_code(td_X, td_ys_bytag, tag2word_classifier, wd_test_tags)
-    vd_metricsByTag, vd_wt_mean_prfa, vd_mean_prfa, vd_wd_predictions_by_code = test_classifier_per_code(vd_X, vd_ys_bytag, tag2word_classifier, wd_test_tags)
+    td_metricsByTag, _, _, td_wd_predictions_by_code = test_classifier_per_code(td_X, td_ys_bytag, tag2word_classifier, wd_test_tags)
+    vd_metricsByTag, _, _, vd_wd_predictions_by_code = test_classifier_per_code(vd_X, vd_ys_bytag, tag2word_classifier, wd_test_tags)
 
-    wd_td_wt_mean_prfa.append(td_wt_mean_prfa), wd_td_mean_prfa.append(td_mean_prfa)
-    wd_vd_wt_mean_prfa.append(vd_wt_mean_prfa), wd_vd_mean_prfa.append(vd_mean_prfa)
-    merge_metrics(td_metricsByTag, wd_td_all_metricsByTag)
-    merge_metrics(vd_metricsByTag, wd_vd_all_metricsByTag)
-
-    print "Training Sentence Model"
+    print "\nTraining Sentence Model"
     """ SENTENCE LEVEL PREDICTIONS FROM STACKING """
     sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_TD, td_X, td_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
     sent_vd_xs, sent_vd_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_VD, vd_X, vd_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
@@ -209,30 +161,37 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     tag2sent_classifier = train_classifier_per_code(sent_td_xs, sent_td_ys_bycode , fn_create_sent_cls, sent_output_train_test_tags)
 
     """ Test Stack Classifier """
-    s_td_metricsByTag, s_td_wt_mean_prfa, s_td_mean_prfa, td_sent_predictions_by_code \
+    s_td_metricsByTag, _, _, td_sent_predictions_by_code \
         = test_classifier_per_code(sent_td_xs, sent_td_ys_bycode , tag2sent_classifier, sent_output_train_test_tags )
 
-    s_vd_metricsByTag, s_vd_wt_mean_prfa, s_vd_mean_prfa, vd_sent_predictions_by_code \
+    s_vd_metricsByTag, _, _, vd_sent_predictions_by_code \
         = test_classifier_per_code(sent_vd_xs, sent_vd_ys_bycode , tag2sent_classifier, sent_output_train_test_tags )
 
-    sent_td_wt_mean_prfa.append(s_td_wt_mean_prfa), sent_td_mean_prfa.append(s_td_mean_prfa)
-    sent_vd_wt_mean_prfa.append(s_vd_wt_mean_prfa), sent_vd_mean_prfa.append(s_vd_mean_prfa)
-    merge_metrics(s_td_metricsByTag, sent_td_all_metricsByTag)
-    merge_metrics(s_vd_metricsByTag, sent_vd_all_metricsByTag)
+    cv_wd_td_metrics_by_tag.append(td_metricsByTag),    cv_wd_vd_metrics_by_tag.append(vd_metricsByTag)
+    cv_sent_td_metrics_by_tag.append(s_td_metricsByTag),  cv_sent_vd_metrics_by_tag.append(s_vd_metricsByTag)
 
     predictions_to_file(f_output_file, sent_vd_ys_bycode, vd_sent_predictions_by_code, essays_VD, list(all_tags_above_threshold) + causal_rel_tags)
 
 f_output_file.close()
 # print results for each code
-s_results = get_results(wd_td_all_metricsByTag, wd_vd_all_metricsByTag, sent_td_all_metricsByTag,
-                        sent_vd_all_metricsByTag,
-                        wd_td_wt_mean_prfa, wd_td_mean_prfa, wd_vd_wt_mean_prfa, wd_vd_mean_prfa,
-                        sent_td_wt_mean_prfa, sent_td_mean_prfa, sent_vd_wt_mean_prfa, sent_vd_mean_prfa,
-                        fn_create_wd_cls, fn_create_sent_cls)
 
-print s_results
-with open(out_metrics_file, "w+") as f:
-    f.write(s_results)
+""" Persist Results to Mongo DB """
+processor = ResultsProcessor()
+wd_algo   = str(fn_create_wd_cls())
+sent_algo = str(fn_create_sent_cls())
+
+CB_TAGGING_TD, CB_TAGGING_VD, CB_SENT_TD, CB_SENT_VD = "CB_TAGGING_TD", "CB_TAGGING_VD", "CB_SENT_TD", "CB_SENT_VD"
+
+hash_config = argument_hasher(config)
+wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_metrics_by_tag, hash_config, wd_algo)
+wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_metrics_by_tag, hash_config, wd_algo)
+
+sent_td_objectid = processor.persist_results(CB_SENT_TD, cv_sent_td_metrics_by_tag, hash_config, sent_algo, tagger_id=wd_td_objectid)
+sent_vd_objectid = processor.persist_results(CB_SENT_VD, cv_sent_vd_metrics_by_tag, hash_config, sent_algo, tagger_id=wd_vd_objectid)
+
+print processor.results_to_string(wd_td_objectid,   CB_TAGGING_TD,  wd_vd_objectid,     CB_TAGGING_VD,  "TAGGING")
+print processor.results_to_string(sent_td_objectid, CB_SENT_TD,     sent_vd_objectid,   CB_SENT_VD,     "SENTENCE")
+
 """
 # PLAN
 #   WORD LEVEL FEATURE EXTRACTION - use functions specific to the individual word, but that can look around at the

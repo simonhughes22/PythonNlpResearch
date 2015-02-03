@@ -100,6 +100,7 @@ def get_sent_feature_for_stacking(feat_tags, interaction_tags, essays, word_feat
         feats_per_sentence = len(tmp_essays_xs[0])
         blank = [0] * feats_per_sentence
 
+        """ LOOK BACK """
         for i, sent_feats in enumerate(tmp_essays_xs):
             concat_feats = list(sent_feats)
             offset = -1

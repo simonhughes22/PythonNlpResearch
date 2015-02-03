@@ -6,6 +6,7 @@ import time
 import os
 import cPickle as pickle
 from collections import defaultdict
+from argument_hasher import argument_hasher
 import hashlib
 
 def timeit(method):
@@ -130,12 +131,7 @@ class memoize_to_disk(object):
         return wrapped_f
 
     def __value2str__(self, value):
-        if type(value) == list or type(value) == tuple \
-                or type(value) == dict or type(value) == defaultdict:
-            return "_".join(map(self.__value2str__, value))
-        elif hasattr(value, '__call__'):
-            return value.func_name
-        return str(value)
+        return argument_hasher(value)
 
 if __name__ == "__main__":
 
