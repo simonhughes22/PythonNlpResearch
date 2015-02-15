@@ -1,9 +1,12 @@
 __author__ = 'simon.hughes'
 
 import pymongo
-from Rpfa import mean_rpfa, weighted_mean_rpfa
+from Rpfa import mean_rpfa, weighted_mean_rpfa, rpfa
+from Metrics import rpf1a
 from collections import defaultdict
 from datetime import datetime
+
+__MACRO_F1__ = "MACRO_F1"
 
 class ResultsProcessor(object):
 
@@ -18,22 +21,13 @@ class ResultsProcessor(object):
         r, p = float(r), float(p)
         return (2.0 * r * p) / (r + p)
 
-    def __get_mean_metrics_(self, cv_td_wd_metrics_by_tag):
-        agg_metrics = defaultdict(list)
-        for fold in cv_td_wd_metrics_by_tag:
-            for tag, metric in fold.items():
-                agg_metrics[tag].append(metric)
+    def __get_mean_metrics_(self, dict_mean_metrics):
 
-        dict_mean_metrics = dict()
         code_metrics = []
-        for tag, lst_metrics in agg_metrics.items():
-            total_codes = sum(map(lambda m: m.num_codes, lst_metrics))
-
-            metric = mean_rpfa(lst_metrics)
-            metric.num_codes = total_codes
-            dict_mean_metrics[tag] = metric
+        for tag, metric in dict_mean_metrics.items():
             if self.fltr(tag):
                 code_metrics.append(metric)
+
 
         """ All Tags """
         mean_metric = mean_rpfa(dict_mean_metrics.values())
@@ -51,21 +45,35 @@ class ResultsProcessor(object):
         dict_mean_metrics["WEIGHTED_MEAN_CONCEPT_CODES"]    = weighted_mean_metric_codes  # convert values to dicts from rpfa objects for mongodb
 
         macro_f1 = self.__f1_(mean_metric_codes.recall, mean_metric_codes.precision)
-        return dict(map(lambda (k, v): (k, v.__dict__), dict_mean_metrics.items()) + [("MACRO_F1", macro_f1)])
+        return dict(map(lambda (k, v): (k, v.__dict__), dict_mean_metrics.items()) + [(__MACRO_F1__, macro_f1)])
 
-    def __add_meta_data_(self, metrics_by_tag, experiment_args):
-        metrics_by_tag["parameters"] = experiment_args
-        metrics_by_tag["asof"] = datetime.now()
+    def __add_meta_data_(self, db_row, experiment_args):
+        db_row["parameters"] = experiment_args
+        db_row["asof"] = datetime.now()
 
-    def persist_results(self, collection, cv_td_wd_metrics_by_tag, experiment_args, algorithm, **kwargs):
+    def __get_metrics_(self, ys_by_tag, predictions_by_tag):
+        """ Compute metrics for all predicted codes """
+        metrics_by_tag = dict()
+        for tag, pred_ys in predictions_by_tag.items():
+            ys = ys_by_tag[tag]
+            r, p, f1, acc = rpf1a(ys, pred_ys)
+            metric = rpfa(r, p, f1, acc, nc = len([1 for y in ys if y > 0.0 ]))
+            metrics_by_tag[tag] = metric
+        return metrics_by_tag
+
+    def persist_results(self, dbcollection, ys_by_tag, predictions_by_tag, experiment_args, algorithm, **kwargs):
 
         # Compute Mean metrics over all folds
-        mean_td_metrics_by_tag = self.__get_mean_metrics_(cv_td_wd_metrics_by_tag)
-        mean_td_metrics_by_tag["algorithm"] = algorithm
+        metrics_by_code = self.__get_metrics_(ys_by_tag, predictions_by_tag)
+        mean_td_metrics_by_tag = self.__get_mean_metrics_(metrics_by_code)
+
+        db_row = dict(mean_td_metrics_by_tag.items())
+        db_row["algorithm"] = algorithm
+        # merge in additional values
         for key, val in kwargs.items():
-            mean_td_metrics_by_tag[key] = val
-        self.__add_meta_data_(mean_td_metrics_by_tag, experiment_args)
-        return self.db[collection].insert(mean_td_metrics_by_tag)
+            db_row[key] = val
+        self.__add_meta_data_(db_row, experiment_args)
+        return self.db[dbcollection].insert(db_row)
 
     def results_to_string(self, td_objectid, td_collection, vd_objectid, vd_collection, header):
 
@@ -91,12 +99,14 @@ class ResultsProcessor(object):
             if type(td_rpfa) == dict and "f1_score" in td_rpfa:
 
                 s_metrics += "\nTAG:       " + pad_str(tag)
-                s_metrics += "\nf1:        " + pad_str(td_rpfa["f1_score"])     + pad_str(vd_rpfa["f1_score"])
-                s_metrics += "\nrecall:    " + pad_str(td_rpfa["recall"])       + pad_str(vd_rpfa["recall"])
-                s_metrics += "\nprecision: " + pad_str(td_rpfa["precision"])    + pad_str(vd_rpfa["precision"])
-                s_metrics += "\naccuracy:  " + pad_str(td_rpfa["accuracy"])     + pad_str(vd_rpfa["accuracy"])
-                s_metrics += "\nsentences: " + pad_str("")                      + pad_str(vd_rpfa["num_codes"])
+                s_metrics += "\nf1:        " + pad_str(td_rpfa["f1_score"])      + pad_str(vd_rpfa["f1_score"])
+                s_metrics += "\nrecall:    " + pad_str(td_rpfa["recall"])        + pad_str(vd_rpfa["recall"])
+                s_metrics += "\nprecision: " + pad_str(td_rpfa["precision"])     + pad_str(vd_rpfa["precision"])
+                s_metrics += "\naccuracy:  " + pad_str(td_rpfa["accuracy"])      + pad_str(vd_rpfa["accuracy"])
+                s_metrics += "\nsentences: " + pad_str("")                       + pad_str(vd_rpfa["num_codes"])
                 s_metrics += "\n"
+        s_metrics         += "\nMacro F1:  " + pad_str(td_metrics[__MACRO_F1__]) + pad_str(vd_metrics[__MACRO_F1__])
+        s_metrics         += "\n"
         return s_metrics
 
 if __name__ == "__main__":

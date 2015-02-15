@@ -117,8 +117,11 @@ f_output_file = open(out_predictions_file, "w+")
 f_output_file.write("Essay|Sent Number|Processed Sentence|Concept Codes|Predictions\n")
 
 # Gather metrics per fold
-cv_wd_td_metrics_by_tag,    cv_wd_vd_metrics_by_tag     = [], []
-cv_sent_td_metrics_by_tag,  cv_sent_vd_metrics_by_tag   = [], []
+cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
+cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
+
+cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag = defaultdict(list), defaultdict(list)
+cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
 
 folds = cross_validation(essay_feats, CV_FOLDS)
 #TODO Parallelize
@@ -134,33 +137,40 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
     feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ, sparse=SPARSE_WD_FEATS)
     td_X, vd_X = feature_transformer.fit_transform(td_feats), feature_transformer.transform(vd_feats)
-    td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
-    vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
+    wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
+    wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
 
     """ TRAIN Tagger """
-    tag2word_classifier = train_classifier_per_code(td_X, td_ys_bytag, fn_create_wd_cls, wd_train_tags)
+    tag2word_classifier = train_classifier_per_code(td_X, wd_td_ys_bytag, fn_create_wd_cls, wd_train_tags)
 
     """ TEST Tagger """
-    td_metricsByTag, _, _, td_wd_predictions_by_code = test_classifier_per_code(td_X, td_ys_bytag, tag2word_classifier, wd_test_tags)
-    vd_metricsByTag, _, _, vd_wd_predictions_by_code = test_classifier_per_code(vd_X, vd_ys_bytag, tag2word_classifier, wd_test_tags)
+    td_wd_predictions_by_code = test_classifier_per_code(td_X, tag2word_classifier, wd_test_tags)
+    vd_wd_predictions_by_code = test_classifier_per_code(vd_X, tag2word_classifier, wd_test_tags)
 
     print "\nTraining Sentence Model"
     """ SENTENCE LEVEL PREDICTIONS FROM STACKING """
-    sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_TD, td_X, td_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
-    sent_vd_xs, sent_vd_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_VD, vd_X, vd_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
+    sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_TD, td_X, wd_td_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
+    sent_vd_xs, sent_vd_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_VD, vd_X, wd_vd_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
 
     """ Train Stacked Classifier """
     tag2sent_classifier = train_classifier_per_code(sent_td_xs, sent_td_ys_bycode , fn_create_sent_cls, sent_output_train_test_tags)
 
     """ Test Stack Classifier """
-    s_td_metricsByTag, _, _, td_sent_predictions_by_code \
-        = test_classifier_per_code(sent_td_xs, sent_td_ys_bycode , tag2sent_classifier, sent_output_train_test_tags )
+    td_sent_predictions_by_code \
+        = test_classifier_per_code(sent_td_xs, tag2sent_classifier, sent_output_train_test_tags )
 
-    s_vd_metricsByTag, _, _, vd_sent_predictions_by_code \
-        = test_classifier_per_code(sent_vd_xs, sent_vd_ys_bycode , tag2sent_classifier, sent_output_train_test_tags )
+    vd_sent_predictions_by_code \
+        = test_classifier_per_code(sent_vd_xs, tag2sent_classifier, sent_output_train_test_tags )
 
-    cv_wd_td_metrics_by_tag.append(td_metricsByTag),    cv_wd_vd_metrics_by_tag.append(vd_metricsByTag)
-    cv_sent_td_metrics_by_tag.append(s_td_metricsByTag),  cv_sent_vd_metrics_by_tag.append(s_vd_metricsByTag)
+    merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
+    merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
+    merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
+    merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
+
+    merge_dictionaries(sent_td_ys_bycode, cv_sent_td_ys_by_tag)
+    merge_dictionaries(sent_vd_ys_bycode, cv_sent_vd_ys_by_tag)
+    merge_dictionaries(td_sent_predictions_by_code, cv_sent_td_predictions_by_tag)
+    merge_dictionaries(vd_sent_predictions_by_code, cv_sent_vd_predictions_by_tag)
 
     predictions_to_file(f_output_file, sent_vd_ys_bycode, vd_sent_predictions_by_code, essays_VD, regular_tags + CAUSE_TAGS + CAUSAL_REL_TAGS)
 
@@ -173,14 +183,14 @@ wd_algo   = str(fn_create_wd_cls())
 sent_algo = str(fn_create_sent_cls())
 
 CB_TAGGING_TD, CB_TAGGING_VD, CB_SENT_TD, CB_SENT_VD = "CB_TAGGING_TD", "CB_TAGGING_VD", "CB_SENT_TD", "CB_SENT_VD"
-
 parameters = dict(config)
 parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
-wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_metrics_by_tag, parameters, wd_algo)
-wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_metrics_by_tag, parameters, wd_algo)
 
-sent_td_objectid = processor.persist_results(CB_SENT_TD, cv_sent_td_metrics_by_tag, parameters, sent_algo, tagger_id=wd_td_objectid)
-sent_vd_objectid = processor.persist_results(CB_SENT_VD, cv_sent_vd_metrics_by_tag, parameters, sent_algo, tagger_id=wd_vd_objectid)
+wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
+wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
+
+sent_td_objectid = processor.persist_results(CB_SENT_TD, cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag, parameters, sent_algo, tagger_id=wd_td_objectid)
+sent_vd_objectid = processor.persist_results(CB_SENT_VD, cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag, parameters, sent_algo, tagger_id=wd_vd_objectid)
 
 print processor.results_to_string(wd_td_objectid,   CB_TAGGING_TD,  wd_vd_objectid,     CB_TAGGING_VD,  "TAGGING")
 print processor.results_to_string(sent_td_objectid, CB_SENT_TD,     sent_vd_objectid,   CB_SENT_VD,     "SENTENCE")

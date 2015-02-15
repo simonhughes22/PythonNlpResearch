@@ -130,14 +130,24 @@ def train_classifier_per_code(xs, ysByCode, fn_create_cls, tags=None):
         tag2classifier[code] = cls
     return tag2classifier
 
-def __test_for_tag__(tag, xs, ysByCode, codeToClassifier):
-    ys  = ysByCode[tag]
-    pred_ys = codeToClassifier[tag].predict(xs)
-    num_codes = len([y for y in ys if y == 1])
-    r,p,f1,a = rpf1a(ys, pred_ys)
-    return rpfa(r,p,f1,a,num_codes), pred_ys
+def merge_dictionaries(dictFrom, dictTo):
+    """
+    Appends a dict[str]: list to an existing defaultdict[str]: list
 
-def test_classifier_per_code(xs, ysByCode, tagToClassifier, tags=None):
+    @param dictFrom: dict[str] : numpyarray
+    @param dictTo:   defaultdict[str]: list
+
+    @return: dictTo
+    """
+
+    for k, lst in dictFrom.items():
+        dictTo[k].extend(lst)
+    return dictTo
+
+def __test_for_tag__(tag, xs, codeToClassifier):
+    return codeToClassifier[tag].predict(xs)
+
+def test_classifier_per_code(xs, tagToClassifier, tags=None):
     """
     Compute metrics over tagging data
 
@@ -145,32 +155,22 @@ def test_classifier_per_code(xs, ysByCode, tagToClassifier, tags=None):
     ----------
     xs : numpy array
         Features over the words
-    ysByCode : dict[str]:(numpy array)
-        Dictionary mapping tags to binary labels
     tag2classifier : dict[str]:BaseEstimator
         A dictionary mapping tags to classifiers
+    tags : list(str)
+        List of tags to test over. Use ysByCode.keys() if none
 
     Returns
     -------
-    metricsByTag, td_wt_mean_prfa, td_mean_prfa : a 3-tuple of
-
-        a dictionary storing rfpa values for each tag
-        the mean weighted recall precision and accuracy metric
-        the mean recall precision and accuracy metric
-
+    ys_by_code, predictions_by_code : a pair of dict's mapping tags to their actual labels \ predictions
     """
     if tags == None:
-        tags = ysByCode.keys()
-    lst_metrics = []
-    metricsByTag = dict()
+        tags = tagToClassifier.keys()
+
     predictions_by_code = dict()
     for tag in sorted(tags):
-        metric, pred_ys = __test_for_tag__(tag, xs, ysByCode, tagToClassifier)
-        metricsByTag[tag] = metric
-        lst_metrics.append(metric)
+        pred_ys = __test_for_tag__(tag, xs, tagToClassifier)
         predictions_by_code[tag] = pred_ys
 
-    td_wt_mean_prfa   = weighted_mean_rpfa(lst_metrics)
-    td_mean_prfa      = mean_rpfa(lst_metrics)
-    return (metricsByTag, td_wt_mean_prfa, td_mean_prfa, predictions_by_code)
+    return predictions_by_code
 
