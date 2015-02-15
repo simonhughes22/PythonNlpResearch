@@ -124,6 +124,56 @@ def get_sent_feature_for_stacking_from_tagging_model(feat_tags, interaction_tags
         xs = np.asarray(td_sent_feats)
     return xs, ys_by_code
 
+def get_sent_feature_for_stacking_from_sentence_model(feat_tags, interaction_tags, sentence_feats, tag2Classifier, sparse=False):
+
+    real_num_predictions_bytag = dict()
+    predictions_bytag = dict()
+    for tag in feat_tags:
+        cls = tag2Classifier[tag]
+        if hasattr(cls, "decision_function"):
+            real_num_predictions = cls.decision_function(sentence_feats)
+        else:
+            real_num_predictions = cls.predict_proba(sentence_feats)
+        predictions = cls.predict(sentence_feats)
+        real_num_predictions_bytag[tag] = real_num_predictions
+        predictions_bytag[tag] = predictions
+        real_num_predictions_bytag[tag] = real_num_predictions
+
+    # features for the sentence level predictions
+    tmp_essays_xs = []
+    for ix, sent_feats in enumerate(sentence_feats):
+        tmp_sentence_xs = []
+        un_pred_tags = set()
+
+        for tag in feat_tags:
+
+            real_pred   = real_num_predictions_bytag[tag][ix]
+            pred        = predictions_bytag[tag][ix]
+
+            tmp_sentence_xs.append(real_pred)
+            tmp_sentence_xs.append(pred)
+
+            if pred > 0.0:
+                un_pred_tags.add(tag)
+                # for adding 2-way feature combos
+
+        #pairwise interactions (2 way interactions of predicted tags)
+        for a in interaction_tags:
+            for b in interaction_tags:
+                if b < a:
+                    if a in un_pred_tags and b in un_pred_tags:
+                        tmp_sentence_xs.append(1)
+                    else:
+                        tmp_sentence_xs.append(0)
+
+        tmp_essays_xs.append(tmp_sentence_xs)
+        # end sentence processing
+    if sparse:
+        xs = scipy.sparse.csr_matrix(tmp_essays_xs)
+    else:
+        xs = np.asarray(tmp_essays_xs)
+    return xs
+
 if __name__ == "__main__":
 
 
