@@ -46,6 +46,7 @@ class ResultsProcessor(object):
         dict_mean_metrics["MEAN"]                           = mean_metric
         dict_mean_metrics["WEIGHTED_MEAN"]                  = weighted_mean_metric
 
+        """ The default behavior is to assume codes starting with a digit are concept codes """
         dict_mean_metrics["MEAN_CONCEPT_CODES"]             = mean_metric_codes
         dict_mean_metrics["WEIGHTED_MEAN_CONCEPT_CODES"]    = weighted_mean_metric_codes  # convert values to dicts from rpfa objects for mongodb
 
@@ -74,7 +75,7 @@ class ResultsProcessor(object):
         def sort_key(code):
             if code.isdigit():
                 return (int(code), len(code), code)
-            return (9999999, 9999999, code.isupper(), (code))
+            return (9999999, 9999999, not code[0].isdigit(), not code.startswith("_"), code[-1].isupper(), code)
 
         s_metrics = ""
         s_metrics += header + "\n"

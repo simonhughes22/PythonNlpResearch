@@ -47,21 +47,17 @@ LOOK_BACK           = 0     # how many sentences to look back when predicting ta
 # construct unique key using settings for pickling
 
 settings = Settings.Settings()
-folder = settings.data_directory + "CoralBleaching/BrattData/EBA_Pre_Post_Merged/"
-#folder = settings.data_directory + "CoralBleaching/BrattData/Merged/"
-processed_essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
-features_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/feats_pickled_"
+folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA_Pre_Post_Merged/"
+processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
+features_filename_prefix =          settings.data_directory + "CoralBleaching/BrattData/Pickled/feats_pickled_"
 
-out_metrics_file     = settings.data_directory + "CoralBleaching/Results/metrics.txt"
-out_predictions_file = settings.data_directory + "CoralBleaching/Results/predictions.txt"
+out_metrics_file     =              settings.data_directory + "CoralBleaching/Results/metrics.txt"
+out_predictions_file =              settings.data_directory + "CoralBleaching/Results/predictions.txt"
 
 config = get_config(folder)
 
 """ FEATURE EXTRACTION """
 offset = (config["window_size"] - 1) / 2
-
-#unigram_window = fact_extract_positional_word_features(offset)
-#biigram_window = fact_extract_ngram_features(offset, 2)
 
 unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
 biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
@@ -69,11 +65,12 @@ biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
 #pos_tag_window = fact_extract_positional_POS_features(offset)
 #pos_tag_plus_wd_window = fact_extract_positional_POS_features_plus_word(offset)
 #head_wd_window = fact_extract_positional_head_word_features(offset)
-pos_dep_vecs = fact_extract_positional_dependency_vectors(offset)
+#pos_dep_vecs = fact_extract_positional_dependency_vectors(offset)
 
-extractors = [biigram_window_stemmed, pos_dep_vecs]
+extractors = [unigram_window_stemmed, biigram_window_stemmed]
 feat_config = dict(config.items() + [("extractors", extractors)])
 
+""" LOAD DATA """
 mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_prefix)(load_process_essays)
 tagged_essays = mem_process_essays( **config )
 logger.info("Essays loaded")
@@ -82,38 +79,28 @@ mem_extract_features = memoize_to_disk(filename_prefix=features_filename_prefix)
 essay_feats = mem_extract_features(tagged_essays, **feat_config)
 logger.info("Features loaded")
 
+""" DEFINE TAGS """
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
-""" Get all tags above the frequency above """
-""" NOTE WHEN OUTPUTING RESULTS WE NEED TO USE ALL TAGS, NOT HIGHER FREQ TAGS """
-flt_lst_tags = flatten(lst_all_tags)
-tally_tags = tally_items(flt_lst_tags, freq_threshold=MIN_TAG_FREQ)
-all_tags_above_threshold = set(tally_tags.keys())
-if "it" in all_tags_above_threshold:
-    all_tags_above_threshold.remove("it")
+regular_tags = list(set((t for t in flatten(lst_all_tags) if t[0].isdigit())))
 
-# use more tags for training for sentence level classifier
-""" !!! THE TAGS USED TO RUN !!! """
-regular_tags = [t for t in all_tags_above_threshold if t[0].isdigit()]
-cause_tags = ["Causer", "Result", "explicit"]
-causal_rel_tags = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
+CAUSE_TAGS = ["Causer", "Result", "explicit"]
+CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 
-#wd_train_tags = list(all_tags_above_threshold)
 """ works best with all the pair-wise causal relation codes """
-wd_train_tags = regular_tags + cause_tags
-wd_test_tags  = regular_tags + cause_tags
+wd_train_tags = regular_tags + CAUSE_TAGS
+wd_test_tags  = regular_tags + CAUSE_TAGS
 
 # tags from tagging model used to train the stacked model
 sent_input_feat_tags = wd_train_tags
 # find interactions between these predicted tags from the word tagger to feed to the sentence tagger
-sent_input_interaction_tags = regular_tags + cause_tags
+sent_input_interaction_tags = wd_train_tags
 # tags to train (as output) for the sentence based classifier
-sent_output_train_test_tags = list(set(regular_tags + causal_rel_tags))
+sent_output_train_test_tags = list(set(regular_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
 
-assert "Causer"     in sent_input_feat_tags, "To extract causal relations, we need Causer tags"
-assert "Result"     in sent_input_feat_tags, "To extract causal relations, we need Result tags"
-assert "explicit"   in sent_input_feat_tags, "To extract causal relations, we need explicit tags"
+assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against
 
+""" CLASSIFIERS """
 """ Log Reg + Log Reg is best!!! """
 fn_create_wd_cls = lambda: LogisticRegression() # C=1, dual = False seems optimal
 #fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
@@ -175,7 +162,7 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     cv_wd_td_metrics_by_tag.append(td_metricsByTag),    cv_wd_vd_metrics_by_tag.append(vd_metricsByTag)
     cv_sent_td_metrics_by_tag.append(s_td_metricsByTag),  cv_sent_vd_metrics_by_tag.append(s_vd_metricsByTag)
 
-    predictions_to_file(f_output_file, sent_vd_ys_bycode, vd_sent_predictions_by_code, essays_VD, list(all_tags_above_threshold) + causal_rel_tags)
+    predictions_to_file(f_output_file, sent_vd_ys_bycode, vd_sent_predictions_by_code, essays_VD, regular_tags + CAUSE_TAGS + CAUSAL_REL_TAGS)
 
 f_output_file.close()
 # print results for each code
