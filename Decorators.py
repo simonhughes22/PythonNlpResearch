@@ -117,10 +117,10 @@ class memoize_to_disk(object):
         # decorate f
         def wrapped_f(*args, **kwargs):
             # don't hash args, just kwargs
-            pickle_key = "_".join(map(lambda (k, v): k + "_" + self.__value2str__(v), sorted(kwargs.items())))
+            s_pickle_key = "_".join(map(lambda (k, v): k + "_" + self.__value2str__(v), sorted(kwargs.items())))
             # hash long filesnames
             #if len(pickle_key) > 225:
-            pickle_key = str(hash(pickle_key))
+            pickle_key = str(hash(s_pickle_key))
 
             pickle_file = self.filename_prefix + pickle_key
             if os.path.exists(pickle_file):

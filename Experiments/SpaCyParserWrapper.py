@@ -73,6 +73,12 @@ class Parser(object):
         tokens = self.__tokenize_(stokens)
         return map(lambda t: str(t.cluster), tokens)
 
+    def dep_vector(self, tokens):
+        stokens = unicode(" ".join(tokens))
+        tokens = self.__tokenize_(stokens)
+        # yields a list of (300,) dimensional numpy arrays
+        return map(lambda t: t.repvec, tokens)
+
     @memoize
     def __tokenize_(self, sentence):
         return list(self.nlp(sentence, tag=True, parse=True))

@@ -2,7 +2,7 @@ from BrattEssay import load_bratt_essays
 from processessays import process_essays
 from featureextractortransformer import FeatureExtractorTransformer
 
-def load_process_essays(extractors, window_size, min_sentence_length, folder, min_df, remove_infrequent,
+def load_process_essays(window_size, min_sentence_length, folder, min_df, remove_infrequent,
                        spelling_correct,
                        replace_nums, stem, remove_stop_words,
                        remove_punctuation, lower_case,

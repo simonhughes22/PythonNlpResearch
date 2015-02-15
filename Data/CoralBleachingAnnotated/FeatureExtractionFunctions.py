@@ -440,3 +440,60 @@ def extract_POS_TAG_PLUS_WORD(input, val = 1):
     tags = zip(*tag_pairs)[1]
     feats = {"POS_TAG_WD:" + tags[input.wordix] + "-" + input.sentence[input.wordix] : val }
     return feats
+
+def __vector_to_dict_(vector, prefix):
+    """
+
+    @param vector:  1D numpy array
+    @param prefix:  str
+    @return:        dict
+    """
+    d = dict()
+    for i, v in enumerate(vector):
+        if v > 0.0:
+            d[prefix + ":" + str(i)] = v
+    return d
+
+def extract_single_dependency_vector(input, val = 1):
+    vectors = parser.dep_vector(input.sentence)
+    return __vector_to_dict_(vectors[input.wordix], "1_VEC")
+
+def fact_extract_positional_dependency_vectors(offset):
+    """ offset      :   int
+                            the number of words either side of the input to extract POS features from
+        returns     :   fn
+                            feature extractor function: FeatureExtactorInput -> dict
+    """
+    # curry offset
+    def fn_extract_positional_dependency_vectors(input, val=1):
+        return extract_extract_positional_dependency_vectors(offset, input, val)
+    return fn_extract_positional_dependency_vectors
+
+def extract_extract_positional_dependency_vectors(offset, input, val = 1):
+    """ offset      :   int
+                           the number of words either side of the input to extract features from
+        input      :    FeatureExtactorInput
+                            input to feature extractor
+        returns     :   dict
+                            dictionary of features
+    """
+
+    feats = {}
+    start = input.wordix - offset
+    stop  = input.wordix + offset
+
+    end = len(input.sentence) - 1
+    vectors = parser.dep_vector(input.sentence)
+
+    PREFIX = "POS_DEP_VEC"
+    for i in range(start, stop+1):
+        relative_offset = str(i - input.wordix)
+        if i < 0:
+            feats[PREFIX + __START__ + ":" + relative_offset] = 1.0
+        elif i > end:
+            feats[PREFIX + __END__ +   ":" + relative_offset] = 1.0
+        else:
+            positional_prefix = PREFIX + ":" + relative_offset
+            d = __vector_to_dict_(vectors[input.wordix], positional_prefix)
+            feats.update(d)
+    return feats

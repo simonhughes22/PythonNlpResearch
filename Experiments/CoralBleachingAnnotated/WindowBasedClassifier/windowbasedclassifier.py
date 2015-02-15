@@ -30,6 +30,9 @@ import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
+# Create persister (mongo client) - fail fast if mongo service not initialized
+processor = ResultsProcessor()
+
 # not hashed as don't affect persistence of feature processing
 SPARSE_WD_FEATS     = True
 SPARSE_SENT_FEATS   = True
@@ -66,16 +69,18 @@ biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
 #pos_tag_window = fact_extract_positional_POS_features(offset)
 #pos_tag_plus_wd_window = fact_extract_positional_POS_features_plus_word(offset)
 #head_wd_window = fact_extract_positional_head_word_features(offset)
+pos_dep_vecs = fact_extract_positional_dependency_vectors(offset)
 
-extractors = [unigram_window_stemmed, biigram_window_stemmed]
-config["extractors"] = extractors
-
+extractors = [biigram_window_stemmed, pos_dep_vecs]
+feat_config = dict(config.items() + [("extractors", extractors)])
 
 mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_prefix)(load_process_essays)
 tagged_essays = mem_process_essays( **config )
+logger.info("Essays loaded")
 # most params below exist ONLY for the purposes of the hashing to and from disk
 mem_extract_features = memoize_to_disk(filename_prefix=features_filename_prefix)(extract_features)
-essay_feats = mem_extract_features(tagged_essays, **config)
+essay_feats = mem_extract_features(tagged_essays, **feat_config)
+logger.info("Features loaded")
 
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
 """ Get all tags above the frequency above """
@@ -176,18 +181,19 @@ f_output_file.close()
 # print results for each code
 
 """ Persist Results to Mongo DB """
-processor = ResultsProcessor()
+
 wd_algo   = str(fn_create_wd_cls())
 sent_algo = str(fn_create_sent_cls())
 
 CB_TAGGING_TD, CB_TAGGING_VD, CB_SENT_TD, CB_SENT_VD = "CB_TAGGING_TD", "CB_TAGGING_VD", "CB_SENT_TD", "CB_SENT_VD"
 
-hash_config = argument_hasher(config)
-wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_metrics_by_tag, hash_config, wd_algo)
-wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_metrics_by_tag, hash_config, wd_algo)
+parameters = dict(config)
+parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
+wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_metrics_by_tag, parameters, wd_algo)
+wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_metrics_by_tag, parameters, wd_algo)
 
-sent_td_objectid = processor.persist_results(CB_SENT_TD, cv_sent_td_metrics_by_tag, hash_config, sent_algo, tagger_id=wd_td_objectid)
-sent_vd_objectid = processor.persist_results(CB_SENT_VD, cv_sent_vd_metrics_by_tag, hash_config, sent_algo, tagger_id=wd_vd_objectid)
+sent_td_objectid = processor.persist_results(CB_SENT_TD, cv_sent_td_metrics_by_tag, parameters, sent_algo, tagger_id=wd_td_objectid)
+sent_vd_objectid = processor.persist_results(CB_SENT_VD, cv_sent_vd_metrics_by_tag, parameters, sent_algo, tagger_id=wd_vd_objectid)
 
 print processor.results_to_string(wd_td_objectid,   CB_TAGGING_TD,  wd_vd_objectid,     CB_TAGGING_VD,  "TAGGING")
 print processor.results_to_string(sent_td_objectid, CB_SENT_TD,     sent_vd_objectid,   CB_SENT_VD,     "SENTENCE")
