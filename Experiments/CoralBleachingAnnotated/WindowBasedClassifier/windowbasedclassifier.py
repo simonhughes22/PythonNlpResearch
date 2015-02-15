@@ -149,8 +149,8 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
     print "\nTraining Sentence Model"
     """ SENTENCE LEVEL PREDICTIONS FROM STACKING """
-    sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_TD, td_X, wd_td_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
-    sent_vd_xs, sent_vd_ys_bycode = get_sent_feature_for_stacking(sent_input_feat_tags, sent_input_interaction_tags, essays_VD, vd_X, wd_vd_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
+    sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking_from_tagging_model(sent_input_feat_tags, sent_input_interaction_tags, essays_TD, td_X, wd_td_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
+    sent_vd_xs, sent_vd_ys_bycode = get_sent_feature_for_stacking_from_tagging_model(sent_input_feat_tags, sent_input_interaction_tags, essays_VD, vd_X, wd_vd_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
 
     """ Train Stacked Classifier """
     tag2sent_classifier = train_classifier_per_code(sent_td_xs, sent_td_ys_bycode , fn_create_sent_cls, sent_output_train_test_tags)

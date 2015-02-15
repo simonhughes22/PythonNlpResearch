@@ -29,7 +29,7 @@ def num_different_tags(pred):
             new_tag = False
     return cnt
 
-def get_sent_feature_for_stacking(feat_tags, interaction_tags, essays, word_feats, ys_bytag, tag2Classifier, sparse=False, look_back=0):
+def get_sent_feature_for_stacking_from_tagging_model(feat_tags, interaction_tags, essays, word_feats, ys_bytag, tag2Classifier, sparse=False, look_back=0):
 
     real_num_predictions_bytag = dict()
     predictions_bytag = dict()
