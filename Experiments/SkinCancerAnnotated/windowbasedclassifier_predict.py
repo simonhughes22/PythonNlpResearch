@@ -26,7 +26,7 @@ LOOK_BACK           = 0
 
 # construct unique key using settings for pickling
 
-""" PETER - Specify the file paths here to the essay files. """
+""" PETER - Specify the full file paths here to the essay files (reads all in containing folder), and the output file. """
 settings = Settings.Settings()
 
 folder                              = settings.data_directory + "SkinCancer/Merged/"
