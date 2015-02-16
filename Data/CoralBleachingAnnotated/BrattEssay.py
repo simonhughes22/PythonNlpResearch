@@ -165,7 +165,7 @@ class NoteAnnotation(AnnotationBase):
 
 class Essay(object):
 
-    def __init__(self, full_path, include_vague = True, include_normal = True):
+    def __init__(self, full_path, include_vague = True, include_normal = True, load_annotations = True):
 
         self.include_normal = include_normal
         self.include_vague = include_vague
@@ -175,8 +175,9 @@ class Essay(object):
 
         txt_file = full_path[:-4] + ".txt"
 
-        assert full_path.endswith(".ann")
-        assert os.path.exists(txt_file), "Missing associated text file for %s" % self.full_path
+        if load_annotations:
+            assert full_path.endswith(".ann")
+            assert os.path.exists(txt_file), "Missing associated text file for %s" % self.full_path
 
         with open(txt_file, "r+") as f:
             self.txt = f.read()
@@ -189,8 +190,11 @@ class Essay(object):
         self.id2annotation = {}
         self.split_sents = []
 
-        with open(full_path, "r+") as f:
-            lines = f.readlines()
+        if load_annotations:
+            with open(full_path, "r+") as f:
+                lines = f.readlines()
+        else:
+            lines = []
 
         codes_start = defaultdict(set)
         codes_end = defaultdict(set)
@@ -450,7 +454,7 @@ class Essay(object):
         #if len(self.tagged_sentences) > 60:
         #    raise Exception("Too many sentences (%s) in essay %s" % (str(len(self.sentence_tags)), self.file_name))
 
-def load_bratt_essays(directory = None, include_vague = True, include_normal = True):
+def load_bratt_essays(directory = None, include_vague = True, include_normal = True, load_annotations = True):
     import warnings
 
     bratt_root_folder = directory
@@ -464,7 +468,7 @@ def load_bratt_essays(directory = None, include_vague = True, include_normal = T
     essays = []
     for f in files:
         #try:
-        essay = Essay(f, include_vague=include_vague, include_normal=include_normal)
+        essay = Essay(f, include_vague=include_vague, include_normal=include_normal, load_annotations=load_annotations)
         if len(essay.tagged_sentences) > 60:
             warnings.warn("Too many sentences (%s) in essay %s" % (str(len(essay.sentence_tags)), essay.file_name))
             print "Too many sentences (%s) in essay %s" % (str(len(essay.sentence_tags)), essay.file_name)

@@ -59,7 +59,7 @@ def get_sent_feature_for_stacking_from_tagging_model(feat_tags, interaction_tags
             # unique
             un_tags = set()
             un_pred_tags = set()
-
+            # ixs into the tagged words
             ixs = range(ix, ix + len(taggged_sentence))
             ix += len(taggged_sentence)
             for tag in feat_tags:
