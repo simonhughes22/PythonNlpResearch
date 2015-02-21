@@ -51,7 +51,7 @@ class ResultsProcessor(object):
         db_row["parameters"] = experiment_args
         db_row["asof"] = datetime.now()
 
-    def __get_metrics_(self, ys_by_tag, predictions_by_tag):
+    def __get_metrics__(self, ys_by_tag, predictions_by_tag):
         """ Compute metrics for all predicted codes """
         metrics_by_tag = dict()
         for tag, pred_ys in predictions_by_tag.items():
@@ -64,7 +64,7 @@ class ResultsProcessor(object):
     def persist_results(self, dbcollection, ys_by_tag, predictions_by_tag, experiment_args, algorithm, **kwargs):
 
         # Compute Mean metrics over all folds
-        metrics_by_code = self.__get_metrics_(ys_by_tag, predictions_by_tag)
+        metrics_by_code = self.__get_metrics__(ys_by_tag, predictions_by_tag)
         mean_td_metrics_by_tag = self.__get_mean_metrics_(metrics_by_code)
 
         db_row = dict(mean_td_metrics_by_tag.items())
@@ -74,6 +74,17 @@ class ResultsProcessor(object):
             db_row[key] = val
         self.__add_meta_data_(db_row, experiment_args)
         return self.db[dbcollection].insert(db_row)
+
+    def __metrics_to_str__(self, pad_str, tag, td_rpfa, vd_rpfa):
+        s_metrics = ""
+        s_metrics += "\nTAG:       " + pad_str(tag)
+        s_metrics += "\nf1:        " + pad_str(td_rpfa["f1_score"]) + pad_str(vd_rpfa["f1_score"])
+        s_metrics += "\nrecall:    " + pad_str(td_rpfa["recall"]) + pad_str(vd_rpfa["recall"])
+        s_metrics += "\nprecision: " + pad_str(td_rpfa["precision"]) + pad_str(vd_rpfa["precision"])
+        s_metrics += "\naccuracy:  " + pad_str(td_rpfa["accuracy"]) + pad_str(vd_rpfa["accuracy"])
+        s_metrics += "\nsentences: " + pad_str("") + pad_str(vd_rpfa["num_codes"])
+        s_metrics += "\n"
+        return s_metrics
 
     def results_to_string(self, td_objectid, td_collection, vd_objectid, vd_collection, header):
 
@@ -95,16 +106,9 @@ class ResultsProcessor(object):
         svd_metrics = sorted(vd_metrics.items(), key=lambda (k, v): sort_key(k))
 
         for ((tag, td_rpfa), (_, vd_rpfa)) in zip(std_metrics, svd_metrics):
-
             if type(td_rpfa) == dict and "f1_score" in td_rpfa:
+                s_metrics += self.__metrics_to_str__(pad_str, tag, td_rpfa, vd_rpfa)
 
-                s_metrics += "\nTAG:       " + pad_str(tag)
-                s_metrics += "\nf1:        " + pad_str(td_rpfa["f1_score"])      + pad_str(vd_rpfa["f1_score"])
-                s_metrics += "\nrecall:    " + pad_str(td_rpfa["recall"])        + pad_str(vd_rpfa["recall"])
-                s_metrics += "\nprecision: " + pad_str(td_rpfa["precision"])     + pad_str(vd_rpfa["precision"])
-                s_metrics += "\naccuracy:  " + pad_str(td_rpfa["accuracy"])      + pad_str(vd_rpfa["accuracy"])
-                s_metrics += "\nsentences: " + pad_str("")                       + pad_str(vd_rpfa["num_codes"])
-                s_metrics += "\n"
         s_metrics         += "\nMacro F1:  " + pad_str(td_metrics[__MACRO_F1__]) + pad_str(vd_metrics[__MACRO_F1__])
         s_metrics         += "\n"
         return s_metrics
