@@ -8,6 +8,16 @@ from datetime import datetime
 
 __MACRO_F1__ = "MACRO_F1"
 
+def compute_metrics(ys_by_tag, predictions_by_tag):
+    """ Compute metrics for all predicted codes """
+    metrics_by_tag = dict()
+    for tag, pred_ys in predictions_by_tag.items():
+        ys = ys_by_tag[tag]
+        r, p, f1, acc = rpf1a(ys, pred_ys)
+        metric = rpfa(r, p, f1, acc, nc=len([1 for y in ys if y > 0.0]))
+        metrics_by_tag[tag] = metric
+    return metrics_by_tag
+
 class ResultsProcessor(object):
 
     def __init__(self, fltr = None):
@@ -27,7 +37,6 @@ class ResultsProcessor(object):
         for tag, metric in dict_mean_metrics.items():
             if self.fltr(tag):
                 code_metrics.append(metric)
-
 
         """ All Tags """
         mean_metric = mean_rpfa(dict_mean_metrics.values())
@@ -51,20 +60,10 @@ class ResultsProcessor(object):
         db_row["parameters"] = experiment_args
         db_row["asof"] = datetime.now()
 
-    def __get_metrics__(self, ys_by_tag, predictions_by_tag):
-        """ Compute metrics for all predicted codes """
-        metrics_by_tag = dict()
-        for tag, pred_ys in predictions_by_tag.items():
-            ys = ys_by_tag[tag]
-            r, p, f1, acc = rpf1a(ys, pred_ys)
-            metric = rpfa(r, p, f1, acc, nc = len([1 for y in ys if y > 0.0 ]))
-            metrics_by_tag[tag] = metric
-        return metrics_by_tag
-
     def persist_results(self, dbcollection, ys_by_tag, predictions_by_tag, experiment_args, algorithm, **kwargs):
 
         # Compute Mean metrics over all folds
-        metrics_by_code = self.__get_metrics__(ys_by_tag, predictions_by_tag)
+        metrics_by_code = compute_metrics(ys_by_tag, predictions_by_tag)
         mean_td_metrics_by_tag = self.__get_mean_metrics_(metrics_by_code)
 
         db_row = dict(mean_td_metrics_by_tag.items())

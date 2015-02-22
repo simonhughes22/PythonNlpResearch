@@ -11,7 +11,7 @@ from perceptron import AveragedPerceptron
 
 PICKLE = "trontagger-0.1.0.pickle"
 
-class PerceptronTagger(object):
+class PerceptronTaggerBinary(object):
 
     '''Greedy Averaged Perceptron tagger, as implemented by Matthew Honnibal.
     See more implementation details here:
@@ -36,6 +36,7 @@ class PerceptronTagger(object):
 
     def _add_tag_features(self, feats, word, prev, prev2):
         sprev, sprev2 = str(prev), str(prev2)
+        feats["bias"] = 1
         feats["TAG -1" + sprev]                  =      1
         feats["TAG -1 wd" + sprev + "|" + word]  =      1
         feats["TAG -2 " + sprev2]                =      1
@@ -53,7 +54,7 @@ class PerceptronTagger(object):
                 prev, prev2 = self.START
                 for i, (wd) in enumerate(taggged_sentence):
 
-                    features = wd.features
+                    features = dict(wd.features.items())
                     self._add_tag_features(features, wd.word, prev, prev2)
                     tag = self.model.predict(features)
                     predictions.append(tag)
@@ -75,7 +76,6 @@ class PerceptronTagger(object):
         # Copy as we do an inplace shuffle below
         cp_essay_feats = list(essay_feats)
         self.model.classes = self.classes
-        prev, prev2 = self.START
         for iter_ in range(nr_iter):
             c = 0
             n = 0

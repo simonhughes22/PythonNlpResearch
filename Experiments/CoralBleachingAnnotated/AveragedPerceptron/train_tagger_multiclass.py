@@ -8,7 +8,7 @@ from wordtagginghelper import *
 from IterableFP import flatten
 from collections import defaultdict
 from window_based_tagger_config import get_config
-from perceptron_tagger_binary import PerceptronTaggerBinary
+from perceptron_tagger_multiclass import PerceptronTaggerMultiClass
 from results_procesor import ResultsProcessor, compute_metrics
 # END Classifiers
 
@@ -121,17 +121,12 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
 
     tag2word_classifier, td_wd_predictions_by_code, vd_wd_predictions_by_code = {}, {}, {}
-    for tag in wd_train_tags:
-        tagger = PerceptronTaggerBinary(tag)
-        tagger.train(essays_TD, nr_iter=10)
-        tag2word_classifier[tag] = tagger
 
-        td_wd_predictions_by_code[tag] = tagger.predict(essays_TD)
-        vd_wd_predictions_by_code[tag] = tagger.predict(essays_VD)
+    tagger = PerceptronTaggerMultiClass(wd_train_tags)
+    tagger.train(essays_TD, nr_iter=10)
 
-        td_metrics = toDict(compute_metrics(wd_td_ys_bytag,  td_wd_predictions_by_code)[tag])
-        vd_metrics = toDict(compute_metrics(wd_vd_ys_bytag, vd_wd_predictions_by_code)[tag])
-        print processor.__metrics_to_str__(pad_str, tag, td_metrics, vd_metrics)
+    td_wd_predictions_by_code = tagger.predict(essays_TD)
+    vd_wd_predictions_by_code = tagger.predict(essays_VD)
 
     merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
     merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
