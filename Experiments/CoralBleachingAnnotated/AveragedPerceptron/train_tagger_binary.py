@@ -29,6 +29,9 @@ CV_FOLDS            = 5
 
 MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
+
+NUM_TRAIN_ITERATIONS = 30
+TAG_HISTORY          = 0
 # end not hashed
 
 # construct unique key using settings for pickling
@@ -121,17 +124,12 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
 
     tag2word_classifier, td_wd_predictions_by_code, vd_wd_predictions_by_code = {}, {}, {}
-    for tag in wd_train_tags:
-        tagger = PerceptronTaggerBinary(tag)
-        tagger.train(essays_TD, nr_iter=10)
-        tag2word_classifier[tag] = tagger
 
-        td_wd_predictions_by_code[tag] = tagger.predict(essays_TD)
-        vd_wd_predictions_by_code[tag] = tagger.predict(essays_VD)
+    tagger = PerceptronTaggerBinary(wd_train_tags, tag_history=TAG_HISTORY)
+    tagger.train(essays_TD, nr_iter=NUM_TRAIN_ITERATIONS)
 
-        td_metrics = toDict(compute_metrics(wd_td_ys_bytag,  td_wd_predictions_by_code)[tag])
-        vd_metrics = toDict(compute_metrics(wd_vd_ys_bytag, vd_wd_predictions_by_code)[tag])
-        print processor.__metrics_to_str__(pad_str, tag, td_metrics, vd_metrics)
+    td_wd_predictions_by_code = tagger.predict(essays_TD)
+    vd_wd_predictions_by_code = tagger.predict(essays_VD)
 
     merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
     merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
@@ -141,6 +139,10 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
 CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD", "CB_TAGGING_VD"
 parameters = dict(config)
+parameters["prev_tag_sharing"] = False # don't include tags from other binary models
+parameters["num_iterations"] = NUM_TRAIN_ITERATIONS
+parameters["tag_history"]    = TAG_HISTORY
+#parameters["AverageWeights"] = False # Bad - averaging really helps
 parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
 
 wd_algo = "AveragedPerceptronBinary"

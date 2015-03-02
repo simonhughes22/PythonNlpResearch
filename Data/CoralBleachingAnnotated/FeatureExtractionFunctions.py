@@ -166,9 +166,9 @@ def fact_extract_positional_word_features_stemmed(offset):
                             feature extractor function: FeatureExtactorInput -> dict
     """
     # curry offset
-    def fn_pos_wd_feats(input, val=1):
+    def fn_pos_wd_feats_stemmed(input, val=1):
         return extract_positional_word_features_stemmed(offset, input, val)
-    return fn_pos_wd_feats
+    return fn_pos_wd_feats_stemmed # recently renamed for mongodob logging
 
 def extract_positional_word_features_stemmed(offset, input, val = 1):
     """ offset      :   int

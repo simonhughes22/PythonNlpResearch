@@ -1,13 +1,14 @@
 from __future__ import absolute_import
+
 import os
 import random
-from collections import defaultdict
 import pickle
 import logging
 
-from textblob.base import BaseTagger
-from textblob.tokenizers import WordTokenizer, SentenceTokenizer
+from collections import defaultdict
 from perceptron import AveragedPerceptron
+from results_procesor import compute_metrics
+from Rpfa import weighted_mean_rpfa
 
 PICKLE = "trontagger-0.1.0.pickle"
 
@@ -26,44 +27,60 @@ class PerceptronTaggerBinary(object):
     POSITIVE_CLASS = 1.0
     NEGATIVE_CLASS = 0.0
 
-    def __init__(self, target_tag, load=False):
-        self.target_tag = target_tag
-        self.model = AveragedPerceptron()
-
-        self.classes = set([self.POSITIVE_CLASS, self.NEGATIVE_CLASS])
-        if load:
-            self.load(self.AP_MODEL_LOC)
+    def __init__(self, classes, tag_history, load=False):
+        self.tag_history = tag_history
+        self.classes = set(classes)
+        self.class2model = {}
+        for cls in classes:
+            self.class2model[cls] = AveragedPerceptron()
+            self.class2model[cls].classes = set([self.NEGATIVE_CLASS, self.POSITIVE_CLASS])
 
     def _add_tag_features(self, feats, word, prev, prev2):
         sprev, sprev2 = str(prev), str(prev2)
         feats["bias"] = 1
-        feats["TAG -1" + sprev]                  =      1
-        feats["TAG -1 wd" + sprev + "|" + word]  =      1
-        feats["TAG -2 " + sprev2]                =      1
-        feats["TAG -2 wd" + sprev2 + "|" + word] =      1
-        feats["TAG -1, -2" + sprev + "|" + sprev2]=     1
+        #feats["TAG -1 " + sprev]                  =      1     # included in other
+        feats["TAG -1 wd " + sprev + "|" + word]  =      1
+        #feats["TAG -2 " + sprev2]                 =      1     # included in other
+        feats["TAG -2 wd " + sprev2 + "|" + word] =      1
+        feats["TAG -1, -2 " + sprev + "|" + sprev2]=     1
+
+    def _add_secondary_tag_features(self, feats, word, cls, prev_tags):
+        for ix, prev in enumerate(prev_tags[-self.tag_history:]):
+            offset = ix - self.tag_history
+            if prev == self.POSITIVE_CLASS:
+                feats["HIST_TAG " + str(offset) + " " + cls ]  = 1
 
     def predict(self, essay_feats):
         '''Tags a string `corpus`.'''
+
         # Assume untokenized corpus has \n between sentences and ' ' between words
-
-        predictions = []
-
+        class2predictions = defaultdict(list)
         for essay_ix, essay in enumerate(essay_feats):
             for sent_ix, taggged_sentence in enumerate(essay.sentences):
-                prev, prev2 = self.START
+                """ Start Sentence """
+                class2prev = defaultdict(list)
+                for cls in self.classes:
+                    class2prev[cls] = list(self.START)
+
                 for i, (wd) in enumerate(taggged_sentence):
+                    # Don't mutate the feat dictionary
+                    shared_features = dict(wd.features.items())
+                    # get all tagger predictions for previous 2 tags
+                    for cls in self.classes:
+                        self._add_secondary_tag_features(shared_features, wd.word, cls, class2prev[cls])
+                    # train each binary tagger
+                    for cls in self.classes:
+                        tagger_feats = dict(shared_features.items())
+                        # add more in depth features for this tag
+                        self._add_tag_features(tagger_feats, wd.word, class2prev[cls][-1], class2prev[cls][-2])
+                        model = self.class2model[cls]
+                        guess = model.predict(tagger_feats)
+                        class2prev[cls].append(guess)
+                        class2predictions[cls].append(guess)
+        return class2predictions
 
-                    features = dict(wd.features.items())
-                    self._add_tag_features(features, wd.word, prev, prev2)
-                    tag = self.model.predict(features)
-                    predictions.append(tag)
-                    prev2 = prev
-                    prev = tag
-        return predictions
-
-    def __get_yal_(self, wd):
-        return self.POSITIVE_CLASS if self.target_tag in wd.tags else self.NEGATIVE_CLASS
+    def __get_yal_(self, wd, tgt_tag):
+        return self.POSITIVE_CLASS if tgt_tag in wd.tags else self.NEGATIVE_CLASS
 
     def train(self, essay_feats, save_loc=None, nr_iter=5):
         '''Train a model from sentences, and save it at ``save_loc``. ``nr_iter``
@@ -75,43 +92,47 @@ class PerceptronTaggerBinary(object):
 
         # Copy as we do an inplace shuffle below
         cp_essay_feats = list(essay_feats)
-        self.model.classes = self.classes
+
         for iter_ in range(nr_iter):
-            c = 0
-            n = 0
+            class2predictions = defaultdict(list)
+            class2tags = defaultdict(list)
 
             for essay_ix, essay in enumerate(cp_essay_feats):
                 for sent_ix, taggged_sentence in enumerate(essay.sentences):
-                    prev, prev2 = self.START
+                    """ Start Sentence """
+                    class2prev = defaultdict(list)
+                    for cls in self.classes:
+                        class2prev[cls] = list(self.START)
+
                     for i, (wd) in enumerate(taggged_sentence):
                         # Don't mutate the feat dictionary
-                        features = dict(wd.features.items())
-                        self._add_tag_features(features, wd.word, prev, prev2)
-                        actual = self.__get_yal_(wd)
-                        guess = self.model.predict(features)
-                        self.model.update(actual, guess, features)
-                        prev2 = prev
-                        prev = guess
-                        c += guess == actual
-                        n += 1
-            random.shuffle(cp_essay_feats)
-            logging.info("Iter {0}: {1}/{2}={3}% correct".format(iter_, c, n, _pc(c, n)))
-        self.model.average_weights()
-        # Pickle as a binary file
-        if save_loc is not None:
-            pickle.dump((self.model.weights, self.tagdict, self.classes),
-                         open(save_loc, 'wb'), -1)
-        return None
+                        shared_features = dict(wd.features.items())
+                        # get all tagger predictions for previous 2 tags
+                        #for cls in self.classes:
+                        #    self._add_secondary_tag_features(shared_features, wd.word, cls, class2prev[cls])
+                        # train each binary tagger
+                        for cls in self.classes:
+                            tagger_feats = dict(shared_features.items())
+                            # add more in depth features for this tag
+                            self._add_tag_features(tagger_feats, wd.word, class2prev[cls][-1], class2prev[cls][-2])
+                            actual = self.__get_yal_(wd, cls)
+                            model = self.class2model[cls]
+                            guess = model.predict(tagger_feats)
+                            model.update(actual, guess, tagger_feats)
 
-    def load(self, loc):
-        '''Load a pickled model.'''
-        try:
-            w_td_c = pickle.load(open(loc, 'rb'))
-        except IOError:
-            msg = ("Missing trontagger.pickle file.")
-            raise Exception(msg)
-        self.model.weights, self.tagdict, self.classes = w_td_c
-        self.model.classes = self.classes
+                            class2prev[cls].append(guess)
+
+                            class2predictions[cls].append(guess)
+                            class2tags[cls].append(actual)
+
+            random.shuffle(cp_essay_feats)
+            class2metrics = compute_metrics(class2tags, class2predictions)
+            wtd_mean = weighted_mean_rpfa(class2metrics.values())
+            logging.info("Iter {0}: Wtd Mean: {1}".format(iter_, str(wtd_mean)))
+
+        for cls in self.classes:
+            self.class2model[cls].average_weights()
+
         return None
 
     def _normalize(self, word):

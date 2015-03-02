@@ -64,7 +64,7 @@ class AveragedPerceptron(object):
                 param = (feat, clas)
                 total = self._totals[param]
                 total += (self.i - self._tstamps[param]) * weight
-                averaged = round(total / float(self.i), 3)
+                averaged = round(total / float(self.i), 5)
                 if averaged:
                     new_feat_weights[clas] = averaged
             self.weights[feat] = new_feat_weights

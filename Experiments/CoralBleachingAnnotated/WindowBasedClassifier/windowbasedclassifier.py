@@ -183,6 +183,7 @@ sent_algo = str(fn_create_sent_cls())
 CB_TAGGING_TD, CB_TAGGING_VD, CB_SENT_TD, CB_SENT_VD = "CB_TAGGING_TD", "CB_TAGGING_VD", "CB_SENT_TD", "CB_SENT_VD"
 parameters = dict(config)
 parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
+parameters["min_feat_freq"] = MIN_FEAT_FREQ
 
 wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
 wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)

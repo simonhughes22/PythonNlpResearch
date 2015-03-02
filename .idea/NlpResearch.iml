@@ -51,6 +51,7 @@
       <sourceFolder url="file://$MODULE_DIR$/Experiments/Tagging" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingAnnotated/AveragedPerceptron" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingAnnotated/RecurrentNeuralNetwork" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingAnnotated/MaximumEntropy" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/Notebooks" />
     </content>

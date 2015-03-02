@@ -18,3 +18,5 @@ model.fit(train_tokens, [1,0,1])
 model.predict(tokenizer.transform(["Frogs are awesome", "frogs are amphibious"]))
 save(model, 'save_test.pkl')
 model = load('save_test.pkl')
+
+""" This model, although doing sequential prediction, predicts a tag per document not per word. """
