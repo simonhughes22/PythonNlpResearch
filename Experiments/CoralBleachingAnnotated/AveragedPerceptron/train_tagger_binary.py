@@ -139,7 +139,8 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
 CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD", "CB_TAGGING_VD"
 parameters = dict(config)
-parameters["prev_tag_sharing"] = False # don't include tags from other binary models
+parameters["prev_tag_sharing"] = True # don't include tags from other binary models
+""" False: 0.737 - 30 iterations """
 parameters["num_iterations"] = NUM_TRAIN_ITERATIONS
 parameters["tag_history"]    = TAG_HISTORY
 #parameters["AverageWeights"] = False # Bad - averaging really helps

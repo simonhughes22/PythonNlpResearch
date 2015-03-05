@@ -108,8 +108,8 @@ class PerceptronTaggerBinary(object):
                         # Don't mutate the feat dictionary
                         shared_features = dict(wd.features.items())
                         # get all tagger predictions for previous 2 tags
-                        #for cls in self.classes:
-                        #    self._add_secondary_tag_features(shared_features, wd.word, cls, class2prev[cls])
+                        for cls in self.classes:
+                            self._add_secondary_tag_features(shared_features, wd.word, cls, class2prev[cls])
                         # train each binary tagger
                         for cls in self.classes:
                             tagger_feats = dict(shared_features.items())

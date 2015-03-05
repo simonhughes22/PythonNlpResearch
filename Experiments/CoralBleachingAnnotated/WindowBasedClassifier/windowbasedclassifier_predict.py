@@ -29,6 +29,7 @@ LOOK_BACK           = 0
 """ PETER - Specify the full file paths here to the essay files (reads all in containing folder), and the output file. """
 settings = Settings.Settings()
 folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA_Pre_Post_Merged/"
+
 out_predictions_file =              settings.data_directory + "CoralBleaching/Results/predictions.txt"
 
 config = get_config(folder)
