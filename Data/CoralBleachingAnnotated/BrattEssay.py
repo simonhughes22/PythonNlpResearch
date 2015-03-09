@@ -462,7 +462,10 @@ def load_bratt_essays(directory = None, include_vague = True, include_normal = T
         settings = Settings.Settings()
         bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/Merged/"
 
-    files = find_files(bratt_root_folder, "\.txt$", remove_empty=True)
+    if load_annotations:
+        files = find_files(bratt_root_folder, "\.ann$", remove_empty=True)
+    else:
+        files = find_files(bratt_root_folder, "\.txt$", remove_empty=True)
     print len(files), "files found"
 
     essays = []

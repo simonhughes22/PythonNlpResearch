@@ -30,8 +30,9 @@ CV_FOLDS            = 5
 MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 
-NUM_TRAIN_ITERATIONS = 30
+NUM_TRAIN_ITERATIONS = 1
 TAG_HISTORY          = 0
+RIGHT2LEFT           = True
 # end not hashed
 
 # construct unique key using settings for pickling
@@ -125,7 +126,7 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
     tag2word_classifier, td_wd_predictions_by_code, vd_wd_predictions_by_code = {}, {}, {}
 
-    tagger = PerceptronTaggerBinary(wd_train_tags, tag_history=TAG_HISTORY)
+    tagger = PerceptronTaggerBinary(wd_train_tags, tag_history=TAG_HISTORY, right2left=RIGHT2LEFT)
     tagger.train(essays_TD, nr_iter=NUM_TRAIN_ITERATIONS)
 
     td_wd_predictions_by_code = tagger.predict(essays_TD)
@@ -142,6 +143,7 @@ parameters = dict(config)
 parameters["prev_tag_sharing"] = True # don't include tags from other binary models
 """ False: 0.737 - 30 iterations """
 parameters["num_iterations"] = NUM_TRAIN_ITERATIONS
+parameters["right-to-left"] = True
 parameters["tag_history"]    = TAG_HISTORY
 #parameters["AverageWeights"] = False # Bad - averaging really helps
 parameters["extractors"] = map(lambda fn: fn.func_name, extractors)

@@ -112,3 +112,4 @@ with open(out_predictions_file, "w+") as f_output_file:
     f_output_file.write("Essay|Sent Number|Processed Sentence|Concept Codes|Predictions\n")
     predictions_to_file(f_output_file, sent_td_ys_bycode, td_sent_predictions_by_code, essays_TD, regular_tags + CAUSE_TAGS + CAUSAL_REL_TAGS)
 # print results for each code
+print out_predictions_file

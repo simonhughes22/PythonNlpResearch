@@ -1,4 +1,3 @@
-from Decorators import memoize_to_disk
 from featureextractortransformer import FeatureExtractorTransformer
 from sent_feats_for_stacking import *
 from load_data import load_process_essays, extract_features
@@ -10,7 +9,7 @@ from wordtagginghelper import *
 from IterableFP import flatten
 from DictionaryHelper import tally_items
 from predictions_to_file import predictions_to_file
-from results_procesor import ResultsProcessor
+
 from argument_hasher import argument_hasher
 # Classifiers
 from sklearn.tree import DecisionTreeClassifier
@@ -32,7 +31,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 logger = logging.getLogger()
 
 # Create persister (mongo client) - fail fast if mongo service not initialized
-processor = ResultsProcessor()
+
 
 # not hashed as don't affect persistence of feature processing
 SPARSE_WD_FEATS     = True
