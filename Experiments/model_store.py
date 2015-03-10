@@ -6,6 +6,7 @@ import cPickle as pickle
 class ModelStore():
     def __init__(self):
         models_folder = os.getcwd() + "/PickledModels/"
+        print "Loading models from", models_folder
         self.models_folder = models_folder
         self.feat_transform_file = models_folder + "feat_extractor_pickled.p"
         self.tag_2_wd_classifiers_file = models_folder + "tag_2_wd_classifier_pickled.p"
