@@ -28,7 +28,7 @@ LOOK_BACK           = 0
 
 """ PETER - Specify the full file paths here to the essay files (reads all in containing folder), and the output file. """
 settings = Settings.Settings()
-folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA_Pre_Post_Merged/"
+folder =                            settings.data_directory + "CoralBleaching/BrattData/Merged/"
 
 out_predictions_file =              settings.data_directory + "CoralBleaching/Results/predictions.txt"
 
@@ -91,7 +91,7 @@ print "Running Tagging Model"
 """ Data Partitioning and Training """
 td_feats, _ = flatten_to_wordlevel_feat_tags(essays_TD)
 
-td_X = feature_transformer.fit_transform(td_feats)
+td_X = feature_transformer.transform(td_feats)
 
 """ TEST Tagger """
 td_wd_predictions_by_code = test_classifier_per_code(td_X, tag2word_classifier, wd_test_tags)

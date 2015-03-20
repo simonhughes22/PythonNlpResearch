@@ -91,7 +91,7 @@ print "Running Tagging Model"
 """ Data Partitioning and Training """
 td_feats, _ = flatten_to_wordlevel_feat_tags(essays_TD)
 
-td_X = feature_transformer.fit_transform(td_feats)
+td_X = feature_transformer.transform(td_feats)
 
 """ TEST Tagger """
 td_wd_predictions_by_code = test_classifier_per_code(td_X, tag2word_classifier, wd_test_tags)
