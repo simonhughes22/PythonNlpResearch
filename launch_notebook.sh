@@ -4,6 +4,8 @@ export PYTHONPATH='/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Pyth
 
 # include pyFM
 export PYTHONPATH=$PYTHONPATH:~/Software/pyFM
+export THEANO_FLAGS='mode=FAST_RUN,device=gpu,floatX=float32'
+
 export MONTYLINGUA='/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/PythonNlpResearch/MontyLingua/'
 cd Notebooks
-ipython notebook --pylab inline
+ipython notebook
