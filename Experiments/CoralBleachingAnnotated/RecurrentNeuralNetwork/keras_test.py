@@ -38,6 +38,7 @@ from load_data import load_process_essays
 
 from window_based_tagger_config import get_config
 from IdGenerator import IdGenerator as idGen
+from IterableFP import flatten
 # END Classifiers
 
 import Settings
@@ -51,6 +52,8 @@ logger = logging.getLogger()
 
 MIN_WORD_FREQ       = 5        # 5 best so far
 TARGET_Y            = "Causer"
+#TARGET_Y            = "14"
+
 TEST_SPLIT          = 0.2
 # end not hashed
 
@@ -100,7 +103,7 @@ print("Pad sequences (samples x time)")
 
 MAX_LEN = 30
 X_train = sequence.pad_sequences(X_train, maxlen=MAX_LEN) #30 seems good
-X_test = sequence.pad_sequences(X_test, maxlen=MAX_LEN)
+X_test  = sequence.pad_sequences(X_test,  maxlen=MAX_LEN)
 
 #def reverse(lst):
 #    return lst[::-1]
@@ -114,10 +117,10 @@ embedding_size = 32
 print('Build model...')
 model = Sequential()
 model.add(Embedding(max_features, embedding_size))
-model.add(LSTM(embedding_size, 4)) # try using a GRU instead, for fun
+model.add(LSTM(embedding_size, embedding_size)) # try using a GRU instead, for fun
 #model.add(GRU(embedding_size, embedding_size)) # try using a GRU instead, for fun
 #model.add(Dropout(0.25))
-model.add(Dense(4, 1))
+model.add(Dense(embedding_size, 1))
 model.add(Activation('sigmoid'))
 
 # try using different optimizers and different optimizer configs
@@ -125,33 +128,33 @@ model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 #model.compile(loss='hinge', optimizer='adagrad', class_mode="binary")
 
 print("Train...")
-last_loss = 99999
+last_accuracy = 0
 iterations = 0
 decreases = 0
-while True:
-    iterations += 1
-    results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=1, validation_split=0.2, show_accuracy=True, verbose=1)
-    loss = results["val_loss"][0]
 
-    classes = model.predict_classes(X_test, batch_size=batch_size)
+def test(epochs = 1):
+    results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.2, show_accuracy=True, verbose=1)
+    loss = results["val_loss"][0]
+    classes = flatten( model.predict_classes(X_test, batch_size=batch_size) )
     r, p, f1 = rpf1(y_test, classes)
     print("recall", r, "precision", p, "f1", f1)
+    return f1
 
-    if loss > last_loss:
+while True:
+    iterations += 1
+
+    accuracy = test(1)
+    if accuracy < last_accuracy:
         decreases +=1
     else:
         decreases = 0
 
     if decreases >= 2 and iterations > 10:
-        print("Val Loss increased from %f to %f. Stopping" % (last_loss, loss))
+        print("Val Loss increased from %f to %f. Stopping" % (last_accuracy, accuracy))
         break
-    last_loss = loss
+    last_accuracy = accuracy
 
 #results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=  5, validation_split=0.2, show_accuracy=True, verbose=1)
 print("at: " + str(datetime.datetime.now()))
 
 # Causer: recall 0.746835443038 precision 0.670454545455 f1 0.706586826347 - 32 embedding, lstm, sigmoid, adam
-
-acc = np_utils.accuracy(classes, y_test)
-print('Test accuracy:', acc)
-

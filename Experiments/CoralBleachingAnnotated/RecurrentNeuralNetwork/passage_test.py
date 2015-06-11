@@ -18,6 +18,7 @@ logger = logging.getLogger()
 
 MIN_WORD_FREQ       = 5        # 5 best so far
 TARGET_Y            = "Causer"
+#TARGET_Y            = "14"
 TEST_SPLIT          = 0.2
 # end not hashed
 
@@ -53,7 +54,6 @@ for essay in tagged_essays:
         xs.append(row)
         maxlen = max(len(row), maxlen)
 
-
 from passage.layers import Embedding
 from passage.layers import GatedRecurrent
 from passage.layers import LstmRecurrent
@@ -69,24 +69,35 @@ X_train, y_train, X_test, y_test = xs[:num_training], ys[:num_training], xs[num_
 num_feats = generator.max_id() + 1
 
 layers = [
-    Embedding(size=32, n_features=num_feats),
-    LstmRecurrent(size=32),
-    Dense(size=1, activation='sigmoid')
+    Embedding(size=128, n_features=num_feats),
+    #LstmRecurrent(size=32),
+    GatedRecurrent(size=32),
+    Dense(size=1, activation='sigmoid'),
 ]
+
+#emd 128, gru 32 is good - 0.70006 causer
 
 print("Creating Model")
 model = RNN(layers=layers, cost='bce')
 
 last_f1 = -1
 decreases = 0
-while True:
-    f = model.fit(X_train, y_train, n_epochs=1)
 
+def test(epochs=1):
+    model.fit(X_train, y_train, n_epochs=epochs, batch_size=8)#8 seems good for now
     predictions = flatten(model.predict(X_test))
-    classes = [1 if p >= 0.5 else 0 for p in predictions]
+    if min(predictions) < 0.0:
+        mid_point = 0.0
+    else:
+        mid_point = 0.5
+
+    classes = [1 if p >= mid_point else 0 for p in predictions]
     r, p, f1 = rpf1(y_test, classes)
     print("recall", r, "precision", p, "f1", f1)
+    return f1
 
+while True:
+    f1 = test(1)
     if f1 < last_f1:
         decreases += 1
 

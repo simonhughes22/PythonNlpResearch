@@ -6,7 +6,7 @@ from keras.preprocessing import sequence
 from keras.optimizers import SGD, RMSprop, Adagrad
 from keras.utils import np_utils
 from keras.models import Sequential
-from keras.layers.core import Dense, Dropout, Activation
+from keras.layers.core import Dense, Dropout, Activation, TimeDistributedDense
 from keras.layers.embeddings import Embedding
 from keras.layers.recurrent import LSTM, GRU
 
@@ -51,7 +51,7 @@ logger = logging.getLogger()
 
 MIN_WORD_FREQ       = 5        # 5 best so far
 #TARGET_Y            = "Causer"
-TARGET_Y            = "Causer"
+TARGET_Y            = "14"
 TEST_SPLIT          = 0.2
 SEQ                 = True
 # end not hashed
@@ -106,6 +106,9 @@ def collapse_results(ys):
 def collapse_probs(probs, threshold = 0.0):
     return [1.0 if max(row) >= threshold else 0.0 for row in probs]
 
+def reverse(xs):
+    return [x[::-1] for x in xs]
+
 print("Loading data...")
 num_training = int((1.0 - 0.2) * len(xs))
 
@@ -114,12 +117,14 @@ X_train, y_reg_train, yseq_train, X_test, y_reg_test, yseq_test = xs[:num_traini
 y_train = yseq_train
 y_test  = yseq_test
 
+#X_train, X_test, y_train, y_test = reverse(X_train), reverse(X_test), reverse(y_train), reverse(y_test)
+
 print(len(X_train), 'train sequences')
 print(len(X_test), 'test sequences')
 
 print("Pad sequences (samples x time)")
 
-MAX_LEN = 30
+MAX_LEN = 10
 X_train = sequence.pad_sequences(X_train, maxlen=MAX_LEN) #30 seems good
 X_test  = sequence.pad_sequences(X_test,  maxlen=MAX_LEN)
 
@@ -129,21 +134,21 @@ y_test  = sequence.pad_sequences(y_test,  maxlen=MAX_LEN)
 y_train = transform_outputs(y_train)
 y_test  = transform_outputs(y_test)
 
-#def reverse(lst):
-#    return lst[::-1]
-#X_train, X_test = np.asarray( map(reverse, X_train) ), np.asarray( map(reverse, X_test))
-
 print('X_train shape:', X_train.shape)
 print('X_test shape:', X_test.shape)
 
-embedding_size = 32
+""" REVERSE """
+
+embedding_size = 64
 
 print('Build model...')
 model = Sequential()
 model.add(Embedding(max_features, embedding_size))
-model.add(LSTM(embedding_size, embedding_size, return_sequences=True)) # try using a GRU instead, for fun
-model.add(LSTM(embedding_size, 1, return_sequences=True)) # try using a GRU instead, for fun
+
+#model.add(LSTM(embedding_size, embedding_size, return_sequences=True)) # try using a GRU instead, for fun
+model.add(LSTM(embedding_size, 32, return_sequences=True)) # try using a GRU instead, for fun
 #model.add(GRU(embedding_size, 1, return_sequences=True)) # try using a GRU instead, for fun
+model.add(TimeDistributedDense(32, 1, activation="sigmoid"))
 
 # try using different optimizers and different optimizer configs
 model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
@@ -158,7 +163,6 @@ prev_weights = None
 
 def train(epochs=1):
     results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.2, show_accuracy=True, verbose=1)
-    loss = results["val_loss"][0]
 
     classes = model.predict_classes(X_test, batch_size=batch_size)
     predictions = collapse_results(classes)
