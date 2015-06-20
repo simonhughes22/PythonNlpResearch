@@ -62,9 +62,9 @@ for essay in tagged_essays:
         row = []
         y_found = False
         for word, tags in sentence:
-            for c in word:
-                id = generator.get_id(c) + 1 #starts at 0, but 0 used to pad sequences
-                row.append(id)
+            #for c in word:
+            id = generator.get_id(word) + 1 #starts at 0, but 0 used to pad sequences
+            row.append(id)
             if TARGET_Y in tags:
                 y_found = True
         ys.append(1 if y_found else 0)
@@ -126,7 +126,7 @@ model = Sequential()
 #model.add(Activation("sigmoid"))
 
 nb_feature_maps = 32
-n_ngram = 20
+n_ngram = 5 # 5 is good (0.7338 on Causer)
 embedding_size = 64
 model.add(Embedding(max_features, embedding_size))
 model.add(Reshape(1, maxlen, embedding_size))
