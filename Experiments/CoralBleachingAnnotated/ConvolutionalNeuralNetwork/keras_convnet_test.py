@@ -92,8 +92,8 @@ for x in xs:
     new_x = [get_one_hot(id) for id in x ]
     new_xs.append(new_x)
 
-xs = np.asarray(new_xs)
-xs = xs.reshape((xs.shape[0], 1, xs.shape[1], xs.shape[2]))
+#xs = np.asarray(new_xs)
+#xs = xs.reshape((xs.shape[0], 1, xs.shape[1], xs.shape[2]))
 print("XS Shape: ", xs.shape)
 
 X_train, y_train, X_test, y_test = xs[:num_training], ys[:num_training], xs[num_training:], ys[num_training:]
@@ -127,7 +127,10 @@ model = Sequential()
 
 nb_feature_maps = 32
 n_ngram = 20
-model.add(Convolution2D(nb_feature_maps, 1, n_ngram, max_features))
+embedding_size = 64
+model.add(Embedding(max_features, embedding_size))
+model.add(Reshape(1, maxlen, embedding_size))
+model.add(Convolution2D(nb_feature_maps, 1, n_ngram, embedding_size, activation='relu'))
 model.add(MaxPooling2D(poolsize=(maxlen - n_ngram + 1, 1)))
 model.add(Flatten())
 model.add(Dense(nb_feature_maps, 1))
