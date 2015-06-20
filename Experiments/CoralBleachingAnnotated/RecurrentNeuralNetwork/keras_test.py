@@ -9,6 +9,7 @@ from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation
 from keras.layers.embeddings import Embedding
 from keras.layers.recurrent import LSTM, GRU
+import keras.layers.convolutional
 
 from Metrics import rpf1
 
@@ -101,7 +102,7 @@ print(len(X_test), 'test sequences')
 
 print("Pad sequences (samples x time)")
 
-MAX_LEN = 30
+MAX_LEN = 10
 X_train = sequence.pad_sequences(X_train, maxlen=MAX_LEN) #30 seems good
 X_test  = sequence.pad_sequences(X_test,  maxlen=MAX_LEN)
 
@@ -117,10 +118,10 @@ embedding_size = 32
 print('Build model...')
 model = Sequential()
 model.add(Embedding(max_features, embedding_size))
-model.add(LSTM(embedding_size, embedding_size)) # try using a GRU instead, for fun
+model.add(LSTM(embedding_size, 64, activation='sigmoid', inner_activation='hard_sigmoid')) # try using a GRU instead, for fun
 #model.add(GRU(embedding_size, embedding_size)) # try using a GRU instead, for fun
-#model.add(Dropout(0.25))
-model.add(Dense(embedding_size, 1))
+#model.add(Dropout(0.2))
+model.add(Dense(64, 1))
 model.add(Activation('sigmoid'))
 
 # try using different optimizers and different optimizer configs
@@ -133,8 +134,7 @@ iterations = 0
 decreases = 0
 
 def test(epochs = 1):
-    results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.2, show_accuracy=True, verbose=1)
-    loss = results["val_loss"][0]
+    results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
     classes = flatten( model.predict_classes(X_test, batch_size=batch_size) )
     r, p, f1 = rpf1(y_test, classes)
     print("recall", r, "precision", p, "f1", f1)

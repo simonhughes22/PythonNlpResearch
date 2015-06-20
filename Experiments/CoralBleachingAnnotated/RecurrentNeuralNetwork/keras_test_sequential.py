@@ -50,8 +50,8 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 logger = logging.getLogger()
 
 MIN_WORD_FREQ       = 5        # 5 best so far
-#TARGET_Y            = "Causer"
-TARGET_Y            = "14"
+TARGET_Y            = "Causer"
+#TARGET_Y            = "14"
 TEST_SPLIT          = 0.2
 SEQ                 = True
 # end not hashed
@@ -95,7 +95,7 @@ for essay in tagged_essays:
         maxlen = max(len(row), maxlen)
 
 max_features=generator.max_id() + 2
-batch_size = 16
+batch_size = 128
 
 def transform_outputs(ys):
     return [map(lambda c: [c], row) for row in ys]
@@ -124,7 +124,7 @@ print(len(X_test), 'test sequences')
 
 print("Pad sequences (samples x time)")
 
-MAX_LEN = 10
+MAX_LEN = maxlen
 X_train = sequence.pad_sequences(X_train, maxlen=MAX_LEN) #30 seems good
 X_test  = sequence.pad_sequences(X_test,  maxlen=MAX_LEN)
 
@@ -146,9 +146,9 @@ model = Sequential()
 model.add(Embedding(max_features, embedding_size))
 
 #model.add(LSTM(embedding_size, embedding_size, return_sequences=True)) # try using a GRU instead, for fun
-model.add(LSTM(embedding_size, 32, return_sequences=True)) # try using a GRU instead, for fun
-#model.add(GRU(embedding_size, 1, return_sequences=True)) # try using a GRU instead, for fun
-model.add(TimeDistributedDense(32, 1, activation="sigmoid"))
+#model.add(LSTM(embedding_size, 32, return_sequences=True)) # try using a GRU instead, for fun
+model.add(GRU(embedding_size, embedding_size, return_sequences=True)) # try using a GRU instead, for fun
+model.add(TimeDistributedDense(embedding_size, 1, activation="sigmoid"))
 
 # try using different optimizers and different optimizer configs
 model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")

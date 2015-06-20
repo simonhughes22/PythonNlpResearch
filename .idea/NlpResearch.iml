@@ -53,6 +53,7 @@
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingAnnotated/RecurrentNeuralNetwork" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingAnnotated/MaximumEntropy" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/DeepLearning/LSTM" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingAnnotated/ConvolutionalNeuralNetwork" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/Notebooks" />
     </content>
