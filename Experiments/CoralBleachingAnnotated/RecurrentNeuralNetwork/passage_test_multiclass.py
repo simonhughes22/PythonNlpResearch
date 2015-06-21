@@ -5,6 +5,7 @@ from IterableFP import flatten
 
 from window_based_tagger_config import get_config
 from IdGenerator import IdGenerator as idGen
+import numpy as np
 # END Classifiers
 
 import Settings
@@ -18,7 +19,6 @@ logger = logging.getLogger()
 
 MIN_WORD_FREQ       = 2        # 5 best so far
 #TARGET_Y            = "explicit"
-TARGET_Y            = "Causer"
 TEST_SPLIT          = 0.2
 PRE_PEND_PREV_SENT  = 3 #2 seems good
 REVERSE             = False
@@ -45,20 +45,38 @@ END_TAG = 'END'
 
 # cut texts after this number of words (among top max_features most common words)
 maxlen = 0
-for essay in tagged_essays:
 
+regular_tags = set()
+for essay in tagged_essays:
+    for sentence in essay.sentences:
+        for word, tags in sentence:
+            for tag in tags:
+                if tag.isdigit() or tag in {"Causer", "explicit", "Result"}:
+                    regular_tags.add(tag)
+
+lst_regular_tags = sorted(regular_tags)
+ix2tag = {}
+for i, tag in enumerate(lst_regular_tags):
+    ix2tag[i] = tag
+
+for essay in tagged_essays:
     sent_rows = [[generator.get_id(END_TAG)] for i in range(PRE_PEND_PREV_SENT)]
     for sentence in essay.sentences:
         row = []
-        y_found = False
+
+        un_tags = set()
         for word, tags in sentence + [(END_TAG, set())]:
             id = generator.get_id(word)
             row.append(id)
-            if TARGET_Y in tags:
-                y_found = True
+            for tag in tags:
+                un_tags.add(tag)
+
+        y = []
+        for tag in lst_regular_tags:
+            y.append(1 if tag in un_tags else 0)
 
         sent_rows.append(row)
-        ys.append(1 if y_found else 0)
+        ys.append(y)
 
         if PRE_PEND_PREV_SENT > 0:
             x = []
@@ -93,9 +111,10 @@ layers = [
     Embedding(size=128, n_features=num_feats),
     #LstmRecurrent(size=32),
     #NOTE - to use a deep RNN, you need all but the final layers with seq_ouput=True
-    #GatedRecurrent(size=64, seq_output=True),
+    #GatedRecurrent(size=128, seq_output=True),
     GatedRecurrent(size=64, direction= 'backward' if REVERSE else 'forward'),
-    Dense(size=1, activation='sigmoid'),
+    #Dense(size=64, activation='sigmoid'),
+    Dense(size=len(lst_regular_tags), activation='sigmoid'),
 ]
 
 #emd 128, gru 32/64 is good - 0.70006 causer
@@ -104,7 +123,7 @@ print("Creating Model")
 model = RNN(layers=layers, cost='bce')
 
 def find_cutoff(y_test, predictions):
-    scale = 100.0
+    scale = 20.0
 
     min_val = round(min(predictions))
     max_val = round(max(predictions))
@@ -128,24 +147,33 @@ def find_cutoff(y_test, predictions):
 def rnd(v):
     digits = 6
     return str(round(v, digits)).ljust(digits+2)
+# convert to numpy array for slicing
+y_train, y_test = np.asarray(y_train), np.asarray(y_test)
 
 def test(epochs=1):
     model.fit(X_train, y_train, n_epochs=epochs, batch_size=64)#64 seems good for now
-    predictions = flatten(model.predict(X_test))
-    r, p, f1, cutoff = find_cutoff(y_test, predictions)
-    print("recall", rnd(r), "precision", rnd(p), "f1", rnd(f1), "cutoff", rnd(cutoff))
-    return f1
+    predictions = model.predict(X_test)
+    f1s = []
+    for ix, tag in ix2tag.items():
+        tag_predictions = predictions[:, ix]
+        tag_ys = y_test[:, ix]
+        r, p, f1, cutoff = find_cutoff(tag_ys, tag_predictions)
+        print(tag.ljust(10), "recall", rnd(r), "precision", rnd(p), "f1", rnd(f1), "cutoff", rnd(cutoff))
+        f1s.append(f1)
+    mean_f1 = np.mean(f1s)
+    print("MEAN F1: " + str(mean_f1))
+    return mean_f1
 
 last_f1 = -1
 decreases = 0
 max_f1 = 0.0
 
 while True:
-    f1 = test(1)
+    f1 = test(5)
     if f1 < last_f1:
         decreases += 1
     max_f1 = max(f1, max_f1)
-    if decreases > 10:
+    if decreases > 1000:
         print "Stopping, f1 %f is less than previous f1 %f" % (f1, last_f1)
         break
     last_f1 = f1

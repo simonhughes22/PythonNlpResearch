@@ -6,7 +6,7 @@ from keras.preprocessing import sequence
 from keras.optimizers import SGD, RMSprop, Adagrad
 from keras.utils import np_utils
 from keras.models import Sequential
-from keras.layers.core import Dense, Dropout, Activation, Flatten, Reshape
+from keras.layers.core import Dense, Dropout, Activation, Flatten, Reshape, Merge, RepeatVector
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.layers.embeddings import Embedding
 from keras.layers.recurrent import LSTM, GRU
@@ -63,8 +63,6 @@ for essay in tagged_essays:
         y_found = False
         for word, tags in sentence:
 
-            #NOTE - put a space in when using characters
-            #for c in word:
             id = generator.get_id(word) + 1 #starts at 0, but 0 used to pad sequences
             row.append(id)
             if TARGET_Y in tags:
@@ -94,8 +92,8 @@ for x in xs:
     new_x = [get_one_hot(id) for id in x ]
     new_xs.append(new_x)
 
-#xs = np.asarray(new_xs)
-#xs = xs.reshape((xs.shape[0], 1, xs.shape[1], xs.shape[2]))
+xs = np.asarray(new_xs)
+xs = xs.reshape((xs.shape[0], 1, xs.shape[1], xs.shape[2]))
 print("XS Shape: ", xs.shape)
 
 X_train, y_train, X_test, y_test = xs[:num_training], ys[:num_training], xs[num_training:], ys[num_training:]
@@ -110,22 +108,26 @@ print('Build model...')
 # input: 2D tensor of integer indices of characters (eg. 1-57).
 # input tensor has shape (samples, maxlen)
 nb_feature_maps = 32
-n_ngram = 5 # 5 is good (0.7338 on Causer) - 64 sized embedding, 32 feature maps, relu in conv layer
 embedding_size = 64
 
+ngram_filters = [3, 5, 7]
+conv_filters = []
+
+for n_gram in ngram_filters:
+    sequential = Sequential()
+    conv_filters.append(sequential)
+    #sequential = Embedding(max_features, embedding_size)
+    #sequential.add(Reshape(1, maxlen, embedding_size))
+    sequential.add(Convolution2D(nb_feature_maps, 1, n_gram, max_features))
+    sequential.add(Activation("relu"))
+    sequential.add(MaxPooling2D(poolsize=(maxlen - n_gram + 1, 1)))
+    sequential.add(Flatten())
+
 model = Sequential()
-model.add(Embedding(max_features, embedding_size))
-model.add(Reshape(1, maxlen, embedding_size))
-model.add(Convolution2D(nb_feature_maps, 1, n_ngram, embedding_size))
-model.add(Activation("relu"))
-#model.add(Convolution2D(nb_feature_maps, nb_feature_maps, n_ngram, embedding_size))
-#model.add(Activation("relu"))
-model.add(MaxPooling2D(poolsize=(maxlen - n_ngram + 1, 1)))
-model.add(Flatten())
+#model.add(RepeatVector(len(ngram_filters)))
+model.add(Merge(conv_filters, mode='sum'))
 model.add(Dense(nb_feature_maps, 1))
 model.add(Activation("sigmoid"))
-#model.add(Dense(nb_feature_maps/2, 1))
-#model.add(Activation("sigmoid"))
 
 #model.add(Dropout(0.25))
 # try using different optimizers and different optimizer configs
@@ -136,7 +138,6 @@ print("Train...")
 last_accuracy = 0
 iterations = 0
 decreases = 0
-best = -1
 
 def test(epochs = 1):
     results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
@@ -153,7 +154,6 @@ while True:
         decreases +=1
     else:
         decreases = 0
-    best = max(best, accuracy)
 
     if decreases >= 4 and iterations > 10:
         print("Val Loss increased from %f to %f. Stopping" % (last_accuracy, accuracy))
@@ -162,6 +162,37 @@ while True:
 
 #results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=  5, validation_split=0.2, show_accuracy=True, verbose=1)
 print("at: " + str(datetime.datetime.now()))
-print("Best:" + str(best))
 
 # Causer: recall 0.746835443038 precision 0.670454545455 f1 0.706586826347 - 32 embedding, lstm, sigmoid, adam
+
+""" Raises Error:
+
+Started at: 2015-06-20 16:50:22.107033
+Results Dir: /Users/simon.hughes/Google Drive/Phd/Results/
+Data Dir:    /Users/simon.hughes/Google Drive/Phd/Data/
+Root Dir:    /Users/simon.hughes/GitHub/NlpResearch/
+Public Data: /Users/simon.hughes/GitHub/NlpResearch/Data/PublicDatasets/
+Loading data...
+Pad sequences (samples x time)
+XS Shape:  (2084, 1, 85, 883)
+1667 train sequences
+417 test sequences
+X_train shape: (1667, 1, 85, 883)
+X_test shape: (417, 1, 85, 883)
+Build model...
+Train...
+Epoch 0
+Traceback (most recent call last):
+  File "/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Experiments/CoralBleachingAnnotated/ConvolutionalNeuralNetwork/keras_merged_convnet_test.py", line 152, in <module>
+    accuracy = test(1)
+  File "/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Experiments/CoralBleachingAnnotated/ConvolutionalNeuralNetwork/keras_merged_convnet_test.py", line 143, in test
+    results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
+  File "build/bdist.macosx-10.6-x86_64/egg/keras/models.py", line 204, in fit
+  File "/Users/simon.hughes/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/Theano-0.6.0-py2.7.egg/theano/compile/function_module.py", line 497, in __call__
+    allow_downcast=s.allow_downcast)
+  File "/Users/simon.hughes/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/Theano-0.6.0-py2.7.egg/theano/tensor/type.py", line 157, in filter
+    data.shape))
+TypeError: ('Bad input argument to theano function at index 1(0-based)', 'Wrong number of dimensions: expected 4, got 2 with shape (16, 1).')
+
+Process finished with exit code 1
+"""

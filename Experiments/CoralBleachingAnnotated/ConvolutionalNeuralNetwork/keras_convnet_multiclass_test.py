@@ -51,6 +51,19 @@ config = get_config(folder)
 mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_prefix)(load_process_essays)
 tagged_essays = mem_process_essays( **config )
 
+regular_tags = set()
+for essay in tagged_essays:
+    for sentence in essay.sentences:
+        for word, tags in sentence:
+            for tag in tags:
+                if tag.isdigit() or tag in {"Causer", "explicit", "Result"}:
+                    regular_tags.add(tag)
+
+lst_regular_tags = sorted(regular_tags)
+ix2tag = {}
+for i, tag in enumerate(lst_regular_tags):
+    ix2tag[i] = tag
+
 generator = idGen()
 xs = []
 ys = []
@@ -64,17 +77,22 @@ for essay in tagged_essays:
         for word, tags in sentence:
 
             #NOTE - put a space in when using characters
-            #for c in word:
-            id = generator.get_id(word) + 1 #starts at 0, but 0 used to pad sequences
-            row.append(id)
-            if TARGET_Y in tags:
-                y_found = True
-        ys.append(1 if y_found else 0)
+            un_tags = set()
+            for word, tags in sentence:
+                id = generator.get_id(word)
+                row.append(id)
+                for tag in tags:
+                    un_tags.add(tag)
+        y = []
+        for tag in lst_regular_tags:
+            y.append(1 if tag in un_tags else 0)
+
+        ys.append(y)
         xs.append(row)
         maxlen = max(len(row), maxlen)
 
 max_features=generator.max_id() + 2
-batch_size = 16
+batch_size = 4
 
 print("Loading data...")
 num_training = int((1.0 - 0.2) * len(xs))
@@ -89,10 +107,10 @@ def get_one_hot(id):
     zeros[id] = 1
     return zeros
 
-new_xs = []
-for x in xs:
-    new_x = [get_one_hot(id) for id in x ]
-    new_xs.append(new_x)
+#new_xs = []
+#for x in xs:
+#    new_x = [get_one_hot(id) for id in x ]
+#    new_xs.append(new_x)
 
 #xs = np.asarray(new_xs)
 #xs = xs.reshape((xs.shape[0], 1, xs.shape[1], xs.shape[2]))
@@ -109,8 +127,8 @@ print('X_test shape:', X_test.shape)
 print('Build model...')
 # input: 2D tensor of integer indices of characters (eg. 1-57).
 # input tensor has shape (samples, maxlen)
-nb_feature_maps = 32
-n_ngram = 5 # 5 is good (0.7338 on Causer) - 64 sized embedding, 32 feature maps, relu in conv layer
+nb_feature_maps = 8
+n_ngram = 4 # 5 is good (0.7338 on Causer) - 64 sized embedding, 32 feature maps, relu in conv layer
 embedding_size = 64
 
 model = Sequential()
@@ -122,7 +140,7 @@ model.add(Activation("relu"))
 #model.add(Activation("relu"))
 model.add(MaxPooling2D(poolsize=(maxlen - n_ngram + 1, 1)))
 model.add(Flatten())
-model.add(Dense(nb_feature_maps, 1))
+model.add(Dense(nb_feature_maps, len(lst_regular_tags)))
 model.add(Activation("sigmoid"))
 #model.add(Dense(nb_feature_maps/2, 1))
 #model.add(Activation("sigmoid"))
@@ -132,18 +150,52 @@ model.add(Activation("sigmoid"))
 model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 #model.compile(loss='hinge', optimizer='adagrad', class_mode="binary")
 
+def find_cutoff(y_test, predictions):
+    scale = 20.0
+
+    min_val = round(min(predictions))
+    max_val = round(max(predictions))
+    diff = max_val - min_val
+    inc = diff / scale
+
+    cutoff = -1
+    best = -1
+    for i in range(1, int(scale)+1, 1):
+        val = inc * i
+        classes = [1 if p >= val else 0 for p in predictions]
+        r, p, f1 = rpf1(y_test, classes)
+        if f1 >= best:
+            cutoff = val
+            best = f1
+
+    classes = [1 if p >= cutoff else 0 for p in predictions]
+    r, p, f1 = rpf1(y_test, classes)
+    return r, p, f1, cutoff
+
+def rnd(v):
+    digits = 6
+    return str(round(v, digits)).ljust(digits+2)
+
 print("Train...")
 last_accuracy = 0
 iterations = 0
 decreases = 0
 best = -1
 
-def test(epochs = 1):
-    results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
-    classes = flatten( model.predict_classes(X_test, batch_size=batch_size) )
-    r, p, f1 = rpf1(y_test, classes)
-    print("recall", r, "precision", p, "f1", f1)
-    return f1
+y_train, y_test = np.asarray(y_train), np.asarray(y_test)
+def test(epochs=1):
+    model.fit(X_train, y_train, nb_epoch=epochs, batch_size=64)#64 seems good for now
+    predictions = model.predict_proba(X_test)
+    f1s = []
+    for ix, tag in ix2tag.items():
+        tag_predictions = predictions[:, ix]
+        tag_ys = y_test[:, ix]
+        r, p, f1, cutoff = find_cutoff(tag_ys, tag_predictions)
+        print(tag.ljust(10), "recall", rnd(r), "precision", rnd(p), "f1", rnd(f1), "cutoff", rnd(cutoff))
+        f1s.append(f1)
+    mean_f1 = np.mean(f1s)
+    print("MEAN F1: " + str(mean_f1))
+    return mean_f1
 
 while True:
     iterations += 1

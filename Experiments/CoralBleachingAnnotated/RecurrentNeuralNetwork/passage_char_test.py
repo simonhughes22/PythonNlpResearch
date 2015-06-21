@@ -16,13 +16,11 @@ print("Started at: " + str(datetime.datetime.now()))
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
-MIN_WORD_FREQ       = 2        # 5 best so far
+MIN_WORD_FREQ       = 0        # 5 best so far
 #TARGET_Y            = "explicit"
 TARGET_Y            = "Causer"
 TEST_SPLIT          = 0.2
-PRE_PEND_PREV_SENT  = 3 #2 seems good
 REVERSE             = False
-PREPEND_REVERSE     = False
 # end not hashed
 
 # construct unique key using settings for pickling
@@ -41,36 +39,26 @@ tagged_essays = mem_process_essays( **config )
 generator = idGen()
 xs = []
 ys = []
-END_TAG = 'END'
 
 # cut texts after this number of words (among top max_features most common words)
 maxlen = 0
 for essay in tagged_essays:
 
-    sent_rows = [[generator.get_id(END_TAG)] for i in range(PRE_PEND_PREV_SENT)]
     for sentence in essay.sentences:
         row = []
         y_found = False
-        for word, tags in sentence + [(END_TAG, set())]:
-            id = generator.get_id(word)
-            row.append(id)
+        for word, tags in sentence :
+            for c in word + " ":
+                id = generator.get_id(c)
+                row.append(id)
             if TARGET_Y in tags:
                 y_found = True
 
-        sent_rows.append(row)
+        #remove the last space
+        row = row[:-1]
+
         ys.append(1 if y_found else 0)
 
-        if PRE_PEND_PREV_SENT > 0:
-            x = []
-            for i in range(PRE_PEND_PREV_SENT + 1):
-                ix = i+1
-                if ix > len(sent_rows):
-                    break
-                x = sent_rows[-ix] + x
-            row = x
-
-        if PREPEND_REVERSE:
-            row = row[::-1] + row
         xs.append(row)
         maxlen = max(len(xs[-1]), maxlen)
 
@@ -90,7 +78,7 @@ X_train, y_train, X_test, y_test = xs[:num_training], ys[:num_training], xs[num_
 num_feats = generator.max_id() + 1
 
 layers = [
-    Embedding(size=128, n_features=num_feats),
+    Embedding(size=8, n_features=num_feats),
     #LstmRecurrent(size=32),
     #NOTE - to use a deep RNN, you need all but the final layers with seq_ouput=True
     #GatedRecurrent(size=64, seq_output=True),
@@ -145,7 +133,7 @@ while True:
     if f1 < last_f1:
         decreases += 1
     max_f1 = max(f1, max_f1)
-    if decreases > 10:
+    if decreases > 6:
         print "Stopping, f1 %f is less than previous f1 %f" % (f1, last_f1)
         break
     last_f1 = f1

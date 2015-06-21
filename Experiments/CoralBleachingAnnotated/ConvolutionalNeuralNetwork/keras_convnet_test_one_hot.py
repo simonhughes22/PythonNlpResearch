@@ -94,8 +94,8 @@ for x in xs:
     new_x = [get_one_hot(id) for id in x ]
     new_xs.append(new_x)
 
-#xs = np.asarray(new_xs)
-#xs = xs.reshape((xs.shape[0], 1, xs.shape[1], xs.shape[2]))
+xs = np.asarray(new_xs)
+xs = xs.reshape((xs.shape[0], 1, xs.shape[1], xs.shape[2]))
 print("XS Shape: ", xs.shape)
 
 X_train, y_train, X_test, y_test = xs[:num_training], ys[:num_training], xs[num_training:], ys[num_training:]
@@ -114,18 +114,14 @@ n_ngram = 5 # 5 is good (0.7338 on Causer) - 64 sized embedding, 32 feature maps
 embedding_size = 64
 
 model = Sequential()
-model.add(Embedding(max_features, embedding_size))
-model.add(Reshape(1, maxlen, embedding_size))
-model.add(Convolution2D(nb_feature_maps, 1, n_ngram, embedding_size))
+#model.add(Embedding(max_features, embedding_size))
+#model.add(Reshape(1, maxlen, embedding_size))
+model.add(Convolution2D(nb_feature_maps, 1, n_ngram, max_features))
 model.add(Activation("relu"))
-#model.add(Convolution2D(nb_feature_maps, nb_feature_maps, n_ngram, embedding_size))
-#model.add(Activation("relu"))
 model.add(MaxPooling2D(poolsize=(maxlen - n_ngram + 1, 1)))
 model.add(Flatten())
 model.add(Dense(nb_feature_maps, 1))
 model.add(Activation("sigmoid"))
-#model.add(Dense(nb_feature_maps/2, 1))
-#model.add(Activation("sigmoid"))
 
 #model.add(Dropout(0.25))
 # try using different optimizers and different optimizer configs
@@ -136,7 +132,6 @@ print("Train...")
 last_accuracy = 0
 iterations = 0
 decreases = 0
-best = -1
 
 def test(epochs = 1):
     results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
@@ -153,7 +148,6 @@ while True:
         decreases +=1
     else:
         decreases = 0
-    best = max(best, accuracy)
 
     if decreases >= 4 and iterations > 10:
         print("Val Loss increased from %f to %f. Stopping" % (last_accuracy, accuracy))
@@ -162,6 +156,5 @@ while True:
 
 #results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=  5, validation_split=0.2, show_accuracy=True, verbose=1)
 print("at: " + str(datetime.datetime.now()))
-print("Best:" + str(best))
 
 # Causer: recall 0.746835443038 precision 0.670454545455 f1 0.706586826347 - 32 embedding, lstm, sigmoid, adam
