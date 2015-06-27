@@ -2,13 +2,15 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import numpy as np
+from collections import defaultdict
 from keras.preprocessing import sequence
 from keras.optimizers import SGD, RMSprop, Adagrad
 from keras.utils import np_utils
 from keras.models import Sequential
-from keras.layers.core import Dense, Dropout, Activation, TimeDistributedDense
+from keras.layers.core import Dense, Dropout, Activation
 from keras.layers.embeddings import Embedding
 from keras.layers.recurrent import LSTM, GRU, JZS1
+import keras.layers.convolutional
 
 from Metrics import rpf1
 
@@ -38,6 +40,7 @@ from load_data import load_process_essays
 
 from window_based_tagger_config import get_config
 from IdGenerator import IdGenerator as idGen
+from IterableFP import flatten
 # END Classifiers
 
 import Settings
@@ -49,11 +52,14 @@ print("Started at: " + str(datetime.datetime.now()))
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
-MIN_WORD_FREQ       = 5        # 5 best so far
-TARGET_Y            = "Causer"
-#TARGET_Y            = "14"
+#TARGET_Y            = "Causer"
+TARGET_Y            = "14"
+
 TEST_SPLIT          = 0.2
-SEQ                 = True
+PRE_PEND_PREV_SENT  = 0 #2 seems good
+REVERSE             = False
+PREPEND_REVERSE     = False
+
 # end not hashed
 
 # construct unique key using settings for pickling
@@ -63,6 +69,7 @@ folder =                            settings.data_directory + "CoralBleaching/Br
 processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
 
 config = get_config(folder)
+config["stem"] = True
 
 """ FEATURE EXTRACTION """
 """ LOAD DATA """
@@ -72,53 +79,71 @@ tagged_essays = mem_process_essays( **config )
 generator = idGen()
 xs = []
 ys = []
-ys_seq = []
+END_TAG = 'END'
 
 # cut texts after this number of words (among top max_features most common words)
 maxlen = 0
+
+tag_freq = defaultdict(int)
 for essay in tagged_essays:
     for sentence in essay.sentences:
-        row = []
-        y_found = False
-        y_seq = []
         for word, tags in sentence:
-            id = generator.get_id(word) + 1 #starts at 0, but 0 used to pad sequences
+            for tag in tags:
+                if (tag[-1].isdigit() or tag in {"Causer", "explicit", "Result"} \
+                        or tag.startswith("Causer") or tag.startswith("Result") or tag.startswith("explicit"))\
+                        and not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag or "->" in tag):
+                    tag_freq[tag] += 1
+
+freq_tags = set((tag for tag, freq in tag_freq.items() if freq >= 20))
+
+lst_freq_tags = sorted(freq_tags)
+ix2tag = {}
+for i, tag in enumerate(lst_freq_tags):
+    ix2tag[i] = tag
+
+
+from numpy.random import shuffle
+shuffle(tagged_essays)
+
+for essay in tagged_essays:
+    sent_rows = [[generator.get_id(END_TAG)] for i in range(PRE_PEND_PREV_SENT)]
+    for sentence in essay.sentences:
+        row = []
+
+        un_tags = set()
+        for word, tags in sentence + [(END_TAG, set())]:
+            id = generator.get_id(word)
             row.append(id)
-            if TARGET_Y in tags:
-                y_found = True
-                y_seq.append(1)
-            else:
-                y_seq.append(0)
-        ys.append(1 if y_found else 0)
-        ys_seq.append(y_seq)
+            for tag in tags:
+                un_tags.add(tag)
+
+        y = []
+        for tag in lst_freq_tags:
+            y.append(1 if tag in un_tags else 0)
+
+        sent_rows.append(row)
+        ys.append(y)
+
+        if PRE_PEND_PREV_SENT > 0:
+            x = []
+            for i in range(PRE_PEND_PREV_SENT + 1):
+                ix = i+1
+                if ix > len(sent_rows):
+                    break
+                x = sent_rows[-ix] + x
+            row = x
+
+        if PREPEND_REVERSE:
+            row = row[::-1] + row
         xs.append(row)
-        maxlen = max(len(row), maxlen)
-
+        maxlen = max(len(xs[-1]), maxlen)
 max_features=generator.max_id() + 2
-batch_size = 128
-
-def transform_outputs(ys):
-    return [map(lambda c: [c], row) for row in ys]
-
-def collapse_results(ys):
-    return [row.max() for row in ys]
-
-def collapse_probs(probs, threshold = 0.0):
-    return [1.0 if max(row) >= threshold else 0.0 for row in probs]
-
-def reverse(xs):
-    return [x[::-1] for x in xs]
+batch_size = 16
 
 print("Loading data...")
 num_training = int((1.0 - 0.2) * len(xs))
 
-X_train, y_reg_train, yseq_train, X_test, y_reg_test, yseq_test = xs[:num_training], ys[:num_training], ys_seq[:num_training], xs[num_training:], ys[num_training:], ys_seq[num_training:]
-
-y_train = yseq_train
-y_test  = yseq_test
-
-#X_train, X_test, y_train, y_test = reverse(X_train), reverse(X_test), reverse(y_train), reverse(y_test)
-
+X_train, y_train, X_test, y_test = xs[:num_training], ys[:num_training], xs[num_training:], ys[num_training:]
 print(len(X_train), 'train sequences')
 print(len(X_test), 'test sequences')
 
@@ -128,42 +153,34 @@ MAX_LEN = maxlen
 X_train = sequence.pad_sequences(X_train, maxlen=MAX_LEN) #30 seems good
 X_test  = sequence.pad_sequences(X_test,  maxlen=MAX_LEN)
 
-y_train = sequence.pad_sequences(y_train, maxlen=MAX_LEN)
-y_test  = sequence.pad_sequences(y_test,  maxlen=MAX_LEN)
-
-y_train = np.asarray(transform_outputs(y_train))
-y_test  = np.asarray(transform_outputs(y_test))
+#def reverse(lst):
+#    return lst[::-1]
+#X_train, X_test = np.asarray( map(reverse, X_train) ), np.asarray( map(reverse, X_test))
 
 print('X_train shape:', X_train.shape)
-print('X_test shape:',  X_test.shape)
-
-print('y_train shape:', y_train.shape)
-print('y_test shape:',  y_test.shape)
-
-""" REVERSE """
+print('X_test shape:', X_test.shape)
 
 embedding_size = 64
 
 print('Build model...')
 model = Sequential()
 model.add(Embedding(max_features, embedding_size))
-
-#model.add(LSTM(embedding_size, embedding_size, return_sequences=True)) # try using a GRU instead, for fun
-#model.add(LSTM(embedding_size, 32, return_sequences=True)) # try using a GRU instead, for fun
-#model.add(GRU(embedding_size, 64, return_sequences=True)) # try using a GRU instead, for fun
-model.add(JZS1(embedding_size, 64, return_sequences=True)) # try using a GRU instead, for fun
-model.add(TimeDistributedDense(64, 1, activation="sigmoid"))
+#model.add(LSTM(embedding_size, 128)) # try using a GRU instead, for fun
+#model.add(GRU(embedding_size, embedding_size)) # try using a GRU instead, for fun
+model.add(JZS1(embedding_size, 64)) # try using a GRU instead, for fun
+#JSZ1, embedding = 64, 64 hidden = 0.708
+#model.add(Dropout(0.2))
+model.add(Dense(64, len(lst_freq_tags)))
+model.add(Activation('sigmoid'))
 
 # try using different optimizers and different optimizer configs
 model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
+#model.compile(loss='hinge', optimizer='adagrad', class_mode="binary")
 
 print("Train...")
-last_accuracy = 99999
+last_accuracy = 0
 iterations = 0
 decreases = 0
-
-best = None
-prev_weights = None
 
 def find_cutoff(y_test, predictions):
     scale = 20.0
@@ -187,35 +204,47 @@ def find_cutoff(y_test, predictions):
     r, p, f1 = rpf1(y_test, classes)
     return r, p, f1, cutoff
 
-def train(epochs=1):
-    results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.2, show_accuracy=True, verbose=1)
+def rnd(v):
+    digits = 6
+    return str(round(v, digits)).ljust(digits+2)
 
+# convert to numpy array for slicing
+y_train, y_test = np.asarray(y_train), np.asarray(y_test)
+
+def test(epochs = 1):
+    results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
     probs = model.predict_proba(X_test, batch_size=batch_size)
-    predictions = collapse_results(probs)
-
-    r, p, f1, cutoff = find_cutoff(y_reg_test, predictions)
-    print("recall", r, "precision", p, "f1", f1, "cutoff", cutoff)
+    f1s = []
+    for ix, tag in ix2tag.items():
+        tag_predictions = probs[:, ix]
+        tag_ys = y_test[:, ix]
+        r, p, f1, cutoff = find_cutoff(tag_ys, tag_predictions)
+        print(tag.ljust(35), str(sum(tag_ys)).ljust(3), "recall", rnd(r), "precision", rnd(p), "f1", rnd(f1), "cutoff",
+              rnd(cutoff))
+        f1s.append(f1)
+    mean_f1 = np.mean(f1s)
+    print("MEAN F1: " + str(mean_f1))
+    return mean_f1
     return f1
 
+best = 0
 while True:
     iterations += 1
-    accuracy = train(1)
 
+    accuracy = test(1)
+    best = max(best, accuracy)
     if accuracy < last_accuracy:
-        best = prev_weights
         decreases +=1
     else:
         decreases = 0
 
-    if decreases >= 10 and iterations > 30:
-        print("Val accruacy decreased from %f to %f. Stopping" % (last_accuracy, accuracy))
+    print("Best F1: ", best)
+    if decreases >= 30 and iterations > 10:
+        print("Val Loss increased from %f to %f. Stopping" % (last_accuracy, accuracy))
         break
     last_accuracy = accuracy
-    prev_weights = model.get_output()
 
+#results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=  5, validation_split=0.2, show_accuracy=True, verbose=1)
 print("at: " + str(datetime.datetime.now()))
-print("Best F1:", best)
 
 # Causer: recall 0.746835443038 precision 0.670454545455 f1 0.706586826347 - 32 embedding, lstm, sigmoid, adam
-
-

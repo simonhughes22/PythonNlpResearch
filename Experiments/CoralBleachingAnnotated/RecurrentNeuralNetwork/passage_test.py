@@ -16,11 +16,11 @@ print("Started at: " + str(datetime.datetime.now()))
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
-MIN_WORD_FREQ       = 2        # 5 best so far
 #TARGET_Y            = "explicit"
 TARGET_Y            = "Causer"
+#TARGET_Y            = "14"
 TEST_SPLIT          = 0.2
-PRE_PEND_PREV_SENT  = 3 #2 seems good
+PRE_PEND_PREV_SENT  = 0 #2 seems good for some. Perfect score on 14 with pre-pend=0
 REVERSE             = False
 PREPEND_REVERSE     = False
 # end not hashed
@@ -32,6 +32,8 @@ folder =                            settings.data_directory + "CoralBleaching/Br
 processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
 
 config = get_config(folder)
+config["stem"] = True
+config["lower_case"] = False
 
 """ FEATURE EXTRACTION """
 """ LOAD DATA """
@@ -42,6 +44,9 @@ generator = idGen()
 xs = []
 ys = []
 END_TAG = 'END'
+
+from numpy.random import shuffle
+shuffle(tagged_essays)
 
 # cut texts after this number of words (among top max_features most common words)
 maxlen = 0
@@ -90,15 +95,16 @@ X_train, y_train, X_test, y_test = xs[:num_training], ys[:num_training], xs[num_
 num_feats = generator.max_id() + 1
 
 layers = [
-    Embedding(size=128, n_features=num_feats),
+    Embedding(size=64, n_features=num_feats),
     #LstmRecurrent(size=32),
     #NOTE - to use a deep RNN, you need all but the final layers with seq_ouput=True
     #GatedRecurrent(size=64, seq_output=True),
     GatedRecurrent(size=64, direction= 'backward' if REVERSE else 'forward'),
+    #LstmRecurrent(size=128),
     Dense(size=1, activation='sigmoid'),
 ]
 
-#emd 128, gru 32/64 is good - 0.70006 causer
+#emd 64, gru 64 is good - 0.70833 causer (0 prev sents)
 
 print("Creating Model")
 model = RNN(layers=layers, cost='bce')

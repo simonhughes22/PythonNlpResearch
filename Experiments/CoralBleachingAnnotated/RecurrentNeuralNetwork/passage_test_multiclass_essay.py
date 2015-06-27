@@ -57,7 +57,9 @@ for essay in tagged_essays:
                 #    all_tags.add(tag)
                 tag_freq[tag] +=1
 
-freq_tags = set((tag for tag, freq in tag_freq.items() if freq >= 5))
+freq_tags = set((tag for tag, freq in tag_freq.items() if freq >= 10
+                 and "other" not in tag and "Anaphor" not in tag and "rhetorical" not in tag
+                 and "compiled" not in tag.lower()))
 
 lst_freq_tags = sorted(freq_tags)
 ix2tag = {}
@@ -106,7 +108,9 @@ layers = [
     #LstmRecurrent(size=32),
     #NOTE - to use a deep RNN, you need all but the final layers with seq_ouput=True
     #GatedRecurrent(size=128, seq_output=True),
-    GatedRecurrent(size=64, direction= 'backward' if REVERSE else 'forward'),
+    #GatedRecurrent(size=256, direction= 'backward' if REVERSE else 'forward'),
+    GatedRecurrent(size=128, seq_output=True),
+    GatedRecurrent(size=128),
     #Dense(size=64, activation='sigmoid'),
     Dense(size=len(lst_freq_tags), activation='sigmoid'),
 ]
@@ -152,7 +156,7 @@ def test(epochs=1):
         tag_predictions = predictions[:, ix]
         tag_ys = y_test[:, ix]
         r, p, f1, cutoff = find_cutoff(tag_ys, tag_predictions)
-        print(tag.ljust(10), "recall", rnd(r), "precision", rnd(p), "f1", rnd(f1), "cutoff", rnd(cutoff))
+        print(tag.ljust(35), str(sum(tag_ys)).ljust(4),  "recall", rnd(r), "precision", rnd(p), "f1", rnd(f1), "cutoff", rnd(cutoff))
         f1s.append(f1)
     mean_f1 = np.mean(f1s)
     print("MEAN F1: " + str(mean_f1))

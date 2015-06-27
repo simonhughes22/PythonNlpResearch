@@ -10,17 +10,16 @@ import numpy as np
 
 import Settings
 import logging
-
+from collections import defaultdict
 import datetime
 print("Started at: " + str(datetime.datetime.now()))
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
-MIN_WORD_FREQ       = 2        # 5 best so far
 #TARGET_Y            = "explicit"
 TEST_SPLIT          = 0.2
-PRE_PEND_PREV_SENT  = 3 #2 seems good
+PRE_PEND_PREV_SENT  = 2 #2 seems good
 REVERSE             = False
 PREPEND_REVERSE     = False
 # end not hashed
@@ -32,6 +31,7 @@ folder =                            settings.data_directory + "CoralBleaching/Br
 processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
 
 config = get_config(folder)
+config["stem"] = True
 
 """ FEATURE EXTRACTION """
 """ LOAD DATA """
@@ -46,18 +46,26 @@ END_TAG = 'END'
 # cut texts after this number of words (among top max_features most common words)
 maxlen = 0
 
-regular_tags = set()
+tag_freq = defaultdict(int)
 for essay in tagged_essays:
     for sentence in essay.sentences:
         for word, tags in sentence:
             for tag in tags:
-                if tag.isdigit() or tag in {"Causer", "explicit", "Result"}:
-                    regular_tags.add(tag)
+                if (tag[-1].isdigit() or tag in {"Causer", "explicit", "Result"} \
+                        or tag.startswith("Causer") or tag.startswith("Result") or tag.startswith("explicit"))\
+                        and not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag or "->" in tag):
+                    tag_freq[tag] += 1
 
-lst_regular_tags = sorted(regular_tags)
+freq_tags = set((tag for tag, freq in tag_freq.items() if freq >= 20))
+
+lst_freq_tags = sorted(freq_tags)
 ix2tag = {}
-for i, tag in enumerate(lst_regular_tags):
+for i, tag in enumerate(lst_freq_tags):
     ix2tag[i] = tag
+
+
+from numpy.random import shuffle
+shuffle(tagged_essays)
 
 for essay in tagged_essays:
     sent_rows = [[generator.get_id(END_TAG)] for i in range(PRE_PEND_PREV_SENT)]
@@ -72,7 +80,7 @@ for essay in tagged_essays:
                 un_tags.add(tag)
 
         y = []
-        for tag in lst_regular_tags:
+        for tag in lst_freq_tags:
             y.append(1 if tag in un_tags else 0)
 
         sent_rows.append(row)
@@ -112,9 +120,12 @@ layers = [
     #LstmRecurrent(size=32),
     #NOTE - to use a deep RNN, you need all but the final layers with seq_ouput=True
     #GatedRecurrent(size=128, seq_output=True),
-    GatedRecurrent(size=64, direction= 'backward' if REVERSE else 'forward'),
+    #GatedRecurrent(size=64, direction= 'backward' if REVERSE else 'forward'),
+
+    #LSTM with size = 64 did really well
+    GatedRecurrent(size=128),
     #Dense(size=64, activation='sigmoid'),
-    Dense(size=len(lst_regular_tags), activation='sigmoid'),
+    Dense(size=len(lst_freq_tags), activation='sigmoid'),
 ]
 
 #emd 128, gru 32/64 is good - 0.70006 causer
@@ -147,6 +158,7 @@ def find_cutoff(y_test, predictions):
 def rnd(v):
     digits = 6
     return str(round(v, digits)).ljust(digits+2)
+
 # convert to numpy array for slicing
 y_train, y_test = np.asarray(y_train), np.asarray(y_test)
 
@@ -158,7 +170,7 @@ def test(epochs=1):
         tag_predictions = predictions[:, ix]
         tag_ys = y_test[:, ix]
         r, p, f1, cutoff = find_cutoff(tag_ys, tag_predictions)
-        print(tag.ljust(10), "recall", rnd(r), "precision", rnd(p), "f1", rnd(f1), "cutoff", rnd(cutoff))
+        print(tag.ljust(35), str(sum(tag_ys)).ljust(3), "recall", rnd(r), "precision", rnd(p), "f1", rnd(f1), "cutoff", rnd(cutoff))
         f1s.append(f1)
     mean_f1 = np.mean(f1s)
     print("MEAN F1: " + str(mean_f1))

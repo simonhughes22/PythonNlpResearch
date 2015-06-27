@@ -8,7 +8,7 @@ from keras.utils import np_utils
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation
 from keras.layers.embeddings import Embedding
-from keras.layers.recurrent import LSTM, GRU
+from keras.layers.recurrent import LSTM, GRU, JZS1
 import keras.layers.convolutional
 
 from Metrics import rpf1
@@ -51,9 +51,8 @@ print("Started at: " + str(datetime.datetime.now()))
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
-MIN_WORD_FREQ       = 5        # 5 best so far
-TARGET_Y            = "Causer"
-#TARGET_Y            = "14"
+#TARGET_Y            = "Causer"
+TARGET_Y            = "14"
 
 TEST_SPLIT          = 0.2
 # end not hashed
@@ -65,11 +64,15 @@ folder =                            settings.data_directory + "CoralBleaching/Br
 processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
 
 config = get_config(folder)
+config["stem"] = True
 
 """ FEATURE EXTRACTION """
 """ LOAD DATA """
 mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_prefix)(load_process_essays)
 tagged_essays = mem_process_essays( **config )
+
+from numpy.random import shuffle
+shuffle(tagged_essays)
 
 generator = idGen()
 xs = []
@@ -102,7 +105,7 @@ print(len(X_test), 'test sequences')
 
 print("Pad sequences (samples x time)")
 
-MAX_LEN = 10
+MAX_LEN = maxlen
 X_train = sequence.pad_sequences(X_train, maxlen=MAX_LEN) #30 seems good
 X_test  = sequence.pad_sequences(X_test,  maxlen=MAX_LEN)
 
@@ -113,13 +116,15 @@ X_test  = sequence.pad_sequences(X_test,  maxlen=MAX_LEN)
 print('X_train shape:', X_train.shape)
 print('X_test shape:', X_test.shape)
 
-embedding_size = 32
+embedding_size = 64
 
 print('Build model...')
 model = Sequential()
 model.add(Embedding(max_features, embedding_size))
-model.add(LSTM(embedding_size, 64, activation='sigmoid', inner_activation='hard_sigmoid')) # try using a GRU instead, for fun
+#model.add(LSTM(embedding_size, 128)) # try using a GRU instead, for fun
 #model.add(GRU(embedding_size, embedding_size)) # try using a GRU instead, for fun
+model.add(JZS1(embedding_size, 64)) # try using a GRU instead, for fun
+#JSZ1, embedding = 64, 64 hidden = 0.708
 #model.add(Dropout(0.2))
 model.add(Dense(64, 1))
 model.add(Activation('sigmoid'))
@@ -133,11 +138,33 @@ last_accuracy = 0
 iterations = 0
 decreases = 0
 
+def find_cutoff(y_test, predictions):
+    scale = 20.0
+
+    min_val = round(min(predictions))
+    max_val = round(max(predictions))
+    diff = max_val - min_val
+    inc = diff / scale
+
+    cutoff = -1
+    best = -1
+    for i in range(1, int(scale)+1, 1):
+        val = inc * i
+        classes = [1 if p >= val else 0 for p in predictions]
+        r, p, f1 = rpf1(y_test, classes)
+        if f1 >= best:
+            cutoff = val
+            best = f1
+
+    classes = [1 if p >= cutoff else 0 for p in predictions]
+    r, p, f1 = rpf1(y_test, classes)
+    return r, p, f1, cutoff
+
 def test(epochs = 1):
     results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
-    classes = flatten( model.predict_classes(X_test, batch_size=batch_size) )
-    r, p, f1 = rpf1(y_test, classes)
-    print("recall", r, "precision", p, "f1", f1)
+    probs = flatten( model.predict_proba(X_test, batch_size=batch_size) )
+    r, p, f1, cutoff = find_cutoff(y_test, probs)
+    print("recall", r, "precision", p, "f1", f1, "cutoff", cutoff)
     return f1
 
 while True:
