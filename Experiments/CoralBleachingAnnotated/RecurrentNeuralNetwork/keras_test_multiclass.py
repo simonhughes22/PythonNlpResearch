@@ -175,7 +175,8 @@ model.add(Activation('sigmoid'))
 
 # try using different optimizers and different optimizer configs
 model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
-#model.compile(loss='hinge', optimizer='adagrad', class_mode="binary")
+
+# Does very well (F1 0.684) using embedding 0.64 and hidden = 0.64
 
 print("Train...")
 last_accuracy = 0
