@@ -6,11 +6,11 @@ from collections import defaultdict
 from keras.preprocessing import sequence
 from keras.optimizers import SGD, RMSprop, Adagrad
 from keras.utils import np_utils
+import keras.layers.convolutional
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation
 from keras.layers.embeddings import Embedding
 from keras.layers.recurrent import LSTM, GRU, JZS1
-import keras.layers.convolutional
 
 from Metrics import rpf1
 
@@ -40,7 +40,6 @@ from load_data import load_process_essays
 
 from window_based_tagger_config import get_config
 from IdGenerator import IdGenerator as idGen
-from IterableFP import flatten
 # END Classifiers
 
 import Settings
@@ -51,9 +50,6 @@ print("Started at: " + str(datetime.datetime.now()))
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
-
-#TARGET_Y            = "Causer"
-TARGET_Y            = "14"
 
 TEST_SPLIT          = 0.2
 PRE_PEND_PREV_SENT  = 0 #2 seems good
@@ -77,6 +73,7 @@ mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_pr
 tagged_essays = mem_process_essays( **config )
 
 generator = idGen()
+generator.get_id("......")
 xs = []
 ys = []
 END_TAG = 'END'
@@ -89,9 +86,10 @@ for essay in tagged_essays:
     for sentence in essay.sentences:
         for word, tags in sentence:
             for tag in tags:
-                if (tag[-1].isdigit() or tag in {"Causer", "explicit", "Result"} \
-                        or tag.startswith("Causer") or tag.startswith("Result") or tag.startswith("explicit"))\
-                        and not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag or "->" in tag):
+                #if (tag[-1].isdigit() or tag in {"Causer", "explicit", "Result"} \
+                #        or tag.startswith("Causer") or tag.startswith("Result") or tag.startswith("explicit"))\
+                #        and not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag or "->" in tag):
+                if not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag):
                     tag_freq[tag] += 1
 
 freq_tags = set((tag for tag, freq in tag_freq.items() if freq >= 20))
@@ -141,24 +139,24 @@ max_features=generator.max_id() + 2
 batch_size = 16
 
 print("Loading data...")
-num_training = int((1.0 - 0.2) * len(xs))
-
-X_train, y_train, X_test, y_test = xs[:num_training], ys[:num_training], xs[num_training:], ys[num_training:]
-print(len(X_train), 'train sequences')
-print(len(X_test), 'test sequences')
-
-print("Pad sequences (samples x time)")
+num_training = int((1.0 - TEST_SPLIT) * len(xs))
+num_left = len(xs) - num_training
+#num_valid = int(num_left / 2.0)
+num_valid = 0
+num_test = len(xs) - num_training - num_valid
 
 MAX_LEN = maxlen
-X_train = sequence.pad_sequences(X_train, maxlen=MAX_LEN) #30 seems good
-X_test  = sequence.pad_sequences(X_test,  maxlen=MAX_LEN)
+print("Pad sequences (samples x time)")
+xs = sequence.pad_sequences(xs, maxlen=MAX_LEN)
 
-#def reverse(lst):
-#    return lst[::-1]
-#X_train, X_test = np.asarray( map(reverse, X_train) ), np.asarray( map(reverse, X_test))
+X_train, y_train, X_valid, y_valid, X_test, y_test = \
+    xs[:num_training], ys[:num_training],  \
+    xs[num_training:num_training + num_valid], ys[num_training:num_training + num_valid],  \
+    xs[num_training + num_valid:], ys[num_training + num_valid:]
 
-print('X_train shape:', X_train.shape)
-print('X_test shape:', X_test.shape)
+print(X_train.shape, 'train sequences')
+print(X_valid.shape, 'valid sequences')
+print(X_test.shape,  'test sequences')
 
 embedding_size = 64
 
@@ -167,6 +165,7 @@ model = Sequential()
 model.add(Embedding(max_features, embedding_size))
 #model.add(LSTM(embedding_size, 128)) # try using a GRU instead, for fun
 #model.add(GRU(embedding_size, embedding_size)) # try using a GRU instead, for fun
+#model.add(JZS1(embedding_size, 64, return_sequences=True)) # try using a GRU instead, for fun
 model.add(JZS1(embedding_size, 64)) # try using a GRU instead, for fun
 #JSZ1, embedding = 64, 64 hidden = 0.708
 #model.add(Dropout(0.2))
@@ -210,36 +209,58 @@ def rnd(v):
     return str(round(v, digits)).ljust(digits+2)
 
 # convert to numpy array for slicing
-y_train, y_test = np.asarray(y_train), np.asarray(y_test)
+y_train, y_valid, y_test = np.asarray(y_train), np.asarray(y_valid), np.asarray(y_test)
 
 def test(epochs = 1):
     results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
-    probs = model.predict_proba(X_test, batch_size=batch_size)
-    f1s = []
+    #valid_probs = model.predict_proba(X_valid, batch_size=batch_size)
+    test_probs  = model.predict_proba(X_test,  batch_size=batch_size)
+    valid_f1s = []
+    test_f1s = []
+    test_f1s_50 = []
+    cutoff = 0
     for ix, tag in ix2tag.items():
-        tag_predictions = probs[:, ix]
-        tag_ys = y_test[:, ix]
-        r, p, f1, cutoff = find_cutoff(tag_ys, tag_predictions)
-        print(tag.ljust(35), str(sum(tag_ys)).ljust(3), "recall", rnd(r), "precision", rnd(p), "f1", rnd(f1), "cutoff",
-              rnd(cutoff))
-        f1s.append(f1)
-    mean_f1 = np.mean(f1s)
-    print("MEAN F1: " + str(mean_f1))
-    return mean_f1
-    return f1
+        #valid_tag_predictions = valid_probs[:, ix]
+        test_tag_predictions  = test_probs[:, ix]
+
+        #valid_tag_ys = y_valid[:, ix]
+        test_tag_ys  =  y_test[:, ix]
+
+        #r_v, p_v, f1_v, cutoff = find_cutoff(valid_tag_ys, valid_tag_predictions)
+        #alid_f1s.append(f1_v)
+
+        #test_classes =      [1 if p >= cutoff else 0 for p in test_tag_predictions]
+        test_classes_5050 = [1 if p >= 0.5 else 0 for p in test_tag_predictions]
+
+        #r, p, f1 = rpf1(test_tag_ys, test_classes)
+        r50, p50, f150 = rpf1(test_tag_ys, test_classes_5050)
+        #print("VALIDATION:", tag.ljust(35), str(sum(valid_tag_ys)).ljust(3), "recall", rnd(r_v), "precision", rnd(p_v), "f1", rnd(f1_v), "cutoff", rnd(cutoff))
+        #print("TEST      :", tag.ljust(35), str(sum(test_tag_ys)).ljust(3),  "recall", rnd(r),   "precision", rnd(p),   "f1", rnd(f1),   "cutoff", rnd(cutoff))
+        print("TEST 50/50:", tag.ljust(35), str(sum(test_tag_ys)).ljust(3),  "recall", rnd(r50),   "precision", rnd(p50),   "f1", rnd(f150),   "cutoff", rnd(cutoff))
+
+        #test_f1s.append(f1)
+        test_f1s_50.append(f150)
+
+    #print("MEAN VALID F1       : " + str(np.mean(valid_f1s)))
+    #print("MEAN TEST  F1       : " + str(np.mean(test_f1s)))
+    print("MEAN TEST  F1 50/50 : " + str(np.mean(test_f1s_50)))
+    return np.mean(test_f1s), np.mean(test_f1s_50)
 
 best = 0
+best_5050 = 0
 while True:
     iterations += 1
 
-    accuracy = test(1)
-    best = max(best, accuracy)
+    accuracy, accuracy_5050 = test(1)
+    #best = max(best, accuracy)
+    best_5050 = max(best_5050, accuracy_5050)
     if accuracy < last_accuracy:
         decreases +=1
     else:
         decreases = 0
 
-    print("Best F1: ", best)
+    #print("Best F1      : ", best)
+    print("Best F1 50/50: ", best_5050)
     if decreases >= 30 and iterations > 10:
         print("Val Loss increased from %f to %f. Stopping" % (last_accuracy, accuracy))
         break

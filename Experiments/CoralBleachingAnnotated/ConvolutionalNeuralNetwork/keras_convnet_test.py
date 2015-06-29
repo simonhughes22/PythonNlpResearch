@@ -44,8 +44,8 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 logger = logging.getLogger()
 
 MIN_WORD_FREQ       = 5        # 5 best so far
-#TARGET_Y            = "Causer"
-TARGET_Y            = "14"
+TARGET_Y            = "Causer"
+#TARGET_Y            = "14"
 TEST_SPLIT          = 0.2
 SEQ                 = True
 # end not hashed
@@ -64,6 +64,7 @@ mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_pr
 tagged_essays = mem_process_essays( **config )
 
 generator = idGen()
+generator.get_id("......")
 xs = []
 ys = []
 ys_seq = []
@@ -104,7 +105,7 @@ def reverse(xs):
     return [x[::-1] for x in xs]
 
 print("Loading data...")
-num_training = int((1.0 - 0.2) * len(xs))
+num_training = int((1.0 - TEST_SPLIT) * len(xs))
 
 X_train, y_reg_train, yseq_train, X_test, y_reg_test, yseq_test = xs[:num_training], ys[:num_training], ys_seq[:num_training], xs[num_training:], ys[num_training:], ys_seq[num_training:]
 

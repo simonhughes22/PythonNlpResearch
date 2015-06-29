@@ -65,6 +65,7 @@ for i, tag in enumerate(lst_regular_tags):
     ix2tag[i] = tag
 
 generator = idGen()
+generator.get_id("......")
 xs = []
 ys = []
 

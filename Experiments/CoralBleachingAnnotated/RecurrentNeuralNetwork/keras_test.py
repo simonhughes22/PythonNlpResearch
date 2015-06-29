@@ -75,6 +75,7 @@ from numpy.random import shuffle
 shuffle(tagged_essays)
 
 generator = idGen()
+generator.get_id("......")
 xs = []
 ys = []
 
@@ -97,7 +98,7 @@ max_features=generator.max_id() + 2
 batch_size = 16
 
 print("Loading data...")
-num_training = int((1.0 - 0.2) * len(xs))
+num_training = int((1.0 - TEST_SPLIT) * len(xs))
 
 X_train, y_train, X_test, y_test = xs[:num_training], ys[:num_training], xs[num_training:], ys[num_training:]
 print(len(X_train), 'train sequences')

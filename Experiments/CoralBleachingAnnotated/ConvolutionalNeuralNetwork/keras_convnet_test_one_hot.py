@@ -52,6 +52,7 @@ mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_pr
 tagged_essays = mem_process_essays( **config )
 
 generator = idGen()
+generator.get_id("......")
 xs = []
 ys = []
 

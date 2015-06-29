@@ -88,7 +88,7 @@ from passage.models import RNN
 from passage.utils import save, load
 
 print("Loading data...")
-num_training = int((1.0 - 0.2) * len(xs))
+num_training = int((1.0 - TEST_SPLIT) * len(xs))
 
 X_train, y_train, X_test, y_test = xs[:num_training], ys[:num_training], xs[num_training:], ys[num_training:]
 
