@@ -112,27 +112,34 @@ print('Build model...')
 nb_feature_maps = 32
 embedding_size = 64
 
-ngram_filters = [3, 5, 7]
+ngram_filters = [3, 5]
 #ngram_filters = [3]
 conv_filters = []
 
 for n_gram in ngram_filters:
     sequential = Sequential()
     conv_filters.append(sequential)
+
+    #sequential.add(Dense(maxlen, 1))
+
     sequential.add(Embedding(max_features, embedding_size))
     sequential.add(Reshape(1, maxlen, embedding_size))
     sequential.add(Convolution2D(nb_feature_maps, 1, n_gram, embedding_size))
     sequential.add(Activation("relu"))
-    #sequential.add(MaxPooling2D(poolsize=(maxlen - n_gram + 1, 1)))
+    sequential.add(MaxPooling2D(poolsize=(maxlen - n_gram + 1, 1)))
     sequential.add(Flatten())
+    sequential.add(Dense(nb_feature_maps, 1))
+    sequential.add(Activation("sigmoid"))
 
 model = Sequential()
 #model = sequential
 #model.add(RepeatVector(len(ngram_filters)))
-model.add(Merge(conv_filters, mode='concat'))
-model.add(Dense(nb_feature_maps * len(ngram_filters), 1))
+#model.add(Merge(conv_filters, mode='concat'))
+model.add(Merge(conv_filters, mode='sum'))
+#model.add(Dense(nb_feature_maps * len(ngram_filters), 1))
+
 #model.add(Dense(nb_feature_maps, 1))
-model.add(Activation("sigmoid"))
+#model.add(Activation("sigmoid"))
 
 #model.add(Dropout(0.25))
 # try using different optimizers and different optimizer configs

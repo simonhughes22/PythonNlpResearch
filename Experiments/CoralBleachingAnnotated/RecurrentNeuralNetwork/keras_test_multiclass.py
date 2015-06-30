@@ -86,10 +86,10 @@ for essay in tagged_essays:
     for sentence in essay.sentences:
         for word, tags in sentence:
             for tag in tags:
-                #if (tag[-1].isdigit() or tag in {"Causer", "explicit", "Result"} \
-                #        or tag.startswith("Causer") or tag.startswith("Result") or tag.startswith("explicit"))\
-                #        and not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag or "->" in tag):
-                if not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag):
+                if (tag[-1].isdigit() or tag in {"Causer", "explicit", "Result"} \
+                        or tag.startswith("Causer") or tag.startswith("Result") or tag.startswith("explicit"))\
+                        and not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag or "->" in tag):
+                #if not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag):
                     tag_freq[tag] += 1
 
 freq_tags = set((tag for tag, freq in tag_freq.items() if freq >= 20))
@@ -169,13 +169,16 @@ model.add(Embedding(max_features, embedding_size))
 model.add(JZS1(embedding_size, 64)) # try using a GRU instead, for fun
 #JSZ1, embedding = 64, 64 hidden = 0.708
 #model.add(Dropout(0.2))
+#model.add(Dropout(0.25))
+#model.add(Dense(64, 64))
+#model.add(Dropout(0.25))
 model.add(Dense(64, len(lst_freq_tags)))
 model.add(Activation('sigmoid'))
 
 # try using different optimizers and different optimizer configs
 model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 
-# Does very well (F1 0.684) using embedding 0.64 and hidden = 0.64
+# Does very well (F1 0.684) using embedding 64 and hidden = 64
 
 print("Train...")
 last_accuracy = 0

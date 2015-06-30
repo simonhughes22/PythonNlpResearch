@@ -10,6 +10,8 @@ from keras.layers.core import Dense, Dropout, Activation
 from keras.layers.embeddings import Embedding
 from keras.layers.recurrent import LSTM, GRU, JZS1
 import keras.layers.convolutional
+from keras.constraints import maxnorm
+
 
 from Metrics import rpf1
 
@@ -51,8 +53,8 @@ print("Started at: " + str(datetime.datetime.now()))
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
-#TARGET_Y            = "Causer"
-TARGET_Y            = "14"
+TARGET_Y            = "Causer"
+#TARGET_Y            = "14"
 
 TEST_SPLIT          = 0.2
 # end not hashed
@@ -122,7 +124,7 @@ embedding_size = 64
 print('Build model...')
 model = Sequential()
 model.add(Embedding(max_features, embedding_size))
-#model.add(LSTM(embedding_size, 128)) # try using a GRU instead, for fun
+#model.add(LSTM(embedding_size, 64)) # try using a GRU instead, for fun
 #model.add(GRU(embedding_size, embedding_size)) # try using a GRU instead, for fun
 model.add(JZS1(embedding_size, 64)) # try using a GRU instead, for fun
 #JSZ1, embedding = 64, 64 hidden = 0.708

@@ -77,8 +77,8 @@ generator.get_id("......")
 xs = []
 ys = []
 
-SENT_START_TAG = 'ESSAY_START'
-SENT_END_TAG   = 'ESSAY_END'
+SENT_START_TAG = 'SENT_START'
+SENT_END_TAG   = 'SENT_END'
 
 ESSAY_START_TAG = 'ESSAY_START'
 ESSAY_END_TAG   = 'ESSAY_END'
@@ -161,23 +161,23 @@ print(X_train.shape, 'train sequences')
 #print(X_test.shape,  'test sequences')
 print("YS Shape: ", ys.shape)
 
-embedding_size = 128
-hidden_size = 256
+embedding_size = 32
+hidden_size = 512
 
 print('Build model...')
 model = Sequential()
 model.add(Embedding(max_features, embedding_size))
 #model.add(LSTM(embedding_size, 128)) # try using a GRU instead, for fun
 #model.add(GRU(embedding_size, embedding_size)) # try using a GRU instead, for fun
-#model.add(JZS1(embedding_size, 64, return_sequences=True)) # try using a GRU instead, for fun
-model.add(JZS1(embedding_size, hidden_size)) # try using a GRU instead, for fun
+model.add(JZS1(embedding_size, hidden_size, return_sequences=True)) # try using a GRU instead, for fun
+model.add(JZS1(hidden_size, hidden_size)) # try using a GRU instead, for fun
 #JSZ1, embedding = 64, 64 hidden = 0.708
 #model.add(Dropout(0.2))
 model.add(Dense(hidden_size, hidden_size))
-model.add(Activation('tanh'))
+model.add(Activation('relu'))
 model.add(RepeatVector(MAX_LEN))
-model.add(JZS1(hidden_size, max_features, return_sequences=True, activation="softmax"))
-#model.add(TimeDistributedDense(embedding_size, max_features, activation="softmax"))
+model.add(JZS1(hidden_size, hidden_size, return_sequences=True))
+model.add(TimeDistributedDense(hidden_size, max_features, activation="softmax"))
 
 # try using different optimizers and different optimizer configs
 model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
@@ -202,7 +202,6 @@ def max_probs_to_words(vector):
     ixs = np.argmax(vector, axis=1)
     return ids_to_words(flatten(ixs))
 
-
 def test(epochs = 1):
     results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
 
@@ -213,16 +212,16 @@ def test(epochs = 1):
     x_sub = X_train[ixs]
     y_sub = y_train[ixs]
 
-    p_sub = model.predict_classes(x_sub, batch_size=batch_size)
+    p_sub = model.predict_proba(x_sub, batch_size=batch_size)
 
-cnt = 0
-for x, y, p in zip(x_sub, y_sub, p_sub):
-    if p.max() > 0 and cnt < 10:
-        x_rev = x[::-1]
-        print("X   :", ids_to_words(x_rev))
-        print("Y   :", max_probs_to_words(y))
-        print("Pred:", max_probs_to_words(p))
-        cnt += 1
+    cnt = 0
+    for x, y, p in zip(x_sub, y_sub, p_sub):
+        if p.max() > 0 and cnt < 10:
+            x_rev = x[::-1]
+            print("X   :", ids_to_words(x_rev))
+            print("Y   :", max_probs_to_words(y))
+            print("Pred:", max_probs_to_words(p))
+            cnt += 1
 
 iterations = 0
 while True:

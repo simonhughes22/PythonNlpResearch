@@ -6,32 +6,21 @@ from keras.preprocessing import sequence
 from keras.optimizers import SGD, RMSprop, Adagrad
 from keras.utils import np_utils
 from keras.models import Sequential
-from keras.layers.core import Dense, Dropout, Activation, TimeDistributedDense
+from keras.layers.core import Dense, Dropout, Activation, Flatten, Reshape
+from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.layers.embeddings import Embedding
 from keras.layers.recurrent import LSTM, GRU
+import keras.layers.convolutional
+from keras.constraints import maxnorm
 
 from Metrics import rpf1
 
-'''
-    Train a LSTM on the IMDB sentiment classification task.
-    The dataset is actually too small for LSTM to be of any advantage
-    compared to simpler, much faster methods such as TF-IDF+LogReg.
-    Notes:
-    - RNNs are tricky. Choice of batch size is important,
-    choice of loss and optimizer is critical, etc.
-    Most configurations won't converge.
-    - LSTM loss decrease during training can be quite different
-    from what you see with CNNs/MLPs/etc. It's more or less a sigmoid
-    instead of an inverse exponential.
-    GPU command:
-        THEANO_FLAGS=mode=FAST_RUN,device=gpu,floatX=float32 python imdb_lstm.py
-    250s/epoch on GPU (GT 650M), vs. 400s/epoch on CPU (2.4Ghz Core i7).
-'''
 from Decorators import memoize_to_disk
 from load_data import load_process_essays
 
 from window_based_tagger_config import get_config
 from IdGenerator import IdGenerator as idGen
+from IterableFP import flatten
 # END Classifiers
 
 import Settings
@@ -46,8 +35,8 @@ logger = logging.getLogger()
 MIN_WORD_FREQ       = 5        # 5 best so far
 TARGET_Y            = "Causer"
 #TARGET_Y            = "14"
+
 TEST_SPLIT          = 0.2
-SEQ                 = True
 # end not hashed
 
 # construct unique key using settings for pickling
@@ -64,10 +53,8 @@ mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_pr
 tagged_essays = mem_process_essays( **config )
 
 generator = idGen()
-generator.get_id("......")
 xs = []
 ys = []
-ys_seq = []
 
 # cut texts after this number of words (among top max_features most common words)
 maxlen = 0
@@ -75,111 +62,107 @@ for essay in tagged_essays:
     for sentence in essay.sentences:
         row = []
         y_found = False
-        y_seq = []
         for word, tags in sentence:
+
+            #NOTE - put a space in when using characters
+            #for c in word:
             id = generator.get_id(word) + 1 #starts at 0, but 0 used to pad sequences
             row.append(id)
             if TARGET_Y in tags:
                 y_found = True
-                y_seq.append(1)
-            else:
-                y_seq.append(0)
         ys.append(1 if y_found else 0)
-        ys_seq.append(y_seq)
         xs.append(row)
         maxlen = max(len(row), maxlen)
 
 max_features=generator.max_id() + 2
 batch_size = 16
 
-def transform_outputs(ys):
-    return [map(lambda c: [c], row) for row in ys]
-
-def collapse_results(ys):
-    return [max(row)[0] for row in ys]
-
-def collapse_probs(probs, threshold = 0.0):
-    return [1.0 if max(row) >= threshold else 0.0 for row in probs]
-
-def reverse(xs):
-    return [x[::-1] for x in xs]
-
 print("Loading data...")
-num_training = int((1.0 - TEST_SPLIT) * len(xs))
+num_training = int((1.0 - 0.2) * len(xs))
 
-X_train, y_reg_train, yseq_train, X_test, y_reg_test, yseq_test = xs[:num_training], ys[:num_training], ys_seq[:num_training], xs[num_training:], ys[num_training:], ys_seq[num_training:]
+print("Pad sequences (samples x time)")
+MAX_LEN = maxlen
 
-y_train = yseq_train
-y_test  = yseq_test
+xs = sequence.pad_sequences(xs, maxlen=MAX_LEN) #30 seems good
 
-#X_train, X_test, y_train, y_test = reverse(X_train), reverse(X_test), reverse(y_train), reverse(y_test)
+def get_one_hot(id):
+    zeros = [0] * max_features
+    zeros[id] = 1
+    return zeros
 
+new_xs = []
+for x in xs:
+    new_x = [get_one_hot(id) for id in x ]
+    new_xs.append(new_x)
+
+#xs = np.asarray(new_xs)
+#xs = xs.reshape((xs.shape[0], 1, xs.shape[1], xs.shape[2]))
+print("XS Shape: ", xs.shape)
+
+X_train, y_train, X_test, y_test = xs[:num_training], ys[:num_training], xs[num_training:], ys[num_training:]
 print(len(X_train), 'train sequences')
 print(len(X_test), 'test sequences')
 
-print("Pad sequences (samples x time)")
-
-MAX_LEN = 10
-X_train = sequence.pad_sequences(X_train, maxlen=MAX_LEN) #30 seems good
-X_test  = sequence.pad_sequences(X_test,  maxlen=MAX_LEN)
-
-y_train = sequence.pad_sequences(y_train, maxlen=MAX_LEN)
-y_test  = sequence.pad_sequences(y_test,  maxlen=MAX_LEN)
-
-y_train = transform_outputs(y_train)
-y_test  = transform_outputs(y_test)
 
 print('X_train shape:', X_train.shape)
 print('X_test shape:', X_test.shape)
 
-""" REVERSE """
-
+print('Build model...')
+# input: 2D tensor of integer indices of characters (eg. 1-57).
+# input tensor has shape (samples, maxlen)
+nb_feature_maps = 32
+n_ngram = 5 # 5 is good (0.7338 on Causer) - 64 sized embedding, 32 feature maps, relu in conv layer
 embedding_size = 64
 
-print('Build model...')
 model = Sequential()
 model.add(Embedding(max_features, embedding_size))
+model.add(Reshape(1, maxlen, embedding_size))
+model.add(Convolution2D(nb_feature_maps, 1, n_ngram, embedding_size))
+model.add(Activation("relu"))
+#model.add(Convolution2D(nb_feature_maps, nb_feature_maps, n_ngram, embedding_size))
+#model.add(Activation("relu"))
+model.add(MaxPooling2D(poolsize=(maxlen - n_ngram + 1, 1)))
+model.add(Flatten())
+model.add(Dense(nb_feature_maps, 1))
+model.add(Activation("sigmoid"))
+#model.add(Dense(nb_feature_maps/2, 1))
+#model.add(Activation("sigmoid"))
 
-#model.add(LSTM(embedding_size, embedding_size, return_sequences=True)) # try using a GRU instead, for fun
-model.add(LSTM(embedding_size, 32, return_sequences=True)) # try using a GRU instead, for fun
-#model.add(GRU(embedding_size, 1, return_sequences=True)) # try using a GRU instead, for fun
-model.add(TimeDistributedDense(32, 1, activation="sigmoid"))
-
+#model.add(Dropout(0.25))
 # try using different optimizers and different optimizer configs
 model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
+#model.compile(loss='hinge', optimizer='adagrad', class_mode="binary")
 
 print("Train...")
-last_accuracy = 99999
+last_accuracy = 0
 iterations = 0
 decreases = 0
+best = -1
 
-best = None
-prev_weights = None
-
-def train(epochs=1):
-    results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.2, show_accuracy=True, verbose=1)
-
-    classes = model.predict_classes(X_test, batch_size=batch_size)
-    predictions = collapse_results(classes)
-
-    r, p, f1 = rpf1(y_reg_test, predictions)
+def test(epochs = 1):
+    results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
+    classes = flatten( model.predict_classes(X_test, batch_size=batch_size) )
+    r, p, f1 = rpf1(y_test, classes)
     print("recall", r, "precision", p, "f1", f1)
     return f1
 
 while True:
     iterations += 1
-    accuracy = train(1)
 
+    accuracy = test(1)
     if accuracy < last_accuracy:
-        best = prev_weights
         decreases +=1
     else:
         decreases = 0
+    best = max(best, accuracy)
 
-    if decreases >= 3 and iterations > 10:
-        print("Val accruacy decreased from %f to %f. Stopping" % (last_accuracy, accuracy))
+    if decreases >= 4 and iterations > 10:
+        print("Val Loss increased from %f to %f. Stopping" % (last_accuracy, accuracy))
         break
     last_accuracy = accuracy
-    prev_weights = model.get_output()
 
+#results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=  5, validation_split=0.2, show_accuracy=True, verbose=1)
 print("at: " + str(datetime.datetime.now()))
+print("Best:" + str(best))
+
+# Causer: recall 0.746835443038 precision 0.670454545455 f1 0.706586826347 - 32 embedding, lstm, sigmoid, adam
