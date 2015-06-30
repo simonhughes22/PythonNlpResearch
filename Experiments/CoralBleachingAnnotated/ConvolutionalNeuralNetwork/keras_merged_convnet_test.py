@@ -109,6 +109,7 @@ print('X_test shape:', X_test.shape)
 print('Build model...')
 # input: 2D tensor of integer indices of characters (eg. 1-57).
 # input tensor has shape (samples, maxlen)
+
 nb_feature_maps = 32
 embedding_size = 64
 
@@ -132,11 +133,12 @@ for n_gram in ngram_filters:
 model = Sequential()
 #model = sequential
 #model.add(RepeatVector(len(ngram_filters)))
-#model.add(Merge(conv_filters, mode='concat'))
-model.add(Merge(conv_filters, mode='sum'))
-#model.add(Dense(nb_feature_maps * len(ngram_filters), 1))
+model.add(Merge(conv_filters, mode='concat'))
+#model.add(Merge(conv_filters, mode='sum'))
+model.add(Dense(nb_feature_maps * len(ngram_filters), 1))
+#model.add(Dense(nb_feature_maps, 1))
 
-model.add(Dense(nb_feature_maps, 1))
+#model.add(Dense(nb_feature_maps, 1))
 model.add(Activation("sigmoid"))
 
 #model.add(Dropout(0.25))
