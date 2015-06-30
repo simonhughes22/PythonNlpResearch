@@ -128,7 +128,7 @@ for n_gram in ngram_filters:
     sequential.add(Activation("relu"))
     sequential.add(MaxPooling2D(poolsize=(maxlen - n_gram + 1, 1)))
     sequential.add(Flatten())
-    sequential.add(Dense(nb_feature_maps, 1))
+    sequential.add(Dense(nb_feature_maps, 32))
     sequential.add(Activation("sigmoid"))
 
 model = Sequential()
@@ -137,9 +137,10 @@ model = Sequential()
 #model.add(Merge(conv_filters, mode='concat'))
 model.add(Merge(conv_filters, mode='sum'))
 #model.add(Dense(nb_feature_maps * len(ngram_filters), 1))
+model.add(Dense(32, 1))
 
 #model.add(Dense(nb_feature_maps, 1))
-#model.add(Activation("sigmoid"))
+model.add(Activation("sigmoid"))
 
 #model.add(Dropout(0.25))
 # try using different optimizers and different optimizer configs
