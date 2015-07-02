@@ -3,14 +3,13 @@ from __future__ import print_function
 
 import numpy as np
 from keras.preprocessing import sequence
-from keras.optimizers import SGD, RMSprop, Adagrad
+from keras.optimizers import SGD, RMSprop, Adagrad, Adam
 from keras.utils import np_utils
 from keras.models import Sequential
-#from keras.layers.containers
 from keras.layers.core import Dense, Dropout, Activation, Flatten, Reshape, Merge, RepeatVector
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.layers.embeddings import Embedding
-from keras.layers.recurrent import LSTM, GRU
+from keras.layers.recurrent import LSTM, GRU, JZS1
 import keras.layers.convolutional
 
 from Metrics import rpf1
@@ -113,15 +112,13 @@ print('Build model...')
 nb_feature_maps = 32
 embedding_size = 64
 
-ngram_filters = [3, 5, 7, 9]
-#ngram_filters = [3]
+#ngram_filters = [3, 5, 7, 9]
+ngram_filters = [2, 4, 6, 8]
 conv_filters = []
 
 for n_gram in ngram_filters:
     sequential = Sequential()
     conv_filters.append(sequential)
-
-    #sequential.add(Dense(maxlen, 1))
 
     sequential.add(Embedding(max_features, embedding_size))
     sequential.add(Reshape(1, maxlen, embedding_size))
@@ -131,19 +128,19 @@ for n_gram in ngram_filters:
     sequential.add(Flatten())
 
 model = Sequential()
-#model = sequential
-#model.add(RepeatVector(len(ngram_filters)))
 model.add(Merge(conv_filters, mode='concat'))
-#model.add(Merge(conv_filters, mode='sum'))
-model.add(Dense(nb_feature_maps * len(ngram_filters), 1))
-#model.add(Dense(nb_feature_maps, 1))
-
+model.add(Dropout(0.5))
+model.add(Dense(nb_feature_maps * len(conv_filters), 1))
 #model.add(Dense(nb_feature_maps, 1))
 model.add(Activation("sigmoid"))
 
-#model.add(Dropout(0.25))
 # try using different optimizers and different optimizer configs
-model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
+
+#sgd = SGD(lr=0.1, decay=1e-6, momentum=0.9, nesterov=True)
+#model.compile(loss='binary_crossentropy', optimizer=sgd, class_mode="binary")
+
+adam = Adam(lr=0.001)
+model.compile(loss='binary_crossentropy', optimizer=adam, class_mode="binary")
 #model.compile(loss='hinge', optimizer='adagrad', class_mode="binary")
 
 print("Train...")

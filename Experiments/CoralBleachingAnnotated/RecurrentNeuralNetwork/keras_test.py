@@ -6,7 +6,7 @@ from keras.preprocessing import sequence
 from keras.optimizers import SGD, RMSprop, Adagrad
 from keras.utils import np_utils
 from keras.models import Sequential
-from keras.layers.core import Dense, Dropout, Activation
+from keras.layers.core import Dense, Dropout, Activation, Reshape
 from keras.layers.embeddings import Embedding
 from keras.layers.recurrent import LSTM, GRU, JZS1
 import keras.layers.convolutional
@@ -124,6 +124,9 @@ embedding_size = 64
 print('Build model...')
 model = Sequential()
 model.add(Embedding(max_features, embedding_size))
+
+model.add(Reshape((1, vector_len)))
+
 #model.add(LSTM(embedding_size, 64)) # try using a GRU instead, for fun
 #model.add(GRU(embedding_size, embedding_size)) # try using a GRU instead, for fun
 model.add(JZS1(embedding_size, 64)) # try using a GRU instead, for fun
@@ -166,6 +169,7 @@ def find_cutoff(y_test, predictions):
 def test(epochs = 1):
     results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
     probs = flatten( model.predict_proba(X_test, batch_size=batch_size) )
+    model.predict()
     r, p, f1, cutoff = find_cutoff(y_test, probs)
     print("recall", r, "precision", p, "f1", f1, "cutoff", cutoff)
     return f1

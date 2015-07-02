@@ -158,8 +158,6 @@ ys = np.asarray(ys)
 X_train, y_train = xs, ys
 
 print(X_train.shape, 'train sequences')
-#print(X_valid.shape, 'valid sequences')
-#print(X_test.shape,  'test sequences')
 print("YS Shape: ", ys.shape)
 
 embedding_size = 32
@@ -168,20 +166,14 @@ hidden_size = 32
 print('Build model...')
 model = Sequential()
 model.add(Embedding(max_features, embedding_size))
-#model.add(LSTM(embedding_size, 128)) # try using a GRU instead, for fun
-#model.add(GRU(embedding_size, embedding_size)) # try using a GRU instead, for fun
-#model.add(JZS1(embedding_size, hidden_size, return_sequences=True)) # try using a GRU instead, for fun
-model.add(JZS1(embedding_size, hidden_size)) # try using a GRU instead, for fun
-#JSZ1, embedding = 64, 64 hidden = 0.708
-#model.add(Dropout(0.2))
-model.add(Dense(hidden_size, hidden_size))
-model.add(Activation('relu'))
-model.add(RepeatVector(MAX_LEN))
-model.add(JZS1(hidden_size, hidden_size, return_sequences=True))
+model.add(JZS1(embedding_size, hidden_size, return_sequences=True)) # try using a GRU instead, for fun
 model.add(TimeDistributedDense(hidden_size, max_features, activation="softmax"))
 
 # try using different optimizers and different optimizer configs
 model.compile(loss='mse', optimizer='adam')
+
+outp = model.predict(X_train)
+print("Output Shape:", outp.shape)
 
 print("Train...")
 
@@ -200,9 +192,6 @@ def ids_to_words(vector):
 def max_probs_to_words(vector):
     ixs = np.argmax(vector, axis=1)
     return ids_to_words(flatten(ixs))
-
-outp = model.predict(X_train)
-print("Output Shape:", outp.shape)
 
 def test(epochs = 1):
     results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)

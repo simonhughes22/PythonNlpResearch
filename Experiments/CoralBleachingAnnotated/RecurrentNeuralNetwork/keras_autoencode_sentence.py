@@ -3,10 +3,10 @@ from __future__ import print_function
 
 import numpy as np
 from collections import defaultdict
-from keras.preprocessing import sequence
 from keras.optimizers import SGD, RMSprop, Adagrad
 from keras.utils import np_utils
 import keras.layers.convolutional
+from keras.preprocessing import sequence
 from keras.models import Sequential
 from keras.layers.core import Dense, Dropout, Activation, RepeatVector, TimeDistributedDense
 from keras.layers.embeddings import Embedding
@@ -90,7 +90,7 @@ from numpy.random import shuffle
 shuffle(tagged_essays)
 
 for essay in tagged_essays:
-    essay_rows = [[generator.get_id(ESSAY_START_TAG)]]
+    essay_rows = []
     for sentence in essay.sentences:
         row = []
 
@@ -101,14 +101,11 @@ for essay in tagged_essays:
             for tag in tags:
                 un_tags.add(tag)
 
-        xs.append(essay_rows[-1])
+        xs.append(row)
         ys.append(row)
         essay_rows.append(row)
 
         maxlen = max(len(xs[-1]), maxlen)
-    xs.append(essay_rows[-1])
-    ys.append([generator.get_id(ESSAY_END_TAG)])
-    maxlen = max(len(xs[-1]), maxlen)
 
 max_features=generator.max_id() + 2
 batch_size = 16
@@ -120,8 +117,7 @@ num_left = len(xs) - num_training
 num_valid = 0
 num_test = len(xs) - num_training - num_valid
 
-#MAX_LEN = maxlen
-MAX_LEN = 30
+MAX_LEN = maxlen
 print("Pad sequences (samples x time)")
 
 def repeat_vector(vector):
@@ -136,7 +132,8 @@ def repeat_vector(vector):
 
 def to_one_hot(id):
     zeros = [0] * max_features
-    zeros[id] = 1
+    if id > 0:
+        zeros[id] = 1
     return zeros
 
 # Reverse inputs
@@ -145,7 +142,7 @@ xs = sequence.pad_sequences(xs, maxlen=MAX_LEN)
 xs = np.asarray(xs)
 
 # don't zero pad - just predicts 0's all the time
-ys = map(repeat_vector, ys)
+ys = sequence.pad_sequences(ys, maxlen=MAX_LEN)
 ys = map(lambda y: map(to_one_hot, y), ys)
 ys = np.asarray(ys)
 
@@ -163,17 +160,12 @@ print(X_train.shape, 'train sequences')
 print("YS Shape: ", ys.shape)
 
 embedding_size = 32
-hidden_size = 32
+hidden_size = 512
 
 print('Build model...')
 model = Sequential()
 model.add(Embedding(max_features, embedding_size))
-#model.add(LSTM(embedding_size, 128)) # try using a GRU instead, for fun
-#model.add(GRU(embedding_size, embedding_size)) # try using a GRU instead, for fun
-#model.add(JZS1(embedding_size, hidden_size, return_sequences=True)) # try using a GRU instead, for fun
 model.add(JZS1(embedding_size, hidden_size)) # try using a GRU instead, for fun
-#JSZ1, embedding = 64, 64 hidden = 0.708
-#model.add(Dropout(0.2))
 model.add(Dense(hidden_size, hidden_size))
 model.add(Activation('relu'))
 model.add(RepeatVector(MAX_LEN))
@@ -201,9 +193,6 @@ def max_probs_to_words(vector):
     ixs = np.argmax(vector, axis=1)
     return ids_to_words(flatten(ixs))
 
-outp = model.predict(X_train)
-print("Output Shape:", outp.shape)
-
 def test(epochs = 1):
     results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
 
@@ -230,6 +219,9 @@ while True:
     iterations += 1
     print("Iteration:", iterations)
     test(5)
+    if iterations % 10 == 0:
+        print("Saving Mode")
+        model.save_weights("sequence_autoencoder.pl", True)
 
 print("at: " + str(datetime.datetime.now()))
 
