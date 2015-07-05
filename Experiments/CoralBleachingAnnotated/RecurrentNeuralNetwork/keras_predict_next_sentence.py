@@ -66,6 +66,7 @@ processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/Br
 
 config = get_config(folder)
 config["stem"] = True
+config["min_df"] = 10
 
 """ FEATURE EXTRACTION """
 """ LOAD DATA """
@@ -148,6 +149,7 @@ xs = np.asarray(xs)
 ys = map(repeat_vector, ys)
 ys = map(lambda y: map(to_one_hot, y), ys)
 ys = np.asarray(ys)
+#ys[ys <= 0] = -1
 
 """X_train, y_train, X_valid, y_valid, X_test, y_test = \
     xs[:num_training], ys[:num_training],  \
@@ -162,8 +164,8 @@ print(X_train.shape, 'train sequences')
 #print(X_test.shape,  'test sequences')
 print("YS Shape: ", ys.shape)
 
-embedding_size = 32
-hidden_size = 32
+embedding_size = 64
+hidden_size = 512
 
 print('Build model...')
 model = Sequential()
@@ -205,7 +207,6 @@ outp = model.predict(X_train)
 print("Output Shape:", outp.shape)
 
 def test(epochs = 1):
-    results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
 
     r = range(len(X_train))
     shuffle(r)
@@ -214,6 +215,7 @@ def test(epochs = 1):
     x_sub = X_train[ixs]
     y_sub = y_train[ixs]
 
+    results = model.fit(x_sub, y_sub, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
     p_sub = model.predict_proba(x_sub, batch_size=batch_size)
 
     cnt = 0
@@ -229,7 +231,7 @@ iterations = 0
 while True:
     iterations += 1
     print("Iteration:", iterations)
-    test(5)
+    test(3)
 
 print("at: " + str(datetime.datetime.now()))
 

@@ -66,6 +66,7 @@ processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/Br
 
 config = get_config(folder)
 config["stem"] = True
+config["min_df"] = 10
 
 """ FEATURE EXTRACTION """
 """ LOAD DATA """
@@ -95,7 +96,8 @@ for essay in tagged_essays:
         row = []
 
         un_tags = set()
-        for word, tags in [(SENT_START_TAG, set())] + sentence + [(SENT_END_TAG, set())]:
+        #for word, tags in [(SENT_START_TAG, set())] + sentence + [(SENT_END_TAG, set())]:
+        for word, tags in sentence:
             id = generator.get_id(word)
             row.append(id)
             for tag in tags:
@@ -117,7 +119,7 @@ num_left = len(xs) - num_training
 num_valid = 0
 num_test = len(xs) - num_training - num_valid
 
-MAX_LEN = maxlen
+MAX_LEN = 30
 print("Pad sequences (samples x time)")
 
 def repeat_vector(vector):
@@ -159,17 +161,17 @@ print(X_train.shape, 'train sequences')
 #print(X_test.shape,  'test sequences')
 print("YS Shape: ", ys.shape)
 
-embedding_size = 32
+embedding_size = 64
 hidden_size = 512
 
 print('Build model...')
 model = Sequential()
 model.add(Embedding(max_features, embedding_size))
-model.add(JZS1(embedding_size, hidden_size)) # try using a GRU instead, for fun
-model.add(Dense(hidden_size, hidden_size))
-model.add(Activation('relu'))
+model.add(GRU(embedding_size, hidden_size)) # try using a GRU instead, for fun
+#model.add(Dense(hidden_size, hidden_size))
+#model.add(Activation('relu'))
 model.add(RepeatVector(MAX_LEN))
-model.add(JZS1(hidden_size, hidden_size, return_sequences=True))
+model.add(GRU(hidden_size, hidden_size, return_sequences=True))
 model.add(TimeDistributedDense(hidden_size, max_features, activation="softmax"))
 
 # try using different optimizers and different optimizer configs
@@ -194,7 +196,6 @@ def max_probs_to_words(vector):
     return ids_to_words(flatten(ixs))
 
 def test(epochs = 1):
-    results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
 
     r = range(len(X_train))
     shuffle(r)
@@ -203,6 +204,7 @@ def test(epochs = 1):
     x_sub = X_train[ixs]
     y_sub = y_train[ixs]
 
+    results = model.fit(x_sub, y_sub, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
     p_sub = model.predict_proba(x_sub, batch_size=batch_size)
 
     cnt = 0
@@ -221,8 +223,6 @@ while True:
     test(5)
     if iterations % 10 == 0:
         print("Saving Mode")
-        model.save_weights("sequence_autoencoder.pl", True)
+        #model.save_weights("sequence_autoencoder.pl", True)
 
 print("at: " + str(datetime.datetime.now()))
-
-# Causer: recall 0.746835443038 precision 0.670454545455 f1 0.706586826347 - 32 embedding, lstm, sigmoid, adam

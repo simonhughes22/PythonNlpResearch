@@ -83,18 +83,6 @@ MAX_LEN = maxlen
 
 xs = sequence.pad_sequences(xs, maxlen=MAX_LEN) #30 seems good
 
-def get_one_hot(id):
-    zeros = [0] * max_features
-    zeros[id] = 1
-    return zeros
-
-new_xs = []
-for x in xs:
-    new_x = [get_one_hot(id) for id in x ]
-    new_xs.append(new_x)
-
-#xs = np.asarray(new_xs)
-#xs = xs.reshape((xs.shape[0], 1, xs.shape[1], xs.shape[2]))
 print("XS Shape: ", xs.shape)
 
 X_train, y_train, X_test, y_test = xs[:num_training], ys[:num_training], xs[num_training:], ys[num_training:]
