@@ -5,7 +5,7 @@ import numpy as np
 from keras.preprocessing import sequence
 from keras.optimizers import SGD, RMSprop, Adagrad
 from keras.utils import np_utils
-from keras.models import Sequential
+from keras.models import Sequential, Graph
 from keras.layers.core import Dense, Dropout, Activation, Flatten, Reshape, Merge
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.layers.embeddings import Embedding
@@ -32,10 +32,6 @@ print("Started at: " + str(datetime.datetime.now()))
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
-MIN_WORD_FREQ       = 5        # 5 best so far
-TARGET_Y            = "Causer"
-#TARGET_Y            = "14"
-
 TEST_SPLIT          = 0.2
 # end not hashed
 
@@ -46,7 +42,7 @@ folder =                            settings.data_directory + "CoralBleaching/Br
 processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
 
 config = get_config(folder)
-config["min_df"] = 5
+#config["min_df"] = 5
 
 """ FEATURE EXTRACTION """
 """ LOAD DATA """
@@ -190,7 +186,8 @@ def test(epochs=1):
         tag_predictions = [1 if p >= 0.5 else 0 for p in tag_predictions]
         tag_ys = y_test[:, ix]
         r, p, f1 = rpf1(tag_ys, tag_predictions)
-        print(tag.ljust(10), "recall", rnd(r), "precision", rnd(p), "f1", rnd(f1))
+        count = sum(tag_ys)
+        print(tag.ljust(10), str(count).rjust(4), "recall", rnd(r), "precision", rnd(p), "f1", rnd(f1))
         f1s.append(f1)
     mean_f1 = np.mean(f1s)
     print("MEAN F1: " + str(mean_f1))
