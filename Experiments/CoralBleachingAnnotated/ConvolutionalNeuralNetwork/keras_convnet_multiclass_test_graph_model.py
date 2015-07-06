@@ -11,6 +11,7 @@ from keras.layers.convolutional import Convolution2D, MaxPooling2D
 from keras.layers.embeddings import Embedding
 from keras.layers.recurrent import LSTM, GRU
 import keras.layers.convolutional
+import theano.tensor as T
 
 from Metrics import rpf1
 
@@ -127,31 +128,35 @@ print('Build model...')
 nb_feature_maps = 128
 embedding_size = 64
 
+graph = Graph()
+graph.add_input(name="input", dtype='int')
+#graph.inputs["input"].input = T.imatrix()
+graph.add_node(Embedding(max_features, embedding_size), name="embedding", input="input")
+graph.add_node(Reshape(1, MAX_LEN, embedding_size), name="reshape", input="embedding")
+
+top_layer_names = []
 ngram_filters = [3, 4, 5, 7]
-conv_filters = []
-
 for n_gram in ngram_filters:
-    sequential = Sequential()
-    conv_filters.append(sequential)
+    sngram = str(n_gram)
+    conv_layer = 'conv-' + sngram
+    activ_layer = 'activ-' + sngram
+    pool_layer = 'max-pool-' + sngram
+    flat_layer = "flat-" + sngram
+    dropout_layer = "dropout-" + sngram
+    top_layer_names.append(dropout_layer)
 
-    sequential.add(Embedding(max_features, embedding_size))
-    sequential.add(Reshape(1, MAX_LEN, embedding_size))
-    sequential.add(Convolution2D(nb_feature_maps, 1, n_gram, embedding_size))
-    sequential.add(Activation("relu"))
-    sequential.add(MaxPooling2D(poolsize=(MAX_LEN - n_gram + 1, 1)))
-    sequential.add(Flatten())
+    graph.add_node(Convolution2D(nb_feature_maps, 1, n_gram, embedding_size), name=conv_layer, input='reshape')
+    graph.add_node(Activation("relu"), name=activ_layer, input=conv_layer)
+    graph.add_node(MaxPooling2D(poolsize=(MAX_LEN - n_gram + 1, 1)), name=pool_layer, input=activ_layer)
+    graph.add_node(Flatten(), name=flat_layer, input=pool_layer)
+    graph.add_node(Dropout(0.5), name=dropout_layer, input=flat_layer)
 
-model = Sequential()
-model.add(Merge(conv_filters, mode='concat'))
-model.add(Dropout(0.5))
-model.add(Dense(nb_feature_maps * len(conv_filters), len(regular_tags)))
-#model.add(Dense(nb_feature_maps, 1))
-model.add(Activation("sigmoid"))
+graph.add_node(Dense(nb_feature_maps * len(ngram_filters), len(regular_tags)), name="dense1", inputs=top_layer_names, merge_mode='concat')
+graph.add_node(Activation("sigmoid"), name="activ-top", input='dense1')
+graph.add_output(name='output', input='activ-top')
 
-# try using different optimizers and different optimizer configs
-
-model.compile(loss='mse', optimizer="adam")
-#model.compile(loss='hinge', optimizer='adagrad', class_mode="binary")
+graph.compile('adam', {"output" : "mse"})
+model = graph
 
 print("Train...")
 last_accuracy = 0
@@ -159,12 +164,8 @@ iterations = 0
 decreases = 0
 best = 0
 
-concat_X_test  = []
-for i in range(len(ngram_filters)):
-    concat_X_test.append(X_test)
-
-Xp = model.predict(concat_X_test)
-print("Xp shape:", Xp.shape)
+#Xp = model.predict(X_train)
+#print("Xp shape:", Xp.shape)
 
 def test(epochs=1):
 
@@ -173,12 +174,8 @@ def test(epochs=1):
     x_shf = X_train[ixs]
     y_shf = y_train[ixs]
 
-    concat_X_train = []
-    for i in range(len(ngram_filters)):
-        concat_X_train.append(x_shf)
-
-    model.fit(concat_X_train, y_shf, nb_epoch=epochs, batch_size=64)#64 seems good for now
-    predictions = model.predict_proba(concat_X_test)
+    model.fit({"input": X_train, "output": y_train}, nb_epoch=epochs)#64 seems good for now
+    predictions = model.predict({"input": X_test, "output": y_test})["output"]
     print("Xp shape:", predictions.shape)
     f1s = []
     for ix, tag in ix2tag.items():
