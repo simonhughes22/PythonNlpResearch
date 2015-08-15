@@ -47,7 +47,7 @@ hidden_size = 512
 
 print('Build model...')
 model = Sequential()
-model.add(Embedding(max_features, embedding_size))
+model.add(Embedding(max_features, embedding_size, mask_zero=True))
 model.add(GRU(embedding_size, hidden_size))
 model.add(Dense(hidden_size, hidden_size))
 model.add(Activation('relu'))
@@ -55,7 +55,7 @@ model.add(RepeatVector(maxlen))
 model.add(GRU(hidden_size, hidden_size, return_sequences=True))
 model.add(TimeDistributedDense(hidden_size, max_features, activation="softmax"))
 
-model.compile(loss='mse', optimizer='adam')
+model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 
 print("Train...")
 X_train, y_train = xs, ys

@@ -143,18 +143,13 @@ print('y_test shape:',  y_test.shape)
 """ REVERSE """
 
 embedding_size = 64
-
 print('Build model...')
 model = Sequential()
 model.add(Embedding(max_features, embedding_size))
 
-#model.add(LSTM(embedding_size, embedding_size, return_sequences=True)) # try using a GRU instead, for fun
-#model.add(LSTM(embedding_size, 32, return_sequences=True)) # try using a GRU instead, for fun
-#model.add(GRU(embedding_size, 64, return_sequences=True)) # try using a GRU instead, for fun
-model.add(JZS1(embedding_size, 64, return_sequences=True)) # try using a GRU instead, for fun
+model.add(GRU(embedding_size, 64, return_sequences=True)) # try using a GRU instead, for fun
 model.add(TimeDistributedDense(64, 1, activation="sigmoid"))
 
-# try using different optimizers and different optimizer configs
 model.compile(loss='binary_crossentropy', optimizer='adam', class_mode="binary")
 
 print("Train...")

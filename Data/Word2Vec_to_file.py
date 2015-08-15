@@ -11,7 +11,6 @@ import string
 def remove_non_ascii(s):
     return filter(lambda x: x in string.printable, s)
 
-
 def save_vectors_to_text(desired_words, output_file, norm = True, filename = __BIN_FILE_):
     print("Loading Model")
     model = Word2Vec.load_word2vec_format(filename, binary=True)
@@ -61,4 +60,4 @@ def vectors_to_pickled_dict(desired_words, output_file, norm = True, filename = 
         Pickle.dump(wd2vec, f)
 
 if __name__ == "__main__":
-    save_vectors_to_text(None, "/Users/simon.hughes/Documents/Dice Data/GoogleNews-vectors-negative300.txt")
+    save_vectors_to_text(None, "/Users/simon.hughes/Documents/Dice Data/Word2Vec/GoogleNews-vectors-negative300.txt")

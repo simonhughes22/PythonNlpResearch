@@ -120,6 +120,7 @@ class memoize_to_disk(object):
             s_pickle_key = "_".join(map(lambda (k, v): k + "_" + self.__value2str__(v), sorted(kwargs.items())))
             # hash long filesnames
             #if len(pickle_key) > 225:
+            print("Pickle Key:", s_pickle_key)
             pickle_key = str(hash(s_pickle_key))
 
             pickle_file = self.filename_prefix + pickle_key

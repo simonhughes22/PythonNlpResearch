@@ -470,15 +470,22 @@ def load_bratt_essays(directory = None, include_vague = True, include_normal = T
 
     essays = []
     for f in files:
-        #try:
-        essay = Essay(f, include_vague=include_vague, include_normal=include_normal, load_annotations=load_annotations)
-        if len(essay.tagged_sentences) > 60:
-            warnings.warn("Too many sentences (%s) in essay %s" % (str(len(essay.sentence_tags)), essay.file_name))
-            print "Too many sentences (%s) in essay %s" % (str(len(essay.sentence_tags)), essay.file_name)
-        else:
-            essays.append(essay)
-        #except Exception, e:
-        #    print "Error processing file: ", e.message, f
+        try:
+            txt_file = f[:-4] + ".txt"
+            with open(txt_file) as fin:
+                contents = fin.read().strip().lower()
+                if contents == "no essay":
+                    print "Skipping %s file as .txt file is 'No essay" % f
+                    continue
+
+            essay = Essay(f, include_vague=include_vague, include_normal=include_normal, load_annotations=load_annotations)
+            if len(essay.tagged_sentences) > 60:
+                warnings.warn("Too many sentences (%s) in essay %s" % (str(len(essay.sentence_tags)), essay.file_name))
+                print "Too many sentences (%s) in essay %s" % (str(len(essay.sentence_tags)), essay.file_name)
+            else:
+                essays.append(essay)
+        except Exception, e:
+            print "Error processing file: ", e.message, f
 
     print "%s essays processed" % str(len(essays))
     return essays
@@ -486,7 +493,10 @@ def load_bratt_essays(directory = None, include_vague = True, include_normal = T
 
 if __name__ == "__main__":
 
-    essays = load_bratt_essays(include_normal=False)
+    #essays = load_bratt_essays(include_normal=False)
+    settings = Settings.Settings()
+    bratt_root_folder = settings.data_directory + "CoralBelching_Latest/EBA1415_Merged/"
+    essays = load_bratt_essays(include_normal=False, directory=bratt_root_folder)
 
     for essay in essays:
         if essay.split_sents:

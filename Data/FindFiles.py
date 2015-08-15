@@ -6,7 +6,7 @@ def find_files(folder, regex, remove_empty = False):
     Find all files matching the [regex] pattern in [folder]
 
     folder  :   string
-                    folder to search (no recursive)
+                    folder to search (not recursive)
     regex   :   string (NOT regex object)
                     pattern to match
     """

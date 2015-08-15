@@ -150,7 +150,7 @@ model.add(Activation("sigmoid"))
 
 # try using different optimizers and different optimizer configs
 
-model.compile(loss='mse', optimizer="adam")
+model.compile(loss='binary_crossentropy', optimizer="adam")
 #model.compile(loss='hinge', optimizer='adagrad', class_mode="binary")
 
 print("Train...")

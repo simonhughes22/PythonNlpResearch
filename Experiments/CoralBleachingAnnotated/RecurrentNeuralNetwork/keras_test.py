@@ -124,9 +124,6 @@ embedding_size = 64
 print('Build model...')
 model = Sequential()
 model.add(Embedding(max_features, embedding_size))
-
-model.add(Reshape((1, vector_len)))
-
 #model.add(LSTM(embedding_size, 64)) # try using a GRU instead, for fun
 #model.add(GRU(embedding_size, embedding_size)) # try using a GRU instead, for fun
 model.add(JZS1(embedding_size, 64)) # try using a GRU instead, for fun
@@ -144,34 +141,12 @@ last_accuracy = 0
 iterations = 0
 decreases = 0
 
-def find_cutoff(y_test, predictions):
-    scale = 20.0
-
-    min_val = round(min(predictions))
-    max_val = round(max(predictions))
-    diff = max_val - min_val
-    inc = diff / scale
-
-    cutoff = -1
-    best = -1
-    for i in range(1, int(scale)+1, 1):
-        val = inc * i
-        classes = [1 if p >= val else 0 for p in predictions]
-        r, p, f1 = rpf1(y_test, classes)
-        if f1 >= best:
-            cutoff = val
-            best = f1
-
-    classes = [1 if p >= cutoff else 0 for p in predictions]
-    r, p, f1 = rpf1(y_test, classes)
-    return r, p, f1, cutoff
-
 def test(epochs = 1):
     results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
     probs = flatten( model.predict_proba(X_test, batch_size=batch_size) )
-    model.predict()
-    r, p, f1, cutoff = find_cutoff(y_test, probs)
-    print("recall", r, "precision", p, "f1", f1, "cutoff", cutoff)
+    y_pred = [1 if p >= 0.5 else 0 for p in probs]
+    r, p, f1 = rpf1(y_test, y_pred)
+    print("recall", r, "precision", p, "f1", f1)
     return f1
 
 while True:

@@ -162,7 +162,7 @@ embedding_size = 64
 
 print('Build model...')
 model = Sequential()
-model.add(Embedding(max_features, embedding_size))
+model.add(Embedding(max_features, embedding_size, mask_zero=True))
 #model.add(LSTM(embedding_size, 128)) # try using a GRU instead, for fun
 #model.add(GRU(embedding_size, embedding_size)) # try using a GRU instead, for fun
 #model.add(JZS1(embedding_size, 64, return_sequences=True)) # try using a GRU instead, for fun

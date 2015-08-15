@@ -166,7 +166,7 @@ hidden_size = 512
 
 print('Build model...')
 model = Sequential()
-model.add(Embedding(max_features, embedding_size))
+model.add(Embedding(max_features, embedding_size, mask_zero=True))
 model.add(GRU(embedding_size, hidden_size)) # try using a GRU instead, for fun
 #model.add(Dense(hidden_size, hidden_size))
 #model.add(Activation('relu'))
@@ -175,7 +175,7 @@ model.add(GRU(hidden_size, hidden_size, return_sequences=True))
 model.add(TimeDistributedDense(hidden_size, max_features, activation="softmax"))
 
 # try using different optimizers and different optimizer configs
-model.compile(loss='mse', optimizer='adam')
+model.compile(loss='binary_crossentropy', optimizer='adam')
 
 print("Train...")
 
@@ -184,7 +184,11 @@ def ids_to_words(vector):
     for id in vector:
         if id == 0:
             continue
-        word = generator.get_key(id)
+        try:
+            word = generator.get_key(id)
+        except:
+            print("Error id %i not found" % id)
+            word += "XXX"
         if word in {".", "!", "?"}:
             s += word
         else:
@@ -218,11 +222,11 @@ def test(epochs = 1):
 
 iterations = 0
 while True:
-    iterations += 1
     print("Iteration:", iterations)
     test(5)
     if iterations % 10 == 0:
-        print("Saving Mode")
-        #model.save_weights("sequence_autoencoder.pl", True)
+        print("Saving Model")
+        model.save_weights("sequence_autoencoder.pl", True)
+    iterations += 1
 
 print("at: " + str(datetime.datetime.now()))
