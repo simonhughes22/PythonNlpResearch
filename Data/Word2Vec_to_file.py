@@ -5,7 +5,7 @@ import cPickle as Pickle
 from collections import defaultdict
 import numpy as np
 
-__BIN_FILE_ = "/Users/simon.hughes/Documents/Dice Data/GoogleNews-vectors-negative300.bin"
+__BIN_FILE_ = "/Users/simon.hughes/Documents/Dice Data/Word2Vec/GoogleNews-vectors-negative300.bin"
 
 import string
 def remove_non_ascii(s):

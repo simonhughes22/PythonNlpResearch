@@ -84,8 +84,17 @@ class TextAnnotation(AnnotationBase):
                 #Correct start and end
                 offset = min(self.start, max(5, len(self.txt)))
                 substr = full_text[self.start-offset:]
-                ix = substr.index(self.txt)
-                self.start = self.start - offset + ix
+                ix = substr.find(self.txt)
+                if ix < 0:
+                    fix = full_text.find(self.txt)
+                    lix = full_text.rfind(self.txt)
+                    assert fix >= 0 or lix >= 0, "String not located in document"
+                    if abs(self.start - fix) <= abs(self.start - lix):
+                        self.start = fix
+                    else:
+                        self.start = lix
+                else:
+                    self.start = self.start - offset + ix
                 self.end = self.start + len(self.txt)
                 assert full_text[self.start:self.end].strip() == self.txt
         assert self.start <= self.end, "Start index should be before the end"
@@ -235,8 +244,13 @@ class Essay(object):
         vague_ids = set()
         normal_ids = set()
         for line in lines:
-            if len(line.strip()) == 0:
+            if len(line.strip()) < 2:
                 continue
+
+            if not line[1].isdigit():
+                print "Skipping annotation line: %s" % line.strip()
+                continue
+
             first_char = line[0]
             if first_char == "T":
                 if is_compound(line):
@@ -254,12 +268,17 @@ class Essay(object):
                     print annotation.second_part.start, annotation.second_part.end
                     """
                 else:
-                    annotation = TextAnnotation(line, self.txt)
-                    #Bad annotation, ignore
-                    if annotation.start == annotation.end:
-                        continue
-                    else:
-                        text_annotations.append(annotation)
+                    try:
+                        annotation = TextAnnotation(line, self.txt)
+                        #Bad annotation, ignore
+                        if annotation.start == annotation.end:
+                            continue
+                        else:
+                            text_annotations.append(annotation)
+                    except Exception, e:
+                        import traceback
+                        print traceback.format_exc()
+                        raise e
 
             elif first_char == "A":
                 annotation = AttributeAnnotation(line)
@@ -362,6 +381,7 @@ class Essay(object):
         def add_sentence(sentence, str_sent):
 
             sents = filter(lambda s: len(s) > 1 and s != '//', sent_tokenize(onlyascii(str_sent.strip())))
+            sents = map(lambda s: s.replace("/", " ").replace("-", " - ").replace("  "," "), sents)
             # the code below handles cases where the sentences are not properly split and we get multiple sentences here
             if len(sents) > 1:
                 # filter to # of full sentences, and we should get at least this many out
@@ -385,14 +405,17 @@ class Essay(object):
 
                         assert last.lower() in unique_wds
 
-                        first = sents[i+1].split()[0]
+                        tokens = sents[i + 1].split()
+                        first = tokens[0]
+                        if first == "//" and len(tokens) > 1:
+                            first = tokens[1]
                         if first.lower() not in unique_wds:
                             if not first[-1].isalnum():
                                 first = first[:-1]
                             if not first[0].isalnum():
                                 first = first[0]
 
-                        assert first.lower() in unique_wds
+                        assert first.lower() in unique_wds, "first.lower():%s  not in unique_wds" % first.lower()
 
                         partitions.append((last, first))
 
@@ -451,6 +474,7 @@ class Essay(object):
         for sent in self.tagged_sentences:
             tags = zip(*sent)[1]
             self.sentence_tags.append(set(flatten(tags)))
+
         #if len(self.tagged_sentences) > 60:
         #    raise Exception("Too many sentences (%s) in essay %s" % (str(len(self.sentence_tags)), self.file_name))
 
@@ -474,8 +498,8 @@ def load_bratt_essays(directory = None, include_vague = True, include_normal = T
             txt_file = f[:-4] + ".txt"
             with open(txt_file) as fin:
                 contents = fin.read().strip().lower()
-                if contents == "no essay":
-                    print "Skipping %s file as .txt file is 'No essay" % f
+                if "no essay" in contents[:20] or "no text" in contents[0:20]:
+                    print "Skipping %s file as .txt file is %s'" % (f, contents)
                     continue
 
             essay = Essay(f, include_vague=include_vague, include_normal=include_normal, load_annotations=load_annotations)
@@ -486,6 +510,7 @@ def load_bratt_essays(directory = None, include_vague = True, include_normal = T
                 essays.append(essay)
         except Exception, e:
             print "Error processing file: ", e.message, f
+            pass
 
     print "%s essays processed" % str(len(essays))
     return essays
@@ -495,7 +520,7 @@ if __name__ == "__main__":
 
     #essays = load_bratt_essays(include_normal=False)
     settings = Settings.Settings()
-    bratt_root_folder = settings.data_directory + "CoralBelching_Latest/EBA1415_Merged/"
+    bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
     essays = load_bratt_essays(include_normal=False, directory=bratt_root_folder)
 
     for essay in essays:

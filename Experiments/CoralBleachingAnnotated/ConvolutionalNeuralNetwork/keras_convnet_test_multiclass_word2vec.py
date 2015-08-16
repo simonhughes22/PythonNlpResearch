@@ -43,7 +43,8 @@ TEST_SPLIT          = 0.2
 # construct unique key using settings for pickling
 
 settings = Settings.Settings()
-folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA_Pre_Post_Merged/"
+#folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA_Pre_Post_Merged/"
+folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
 processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
 
 config = get_config(folder)
@@ -134,7 +135,8 @@ nb_feature_maps = 64
 embedding_size = emb_shape[0]
 
 conv_filters = []
-ngram_filters = [3, 4, 5, 7]
+#ngram_filters = [3, 4, 5, 7]
+ngram_filters = [3, 6]
 for n_gram in ngram_filters:
     sequential = Sequential()
     conv_filters.append(sequential)
