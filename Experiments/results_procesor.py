@@ -62,6 +62,7 @@ class ResultsProcessor(object):
 
     def persist_results(self, dbcollection, ys_by_tag, predictions_by_tag, experiment_args, algorithm, **kwargs):
 
+        experiment_args["num_tags"] = len(ys_by_tag.keys())
         # Compute Mean metrics over all folds
         metrics_by_code = compute_metrics(ys_by_tag, predictions_by_tag)
         mean_td_metrics_by_tag = self.__get_mean_metrics_(metrics_by_code)

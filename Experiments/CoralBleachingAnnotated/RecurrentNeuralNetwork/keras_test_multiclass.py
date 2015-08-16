@@ -256,6 +256,7 @@ while True:
 
     accuracy, accuracy_5050 = test(1)
     #best = max(best, accuracy)
+    new_best = accuracy_5050 > best
     best_5050 = max(best_5050, accuracy_5050)
     if accuracy < last_accuracy:
         decreases +=1
@@ -263,7 +264,10 @@ while True:
         decreases = 0
 
     #print("Best F1      : ", best)
-    print("Best F1 50/50: ", best_5050)
+    if new_best:
+        print("*** NEW Best F1 50/50: ", best_5050, "****")
+    else:
+        print("Best F1 50/50: ", best_5050)
     if decreases >= 30 and iterations > 10:
         print("Val Loss increased from %f to %f. Stopping" % (last_accuracy, accuracy))
         break
