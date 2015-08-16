@@ -7,7 +7,7 @@ from Word2Vec_to_file import vectors_to_pickled_dict
 
 settings = Settings.Settings()
 
-#folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA_Pre_Post_Merged/"
+#folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
 folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
 processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
 

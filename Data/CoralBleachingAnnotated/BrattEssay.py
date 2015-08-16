@@ -381,7 +381,7 @@ class Essay(object):
         def add_sentence(sentence, str_sent):
 
             sents = filter(lambda s: len(s) > 1 and s != '//', sent_tokenize(onlyascii(str_sent.strip())))
-            sents = map(lambda s: s.replace("/", " ").replace("-", " - ").replace(")", " ) ").replace("  "," "), sents)
+            sents = map(lambda s: s.replace("/", " ").replace("-", " - ").replace(")", " ) ").replace("  "," ").strip(), sents)
             # the code below handles cases where the sentences are not properly split and we get multiple sentences here
             if len(sents) > 1:
                 # filter to # of full sentences, and we should get at least this many out
@@ -520,8 +520,8 @@ if __name__ == "__main__":
 
     #essays = load_bratt_essays(include_normal=False)
     settings = Settings.Settings()
-    #bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
-    bratt_root_folder = settings.data_directory + "SkinCancer/EBA1415_Merged/"
+    bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
+    #bratt_root_folder = settings.data_directory + "SkinCancer/EBA1415_Merged/"
     essays = load_bratt_essays(include_normal=False, directory=bratt_root_folder)
 
     for essay in essays:

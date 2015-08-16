@@ -42,7 +42,7 @@ settings = Settings.Settings()
 model_store = ModelStore()
 
 """ PETER - CHANGE THESE FILE PATHS """
-folder =                settings.data_directory + "CoralBleaching/BrattData/EBA_Pre_Post_Merged/"   # Location where the training data is, use EBA_Pre and Post test essays preferably
+folder =                settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"   # Location where the training data is, use EBA_Pre and Post test essays preferably
 test_folder=            settings.data_directory + "CoralBleaching/BrattData/Merged/"                # Location where the new essays to tag are located
 out_predictions_file =  settings.data_directory + "CoralBleaching/Results/predictions.txt"          # File to dump the predictions to
 

@@ -26,7 +26,7 @@ REVERSE             = False
 # construct unique key using settings for pickling
 
 settings = Settings.Settings()
-folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA_Pre_Post_Merged/"
+folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
 processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
 
 config = get_config(folder)

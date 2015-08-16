@@ -49,7 +49,7 @@ settings = Settings.Settings()
 
 model_store = ModelStore()
 
-folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA_Pre_Post_Merged/"
+folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
 config = get_config(folder)
 
 """ FEATURE EXTRACTION """

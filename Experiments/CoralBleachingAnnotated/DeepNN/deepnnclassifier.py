@@ -55,7 +55,7 @@ settings = Settings.Settings()
 essay_filename_prefix           = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_pickled_"
 processed_essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
 
-folder = settings.data_directory + "CoralBleaching/BrattData/EBA_Pre_Post_Merged/"
+folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
 
 @memoize_to_disk(filename_prefix=essay_filename_prefix)
 def load_essays(include_vague=INCLUDE_VAGUE, include_normal=INCLUDE_NORMAL):
