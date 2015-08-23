@@ -57,14 +57,28 @@ class SpellingCorrector(object):
     def known(self, words): return set(w for w in words if w in self.nwords)
     
     def correct(self, word):
+        word = word.strip()
         #don't correct words with numerics
         #need to ignore ' here
-        if not word.replace("'","").isalpha():
+        lcword = word.lower()
+        if not word.replace("'","").isalpha() or lcword in self.nwords or len(word) < 3:
             return word
+
+        initial_caps = word[0].isupper() and len(word) > 1
+        all_caps = word.isupper()
+
+        #This code only deals with lc characters
+        word = lcword
         if word in self.memoize:
-            return self.memoize[word]
-        correction = self.__correct__(word)
-        self.memoize[word] = correction
+            correction = self.memoize[word]
+        else:
+            correction = self.__correct__(word)
+            self.memoize[word] = correction
+
+        if all_caps:
+            correction = correction.upper()
+        elif initial_caps:
+            correction = correction[0].upper() + correction[1:]
         return correction
 
     def __correct__(self, word):
@@ -73,10 +87,11 @@ class SpellingCorrector(object):
 
 if __name__ == "__main__":
     sc = SpellingCorrector()
-    
-    print "appe", sc.correct("appe")
-    print "apple", sc.correct("apple")
-    print "aple", sc.correct("aple")
-    print "appl", sc.correct("appl")
-    print "appple", sc.correct("appple")
+
+    print "eappl  ",  sc.correct("eappl")
+    print "Coral ", sc.correct("Coral")
+    print "Appe  ",  sc.correct("Appe")
+    print "APPLE ", sc.correct("APPLE")
+    print "APLE  ",  sc.correct("APLE")
+    print "appplE",sc.correct("appplE")
     

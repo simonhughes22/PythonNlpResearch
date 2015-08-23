@@ -29,7 +29,10 @@ class ResultsProcessor(object):
 
     def __f1_(self, r, p):
         r, p = float(r), float(p)
-        return (2.0 * r * p) / (r + p)
+        denom = (r + p)
+        if denom == 0:
+            return 0.0
+        return (2.0 * r * p) / denom
 
     def __get_mean_metrics_(self, dict_mean_metrics):
 

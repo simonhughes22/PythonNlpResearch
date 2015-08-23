@@ -36,10 +36,10 @@ processor = ResultsProcessor()
 SPARSE_WD_FEATS     = True
 SPARSE_SENT_FEATS   = True
 
-MIN_FEAT_FREQ       = 5        # 5 best so far
+MIN_FEAT_FREQ       = 10        # 5 best so far
 CV_FOLDS            = 5
 
-MIN_TAG_FREQ        = 5
+MIN_TAG_FREQ        = 10
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 # end not hashed
 
@@ -82,15 +82,20 @@ logger.info("Features loaded")
 tag_freq = defaultdict(int)
 for essay in tagged_essays:
     for sentence in essay.sentences:
+        un_tags = set()
         for word, tags in sentence:
             for tag in tags:
                 if (tag[-1].isdigit() or tag in {"Causer", "explicit", "Result"} \
-                        or tag.startswith("Causer") or tag.startswith("Result") or tag.startswith("explicit"))\
-                        and not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag or "->" in tag):
+                        or tag.startswith("Causer") or tag.startswith("Result") or tag.startswith("explicit") or "->" in tag)\
+                        and not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag):
                 #if not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag):
-                    tag_freq[tag] += 1
+                    un_tags.add(tag)
+        for tag in un_tags:
+            tag_freq[tag] += 1
 
-freq_tags = list(set((tag for tag, freq in tag_freq.items() if freq >= 20)))
+freq_tags = list(set((tag for tag, freq in tag_freq.items() if freq >= MIN_TAG_FREQ)))
+non_causal  = [t for t in freq_tags if "->" not in t]
+only_causal = [t for t in freq_tags if "->" in t]
 
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
 regular_tags = list(set((t for t in flatten(lst_all_tags) if t[0].isdigit())))
@@ -103,11 +108,11 @@ wd_train_tags = list(set(freq_tags + CAUSE_TAGS))
 wd_test_tags  = list(set(freq_tags + CAUSE_TAGS))
 
 # tags from tagging model used to train the stacked model
-sent_input_feat_tags = wd_train_tags
+sent_input_feat_tags = list(set(freq_tags + CAUSE_TAGS))
 # find interactions between these predicted tags from the word tagger to feed to the sentence tagger
-sent_input_interaction_tags = regular_tags
+sent_input_interaction_tags = list(set(non_causal + CAUSE_TAGS))
 # tags to train (as output) for the sentence based classifier
-sent_output_train_test_tags = list(set(freq_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
+sent_output_train_test_tags = list(set(only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
 
 assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against

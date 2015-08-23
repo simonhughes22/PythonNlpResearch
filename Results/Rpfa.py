@@ -32,6 +32,9 @@ def mean_rpfa(metrics):
         ta += metric.accuracy
 
     l = float(len(metrics))
+    #prevent divide by 0!
+    if l == 0.0:
+        return rpfa(0,0,0,0,0)
     return rpfa(tr / l, tp / l, tf / l, ta / l, l)
 
 
@@ -47,6 +50,8 @@ def weighted_mean_rpfa(metrics):
         ta += metric.accuracy * metric.num_codes
         total_codes += metric.num_codes
 
+    if total_codes <= 0.0:
+        return rpfa(0.0,0.0,0.0,0.0)
     return rpfa(tr / total_codes, tp / total_codes, tf / total_codes, ta / total_codes, total_codes)
 
 

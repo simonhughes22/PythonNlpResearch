@@ -96,6 +96,10 @@ for essay in tagged_essays:
         xs.append(row)
         maxlen = max(len(row), maxlen)
 
+total_positive = sum(ys)
+assert total_positive > 5, "No positive examples"
+print("Total positive %i" % total_positive)
+
 max_features=generator.max_id() + 2
 batch_size = 16
 
