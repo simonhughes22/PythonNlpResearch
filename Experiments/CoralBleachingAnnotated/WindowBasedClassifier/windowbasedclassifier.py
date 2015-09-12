@@ -170,7 +170,7 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     merge_dictionaries(td_sent_predictions_by_code, cv_sent_td_predictions_by_tag)
     merge_dictionaries(vd_sent_predictions_by_code, cv_sent_vd_predictions_by_tag)
 
-    predictions_to_file(f_output_file, sent_vd_ys_bycode, vd_sent_predictions_by_code, essays_VD, regular_tags + CAUSE_TAGS + CAUSAL_REL_TAGS)
+    predictions_to_file(f_output_file, sent_vd_ys_bycode, vd_sent_predictions_by_code, essays_VD)
 
 f_output_file.close()
 # print results for each code

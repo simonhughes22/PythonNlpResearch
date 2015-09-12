@@ -484,7 +484,8 @@ def load_bratt_essays(directory = None, include_vague = True, include_normal = T
     bratt_root_folder = directory
     if not bratt_root_folder:
         settings = Settings.Settings()
-        bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/Merged/"
+        #bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/Merged/"
+        bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
 
     if load_annotations:
         files = find_files(bratt_root_folder, "\.ann$", remove_empty=True)

@@ -12,10 +12,16 @@ def compute_metrics(ys_by_tag, predictions_by_tag):
     """ Compute metrics for all predicted codes """
     metrics_by_tag = dict()
     for tag, pred_ys in predictions_by_tag.items():
-        ys = ys_by_tag[tag]
-        r, p, f1, acc = rpf1a(ys, pred_ys)
-        metric = rpfa(r, p, f1, acc, nc=len([1 for y in ys if y > 0.0]))
-        metrics_by_tag[tag] = metric
+        try:
+            ys = ys_by_tag[tag]
+            if len(ys) == 0:
+                continue
+            r, p, f1, acc = rpf1a(ys, pred_ys)
+            metric = rpfa(r, p, f1, acc, nc=len([1 for y in ys if y > 0.0]))
+            metrics_by_tag[tag] = metric
+        except Exception as e:
+            print("Exception processing tag: %s" % str(tag))
+            raise e
     return metrics_by_tag
 
 class ResultsProcessor(object):

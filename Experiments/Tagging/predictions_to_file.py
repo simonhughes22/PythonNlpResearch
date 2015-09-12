@@ -1,12 +1,16 @@
 __author__ = 'simon.hughes'
 
-def predictions_to_file(file, ys_by_code, predictions_by_code, essays, codes):
+def predictions_to_file(file, ys_by_code, predictions_by_code, essays, codes = None):
 
     def sort_key(code):
         if code[0].isdigit():
             return (-1, len(code), code)
         return (1, len(code), code)
 
+    if codes is None:
+        codes = sorted(set(list(ys_by_code.keys()) + list(predictions_by_code.keys())))
+    else:
+        codes = sorted(codes)
     ix = 0
     for essay_ix, essay in enumerate(essays):
         for sent_ix, tagged_sentence in enumerate(essay.sentences):

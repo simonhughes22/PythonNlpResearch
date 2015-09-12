@@ -10,7 +10,7 @@ def __tally_results__(expected, actual, class_value):
     """
 
     if len(actual) != len(expected):
-        raise Exception("Both list must be the same size")
+        raise Exception("Both list must be the same size, actual - %i expected - %i" % ( len(actual), len(expected)) )
     
     tp = 0.0
     fp = 0.0

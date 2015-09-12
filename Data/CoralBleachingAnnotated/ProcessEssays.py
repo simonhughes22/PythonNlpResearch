@@ -53,6 +53,11 @@ def process_essays(essays, min_df = 5,
 
     @memoize
     def correct_word(w):
+        if len(w) > 2:
+            if w.startswith("'") or w.startswith("\""):
+                w = w[1:]
+            if w.endswith("'") or w.endswith("\""):
+                w = w[:-1]
         if w.endswith("n't") or w.endswith("n'"):
             cw = w[:-3] + "nt"
         elif w.endswith("'s"):
@@ -81,12 +86,15 @@ def process_essays(essays, min_df = 5,
             w = w.lower()
         if len(w) == 0:
             return None
-        if w[0] == "\"":
+        while len(w) > 1 and (w[0] == "\"" or w[0] == "'"):
             w = w[1:]
             if len(w) == 0:
                 return None
-        if w[-1] == "\"":
+        while len(w) > 1 and (w[-1] == "\"" or w[-1] == "'"):
             w = w[:-1]
+            if len(w) == 0:
+                return None
+
         if remove_stop_words and w in stop_wds:
             return None
 
@@ -167,5 +175,5 @@ if __name__ == "__main__":
     from BrattEssay import load_bratt_essays
 
     essays = load_bratt_essays()
-    processed_sentences = process_sentences(essays, stem=True)
+    processed_sentences = process_sentences(essays, stem=True, spelling_correct=False)
     pass

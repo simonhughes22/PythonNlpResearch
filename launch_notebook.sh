@@ -8,4 +8,5 @@ export THEANO_FLAGS='mode=FAST_RUN,device=gpu,floatX=float32'
 
 export MONTYLINGUA='/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/PythonNlpResearch/MontyLingua/'
 cd Notebooks
-ipython notebook
+#ipython notebook
+jupyter notebook

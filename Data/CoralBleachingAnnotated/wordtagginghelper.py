@@ -122,7 +122,7 @@ def train_classifier_per_code(xs, ysByCode, fn_create_cls, tags=None):
     for code in sorted(tags):
         print "Training for :", code
         ys = np.asarray(ysByCode[code])
-        if max(ys) == 0:
+        if len(ys) == 0 or max(ys) == 0:
             cls = always_false()
         else:
             cls = fn_create_cls()

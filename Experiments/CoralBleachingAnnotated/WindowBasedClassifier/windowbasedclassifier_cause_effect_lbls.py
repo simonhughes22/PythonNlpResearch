@@ -85,6 +85,8 @@ for essay in tagged_essays:
         un_tags = set()
         for word, tags in sentence:
             for tag in tags:
+                if "5b" in tag:
+                    continue
                 if (tag[-1].isdigit() or tag in {"Causer", "explicit", "Result"} \
                         or tag.startswith("Causer") or tag.startswith("Result") or tag.startswith("explicit") or "->" in tag)\
                         and not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag):
@@ -93,6 +95,7 @@ for essay in tagged_essays:
         for tag in un_tags:
             tag_freq[tag] += 1
 
+all_tags = list(tag_freq.keys())
 freq_tags = list(set((tag for tag, freq in tag_freq.items() if freq >= MIN_TAG_FREQ)))
 non_causal  = [t for t in freq_tags if "->" not in t]
 only_causal = [t for t in freq_tags if "->" in t]
@@ -104,15 +107,20 @@ CAUSE_TAGS = ["Causer", "Result", "explicit"]
 CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 
 """ works best with all the pair-wise causal relation codes """
-wd_train_tags = list(set(freq_tags + CAUSE_TAGS))
-wd_test_tags  = list(set(freq_tags + CAUSE_TAGS))
+# Include all tags for the output
+wd_train_tags = list(set(all_tags + CAUSE_TAGS))
+wd_test_tags  = list(set(all_tags + CAUSE_TAGS))
+#wd_train_tags = list(set(freq_tags + CAUSE_TAGS))
+#wd_test_tags  = list(set(freq_tags + CAUSE_TAGS))
 
 # tags from tagging model used to train the stacked model
 sent_input_feat_tags = list(set(freq_tags + CAUSE_TAGS))
 # find interactions between these predicted tags from the word tagger to feed to the sentence tagger
 sent_input_interaction_tags = list(set(non_causal + CAUSE_TAGS))
 # tags to train (as output) for the sentence based classifier
-sent_output_train_test_tags = list(set(only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
+#sent_output_train_test_tags = list(set(regular_tags + only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
+#sent_output_train_test_tags = list(set(only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
+sent_output_train_test_tags = list(set(regular_tags + freq_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
 
 assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against
@@ -189,10 +197,11 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     merge_dictionaries(td_sent_predictions_by_code, cv_sent_td_predictions_by_tag)
     merge_dictionaries(vd_sent_predictions_by_code, cv_sent_vd_predictions_by_tag)
 
-    predictions_to_file(f_output_file, sent_vd_ys_bycode, vd_sent_predictions_by_code, essays_VD, regular_tags + CAUSE_TAGS + CAUSAL_REL_TAGS)
+    predictions_to_file(f_output_file, sent_vd_ys_bycode, vd_sent_predictions_by_code, essays_VD, codes=sent_output_train_test_tags)
 
 f_output_file.close()
 # print results for each code
+logger.info("Training completed")
 
 """ Persist Results to Mongo DB """
 
@@ -214,7 +223,7 @@ sent_vd_objectid = processor.persist_results(CB_SENT_VD, cv_sent_vd_ys_by_tag, c
 
 print processor.results_to_string(wd_td_objectid,   CB_TAGGING_TD,  wd_vd_objectid,     CB_TAGGING_VD,  "TAGGING")
 print processor.results_to_string(sent_td_objectid, CB_SENT_TD,     sent_vd_objectid,   CB_SENT_VD,     "SENTENCE")
-
+logger.info("Results Processed")
 """
 # PLAN
 #   WORD LEVEL FEATURE EXTRACTION - use functions specific to the individual word, but that can look around at the

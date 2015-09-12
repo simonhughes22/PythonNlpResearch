@@ -101,6 +101,10 @@ def get_sent_feature_for_stacking_from_tagging_model(feat_tags, interaction_tags
         blank = [0] * feats_per_sentence
 
         """ LOOK BACK """
+        # Right now this isn't very useful. What we need to do is to add on only concept codes
+        # from the previous sentence as additional feats, and possibly interactions between codes
+        # in the previous sentence(s) and the current, treating prev sent codes as different to
+        # current sent codes (e.g. a 50 in sent -1 is different to a 50 in current sentence)
         for i, sent_feats in enumerate(tmp_essays_xs):
             concat_feats = list(sent_feats)
             offset = -1
