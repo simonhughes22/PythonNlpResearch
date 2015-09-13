@@ -198,6 +198,7 @@ class Essay(object):
         self.sentence_tags = []
         self.id2annotation = {}
         self.split_sents = []
+        self.aborted_splits = []
 
         if load_annotations:
             with open(full_path, "r+") as f:
@@ -378,12 +379,33 @@ class Essay(object):
                     out += char
             return out
 
+        def first_alnum(s):
+            for c in s:
+                if c.isalnum():
+                    return c
+            return ""
+
         def add_sentence(sentence, str_sent):
 
             sents = filter(lambda s: len(s) > 1 and s != '//', sent_tokenize(onlyascii(str_sent.strip())))
             sents = map(lambda s: s.replace("/", " ").replace("-", " - ").replace(")", " ) ").replace("  "," ").strip(), sents)
+
             # the code below handles cases where the sentences are not properly split and we get multiple sentences here
             if len(sents) > 1:
+                # Only valid splits start with a initial capital letter
+
+                new_sents = []
+                for s in sents:
+                    if len(new_sents) > 0 and (s.strip() =="\"" or s.strip()[0] in ("(",")") or s.strip()[0].islower() or first_alnum(s).islower()):
+                        self.aborted_splits.append(new_sents[-1])
+                        self.aborted_splits.append(s)
+                        new_sents[-1] += " " + s
+                    else:
+                        new_sents.append(s)
+                sents = new_sents
+
+            if len(sents) > 1:
+
                 # filter to # of full sentences, and we should get at least this many out
                 expected_min_sents = len([s for s in sents if s.strip().split(" ") > 1])
 
@@ -525,6 +547,15 @@ if __name__ == "__main__":
     #bratt_root_folder = settings.data_directory + "SkinCancer/EBA1415_Merged/"
     essays = load_bratt_essays(include_normal=False, directory=bratt_root_folder)
 
+    print("ABORTED SPLITS")
+    for essay in essays:
+        if essay.aborted_splits:
+            print essay.full_path
+            for sent in essay.aborted_splits:
+                print sent
+            print ""
+
+    print("\n\nSPLIT SENTENCES")
     for essay in essays:
         if essay.split_sents:
             print essay.full_path
