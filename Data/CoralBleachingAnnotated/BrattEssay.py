@@ -1,4 +1,3 @@
-
 import os
 
 from FindFiles import find_files
@@ -6,7 +5,6 @@ import Settings
 
 from collections import defaultdict
 from nltk.tokenize import sent_tokenize
-import numpy as np
 from IterableFP import flatten
 
 class AnnotationBase(object):

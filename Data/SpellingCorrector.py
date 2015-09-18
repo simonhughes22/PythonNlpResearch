@@ -8,10 +8,13 @@ class SpellingCorrector(object):
     """ 
         This is a simple spelling corrector taking from Peter Norvig's site
     """    
-    def __init__(self, words = None):
+    def __init__(self, words = None, folder = None):
 
         #settings = Settings.Settings()
-        dir = "/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Data/PublicDataSets/"
+        if folder is None:
+            dir = "/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Data/PublicDataSets/"
+        else:
+            dir = folder
         dictionary_file = dir + "words.lst"
 
         if not words:

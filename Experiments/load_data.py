@@ -11,7 +11,7 @@ def load_process_essays(window_size, min_sentence_length, folder, min_df, remove
     essays = load_bratt_essays(directory=folder, include_vague=include_vague, include_normal=include_normal)
     return process_essays(essays, min_df=min_df, remove_infrequent=remove_infrequent, spelling_correct=spelling_correct,
                           replace_nums=replace_nums, stem=stem, remove_stop_words=remove_stop_words,
-                          remove_punctuation=remove_punctuation, lower_case=lower_case)
+                          remove_punctuation=remove_punctuation, lower_case=lower_case, spelling_corrector=None)
 
 def load_process_essays_without_annotations(window_size, min_sentence_length, folder, min_df, remove_infrequent,
                             spelling_correct,
@@ -22,7 +22,7 @@ def load_process_essays_without_annotations(window_size, min_sentence_length, fo
     essays = load_bratt_essays(directory=folder, include_vague=include_vague, include_normal=include_normal, load_annotations=False)
     return process_essays(essays, min_df=min_df, remove_infrequent=remove_infrequent, spelling_correct=spelling_correct,
                           replace_nums=replace_nums, stem=stem, remove_stop_words=remove_stop_words,
-                          remove_punctuation=remove_punctuation, lower_case=lower_case)
+                          remove_punctuation=remove_punctuation, lower_case=lower_case, spelling_corrector=None)
 
 def extract_features(tagged_essays, extractors=None, window_size=None, min_sentence_length=None, folder=None,
                      min_df=None, remove_infrequent=None,

@@ -4,8 +4,10 @@ import os
 import cPickle as pickle
 
 class ModelStore():
-    def __init__(self):
-        models_folder = os.getcwd() + "/PickledModels/"
+    def __init__(self, models_folder=None):
+
+        if not models_folder:
+            models_folder = os.getcwd() + "/PickledModels/"
         print "Loading models from", models_folder
         self.models_folder = models_folder
         self.feat_transform_file = models_folder + "feat_extractor_pickled.p"

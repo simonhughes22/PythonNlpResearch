@@ -36,7 +36,7 @@ processor = ResultsProcessor()
 SPARSE_WD_FEATS     = True
 SPARSE_SENT_FEATS   = True
 
-MIN_FEAT_FREQ       = 10        # 5 best so far
+MIN_FEAT_FREQ       = 5        # 5 best so far
 CV_FOLDS            = 5
 
 MIN_TAG_FREQ        = 10
@@ -54,6 +54,10 @@ out_metrics_file     =              settings.data_directory + "CoralBleaching/Re
 out_predictions_file =              settings.data_directory + "CoralBleaching/Results/predictions.txt"
 
 config = get_config(folder)
+
+#Doesn't seem to make much of a difference
+#config["stem"] = True
+#config["lower_case"] = True
 
 """ FEATURE EXTRACTION """
 offset = (config["window_size"] - 1) / 2
@@ -108,10 +112,10 @@ CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 
 """ works best with all the pair-wise causal relation codes """
 # Include all tags for the output
-wd_train_tags = list(set(all_tags + CAUSE_TAGS))
-wd_test_tags  = list(set(all_tags + CAUSE_TAGS))
-#wd_train_tags = list(set(freq_tags + CAUSE_TAGS))
-#wd_test_tags  = list(set(freq_tags + CAUSE_TAGS))
+#wd_train_tags = list(set(all_tags + CAUSE_TAGS))
+#wd_test_tags  = list(set(all_tags + CAUSE_TAGS))
+wd_train_tags = list(set(freq_tags + CAUSE_TAGS))
+wd_test_tags  = list(set(freq_tags + CAUSE_TAGS))
 
 # tags from tagging model used to train the stacked model
 sent_input_feat_tags = list(set(freq_tags + CAUSE_TAGS))
@@ -119,8 +123,8 @@ sent_input_feat_tags = list(set(freq_tags + CAUSE_TAGS))
 sent_input_interaction_tags = list(set(non_causal + CAUSE_TAGS))
 # tags to train (as output) for the sentence based classifier
 #sent_output_train_test_tags = list(set(regular_tags + only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
-#sent_output_train_test_tags = list(set(only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
-sent_output_train_test_tags = list(set(all_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
+#sent_output_train_test_tags = list(set(all_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
+sent_output_train_test_tags = list(set(only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
 
 assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against

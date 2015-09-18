@@ -58,11 +58,6 @@ offset = (config["window_size"] - 1) / 2
 unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
 biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
 
-#pos_tag_window = fact_extract_positional_POS_features(offset)
-#pos_tag_plus_wd_window = fact_extract_positional_POS_features_plus_word(offset)
-#head_wd_window = fact_extract_positional_head_word_features(offset)
-#pos_dep_vecs = fact_extract_positional_dependency_vectors(offset)
-
 extractors = [unigram_window_stemmed, biigram_window_stemmed]
 feat_config = dict(config.items() + [("extractors", extractors)])
 
@@ -76,6 +71,27 @@ essay_feats = feature_extractor.transform(tagged_essays)
 logger.info("Features loaded")
 
 """ DEFINE TAGS """
+tag_freq = defaultdict(int)
+for essay in tagged_essays:
+    for sentence in essay.sentences:
+        un_tags = set()
+        for word, tags in sentence:
+            for tag in tags:
+                if "5b" in tag:
+                    continue
+                if (tag[-1].isdigit() or tag in {"Causer", "explicit", "Result"} \
+                        or tag.startswith("Causer") or tag.startswith("Result") or tag.startswith("explicit") or "->" in tag)\
+                        and not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag):
+                #if not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag):
+                    un_tags.add(tag)
+        for tag in un_tags:
+            tag_freq[tag] += 1
+
+all_tags = list(tag_freq.keys())
+freq_tags = list(set((tag for tag, freq in tag_freq.items() if freq >= MIN_TAG_FREQ)))
+non_causal  = [t for t in freq_tags if "->" not in t]
+only_causal = [t for t in freq_tags if "->" in t]
+
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
 regular_tags = list(set((t for t in flatten(lst_all_tags) if t[0].isdigit())))
 
@@ -83,28 +99,24 @@ CAUSE_TAGS = ["Causer", "Result", "explicit"]
 CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 
 """ works best with all the pair-wise causal relation codes """
-wd_train_tags = regular_tags + CAUSE_TAGS
-wd_test_tags  = regular_tags + CAUSE_TAGS
+# Include all tags for the output
+wd_train_tags = list(set(all_tags + CAUSE_TAGS))
+wd_test_tags  = list(set(all_tags + CAUSE_TAGS))
 
 # tags from tagging model used to train the stacked model
-sent_input_feat_tags = wd_train_tags
+sent_input_feat_tags = list(set(freq_tags + CAUSE_TAGS))
 # find interactions between these predicted tags from the word tagger to feed to the sentence tagger
-sent_input_interaction_tags = wd_train_tags
+sent_input_interaction_tags = list(set(non_causal + CAUSE_TAGS))
 # tags to train (as output) for the sentence based classifier
-sent_output_train_test_tags = list(set(regular_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
+sent_output_train_test_tags = list(set(all_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
 
-assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
-# tags to evaluate against
+assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"# tags to evaluate against
 
 """ CLASSIFIERS """
 """ Log Reg + Log Reg is best!!! """
 fn_create_wd_cls = lambda: LogisticRegression() # C=1, dual = False seems optimal
-#fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
-
-#fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
 fn_create_sent_cls  = lambda : LogisticRegression(dual=True) # C around 1.0 seems pretty optimal
 # NOTE - GBT is stochastic in the SPLITS, and so you will get non-deterministic results
-#fn_create_sent_cls  = lambda : GradientBoostingClassifier() #F1 = 0.5312 on numeric + 5b + casual codes for sentences
 
 if type(fn_create_sent_cls()) == GradientBoostingClassifier:
     SPARSE_SENT_FEATS = False

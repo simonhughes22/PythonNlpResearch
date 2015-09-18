@@ -16,10 +16,27 @@ class Sentence(object):
         self.sentence_tags = sentence_tags
         self.tagged_words = tagged_words
 
+
+def build_spelling_corrector(essays, lower_case, wd_sent_freq):
+    all_words = []
+    for essay in essays:
+        for sentence in essay.tagged_sentences:
+            unique_wds = set()
+            for w, tags in sentence:
+                if lower_case:
+                    w = w.lower()
+                all_words.append(w)  # retain frequencies for spelling correction
+                if w not in unique_wds:
+                    unique_wds.add(w)
+                    wd_sent_freq[w] += 1
+
+    return SpellingCorrector(all_words)
+
+
 def process_essays(essays, min_df = 5,
                       remove_infrequent = False, spelling_correct = True,
                       replace_nums = True, stem = False, remove_stop_words = False,
-                      remove_punctuation = True, lower_case=True):
+                      remove_punctuation = True, lower_case=True, spelling_corrector=None, wd_sent_freq=None):
 
     """ returns a list of essays.
 
@@ -28,8 +45,7 @@ def process_essays(essays, min_df = 5,
     """
 
     INFREQUENT = "INFREQUENT"
-    all_words = []
-    wd_sent_freq = defaultdict(int)
+
     VALID_CHARS = {".", "?", "!", "=", "/", ":", ";", "&", "+", "-", "=", "%", "'", ",", "\\", "(", ")", "\""}
     if remove_stop_words:
         stop_wds = stopwords.words("english")
@@ -37,18 +53,12 @@ def process_essays(essays, min_df = 5,
     if stem:
         stemmer = PorterStemmer()
 
-    for essay in essays:
-        for sentence in essay.tagged_sentences:
-            unique_wds = set()
-            for w, tags in sentence:
-                if lower_case:
-                    w = w.lower()
-                all_words.append(w) # retain frequencies for spelling correction
-                if w not in unique_wds:
-                    unique_wds.add(w)
-                    wd_sent_freq[w] += 1
+    if spelling_corrector is None:
+        wd_sent_freq = defaultdict(int)
+        corrector = build_spelling_corrector(essays, lower_case, wd_sent_freq)
+    else:
+        corrector = spelling_corrector
 
-    corrector = SpellingCorrector(all_words)
     corrections = defaultdict(int)
 
     @memoize
