@@ -116,7 +116,6 @@ class Annotator(object):
     def annotate(self, essay_text):
 
         try:
-            # expects a new line per sentence
             sentences = sent_tokenize(essay_text.strip())
             contents = "\n".join(sentences)
 
@@ -124,7 +123,9 @@ class Annotator(object):
             with open(fname, 'w"') as f:
                 f.write(contents)
 
-            essay = Essay(fname, include_vague=self.config["include_vague"], include_normal=self.config["include_normal"], load_annotations=False)
+            essay = Essay(fname, include_vague=self.config["include_vague"],
+                          include_normal=self.config["include_normal"], load_annotations=False)
+
             processed_essays = process_essays(essays=[essay],
                                               spelling_corrector=self.spelling_corrector,
                                               wd_sent_freq=self.wd_sent_freq,
@@ -139,29 +140,143 @@ class Annotator(object):
             self.logger.info("Essay loaded successfully")
             essays_TD = self.feature_extractor.transform(processed_essays)
 
-            td_feats, _ = flatten_to_wordlevel_feat_tags(essays_TD)
-            td_X = self.feature_transformer.transform(td_feats)
-            td_wd_predictions_by_code = test_classifier_per_code(td_X, self.tag_2_wd_classifier, self.wd_test_tags)
+            wd_feats, _ = flatten_to_wordlevel_feat_tags(essays_TD)
+            xs = self.feature_transformer.transform(wd_feats)
+            wd_predictions_by_code = test_classifier_per_code(xs, self.tag_2_wd_classifier, self.wd_test_tags)
 
-            dummy_wd_td_ys_bytag = defaultdict(lambda: np.asarray([0.0] * td_X.shape[0]))
-            sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking_from_tagging_model(self.sent_input_feat_tags,
+            dummy_wd_td_ys_bytag = defaultdict(lambda: np.asarray([0.0] * xs.shape[0]))
+            sent_xs, sent_ys_bycode = get_sent_feature_for_stacking_from_tagging_model(self.sent_input_feat_tags,
                                                                                              self.sent_input_interaction_tags,
-                                                                                             essays_TD, td_X,
+                                                                                             essays_TD, xs,
                                                                                              dummy_wd_td_ys_bytag,
                                                                                              self.tag_2_wd_classifier,
                                                                                              sparse=True,
                                                                                              look_back=0)
 
             """ Test Stack Classifier """
-            td_sent_predictions_by_code \
-                = test_classifier_per_code(sent_td_xs, self.tag_2_sent_classifier, self.sent_output_train_test_tags)
+            sent_predictions_by_code = test_classifier_per_code(sent_xs, self.tag_2_sent_classifier, self.sent_output_train_test_tags)
 
-            return essay
+            return {"tagged_words":      self.__get_tagged_words_(essay, essays_TD[0], wd_predictions_by_code),
+                    "tagged_sentences" : self.__get_tagged_sentences_(essay, sent_predictions_by_code)}
         except Exception as x:
             self.logger.exception("An exception occured while annotating essay")
             return {"error": format_exc()}
         pass
 
+    def __is_tag_to_return_(self, tag):
+        return tag[0].isdigit() or ("->" in tag and "Causer" in tag)
+
+    def __friendly_tag_(self, tag):
+        return tag.replace("Causer:", "").replace("Result:", "")
+
+    def __get_regular_tags_(self, pred_tags):
+        r_tags = sorted(filter(lambda t: t[0].isdigit() and "->" not in t, pred_tags),
+                        key=lambda s: (int(s), s) if s.isdigit() else ((-1, s)))
+        str_r_tags = ",".join(r_tags)
+        return str_r_tags
+
+    def __get_causal_tags_(self, pred_tags):
+        c_tags = sorted(filter(lambda t: "->" in t, pred_tags), key=lambda s: int(s.split("->")[0]))
+        str_c_tags = ",".join(c_tags)
+        return str_c_tags
+
+    def __get_tagged_sentences_(self, essay, sent_predictions_by_code):
+        tagged_sents = []
+        for i, sent in enumerate(essay.tagged_sentences):
+            wds, _ = zip(*sent)
+            str_sent = " ".join(wds)
+            pred_tags = set()
+            for tag, array in sent_predictions_by_code.items():
+                if self.__is_tag_to_return_(tag):
+                    if np.max(array) == 1:
+                        pred_tags.add(self.__friendly_tag_(tag))
+
+            str_r_tags = self.__get_regular_tags_(pred_tags)
+            str_c_tags = self.__get_causal_tags_(pred_tags)
+
+            tagged_sents.append((str_sent, str_r_tags, str_c_tags ))
+        return tagged_sents
+
+    def __fuzzy_match_(self, original, feat_wd):
+        original = original.lower().strip()
+        feat_wd = feat_wd.lower().strip()
+        if original == feat_wd:
+            return True
+        if original[:3] == feat_wd[:3]:
+            return True
+        a = set(original)
+        b = set(feat_wd)
+        jaccard = float(len(a.intersection(b))) / float(len(a.union(b)))
+        return jaccard >= 0.5
+
+    def __align_wd_tags_(self, orig, feats):
+        """
+        Once processed, there may be a different number of words than in the original sentence
+        Try and recover the tags for the original words by aligning the two using simple heuristics
+        """
+        if len(orig) < len(feats):
+            raise Exception("align_wd_tags() : Original sentence is longer!")
+
+        o_wds, _ = zip(*orig)
+        feat_wds, new_tags = zip(*feats)
+
+        if len(orig) == len(feats):
+            return zip(o_wds, new_tags)
+
+        #here orig is longer than feats
+        diff = len(orig) - len(feats)
+        tagged_wds = []
+        feat_offset = 0
+        while len(tagged_wds) < len(o_wds):
+            i = len(tagged_wds)
+            orig_wd = o_wds[i]
+            print i, orig_wd
+
+            if i >= len(feats):
+                tagged_wds.append((orig_wd, new_tags[-1]))
+                continue
+            else:
+                new_tag_ix = i - feat_offset
+                feat_wd = feats[new_tag_ix][0]
+                if feat_wd == "INFREQUENT" or feat_wd.isdigit():
+                    tagged_wds.append((orig_wd, new_tags[new_tag_ix]))
+                    continue
+
+                new_tagged_wds = []
+                found = False
+                for j in range(i, i + diff + 1):
+                    new_tagged_wds.append((o_wds[j], new_tags[new_tag_ix]))
+                    next_orig_wd = o_wds[j]
+                    if self.__fuzzy_match_(next_orig_wd, feat_wd):
+                        found = True
+                        tagged_wds.extend(new_tagged_wds)
+                        feat_offset += len(new_tagged_wds) - 1
+                        break
+                if not found:
+                    raise Exception("No matching word found for index:%i and processed word:%s" % (i, feat_wd))
+        return tagged_wds
+
+    def __get_tagged_words_(self, original_essay, essay_TD, wd_predictions_by_code):
+        tagged_sents = []
+        # should be a one to one correspondance between words in essays_TD[0] and predictions
+        i = 0
+        for sent_ix, sent in enumerate(essay_TD.sentences):
+            tmp_tagged_wds = []
+            for wix, (feat) in enumerate(sent):
+                word = feat.word
+                tags = set()
+                for tag in wd_predictions_by_code.keys():
+                    if wd_predictions_by_code[tag][i] > 0:
+                        tags.add(tag)
+                i += 1
+                tmp_tagged_wds.append((word, tags))
+
+            # Now allign the predicted tags with the original words
+            wds, aligned_tags = zip(*self.__align_wd_tags_(original_essay.tagged_sentences[sent_ix], tmp_tagged_wds))
+            fr_aligned_tags = map(lambda tags: set(map(self.__friendly_tag_, tags)), aligned_tags)
+            tagged_words = zip(wds, fr_aligned_tags)
+            tagged_sents.append(map(lambda (wd, tags): (wd, self.__get_regular_tags_(tags), self.__get_causal_tags_(tags)), tagged_words))
+        return tagged_sents
 
 if __name__ == "__main__":
 
@@ -172,7 +287,7 @@ if __name__ == "__main__":
     folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
 
     annotator = Annotator(models_folder= cwd +"/Models/CB/", temp_folder=cwd+"/temp/", essays_folder=folder)
-    annotations = annotator.annotate("""
+    d_annotations = annotator.annotate("""
 Corals are living animals in the ocean.
 Corals live in one place and dont really move alot.
 Some corals have white on them and that is called "coral bleaching."
@@ -192,6 +307,14 @@ The zooanthellae rely on the coral to stay healthy, but the coral can get physic
 Coral bleaching is a physical damage to the corals.
 Coral bleaching is also an example how the envionmental stressors can affect the relationships between the coral and the algae. //
     """)
-    for sent in annotations.tagged_sentences:
-        print sent
+    
+    for sent, r_tags, c_tags in d_annotations["tagged_sentences"]:
+        print "\"" + sent + "\"", r_tags, c_tags
+    print ""
+
+    for sent in d_annotations["tagged_words"]:
+        for wd, r_tags, c_tags in sent:
+            print str((wd, r_tags, c_tags))
+        print ""
+    print ""
     pass

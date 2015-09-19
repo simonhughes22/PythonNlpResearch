@@ -81,6 +81,8 @@ def process_essays(essays, min_df = 5,
     @memoize
     def is_valid_wd(wd):
         wd = wd.strip()
+        if wd in {".","?","!"}:
+            return True
         if len(wd) > 1:
             return True
         if wd.isalpha() or wd.isdigit() or wd in VALID_CHARS:

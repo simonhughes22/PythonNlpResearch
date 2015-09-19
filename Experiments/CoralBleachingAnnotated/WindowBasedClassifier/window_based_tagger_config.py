@@ -13,7 +13,8 @@ STEM                = False    # note this tends to improve matters, but is need
 REPLACE_NUMS        = True     # 1989 -> 0000, 10 -> 00
 MIN_SENTENCE_LENGTH = 3
 REMOVE_STOP_WORDS   = False
-REMOVE_PUNCTUATION  = True
+#REMOVE_PUNCTUATION  = True
+REMOVE_PUNCTUATION  = False
 LOWER_CASE          = False
 
 # FEATURE SETTINGS

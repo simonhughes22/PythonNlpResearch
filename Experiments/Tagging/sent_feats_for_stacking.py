@@ -31,6 +31,7 @@ def num_different_tags(pred):
 
 def get_sent_feature_for_stacking_from_tagging_model(feat_tags, interaction_tags, essays, word_feats, ys_bytag, tag2Classifier, sparse=False, look_back=0):
 
+    # dicts, key = tag, to a 1D array of word-level predictions
     real_num_predictions_bytag = dict()
     predictions_bytag = dict()
     for tag in feat_tags:

@@ -79,7 +79,6 @@ sent_output_train_test_tags = list(set(regular_tags + CAUSE_TAGS + CAUSAL_REL_TA
 assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against
 
-
 # Gather metrics
 cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
 
