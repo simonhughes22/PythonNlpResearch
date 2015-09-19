@@ -192,6 +192,6 @@ The zooanthellae rely on the coral to stay healthy, but the coral can get physic
 Coral bleaching is a physical damage to the corals.
 Coral bleaching is also an example how the envionmental stressors can affect the relationships between the coral and the algae. //
     """)
-    for sent in annotations.sentences:
+    for sent in annotations.tagged_sentences:
         print sent
     pass

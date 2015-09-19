@@ -247,7 +247,7 @@ class Essay(object):
                 continue
 
             if not line[1].isdigit():
-                print "Skipping annotation line: %s" % line.strip()
+                print "Skipping annotation line: %s \n\tin essay %s" % (line.strip(), self.file_name)
                 continue
 
             first_char = line[0]
@@ -541,8 +541,8 @@ if __name__ == "__main__":
 
     #essays = load_bratt_essays(include_normal=False)
     settings = Settings.Settings()
-    bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
-    #bratt_root_folder = settings.data_directory + "SkinCancer/EBA1415_Merged/"
+    #bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
+    bratt_root_folder = settings.data_directory + "SkinCancer/EBA1415_Merged/"
     essays = load_bratt_essays(include_normal=False, directory=bratt_root_folder)
 
     print("ABORTED SPLITS")
