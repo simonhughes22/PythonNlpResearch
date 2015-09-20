@@ -27,6 +27,38 @@ def onlyascii(s):
             out += char
     return out
 
+def friendly_tag(tag):
+    return tag.replace("Causer:", "").replace("Result:", "")
+
+def cr_sort_key(cr):
+    cr = cr.replace("5b", "5.5")
+    # _'s last
+    if cr[0] == "_":
+        return (99999999, cr, cr, cr)
+    # Casual second to last, ordered by the order of the cause then the effect
+    if "->" in cr:
+        cr = friendly_tag(cr)
+        a,b = cr.split("->")
+        if a.isdigit():
+            a = float(a)
+        if b.isdigit():
+            b = float(b)
+        return (9000, a,b, cr)
+    # order causer's before results
+    elif "Result:" in cr:
+        cr = friendly_tag(cr)
+        return (-1, float(cr),-1,cr)
+    elif "Causer:" in cr:
+        cr = friendly_tag(cr)
+        return (-2, float(cr),-1,cr)
+    else:
+        #place regular tags first, numbers ahead of words
+        if cr[0].isdigit():
+            return (-10, float(cr),-1,cr)
+        else:
+            return (-10, 9999.9   ,-1,cr.lower())
+    return (float(cr.split("->")[0]), cr) if cr.split("->")[0][0].isdigit() else (99999, cr)
+
 class Annotator(object):
 
     def __init__(self, models_folder, temp_folder, essays_folder):
@@ -156,18 +188,104 @@ class Annotator(object):
             """ Test Stack Classifier """
             sent_predictions_by_code = test_classifier_per_code(sent_xs, self.tag_2_sent_classifier, self.sent_output_train_test_tags)
 
+            """ Generate Return Values """
+            essay_tags = self.__get_essay_tags_(sent_predictions_by_code)
+
+            essay_type = None
+            if "coral" in self.essays_folder.lower():
+                essay_type = "CB"
+            elif "skin" in self.essays_folder.lower():
+                essay_type = "SC"
+            else:
+                raise Exception("Unknown essay type")
+
+            raw_essay_tags = ",".join(sorted(essay_tags, key=cr_sort_key))
             return {"tagged_words":      self.__get_tagged_words_(essay, essays_TD[0], wd_predictions_by_code),
-                    "tagged_sentences" : self.__get_tagged_sentences_(essay, sent_predictions_by_code)}
+                    "tagged_sentences" : self.__get_tagged_sentences_(essay, sent_predictions_by_code),
+                    "essay_tags":        self.__format_essay_tags_(essay_tags),
+                    "essay_category":    self.essay_category(raw_essay_tags, essay_type),
+                    "raw_essay_tags":    raw_essay_tags
+            }
         except Exception as x:
             self.logger.exception("An exception occured while annotating essay")
             return {"error": format_exc()}
         pass
 
+    def essay_category(self, s, essay_type):
+
+        essay_type = essay_type.strip().upper()
+
+        if not s or s == "" or s == "nan":
+            return 1
+        splt = s.strip().split(",")
+        splt = filter(lambda s: len(s.strip()) > 0, splt)
+        regular = [t.strip() for t in splt if t[0].isdigit()]
+        any_causal = [t.strip() for t in splt if "->" in t and (("Causer" in t and "Result" in t) or "C->R" in t)]
+        causal = [t.strip() for t in splt if "->" in t and "Causer" in t and "Result" in t]
+        if len(regular) == 0 and len(any_causal) == 0:
+            return 1
+        if len(any_causal) == 0:  # i.e. by this point regular must have some
+            return 2  # no causal
+        # if only one causal then must be 3
+        elif len(any_causal) == 1 or len(causal) == 1:
+            return 3
+        # Map to Num->Num, e.g. Causer:3->Results:50 becomes 3->5
+        # Also map 6 to 16 and 7 to 17 to enforce the relative size relationship
+
+        def map_cb(code):
+            return code.replace("6", "16").replace("7", "17")
+
+        def map_sc(code):
+            return code.replace("4", "14").replace("5", "15").replace("6", "16").replace("150", "50")
+
+        is_cb = False
+        is_sc = False
+        if essay_type == "CB":
+            is_cb = True
+            crels = sorted(map(lambda t: map_cb(t.replace("Causer:", "").replace("Result:", "")).strip(), causal),
+                           key=cr_sort_key)
+        elif essay_type == "SC":
+            is_sc = True
+            crels = sorted(map(lambda t: map_sc(t.replace("Causer:", "").replace("Result:", "")).strip(), \
+                               causal),
+                           key=cr_sort_key)
+        else:
+            raise Exception("Unrecognized filename")
+
+        un_results = set()
+        # For each unique pairwise combination
+        for a in crels:
+            for b in crels:
+                if cr_sort_key(b) >= cr_sort_key(a):  # don't compare each pair twice (a,b) == (b,a)
+                    break
+                # b is always the smaller of the two
+                bc, br = b.split("->")
+                ac, ar = a.split("->")
+                # if result from a is causer for b
+                if br.strip() == ac.strip():
+                    un_results.add((b, a))
+
+        if len(un_results) >= 1:
+            #CB and 6->7->50 ONLY
+            if len(un_results) == 1 and is_cb and ("16->17", "17->50") in un_results:
+                return 4
+            if len(un_results) <= 2 and is_sc:
+                #4->5->6->50
+                codes = set("14,15,16,50".split(","))
+                un_results_cp = set(un_results)
+                for a, b in un_results:
+                    alhs, arhs = a.split("->")
+                    blhs, brhs = b.split("->")
+                    if alhs in codes and arhs in codes and blhs in codes and brhs in codes:
+                        un_results_cp.remove((a, b))
+                if len(un_results_cp) == 0:
+                    return 4
+            return 5
+        else:
+            return 3
+
     def __is_tag_to_return_(self, tag):
         return tag[0].isdigit() or ("->" in tag and "Causer" in tag)
-
-    def __friendly_tag_(self, tag):
-        return tag.replace("Causer:", "").replace("Result:", "")
 
     def __get_regular_tags_(self, pred_tags):
         r_tags = sorted(filter(lambda t: t[0].isdigit() and "->" not in t, pred_tags),
@@ -176,7 +294,7 @@ class Annotator(object):
         return str_r_tags
 
     def __get_causal_tags_(self, pred_tags):
-        c_tags = sorted(filter(lambda t: "->" in t, pred_tags), key=lambda s: int(s.split("->")[0]))
+        c_tags = sorted(filter(lambda t: "->" in t, pred_tags), key=cr_sort_key)
         str_c_tags = ",".join(c_tags)
         return str_c_tags
 
@@ -188,14 +306,37 @@ class Annotator(object):
             pred_tags = set()
             for tag, array in sent_predictions_by_code.items():
                 if self.__is_tag_to_return_(tag):
-                    if np.max(array) == 1:
-                        pred_tags.add(self.__friendly_tag_(tag))
+                    if np.max(array[i]) == 1:
+                        pred_tags.add(friendly_tag(tag))
 
             str_r_tags = self.__get_regular_tags_(pred_tags)
             str_c_tags = self.__get_causal_tags_(pred_tags)
 
             tagged_sents.append((str_sent, str_r_tags, str_c_tags ))
         return tagged_sents
+
+    def __get_essay_tags_(self, sent_predictions_by_code):
+        tags = set()
+
+        for tag, array in sent_predictions_by_code.items():
+            if np.max(array) == 1:
+                tags.add(tag)
+
+        return tags
+
+    def __format_essay_tags_(self, tags):
+
+        tags = map(lambda s: friendly_tag(s), filter(lambda t: self.__is_tag_to_return_(t), tags))
+
+        str_r_tags = self.__get_regular_tags_(tags)
+        str_c_tags = self.__get_causal_tags_(tags)
+
+        if not str_r_tags:
+            return str_c_tags
+        elif not str_c_tags:
+            return str_r_tags
+        else:
+            return str_r_tags + "," + str_c_tags
 
     def __fuzzy_match_(self, original, feat_wd):
         original = original.lower().strip()
@@ -273,7 +414,7 @@ class Annotator(object):
 
             # Now allign the predicted tags with the original words
             wds, aligned_tags = zip(*self.__align_wd_tags_(original_essay.tagged_sentences[sent_ix], tmp_tagged_wds))
-            fr_aligned_tags = map(lambda tags: set(map(self.__friendly_tag_, tags)), aligned_tags)
+            fr_aligned_tags = map(lambda tags: set(map(friendly_tag, tags)), aligned_tags)
             tagged_words = zip(wds, fr_aligned_tags)
             tagged_sents.append(map(lambda (wd, tags): (wd, self.__get_regular_tags_(tags), self.__get_causal_tags_(tags)), tagged_words))
         return tagged_sents
@@ -307,7 +448,7 @@ The zooanthellae rely on the coral to stay healthy, but the coral can get physic
 Coral bleaching is a physical damage to the corals.
 Coral bleaching is also an example how the envionmental stressors can affect the relationships between the coral and the algae. //
     """)
-    
+
     for sent, r_tags, c_tags in d_annotations["tagged_sentences"]:
         print "\"" + sent + "\"", r_tags, c_tags
     print ""
@@ -317,4 +458,9 @@ Coral bleaching is also an example how the envionmental stressors can affect the
             print str((wd, r_tags, c_tags))
         print ""
     print ""
-    pass
+    print "Essay Tags"
+    print d_annotations["essay_tags"]
+    print "\nRaw tags"
+    print d_annotations["raw_essay_tags"]
+    print "\nEssay Category"
+    print d_annotations["essay_category"]
