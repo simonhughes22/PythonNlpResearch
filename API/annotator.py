@@ -6,15 +6,16 @@ from processessays import process_essays, build_spelling_corrector
 from nltk.tokenize import sent_tokenize
 from collections import defaultdict
 from BrattEssay import Essay, load_bratt_essays
+import numpy as np
 
 from featureextractortransformer import FeatureExtractorTransformer
-from sent_feats_for_stacking import *
-from load_data import load_process_essays_without_annotations
+from sent_feats_for_stacking import CAUSAL_REL, RESULT_REL, CAUSE_RESULT, get_sent_feature_for_stacking_from_tagging_model
 
-from featureextractionfunctions import *
-from wordtagginghelper import *
+from featureextractionfunctions import fact_extract_positional_word_features_stemmed, fact_extract_ngram_features_stemmed
+from wordtagginghelper import flatten_to_wordlevel_feat_tags, test_classifier_per_code
 
 from traceback import format_exc
+from config import Config
 
 import logging
 
@@ -59,7 +60,29 @@ def cr_sort_key(cr):
             return (-10, 9999.9   ,-1,cr.lower())
     return (float(cr.split("->")[0]), cr) if cr.split("->")[0][0].isdigit() else (99999, cr)
 
+class TaggedSentence(object):
+    def __init__(self, sentence, codes, causal):
+        self.tagged_words = []
+        self.causal = causal
+        self.codes = codes
+        self.sentence = sentence
+
+    def add_word_tags(self, tagged_words):
+        self.tagged_words = tagged_words
+        return self
+
+class TaggedWord(object):
+    def __init__(self, word, codes, causal):
+        self.word = word
+        self.codes = codes
+        self.causal = causal
+
 class Annotator(object):
+
+    @classmethod
+    def from_config(cls, config_file):
+        cfg = Config(config_file)
+        return Annotator(cfg.models_folder, cfg.temp_folder, cfg.essays_folder)
 
     def __init__(self, models_folder, temp_folder, essays_folder):
 
@@ -105,6 +128,80 @@ class Annotator(object):
         self.tag_2_sent_classifier = store.get_tag_2_sent_classifier()
         self.logger.info("Loaded sentence classifier")
 
+    def annotate(self, essay_text):
+
+        try:
+            sentences = sent_tokenize(essay_text.strip())
+            contents = "\n".join(sentences)
+
+            fname = self.temp_folder + "essay.txt"
+            with open(fname, 'w"') as f:
+                f.write(contents)
+
+            essay = Essay(fname, include_vague=self.config["include_vague"],
+                          include_normal=self.config["include_normal"], load_annotations=False)
+
+            processed_essays = process_essays(essays=[essay],
+                                              spelling_corrector=self.spelling_corrector,
+                                              wd_sent_freq=self.wd_sent_freq,
+                                              remove_infrequent=self.config["remove_infrequent"],
+                                              spelling_correct=self.config["spelling_correct"],
+                                              replace_nums=self.config["replace_nums"],
+                                              stem=self.config["stem"],
+                                              remove_stop_words=self.config["remove_stop_words"],
+                                              remove_punctuation=self.config["remove_punctuation"],
+                                              lower_case=self.config["lower_case"])
+
+            self.logger.info("Essay loaded successfully")
+            essays_TD = self.feature_extractor.transform(processed_essays)
+
+            wd_feats, _ = flatten_to_wordlevel_feat_tags(essays_TD)
+            xs = self.feature_transformer.transform(wd_feats)
+
+            wd_predictions_by_code = test_classifier_per_code(xs, self.tag_2_wd_classifier, self.wd_test_tags)
+
+            dummy_wd_td_ys_bytag = defaultdict(lambda: np.asarray([0.0] * xs.shape[0]))
+            sent_xs, sent_ys_bycode = get_sent_feature_for_stacking_from_tagging_model(self.sent_input_feat_tags,
+                                                                                             self.sent_input_interaction_tags,
+                                                                                             essays_TD, xs,
+                                                                                             dummy_wd_td_ys_bytag,
+                                                                                             self.tag_2_wd_classifier,
+                                                                                             sparse=True,
+                                                                                             look_back=0)
+
+            """ Test Stack Classifier """
+
+            sent_predictions_by_code = test_classifier_per_code(sent_xs, self.tag_2_sent_classifier, self.sent_output_train_test_tags)
+
+            """ Generate Return Values """
+            essay_tags = self.__get_essay_tags_(sent_predictions_by_code)
+
+            essay_type = None
+            if "coral" in self.essays_folder.lower():
+                essay_type = "CB"
+            elif "skin" in self.essays_folder.lower():
+                essay_type = "SC"
+            else:
+                raise Exception("Unknown essay type")
+
+            raw_essay_tags = ",".join(sorted(essay_tags, key=cr_sort_key))
+
+            t_words = self.__get_tagged_words_(essay, essays_TD[0], wd_predictions_by_code)
+            t_sentences = self.__get_tagged_sentences_(essay, sent_predictions_by_code)
+
+            tagged_sentences = [t_sent.add_word_tags(map(lambda twd: twd.__dict__, t_wds)).__dict__
+                                for t_sent, t_wds in zip(t_sentences, t_words)]
+
+            return {"tagged_sentences" : tagged_sentences,
+                    "essay_tags":        self.__format_essay_tags_(essay_tags),
+                    "essay_category":    self.essay_category(raw_essay_tags, essay_type),
+                    "raw_essay_tags":    raw_essay_tags
+            }
+        except Exception as x:
+            self.logger.exception("An exception occured while annotating essay")
+            return {"error": format_exc()}
+        pass
+
     def __set_tags_(self, tagged_essays):
 
         MIN_TAG_FREQ = 5
@@ -144,72 +241,6 @@ class Annotator(object):
         self.sent_input_interaction_tags = list(set(non_causal + CAUSE_TAGS))
         # tags to train (as output) for the sentence based classifier
         self.sent_output_train_test_tags = list(set(all_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
-
-    def annotate(self, essay_text):
-
-        try:
-            sentences = sent_tokenize(essay_text.strip())
-            contents = "\n".join(sentences)
-
-            fname = self.temp_folder + "essay.txt"
-            with open(fname, 'w"') as f:
-                f.write(contents)
-
-            essay = Essay(fname, include_vague=self.config["include_vague"],
-                          include_normal=self.config["include_normal"], load_annotations=False)
-
-            processed_essays = process_essays(essays=[essay],
-                                              spelling_corrector=self.spelling_corrector,
-                                              wd_sent_freq=self.wd_sent_freq,
-                                              remove_infrequent=self.config["remove_infrequent"],
-                                              spelling_correct=self.config["spelling_correct"],
-                                              replace_nums=self.config["replace_nums"],
-                                              stem=self.config["stem"],
-                                              remove_stop_words=self.config["remove_stop_words"],
-                                              remove_punctuation=self.config["remove_punctuation"],
-                                              lower_case=self.config["lower_case"])
-
-            self.logger.info("Essay loaded successfully")
-            essays_TD = self.feature_extractor.transform(processed_essays)
-
-            wd_feats, _ = flatten_to_wordlevel_feat_tags(essays_TD)
-            xs = self.feature_transformer.transform(wd_feats)
-            wd_predictions_by_code = test_classifier_per_code(xs, self.tag_2_wd_classifier, self.wd_test_tags)
-
-            dummy_wd_td_ys_bytag = defaultdict(lambda: np.asarray([0.0] * xs.shape[0]))
-            sent_xs, sent_ys_bycode = get_sent_feature_for_stacking_from_tagging_model(self.sent_input_feat_tags,
-                                                                                             self.sent_input_interaction_tags,
-                                                                                             essays_TD, xs,
-                                                                                             dummy_wd_td_ys_bytag,
-                                                                                             self.tag_2_wd_classifier,
-                                                                                             sparse=True,
-                                                                                             look_back=0)
-
-            """ Test Stack Classifier """
-            sent_predictions_by_code = test_classifier_per_code(sent_xs, self.tag_2_sent_classifier, self.sent_output_train_test_tags)
-
-            """ Generate Return Values """
-            essay_tags = self.__get_essay_tags_(sent_predictions_by_code)
-
-            essay_type = None
-            if "coral" in self.essays_folder.lower():
-                essay_type = "CB"
-            elif "skin" in self.essays_folder.lower():
-                essay_type = "SC"
-            else:
-                raise Exception("Unknown essay type")
-
-            raw_essay_tags = ",".join(sorted(essay_tags, key=cr_sort_key))
-            return {"tagged_words":      self.__get_tagged_words_(essay, essays_TD[0], wd_predictions_by_code),
-                    "tagged_sentences" : self.__get_tagged_sentences_(essay, sent_predictions_by_code),
-                    "essay_tags":        self.__format_essay_tags_(essay_tags),
-                    "essay_category":    self.essay_category(raw_essay_tags, essay_type),
-                    "raw_essay_tags":    raw_essay_tags
-            }
-        except Exception as x:
-            self.logger.exception("An exception occured while annotating essay")
-            return {"error": format_exc()}
-        pass
 
     def essay_category(self, s, essay_type):
 
@@ -312,7 +343,7 @@ class Annotator(object):
             str_r_tags = self.__get_regular_tags_(pred_tags)
             str_c_tags = self.__get_causal_tags_(pred_tags)
 
-            tagged_sents.append((str_sent, str_r_tags, str_c_tags ))
+            tagged_sents.append(TaggedSentence(str_sent, str_r_tags, str_c_tags ))
         return tagged_sents
 
     def __get_essay_tags_(self, sent_predictions_by_code):
@@ -416,7 +447,7 @@ class Annotator(object):
             wds, aligned_tags = zip(*self.__align_wd_tags_(original_essay.tagged_sentences[sent_ix], tmp_tagged_wds))
             fr_aligned_tags = map(lambda tags: set(map(friendly_tag, tags)), aligned_tags)
             tagged_words = zip(wds, fr_aligned_tags)
-            tagged_sents.append(map(lambda (wd, tags): (wd, self.__get_regular_tags_(tags), self.__get_causal_tags_(tags)), tagged_words))
+            tagged_sents.append(map(lambda (wd, tags): TaggedWord(wd, self.__get_regular_tags_(tags), self.__get_causal_tags_(tags)), tagged_words))
         return tagged_sents
 
 if __name__ == "__main__":
