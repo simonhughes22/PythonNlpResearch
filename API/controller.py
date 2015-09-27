@@ -24,7 +24,7 @@ def annotate_essay_text():
     try:
         text = request.args.get("text")
         if not valid_param(text):
-            return jsonify({"error": "No text specified"})
+            return jsonify({"error": "No essay text entered!"})
 
         return jsonify(annotatr.annotate(text))
     except Exception as e:
@@ -39,7 +39,7 @@ if __name__ == "__main__":
 
         config_file = sys.argv[1]
         app = build_app(config_file)
-        app.run(debug=False, host='0.0.0.0', port=5000)  # host= '0.0.0.0' will expose externally on host's ip
+        app.run(debug=False, host='0.0.0.0', port=5001)  # host= '0.0.0.0' will expose externally on host's ip
 
     except Exception as e:
         print format_exc()

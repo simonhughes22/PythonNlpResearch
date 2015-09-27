@@ -64,13 +64,14 @@ offset = (config["window_size"] - 1) / 2
 
 unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
 biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
+first3_window          = fact_extract_first_3_chars(offset)
 
 #pos_tag_window = fact_extract_positional_POS_features(offset)
 #pos_tag_plus_wd_window = fact_extract_positional_POS_features_plus_word(offset)
 #head_wd_window = fact_extract_positional_head_word_features(offset)
 #pos_dep_vecs = fact_extract_positional_dependency_vectors(offset)
 
-extractors = [unigram_window_stemmed, biigram_window_stemmed]
+extractors = [unigram_window_stemmed, biigram_window_stemmed, first3_window]
 feat_config = dict(config.items() + [("extractors", extractors)])
 
 """ LOAD DATA """

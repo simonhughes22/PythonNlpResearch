@@ -172,22 +172,23 @@ class NoteAnnotation(AnnotationBase):
 
 class Essay(object):
 
-    def __init__(self, full_path, include_vague = True, include_normal = True, load_annotations = True):
+    def __init__(self, full_path, include_vague = True, include_normal = True, load_annotations = True, essay_text = None):
 
         self.include_normal = include_normal
         self.include_vague = include_vague
 
-        self.full_path = full_path
-        self.file_name = full_path.split("/")[-1]
-
-        txt_file = full_path[:-4] + ".txt"
-
-        if load_annotations:
-            assert full_path.endswith(".ann")
-            assert os.path.exists(txt_file), "Missing associated text file for %s" % self.full_path
-
-        with open(txt_file, "r+") as f:
-            self.txt = f.read()
+        if essay_text is None:
+            self.full_path = full_path
+            self.file_name = full_path.split("/")[-1]
+            txt_file = full_path[:-4] + ".txt"
+            with open(txt_file, "r+") as f:
+                self.txt = f.read()
+        else:
+            if load_annotations:
+                raise Exception("Can't load annotations when pasing in essay as text string")
+            self.full_path = "None"
+            self.file_name = "None"
+            self.txt = essay_text
 
         self.tagged_words = []
         #list of list of tuples (words and tags)
@@ -199,6 +200,9 @@ class Essay(object):
         self.aborted_splits = []
 
         if load_annotations:
+            assert full_path.endswith(".ann")
+            assert os.path.exists(txt_file), "Missing associated text file for %s" % self.full_path
+
             with open(full_path, "r+") as f:
                 lines = f.readlines()
         else:
@@ -206,7 +210,6 @@ class Essay(object):
 
         codes_start = defaultdict(set)
         codes_end = defaultdict(set)
-
 
         def get_code(annotation):
             if ":" not in annotation.code:

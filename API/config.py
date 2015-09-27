@@ -9,7 +9,6 @@ class Config(object):
         self.__cfg__            = self.__load_config_file__(config_file)
 
         self.models_folder = self.__getfilename__("DEFAULT", "models_folder")
-        self.temp_folder   = self.__getfilename__("DEFAULT", "temp_folder")
         self.essays_folder = self.__getfilename__("DEFAULT", "essays_folder")
 
     def __load_config_file__(self, config_file):

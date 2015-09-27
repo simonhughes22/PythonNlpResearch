@@ -85,6 +85,7 @@ def extract_dependency_relation(input, val=1):
 __START__ = "<START>"
 __END__   = "<END>"
 
+
 def fact_extract_positional_head_word_features(offset):
     """ offset      :   int
                             the number of words either side of the input to extract features from
@@ -193,6 +194,39 @@ def extract_positional_word_features_stemmed(offset, input, val = 1):
         else:
             offset_word = stem(input.sentence[i])
             feats["WD:" + relative_offset + "->" + offset_word] = val
+    return feats
+
+def fact_extract_first_3_chars(offset):
+    """ offset      :   int
+                            the number of words either side of the input to extract features from
+        returns     :   fn
+                            feature extractor function: FeatureExtactorInput -> dict
+    """
+    # curry offset
+    def fn_extract_first_3_chars(input, val=1):
+        return extract_first_3_chars(offset, input, val)
+    return fn_extract_first_3_chars # recently renamed for mongodob logging
+
+def extract_first_3_chars(offset, input, val = 1):
+    """ offset      :   int
+                           the number of words either side of the input to extract features from
+        input      :    FeatureExtactorInput
+                            input to feature extractor
+        returns     :   dict
+                            dictionary of features
+    """
+
+    feats = {}
+    start = input.wordix - offset
+    stop = input.wordix + offset
+
+    end = len(input.sentence) - 1
+    for i in range(start, stop + 1):
+        relative_offset = str(i - input.wordix)
+        #only bother when there is a word within window
+        if i >= 0 and i < end:
+            offset_word = input.sentence[i].strip()
+            feats["First3:" + relative_offset + "->" + offset_word[:3]] = val
     return feats
 
 """ POSITIONAL NGRAMS

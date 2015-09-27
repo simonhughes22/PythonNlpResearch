@@ -82,21 +82,18 @@ class Annotator(object):
     @classmethod
     def from_config(cls, config_file):
         cfg = Config(config_file)
-        return Annotator(cfg.models_folder, cfg.temp_folder, cfg.essays_folder)
+        return Annotator(cfg.models_folder, cfg.essays_folder)
 
-    def __init__(self, models_folder, temp_folder, essays_folder):
+    def __init__(self, models_folder, essays_folder):
 
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
         if not models_folder.endswith("/"):
             models_folder += "/"
-        if not temp_folder.endswith("/"):
-            temp_folder += "/"
         if not essays_folder.endswith("/"):
             essays_folder += "/"
 
         self.logger = logging.getLogger()
-        self.temp_folder = temp_folder
-        cfg = get_config(temp_folder)
+        cfg = get_config(essays_folder)
         self.config = cfg
         self.essays_folder = essays_folder
 
@@ -134,12 +131,8 @@ class Annotator(object):
             sentences = sent_tokenize(essay_text.strip())
             contents = "\n".join(sentences)
 
-            fname = self.temp_folder + "essay.txt"
-            with open(fname, 'w"') as f:
-                f.write(contents)
-
-            essay = Essay(fname, include_vague=self.config["include_vague"],
-                          include_normal=self.config["include_normal"], load_annotations=False)
+            essay = Essay(full_path=None, include_vague=self.config["include_vague"],
+                          include_normal=self.config["include_normal"], load_annotations=False, essay_text=contents)
 
             processed_essays = process_essays(essays=[essay],
                                               spelling_corrector=self.spelling_corrector,
@@ -192,10 +185,14 @@ class Annotator(object):
             tagged_sentences = [t_sent.add_word_tags(map(lambda twd: twd.__dict__, t_wds)).__dict__
                                 for t_sent, t_wds in zip(t_sentences, t_words)]
 
-            return {"tagged_sentences" : tagged_sentences,
-                    "essay_tags":        self.__format_essay_tags_(essay_tags),
-                    "essay_category":    self.essay_category(raw_essay_tags, essay_type),
-                    "raw_essay_tags":    raw_essay_tags
+            essay_codes, essay_causal = self.__format_essay_tags_(essay_tags)
+            return {"tagged_sentences"  :   tagged_sentences,
+
+                    "essay_codes"       :   essay_codes,
+                    "essay_causal"      :   essay_causal,
+                    "essay_category"    :   self.essay_category(raw_essay_tags, essay_type),
+
+                    "raw_essay_tags"    :   raw_essay_tags
             }
         except Exception as x:
             self.logger.exception("An exception occured while annotating essay")
@@ -363,11 +360,11 @@ class Annotator(object):
         str_c_tags = self.__get_causal_tags_(tags)
 
         if not str_r_tags:
-            return str_c_tags
+            return "", str_c_tags
         elif not str_c_tags:
-            return str_r_tags
+            return str_r_tags, ""
         else:
-            return str_r_tags + "," + str_c_tags
+            return str_r_tags, str_c_tags
 
     def __fuzzy_match_(self, original, feat_wd):
         original = original.lower().strip()
