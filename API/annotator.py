@@ -72,7 +72,8 @@ class TaggedSentence(object):
         return self
 
 class TaggedWord(object):
-    def __init__(self, word, codes, causal):
+    def __init__(self, word, corrected_word, codes, causal):
+        self.corrected_word = corrected_word
         self.word = word
         self.codes = codes
         self.causal = causal
@@ -442,9 +443,11 @@ class Annotator(object):
 
             # Now allign the predicted tags with the original words
             wds, aligned_tags = zip(*self.__align_wd_tags_(original_essay.tagged_sentences[sent_ix], tmp_tagged_wds))
+            # spelling correct (needs to be after alignment)
+
             fr_aligned_tags = map(lambda tags: set(map(friendly_tag, tags)), aligned_tags)
             tagged_words = zip(wds, fr_aligned_tags)
-            tagged_sents.append(map(lambda (wd, tags): TaggedWord(wd, self.__get_regular_tags_(tags), self.__get_causal_tags_(tags)), tagged_words))
+            tagged_sents.append(map(lambda (wd, tags): TaggedWord(wd, self.spelling_corrector.correct(wd), self.__get_regular_tags_(tags), self.__get_causal_tags_(tags)), tagged_words))
         return tagged_sents
 
 if __name__ == "__main__":
