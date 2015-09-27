@@ -39,11 +39,11 @@ def import_python_files_from_path(src_root):
 if __name__ == "__main__":
 
     #look up user
-    user = os.environ["USER"]
+    #user = os.environ["USER"]
 
     """ Writes a path.txt file to the profile dir. Copy into the ~/bash_profile """
     path = ("/Users/%s/GitHub/NlpResearch/PythonNlpResearch" % user)
-    fname = path + "/launch_notbook.sh"
+    fname = path + "/launch_notebook.sh"
 
     folders = get_source_folders(path)
     py_path = "'" + os.pathsep.join(folders) + "'"
