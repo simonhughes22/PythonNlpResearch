@@ -83,9 +83,9 @@ class Annotator(object):
     @classmethod
     def from_config(cls, config_file):
         cfg = Config(config_file)
-        return Annotator(cfg.models_folder, cfg.essays_folder)
+        return Annotator(cfg.models_folder, cfg.essays_folder, cfg.spell_check_dict)
 
-    def __init__(self, models_folder, essays_folder):
+    def __init__(self, models_folder, essays_folder, spell_check_dict):
 
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
         if not models_folder.endswith("/"):
@@ -103,7 +103,7 @@ class Annotator(object):
         tagged_essays = load_bratt_essays(essays_folder, include_vague=cfg["include_vague"], include_normal=cfg["include_normal"], load_annotations=True)
         self.__set_tags_(tagged_essays)
         self.wd_sent_freq = defaultdict(int)
-        self.spelling_corrector = build_spelling_corrector(tagged_essays, self.config["lower_case"], self.wd_sent_freq)
+        self.spelling_corrector = build_spelling_corrector(tagged_essays, self.config["lower_case"], self.wd_sent_freq, folder=spell_check_dict)
 
         offset = (self.config["window_size"] - 1) / 2
 

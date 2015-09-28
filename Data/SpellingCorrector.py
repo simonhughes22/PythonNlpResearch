@@ -1,5 +1,3 @@
-import os
-import Settings
 import re, collections
 from collections import defaultdict
 
@@ -15,6 +13,10 @@ class SpellingCorrector(object):
             dir = "/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Data/PublicDataSets/"
         else:
             dir = folder
+
+        if not dir.endswith("/"):
+            dir += "/"
+
         dictionary_file = dir + "words.lst"
 
         if not words:

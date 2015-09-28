@@ -8,8 +8,9 @@ class Config(object):
         self.__verify_config_file__(config_file)
         self.__cfg__            = self.__load_config_file__(config_file)
 
-        self.models_folder = self.__getfilename__("DEFAULT", "models_folder")
-        self.essays_folder = self.__getfilename__("DEFAULT", "essays_folder")
+        self.models_folder    = self.__getfilename__("DEFAULT", "models_folder")
+        self.essays_folder    = self.__getfilename__("DEFAULT", "essays_folder")
+        self.spell_check_dict = self.__getfilename__("DEFAULT", "spell_check_dict")
 
     def __load_config_file__(self, config_file):
         config = ConfigParser.ConfigParser()

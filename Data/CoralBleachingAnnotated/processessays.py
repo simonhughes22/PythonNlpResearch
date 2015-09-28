@@ -17,7 +17,7 @@ class Sentence(object):
         self.tagged_words = tagged_words
 
 
-def build_spelling_corrector(essays, lower_case, wd_sent_freq):
+def build_spelling_corrector(essays, lower_case, wd_sent_freq, folder=None):
     all_words = []
     for essay in essays:
         for sentence in essay.tagged_sentences:
@@ -30,7 +30,7 @@ def build_spelling_corrector(essays, lower_case, wd_sent_freq):
                     unique_wds.add(w)
                     wd_sent_freq[w] += 1
 
-    return SpellingCorrector(all_words)
+    return SpellingCorrector(all_words, folder=folder)
 
 
 def process_essays(essays, min_df = 5,
