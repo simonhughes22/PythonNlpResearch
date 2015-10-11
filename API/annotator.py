@@ -295,6 +295,13 @@ class Annotator(object):
                     un_results.add((b, a))
 
         if len(un_results) >= 1:
+
+            # To be a 4 or a 5, at least one relation needs to end in a 50
+            joined = ",".join(map(str, un_results))
+            # 50 is the universal code for the essay topic
+            if "->50" not in joined:
+                return 3
+
             #CB and 6->7->50 ONLY
             if len(un_results) == 1 and is_cb and ("16->17", "17->50") in un_results:
                 return 4
