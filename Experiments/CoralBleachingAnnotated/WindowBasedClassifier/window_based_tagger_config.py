@@ -5,7 +5,7 @@ INCLUDE_VAGUE       = True
 INCLUDE_NORMAL      = False
 
 # Settings for essay pre-processing
-MIN_SENTENCE_FREQ   = 5        # i.e. df. Note this is calculated BEFORE creating windows
+MIN_SENTENCE_FREQ   = 2        # i.e. df. Note this is calculated BEFORE creating windows
 REMOVE_INFREQUENT   = False    # if false, infrequent words are replaced with "INFREQUENT"
 SPELLING_CORRECT    = True
 STEM                = False    # note this tends to improve matters, but is needed to be on for pos tagging and dep parsing
