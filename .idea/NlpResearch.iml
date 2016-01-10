@@ -55,10 +55,11 @@
       <sourceFolder url="file://$MODULE_DIR$/DeepLearning/LSTM" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingAnnotated/ConvolutionalNeuralNetwork" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/API" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleaching_ActiveLearning" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/Notebooks" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 2.7.10 (~/anaconda/bin/python)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 2.7.10 (~/anaconda/envs/phd/bin/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
@@ -69,4 +70,3 @@
     <option name="PROJECT_TEST_RUNNER" value="Nosetests" />
   </component>
 </module>
-

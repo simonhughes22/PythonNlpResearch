@@ -22,6 +22,7 @@ from sklearn.svm import SVC
 from sklearn.lda import LDA
 
 from window_based_tagger_config import get_config
+from tag_frequency import get_tag_freq, regular_tag
 # END Classifiers
 
 import Settings
@@ -84,24 +85,9 @@ essay_feats = mem_extract_features(tagged_essays, **feat_config)
 logger.info("Features loaded")
 
 """ DEFINE TAGS """
-tag_freq = defaultdict(int)
-for essay in tagged_essays:
-    for sentence in essay.sentences:
-        un_tags = set()
-        for word, tags in sentence:
-            for tag in tags:
-                if "5b" in tag:
-                    continue
-                if (tag[-1].isdigit() or tag in {"Causer", "explicit", "Result"} \
-                        or tag.startswith("Causer") or tag.startswith("Result") or tag.startswith("explicit") or "->" in tag)\
-                        and not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag):
-                #if not ("Anaphor" in tag or "rhetorical" in tag or "other" in tag):
-                    un_tags.add(tag)
-        for tag in un_tags:
-            tag_freq[tag] += 1
 
-all_tags = list(tag_freq.keys())
-freq_tags = list(set((tag for tag, freq in tag_freq.items() if freq >= MIN_TAG_FREQ)))
+tag_freq = get_tag_freq(tagged_essays)
+freq_tags = list(set((tag for tag, freq in tag_freq.items() if freq >= MIN_TAG_FREQ and regular_tag(tag))))
 non_causal  = [t for t in freq_tags if "->" not in t]
 only_causal = [t for t in freq_tags if "->" in t]
 
