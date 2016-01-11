@@ -18,9 +18,7 @@ out_metrics_file            = root + "output/metrics.txt"
 
 import cPickle as pickle
 from sent_feats_for_stacking import *
-
 from featurevectorizer import FeatureVectorizer
-
 from wordtagginghelper import *
 from IterableFP import flatten
 from results_procesor import ResultsProcessor
@@ -107,8 +105,8 @@ assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal r
 #fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
 fn_create_wd_cls = lambda: LogisticRegression() # C=1, dual = False seems optimal
 
-fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
-#fn_create_sent_cls  = lambda : LogisticRegression(dual=True) # C around 1.0 seems pretty optimal
+#fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
+fn_create_sent_cls  = lambda : LogisticRegression(dual=True) # C around 1.0 seems pretty optimal
 
 # TD and VD are lists of Essay objects. The sentences are lists
 # of featureextractortransformer.Word objects
@@ -156,7 +154,8 @@ test_sent_predictions_by_code \
     = test_classifier_per_code(sent_test_xs, tag2sent_classifier, sent_output_train_test_tags )
 
 test_decision_functions_by_code \
-    = test_classifier_per_code(sent_test_xs, tag2sent_classifier, sent_output_train_test_tags, predict_fn=decision_function_for_tag)
+    = test_classifier_per_code(sent_test_xs, tag2sent_classifier, sent_output_train_test_tags, predict_fn=probability_for_tag)
+    #= test_classifier_per_code(sent_test_xs, tag2sent_classifier, sent_output_train_test_tags, predict_fn=decision_function_for_tag)
 
 """ Write out the predicted classes """
 with open(out_predictions_file, "w+") as f_output_file:
