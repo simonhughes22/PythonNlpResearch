@@ -2,8 +2,8 @@
 
 """ PETER - CHANGE THESE FILE PATHS """
 root        = "/Users/simon.hughes/Google Drive/PhD/Data/ActiveLearning/"
-f_training_essays = root + "training_essays.txt"
-f_test_essays     = root + "test_essays.txt"
+f_training_essays = root + "tmp_training_essays.txt"
+f_test_essays     = root + "tmp_test_essays.txt"
 
 """ INPUT - two serialized files, one for the pre-processed essays, the other for the features """
 serialized_features = root + "essay_feats.pl"
@@ -13,6 +13,10 @@ serialized_essays   = root + "essays.pl"
 out_predictions_file        = root + "output/predictions.txt"
 out_predicted_margins_file  = root + "output/predicted_margins.txt"
 out_metrics_file            = root + "output/metrics.txt"
+
+# Leave to True for Active learning (SVM is supposed to be better)
+# But set to False for regular predictions as Logistic Regression is more accurate
+USE_SVM = True
 
 """ END SETTINGS """
 
@@ -105,8 +109,10 @@ assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal r
 #fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
 fn_create_wd_cls = lambda: LogisticRegression() # C=1, dual = False seems optimal
 
-#fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
-fn_create_sent_cls  = lambda : LogisticRegression(dual=True) # C around 1.0 seems pretty optimal
+if USE_SVM:
+    fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
+else:
+    fn_create_sent_cls  = lambda : LogisticRegression(dual=True) # C around 1.0 seems pretty optimal
 
 # TD and VD are lists of Essay objects. The sentences are lists
 # of featureextractortransformer.Word objects
@@ -153,9 +159,10 @@ sent_test_xs, sent_test_ys_bycode = get_sent_feature_for_stacking_from_tagging_m
 test_sent_predictions_by_code \
     = test_classifier_per_code(sent_test_xs, tag2sent_classifier, sent_output_train_test_tags )
 
-test_decision_functions_by_code \
-    = test_classifier_per_code(sent_test_xs, tag2sent_classifier, sent_output_train_test_tags, predict_fn=probability_for_tag)
-    #= test_classifier_per_code(sent_test_xs, tag2sent_classifier, sent_output_train_test_tags, predict_fn=decision_function_for_tag)
+if USE_SVM:
+    test_decision_functions_by_code = test_classifier_per_code(sent_test_xs, tag2sent_classifier, sent_output_train_test_tags, predict_fn=decision_function_for_tag)
+else:
+    test_decision_functions_by_code = test_classifier_per_code(sent_test_xs, tag2sent_classifier, sent_output_train_test_tags, predict_fn=probability_for_tag)
 
 """ Write out the predicted classes """
 with open(out_predictions_file, "w+") as f_output_file:
@@ -164,7 +171,7 @@ with open(out_predictions_file, "w+") as f_output_file:
 
 with open(out_predicted_margins_file, "w+") as f_output_file:
     f_output_file.write("Essay|Sent Number|Processed Sentence|Concept Codes|Predicted Margins\n")
-    predictions_to_file(f_output_file, sent_test_ys_bycode, test_sent_predictions_by_code, test_essay_feats, regular_tags + sent_output_train_test_tags, output_confidence=True)
+    predictions_to_file(f_output_file, sent_test_ys_bycode, test_decision_functions_by_code, test_essay_feats, regular_tags + sent_output_train_test_tags, output_confidence=True)
 
 """ Write out the accuracy metrics """
 train_wd_metrics    = ResultsProcessor.compute_mean_metrics(wd_td_ys_bytag, train_wd_predictions_by_code)

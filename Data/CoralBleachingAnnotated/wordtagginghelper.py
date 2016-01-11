@@ -95,6 +95,9 @@ class always_false(object):
     def predict_proba(self, x):
         return np.zeros((x.shape[0],), dtype=np.float64)
 
+    def decision_function(self, x):
+        return -1.0 * np.ones((x.shape[0],), dtype=np.float64)
+
 #TODO Parallelize
 def train_classifier_per_code(xs, ysByCode, fn_create_cls, tags=None):
     """
@@ -178,7 +181,7 @@ def test_classifier_per_code(xs, tagToClassifier, tags=None, predict_fn=predict_
 
     predictions_by_code = dict()
     for tag in sorted(tags):
-        pred_ys = predict_for_tag(tag, xs, tagToClassifier)
+        pred_ys = predict_fn(tag, xs, tagToClassifier)
         predictions_by_code[tag] = pred_ys
 
     return predictions_by_code
