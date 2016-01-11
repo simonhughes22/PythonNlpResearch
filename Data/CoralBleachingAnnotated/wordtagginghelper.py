@@ -73,13 +73,15 @@ def get_wordlevel_ys_by_code(lst_tag_sets, expected_tags):
         for y in unique_tags:
             tmp_ys_bycode[y].append(1 if y in tag_set else 0)
 
+    num_rows = len(tmp_ys_bycode.values()[0])
+
     ys_bycode = dict()
     for tag in expected_tags:
-        if tag in tmp_ys_bycode:
+        if tag in tmp_ys_bycode and len(tmp_ys_bycode[tag]) > 0:
             lst = tmp_ys_bycode[tag]
             ys_bycode[tag] = np.asarray(lst, dtype=np.int).reshape((len(lst), ))
         else:
-            ys_bycode[tag] = np.zeros(shape=(len(tmp_ys_bycode.values()[0]), ), dtype=np.int)
+            ys_bycode[tag] = np.zeros(shape=(num_rows,), dtype=np.int)
     return ys_bycode
 
 
@@ -144,10 +146,16 @@ def merge_dictionaries(dictFrom, dictTo):
         dictTo[k].extend(lst)
     return dictTo
 
-def __test_for_tag__(tag, xs, codeToClassifier):
+def predict_for_tag(tag, xs, codeToClassifier):
     return codeToClassifier[tag].predict(xs)
 
-def test_classifier_per_code(xs, tagToClassifier, tags=None):
+def probability_for_tag(tag, xs, codeToClassifier):
+    return codeToClassifier[tag].predict_proba(xs)
+
+def decision_function_for_tag(tag, xs, codeToClassifier):
+    return codeToClassifier[tag].decision_function(xs)
+
+def test_classifier_per_code(xs, tagToClassifier, tags=None, predict_fn=predict_for_tag):
     """
     Compute metrics over tagging data
 
@@ -159,7 +167,8 @@ def test_classifier_per_code(xs, tagToClassifier, tags=None):
         A dictionary mapping tags to classifiers
     tags : list(str)
         List of tags to test over. Use ysByCode.keys() if none
-
+    predict_fn : (tag,xs,codeToClassifier) => np.array
+        A function to predict the labels for a given tag
     Returns
     -------
     ys_by_code, predictions_by_code : a pair of dict's mapping tags to their actual labels \ predictions
@@ -169,7 +178,7 @@ def test_classifier_per_code(xs, tagToClassifier, tags=None):
 
     predictions_by_code = dict()
     for tag in sorted(tags):
-        pred_ys = __test_for_tag__(tag, xs, tagToClassifier)
+        pred_ys = predict_for_tag(tag, xs, tagToClassifier)
         predictions_by_code[tag] = pred_ys
 
     return predictions_by_code

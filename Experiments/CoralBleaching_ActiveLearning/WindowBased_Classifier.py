@@ -1,19 +1,18 @@
 # coding=utf-8
 
-# construct unique key using settings for pickling
-import Settings
-
 """ PETER - CHANGE THESE FILE PATHS """
 root        = "/Users/simon.hughes/Google Drive/PhD/Data/ActiveLearning/"
 f_training_essays = root + "training_essays.txt"
 f_test_essays     = root + "test_essays.txt"
 
 """ INPUT - two serialized files, one for the pre-processed essays, the other for the features """
-serialized_features = root + "tmp_essay_feats.pl"
-serialized_essays   = root + "tmp_essays.pl"
+serialized_features = root + "essay_feats.pl"
+serialized_essays   = root + "essays.pl"
 
 """ OUTPUT """
-out_predictions_file = root + "output/predictions.txt"
+out_predictions_file        = root + "output/predictions.txt"
+out_predicted_margins_file  = root + "output/predicted_margins.txt"
+out_metrics_file            = root + "output/metrics.txt"
 
 """ END SETTINGS """
 
@@ -24,6 +23,7 @@ from featurevectorizer import FeatureVectorizer
 
 from wordtagginghelper import *
 from IterableFP import flatten
+from results_procesor import ResultsProcessor
 
 # Classifiers
 from sklearn.linear_model import LogisticRegression
@@ -32,6 +32,7 @@ from sklearn.svm import LinearSVC
 # END Classifiers
 from tag_frequency import get_tag_freq, regular_tag
 from predictions_to_file import predictions_to_file
+from wordtagginghelper import test_classifier_per_code, predict_for_tag, probability_for_tag, decision_function_for_tag
 
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -122,6 +123,7 @@ wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
 
 """ TRAIN Tagger """
 tag2word_classifier = train_classifier_per_code(td_X, wd_td_ys_bytag, fn_create_wd_cls, wd_train_tags)
+train_wd_predictions_by_code = test_classifier_per_code(td_X, tag2word_classifier, wd_test_tags)
 
 print "\nTraining Sentence Model"
 """ SENTENCE LEVEL PREDICTIONS FROM STACKING """
@@ -132,33 +134,50 @@ tag2sent_classifier = train_classifier_per_code(sent_td_xs, sent_td_ys_bycode , 
 
 """ END TRAINING """
 
-cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
-
 # TD and VD are lists of Essay objects. The sentences are lists
 # of featureextractortransformer.Word objects
 print "Running Tagging Model"
 """ Data Partitioning and Training """
-test_feats, _ = flatten_to_wordlevel_feat_tags(test_essay_feats)
+test_feats, test_tags = flatten_to_wordlevel_feat_tags(test_essay_feats)
+wd_test_ys_bytag = get_wordlevel_ys_by_code(test_tags, wd_train_tags)
 
 test_x = feature_transformer.transform(test_feats)
 
 """ TEST Tagger """
-td_wd_predictions_by_code = test_classifier_per_code(test_x, tag2word_classifier, wd_test_tags)
+test_wd_predictions_by_code = test_classifier_per_code(test_x, tag2word_classifier, wd_test_tags)
 
 print "\nRunning Sentence Model"
 """ SENTENCE LEVEL PREDICTIONS FROM STACKING """
 
-dummy_wd_td_ys_bytag = defaultdict(lambda : np.asarray([0.0] * test_x.shape[0]))
-sent_test_xs, sent_test_ys_bycode = get_sent_feature_for_stacking_from_tagging_model(sent_input_feat_tags, sent_input_interaction_tags, test_essay_feats, test_x, dummy_wd_td_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
+sent_test_xs, sent_test_ys_bycode = get_sent_feature_for_stacking_from_tagging_model(sent_input_feat_tags, sent_input_interaction_tags, test_essay_feats, test_x, wd_test_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
 
 """ Test Stack Classifier """
 test_sent_predictions_by_code \
     = test_classifier_per_code(sent_test_xs, tag2sent_classifier, sent_output_train_test_tags )
 
-merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
+test_decision_functions_by_code \
+    = test_classifier_per_code(sent_test_xs, tag2sent_classifier, sent_output_train_test_tags, predict_fn=decision_function_for_tag)
 
+""" Write out the predicted classes """
 with open(out_predictions_file, "w+") as f_output_file:
     f_output_file.write("Essay|Sent Number|Processed Sentence|Concept Codes|Predictions\n")
-    predictions_to_file(f_output_file, sent_test_ys_bycode, test_sent_predictions_by_code, test_essay_feats, regular_tags + CAUSE_TAGS + CAUSAL_REL_TAGS)
-# print results for each code
-print out_predictions_file
+    predictions_to_file(f_output_file, sent_test_ys_bycode, test_sent_predictions_by_code, test_essay_feats, regular_tags + sent_output_train_test_tags)
+
+with open(out_predicted_margins_file, "w+") as f_output_file:
+    f_output_file.write("Essay|Sent Number|Processed Sentence|Concept Codes|Predicted Margins\n")
+    predictions_to_file(f_output_file, sent_test_ys_bycode, test_sent_predictions_by_code, test_essay_feats, regular_tags + sent_output_train_test_tags, output_confidence=True)
+
+""" Write out the accuracy metrics """
+train_wd_metrics    = ResultsProcessor.compute_mean_metrics(wd_td_ys_bytag, train_wd_predictions_by_code)
+test_wd_metrics     = ResultsProcessor.compute_mean_metrics(wd_test_ys_bytag, test_wd_predictions_by_code)
+
+train_sent_metrics  = ResultsProcessor.compute_mean_metrics(sent_test_ys_bycode, test_sent_predictions_by_code)
+test_sent_metrics   = ResultsProcessor.compute_mean_metrics(sent_test_ys_bycode, test_sent_predictions_by_code)
+
+with open(out_metrics_file, "w+") as f_metrics_file:
+    s = ""
+    pad = ResultsProcessor.pad_str
+    s += ResultsProcessor.metrics_to_string(train_wd_metrics,   test_wd_metrics,   "\n%s%s%s" % (pad("TAGGING"), pad("Train"), pad("Test")))
+    s += ResultsProcessor.metrics_to_string(train_sent_metrics, test_sent_metrics, "\n%s%s%s" % (pad("SENTENCE"), pad("Train"), pad("Test")))
+    f_metrics_file.write(s)
+    print s
