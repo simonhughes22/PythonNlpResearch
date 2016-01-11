@@ -5,19 +5,23 @@ import Settings
 
 """ PETER - CHANGE THESE FILE PATHS """
 root        = "/Users/simon.hughes/Google Drive/PhD/Data/ActiveLearning/"
-data        = root + "EBA1415_Merged/"    # Location where the data is, use EBA_Pre and Post test essays preferably
-test_folder = root + "Test/"              # Location where the new essays to tag are located
+f_training_essays = root + "training_essays.txt"
+f_test_essays     = root + "test_essays.txt"
 
-#output
-out_predictions_file = root + "output/"  # File to dump the predictions to
+""" INPUT - two serialized files, one for the pre-processed essays, the other for the features """
+serialized_features = root + "tmp_essay_feats.pl"
+serialized_essays   = root + "tmp_essays.pl"
+
+""" OUTPUT """
+out_predictions_file = root + "output/predictions.txt"
+
 """ END SETTINGS """
 
-from featureextractortransformer import FeatureExtractorTransformer
+import cPickle as pickle
 from sent_feats_for_stacking import *
-from load_data import load_process_essays, extract_features
 
 from featurevectorizer import FeatureVectorizer
-from featureextractionfunctions import *
+
 from wordtagginghelper import *
 from IterableFP import flatten
 
@@ -27,43 +31,47 @@ from sklearn.svm import LinearSVC
 
 # END Classifiers
 from tag_frequency import get_tag_freq, regular_tag
-from window_based_tagger_config import get_config
 from predictions_to_file import predictions_to_file
 
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
-# not hashed as don't affect persistence of feature processing
 SPARSE_WD_FEATS     = True
 SPARSE_SENT_FEATS   = True
 
 MIN_FEAT_FREQ       = 5        # 5 best so far
-CV_FOLDS            = 5
 
 MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
-# end not hashed
-
-config = get_config(data)
-
-""" FEATURE EXTRACTION """
-offset = (config["window_size"] - 1) / 2
-
-unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
-biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
-
-extractors = [unigram_window_stemmed, biigram_window_stemmed]
-feat_config = dict(config.items() + [("extractors", extractors)])
 
 """ LOAD DATA """
-tagged_essays = load_process_essays( **config )
+with open(serialized_essays, "r+") as f:
+    tagged_essays = pickle.load(f)
 logger.info("Essays loaded")
-# most params below exist ONLY for the purposes of the hashing to and from disk
-feature_extractor = FeatureExtractorTransformer(extractors)
 
-essay_feats = feature_extractor.transform(tagged_essays)
+with open(serialized_features, "r+") as f:
+    essay_feats = pickle.load(f)
 logger.info("Features loaded")
+
+with open(f_training_essays) as f:
+    set_training_essays = set(map(lambda s: s.strip(), f.readlines()))
+
+with open(f_test_essays) as f:
+    set_test_essays = set(map(lambda s: s.strip(), f.readlines()))
+
+""" Split essays according to lists """
+train_essays, train_essay_feats = [], []
+test_essays,  test_essay_feats  = [], []
+
+for i, essay in enumerate(tagged_essays):
+    feats = essay_feats[i]
+    if essay.name in set_training_essays:
+        train_essays.append(essay)
+        train_essay_feats.append(feats)
+    elif essay.name in set_test_essays:
+        test_essays.append(essay)
+        test_essay_feats.append(feats)
 
 """ DEFINE TAGS """
 tag_freq = get_tag_freq(tagged_essays)
@@ -91,24 +99,22 @@ sent_output_train_test_tags = list(set(only_causal + CAUSE_TAGS + CAUSAL_REL_TAG
 
 assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against
+""" END Define Tags """
 
 """ CLASSIFIERS """
 """ Log Reg + Log Reg is best!!! """
 #fn_create_wd_cls    = lambda : LinearSVC(C=1.0)
 fn_create_wd_cls = lambda: LogisticRegression() # C=1, dual = False seems optimal
 
-#fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
-fn_create_sent_cls  = lambda : LogisticRegression(dual=True) # C around 1.0 seems pretty optimal
-
-#TODO Parallelize
-essays_TD = essay_feats
+fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
+#fn_create_sent_cls  = lambda : LogisticRegression(dual=True) # C around 1.0 seems pretty optimal
 
 # TD and VD are lists of Essay objects. The sentences are lists
 # of featureextractortransformer.Word objects
 
 print "Training Tagging Model"
 """ Data Partitioning and Training """
-td_feats, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
+td_feats, td_tags = flatten_to_wordlevel_feat_tags(train_essay_feats)
 feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ, sparse=SPARSE_WD_FEATS)
 
 td_X = feature_transformer.fit_transform(td_feats)
@@ -119,17 +125,12 @@ tag2word_classifier = train_classifier_per_code(td_X, wd_td_ys_bytag, fn_create_
 
 print "\nTraining Sentence Model"
 """ SENTENCE LEVEL PREDICTIONS FROM STACKING """
-sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking_from_tagging_model(sent_input_feat_tags, sent_input_interaction_tags, essays_TD, td_X, wd_td_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
+sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking_from_tagging_model(sent_input_feat_tags, sent_input_interaction_tags, train_essay_feats, td_X, wd_td_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
 
 """ Train Stacked Classifier """
 tag2sent_classifier = train_classifier_per_code(sent_td_xs, sent_td_ys_bycode , fn_create_sent_cls, sent_output_train_test_tags)
 
-
 """ END TRAINING """
-
-test_config = get_config(test_folder)
-test_tagged_essays = load_process_essays(**test_config)
-test_essay_feats = feature_extractor.transform(test_tagged_essays)
 
 cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
 

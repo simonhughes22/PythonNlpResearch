@@ -4,22 +4,24 @@
 import Settings
 
 """ PETER - CHANGE THESE FILE PATHS """
+""" DATA - raw essay files + annotations"""
 root        = "/Users/simon.hughes/Google Drive/PhD/Data/ActiveLearning/"
 data        = root + "EBA1415_Merged/"    # Location where the data is, use EBA_Pre and Post test essays preferably
 
+""" OUTPUT - two serialized files, one for the pre-processed essays, the other for the features """
 serialized_features = root + "essay_feats.pl"
 serialized_essays   = root + "essays.pl"
-
 """ END SETTINGS """
 
 from featureextractortransformer import FeatureExtractorTransformer
 from load_data import load_process_essays
-import cPickle as pickle
 
 from featureextractionfunctions import *
 from window_based_tagger_config import get_config
 
+import cPickle as pickle
 import logging
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
@@ -45,6 +47,10 @@ feature_extractor = FeatureExtractorTransformer(extractors)
 essay_feats = feature_extractor.transform(tagged_essays)
 logger.info("Features loaded")
 
-pickle.dump(tagged_essays, serialized_essays)
-pickle.dump(essay_feats, serialized_features)
+with open(serialized_essays, "w+") as f_essays:
+    pickle.dump(tagged_essays, f_essays)
+
+with open(serialized_features, "w+") as f_feats:
+    pickle.dump(essay_feats,   f_feats)
+
 logger.info("Serialized")
