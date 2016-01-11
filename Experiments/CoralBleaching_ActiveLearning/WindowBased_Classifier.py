@@ -2,8 +2,8 @@
 
 """ PETER - CHANGE THESE FILE PATHS """
 root        = "/Users/simon.hughes/Google Drive/PhD/Data/ActiveLearning/"
-f_training_essays = root + "tmp_training_essays.txt"
-f_test_essays     = root + "tmp_test_essays.txt"
+f_training_essays = root + "training_essays.txt"
+f_test_essays     = root + "test_essays.txt"
 
 """ INPUT - two serialized files, one for the pre-processed essays, the other for the features """
 serialized_features = root + "essay_feats.pl"
