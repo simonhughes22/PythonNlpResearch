@@ -166,7 +166,7 @@ def get_accuracy(fname, essay_type):
     grpd["Diff"] = grpd["Ys_cat"] - grpd["Pred_cat"]
     grpd["Diff"] = grpd["Diff"].abs()
 
-    s = "Essay_Category" + "\n\n"
+    s = "Essay_Category" + "\n"
     s += "Accuracy:" + str(round(len(grpd[grpd["Ys_cat"] == grpd["Pred_cat"]]) / float(len(grpd)), 4)) + "\n"
     s += "Adj:"     + str(round(len(grpd[grpd["Diff"] <= 1]) / float(len(grpd)), 4)) + "\n"
     s += "NumEssays:" + str(len(grpd)) + "\n"
