@@ -25,7 +25,7 @@ def predictions_to_file(file, ys_by_code, predictions_by_code, essays, codes = N
                 if code in predictions_by_code:
                     pred_y_val = predictions_by_code[code][ix]
                     if output_confidence:
-                        predictions.add("%s:%f" % (code, pred_y_val))
+                        predictions.add("%s@%f" % (code, pred_y_val))
                     elif pred_y_val > 0:
                         predictions.add(code)
 

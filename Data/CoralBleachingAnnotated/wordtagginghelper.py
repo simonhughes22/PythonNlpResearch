@@ -153,7 +153,7 @@ def predict_for_tag(tag, xs, codeToClassifier):
     return codeToClassifier[tag].predict(xs)
 
 def probability_for_tag(tag, xs, codeToClassifier):
-    return codeToClassifier[tag].predict_proba(xs)
+    return codeToClassifier[tag].predict_proba(xs)[0]
 
 def decision_function_for_tag(tag, xs, codeToClassifier):
     return codeToClassifier[tag].decision_function(xs)

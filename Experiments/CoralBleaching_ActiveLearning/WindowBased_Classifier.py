@@ -11,7 +11,7 @@ serialized_essays   = root + "essays.pl"
 
 """ OUTPUT """
 out_predictions_file        = root + "output/predictions.txt"
-out_predicted_margins_file  = root + "output/predicted_margins.txt"
+out_predicted_margins_file  = root + "output/predicted_confidence.txt"
 out_metrics_file            = root + "output/metrics.txt"
 
 # Leave to True for Active learning (SVM is supposed to be better)
@@ -63,6 +63,9 @@ with open(f_training_essays) as f:
 with open(f_test_essays) as f:
     set_test_essays = set(map(lambda s: s.strip(), f.readlines()))
 
+#USE_SVM = False
+#set_training_essays = set(list(set_training_essays)[0:50])
+
 """ Split essays according to lists """
 train_essays, train_essay_feats = [], []
 test_essays,  test_essay_feats  = [], []
@@ -98,7 +101,12 @@ sent_input_feat_tags = list(set(freq_tags + CAUSE_TAGS))
 # find interactions between these predicted tags from the word tagger to feed to the sentence tagger
 sent_input_interaction_tags = list(set(non_causal + CAUSE_TAGS))
 # tags to train (as output) for the sentence based classifier
-sent_output_train_test_tags = list(set(only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
+
+#ONLY CAUSAL
+#sent_output_train_test_tags = list(set(only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
+
+#CAUSAL + CONCEPT CODES
+sent_output_train_test_tags = list(set(non_causal + only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
 
 assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against
@@ -170,7 +178,7 @@ with open(out_predictions_file, "w+") as f_output_file:
     predictions_to_file(f_output_file, sent_test_ys_bycode, test_sent_predictions_by_code, test_essay_feats, regular_tags + sent_output_train_test_tags)
 
 with open(out_predicted_margins_file, "w+") as f_output_file:
-    f_output_file.write("Essay|Sent Number|Processed Sentence|Concept Codes|Predicted Margins\n")
+    f_output_file.write("Essay|Sent Number|Processed Sentence|Concept Codes|Predicted Confidence\n")
     predictions_to_file(f_output_file, sent_test_ys_bycode, test_decision_functions_by_code, test_essay_feats, regular_tags + sent_output_train_test_tags, output_confidence=True)
 
 """ Write out the accuracy metrics """
