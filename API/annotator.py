@@ -6,6 +6,7 @@ from processessays import process_essays, build_spelling_corrector
 from nltk.tokenize import sent_tokenize
 from collections import defaultdict
 from BrattEssay import Essay, load_bratt_essays
+from EssayCategory import cr_sort_key, friendly_tag, essay_category
 import numpy as np
 
 from featureextractortransformer import FeatureExtractorTransformer
@@ -19,6 +20,7 @@ from config import Config
 
 import logging
 
+
 def onlyascii(s):
     out = ""
     for char in s:
@@ -27,38 +29,6 @@ def onlyascii(s):
         else:
             out += char
     return out
-
-def friendly_tag(tag):
-    return tag.replace("Causer:", "").replace("Result:", "")
-
-def cr_sort_key(cr):
-    cr = cr.replace("5b", "5.5")
-    # _'s last
-    if cr[0] == "_":
-        return (99999999, cr, cr, cr)
-    # Casual second to last, ordered by the order of the cause then the effect
-    if "->" in cr:
-        cr = friendly_tag(cr)
-        a,b = cr.split("->")
-        if a.isdigit():
-            a = float(a)
-        if b.isdigit():
-            b = float(b)
-        return (9000, a,b, cr)
-    # order causer's before results
-    elif "Result:" in cr:
-        cr = friendly_tag(cr)
-        return (-1, float(cr),-1,cr)
-    elif "Causer:" in cr:
-        cr = friendly_tag(cr)
-        return (-2, float(cr),-1,cr)
-    else:
-        #place regular tags first, numbers ahead of words
-        if cr[0].isdigit():
-            return (-10, float(cr),-1,cr)
-        else:
-            return (-10, 9999.9   ,-1,cr.lower())
-    return (float(cr.split("->")[0]), cr) if cr.split("->")[0][0].isdigit() else (99999, cr)
 
 class TaggedSentence(object):
     def __init__(self, sentence, codes, causal):
@@ -191,7 +161,7 @@ class Annotator(object):
 
                     "essay_codes"       :   essay_codes,
                     "essay_causal"      :   essay_causal,
-                    "essay_category"    :   self.essay_category(raw_essay_tags, essay_type),
+                    "essay_category"    :   essay_category(raw_essay_tags, essay_type),
 
                     "raw_essay_tags"    :   raw_essay_tags
             }
@@ -239,86 +209,6 @@ class Annotator(object):
         self.sent_input_interaction_tags = list(set(non_causal + CAUSE_TAGS))
         # tags to train (as output) for the sentence based classifier
         self.sent_output_train_test_tags = list(set(all_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
-
-    def essay_category(self, s, essay_type):
-
-        essay_type = essay_type.strip().upper()
-
-        if not s or s == "" or s == "nan":
-            return 1
-        splt = s.strip().split(",")
-        splt = filter(lambda s: len(s.strip()) > 0, splt)
-        regular = [t.strip() for t in splt if t[0].isdigit()]
-        any_causal = [t.strip() for t in splt if "->" in t and (("Causer" in t and "Result" in t) or "C->R" in t)]
-        causal = [t.strip() for t in splt if "->" in t and "Causer" in t and "Result" in t]
-        if len(regular) == 0 and len(any_causal) == 0:
-            return 1
-        if len(any_causal) == 0:  # i.e. by this point regular must have some
-            return 2  # no causal
-        # if only one causal then must be 3
-        elif len(any_causal) == 1 or len(causal) == 1:
-            return 3
-        # Map to Num->Num, e.g. Causer:3->Results:50 becomes 3->5
-        # Also map 6 to 16 and 7 to 17 to enforce the relative size relationship
-
-        def map_cb(code):
-            return code.replace("6", "16").replace("7", "17")
-
-        def map_sc(code):
-            return code.replace("4", "14").replace("5", "15").replace("6", "16").replace("150", "50")
-
-        is_cb = False
-        is_sc = False
-        if essay_type == "CB":
-            is_cb = True
-            crels = sorted(map(lambda t: map_cb(t.replace("Causer:", "").replace("Result:", "")).strip(), causal),
-                           key=cr_sort_key)
-        elif essay_type == "SC":
-            is_sc = True
-            crels = sorted(map(lambda t: map_sc(t.replace("Causer:", "").replace("Result:", "")).strip(), \
-                               causal),
-                           key=cr_sort_key)
-        else:
-            raise Exception("Unrecognized filename")
-
-        un_results = set()
-        # For each unique pairwise combination
-        for a in crels:
-            for b in crels:
-                if cr_sort_key(b) >= cr_sort_key(a):  # don't compare each pair twice (a,b) == (b,a)
-                    break
-                # b is always the smaller of the two
-                bc, br = b.split("->")
-                ac, ar = a.split("->")
-                # if result from a is causer for b
-                if br.strip() == ac.strip():
-                    un_results.add((b, a))
-
-        if len(un_results) >= 1:
-
-            # To be a 4 or a 5, at least one relation needs to end in a 50
-            joined = ",".join(map(str, un_results))
-            # 50 is the universal code for the essay topic
-            if "->50" not in joined:
-                return 3
-
-            #CB and 6->7->50 ONLY
-            if len(un_results) == 1 and is_cb and ("16->17", "17->50") in un_results:
-                return 4
-            if len(un_results) <= 2 and is_sc:
-                #4->5->6->50
-                codes = set("14,15,16,50".split(","))
-                un_results_cp = set(un_results)
-                for a, b in un_results:
-                    alhs, arhs = a.split("->")
-                    blhs, brhs = b.split("->")
-                    if alhs in codes and arhs in codes and blhs in codes and brhs in codes:
-                        un_results_cp.remove((a, b))
-                if len(un_results_cp) == 0:
-                    return 4
-            return 5
-        else:
-            return 3
 
     def __is_tag_to_return_(self, tag):
         return tag[0].isdigit() or ("->" in tag and "Causer" in tag)
@@ -465,7 +355,8 @@ if __name__ == "__main__":
     settings = Settings.Settings()
     folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
 
-    annotator = Annotator(models_folder= cwd +"/Models/CB/", temp_folder=cwd+"/temp/", essays_folder=folder)
+    annotator = Annotator(models_folder= cwd +"/Models/CB/", essays_folder=folder,
+                          spell_check_dict="/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Data/PublicDataSets")
     d_annotations = annotator.annotate("""
 Corals are living animals in the ocean.
 Corals live in one place and dont really move alot.
@@ -487,14 +378,15 @@ Coral bleaching is a physical damage to the corals.
 Coral bleaching is also an example how the envionmental stressors can affect the relationships between the coral and the algae. //
     """)
 
-    for sent, r_tags, c_tags in d_annotations["tagged_sentences"]:
-        print "\"" + sent + "\"", r_tags, c_tags
+    for d in d_annotations["tagged_sentences"]:
+        print "\"" + d["codes"] + "\"", d["causal"], d["sentence"], d["tagged_words"]
     print ""
 
     for sent in d_annotations["tagged_words"]:
         for wd, r_tags, c_tags in sent:
             print str((wd, r_tags, c_tags))
         print ""
+
     print ""
     print "Essay Tags"
     print d_annotations["essay_tags"]

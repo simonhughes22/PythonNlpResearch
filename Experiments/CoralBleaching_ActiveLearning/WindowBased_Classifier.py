@@ -26,6 +26,9 @@ from featurevectorizer import FeatureVectorizer
 from wordtagginghelper import *
 from IterableFP import flatten
 from results_procesor import ResultsProcessor
+from PandasHelper import group_by
+import pandas as pd
+from EssayCategory import essay_category, get_accuracy
 
 # Classifiers
 from sklearn.linear_model import LogisticRegression
@@ -188,10 +191,12 @@ test_wd_metrics     = ResultsProcessor.compute_mean_metrics(wd_test_ys_bytag, te
 train_sent_metrics  = ResultsProcessor.compute_mean_metrics(sent_test_ys_bycode, test_sent_predictions_by_code)
 test_sent_metrics   = ResultsProcessor.compute_mean_metrics(sent_test_ys_bycode, test_sent_predictions_by_code)
 
+
 with open(out_metrics_file, "w+") as f_metrics_file:
     s = ""
     pad = ResultsProcessor.pad_str
     s += ResultsProcessor.metrics_to_string(train_wd_metrics,   test_wd_metrics,   "\n%s%s%s" % (pad("TAGGING"), pad("Train"), pad("Test")))
     s += ResultsProcessor.metrics_to_string(train_sent_metrics, test_sent_metrics, "\n%s%s%s" % (pad("SENTENCE"), pad("Train"), pad("Test")))
+    s += "\n" + get_accuracy(out_predictions_file, "CB")
     f_metrics_file.write(s)
     print s
