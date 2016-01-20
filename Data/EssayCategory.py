@@ -114,9 +114,9 @@ def essay_category(s, essay_type):
 import pandas as pd
 from PandasHelper import group_by
 
-def get_accuracy(fname, essay_type):
+def write_categories(input_fname, essay_type, out_fname):
 
-    data = pd.read_csv(fname, sep="|")
+    data = pd.read_csv(input_fname, sep="|")
     data["Concept Codes"] = data["Concept Codes"].astype("str")
     data["Concept Codes"] = data["Concept Codes"].apply(lambda s: "" if s == "nan" else s)
     data["Predictions"] = data["Predictions"].astype("str")
@@ -166,8 +166,12 @@ def get_accuracy(fname, essay_type):
     grpd["Diff"] = grpd["Ys_cat"] - grpd["Pred_cat"]
     grpd["Diff"] = grpd["Diff"].abs()
 
-    s = "Essay_Category" + "\n"
-    s += "Accuracy:" + str(round(len(grpd[grpd["Ys_cat"] == grpd["Pred_cat"]]) / float(len(grpd)), 4)) + "\n"
-    s += "Adj:"     + str(round(len(grpd[grpd["Diff"] <= 1]) / float(len(grpd)), 4)) + "\n"
+    d = grpd[["Essay", "Concept Codes", "Predictions", "Ys_cat", "Pred_cat", "Diff"]]
+    d.to_csv(out_fname, "|")
+
+    s = "\nAccuracy:" + str(round(len(grpd[grpd["Ys_cat"] == grpd["Pred_cat"]]) / float(len(grpd)), 4)) + "\n"
+    s += "Adj:" + str(round(len(grpd[grpd["Diff"] <= 1]) / float(len(grpd)), 4)) + "\n"
     s += "NumEssays:" + str(len(grpd)) + "\n"
-    return s
+
+    with open(out_fname, "a") as f:
+        f.write(s)

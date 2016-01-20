@@ -3,6 +3,7 @@
 """ PETER - CHANGE THESE FILE PATHS """
 root        = "/Users/simon.hughes/Google Drive/PhD/Data/ActiveLearning/"
 f_training_essays = root + "training_essays.txt"
+#f_training_essays = root + "tmp_training_essays.txt"
 f_test_essays     = root + "test_essays.txt"
 
 """ INPUT - two serialized files, one for the pre-processed essays, the other for the features """
@@ -13,6 +14,7 @@ serialized_essays   = root + "essays.pl"
 out_predictions_file        = root + "output/predictions.txt"
 out_predicted_margins_file  = root + "output/predicted_confidence.txt"
 out_metrics_file            = root + "output/metrics.txt"
+out_categories_file         = root + "output/categories.txt"
 
 # Leave to True for Active learning (SVM is supposed to be better)
 # But set to False for regular predictions as Logistic Regression is more accurate
@@ -28,7 +30,7 @@ from IterableFP import flatten
 from results_procesor import ResultsProcessor
 from PandasHelper import group_by
 import pandas as pd
-from EssayCategory import essay_category, get_accuracy
+from EssayCategory import essay_category, write_categories
 
 # Classifiers
 from sklearn.linear_model import LogisticRegression
@@ -191,12 +193,11 @@ test_wd_metrics     = ResultsProcessor.compute_mean_metrics(wd_test_ys_bytag, te
 train_sent_metrics  = ResultsProcessor.compute_mean_metrics(sent_test_ys_bycode, test_sent_predictions_by_code)
 test_sent_metrics   = ResultsProcessor.compute_mean_metrics(sent_test_ys_bycode, test_sent_predictions_by_code)
 
-
 with open(out_metrics_file, "w+") as f_metrics_file:
     s = ""
     pad = ResultsProcessor.pad_str
     s += ResultsProcessor.metrics_to_string(train_wd_metrics,   test_wd_metrics,   "\n%s%s%s" % (pad("TAGGING"), pad("Train"), pad("Test")))
     s += ResultsProcessor.metrics_to_string(train_sent_metrics, test_sent_metrics, "\n%s%s%s" % (pad("SENTENCE"), pad("Train"), pad("Test")))
-    s += "\n" + get_accuracy(out_predictions_file, "CB")
     f_metrics_file.write(s)
+    write_categories(out_predictions_file, "CB", out_categories_file)
     print s
