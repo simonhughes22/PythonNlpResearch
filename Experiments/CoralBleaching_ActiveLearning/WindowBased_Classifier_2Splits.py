@@ -1,15 +1,14 @@
 # coding=utf-8
 
 """ PETER - CHANGE THESE FILE PATHS """
-root        = "/Users/simon.hughes/Google Drive/PhD/Data/ActiveLearning/"
-f_training_essays = root + "training_essays.txt"
-#f_training_essays = root + "tmp_training_essays.txt"
+root        = "/Users/simon.hughes/Google Drive/PhD/Data/ActiveLearning/split_2/"
+f_training_essays   = root + "training_essays.txt"
 f_test_essays_A     = root + "test_essays_A.txt"
 f_test_essays_B     = root + "test_essays_B.txt"
 
 """ INPUT - two serialized files, one for the pre-processed essays, the other for the features """
-serialized_features = root + "essay_feats.pl"
-serialized_essays   = root + "essays.pl"
+serialized_features = root + "../essay_feats.pl"
+serialized_essays   = root + "../essays.pl"
 
 """ OUTPUT """
 """ SPLIT A """
@@ -23,7 +22,6 @@ out_predictions_file_B        = root + "output/predictions_B.txt"
 out_predicted_margins_file_B  = root + "output/predicted_confidence_B.txt"
 out_metrics_file_B            = root + "output/metrics_B.txt"
 out_categories_file_B         = root + "output/categories_B.txt"
-
 
 # Leave to True for Active learning (SVM is supposed to be better)
 # But set to False for regular predictions as Logistic Regression is more accurate
@@ -167,7 +165,7 @@ tag2sent_classifier = train_classifier_per_code(sent_td_xs, sent_td_ys_bycode , 
 print "Running Tagging Model"
 """ Data Partitioning and Training """
 
-def evaluate_on_test_set(test_essay_feats):
+def evaluate_on_test_set(test_essay_feats, out_predictions_file, out_predicted_margins_file, out_metrics_file, out_categories_file):
 
     test_feats, test_tags = flatten_to_wordlevel_feat_tags(test_essay_feats)
     wd_test_ys_bytag = get_wordlevel_ys_by_code(test_tags, wd_train_tags)
@@ -178,7 +176,7 @@ def evaluate_on_test_set(test_essay_feats):
     """ SENTENCE LEVEL PREDICTIONS FROM STACKING """
     sent_test_xs, sent_test_ys_bycode = get_sent_feature_for_stacking_from_tagging_model(sent_input_feat_tags,
                                                                                          sent_input_interaction_tags,
-                                                                                         test_essay_feats_A, test_x,
+                                                                                         test_essay_feats, test_x,
                                                                                          wd_test_ys_bytag,
                                                                                          tag2word_classifier,
                                                                                          SPARSE_SENT_FEATS, LOOK_BACK)
@@ -193,23 +191,21 @@ def evaluate_on_test_set(test_essay_feats):
         test_decision_functions_by_code = test_classifier_per_code(sent_test_xs, tag2sent_classifier,
                                                                    sent_output_train_test_tags,
                                                                    predict_fn=probability_for_tag)
-    return sent_test_ys_bycode, test_sent_predictions_by_code, wd_test_ys_bytag, test_wd_predictions_by_code, test_decision_functions_by_code
 
-def write_results(out_predictions_file, out_predicted_margins_file, out_metrics_file):
     """ Write out the predicted classes """
     with open(out_predictions_file, "w+") as f_output_file:
         f_output_file.write("Essay|Sent Number|Processed Sentence|Concept Codes|Predictions\n")
-        predictions_to_file(f_output_file, sent_test_ys_bycode_A, test_sent_predictions_by_code_A, test_essay_feats_A,
+        predictions_to_file(f_output_file, sent_test_ys_bycode, test_sent_predictions_by_code, test_essay_feats,
                             regular_tags + sent_output_train_test_tags)
     with open(out_predicted_margins_file, "w+") as f_output_file:
         f_output_file.write("Essay|Sent Number|Processed Sentence|Concept Codes|Predicted Confidence\n")
-        predictions_to_file(f_output_file, sent_test_ys_bycode_A, test_decision_functions_by_code_A, test_essay_feats_A,
+        predictions_to_file(f_output_file, sent_test_ys_bycode, test_decision_functions_by_code, test_essay_feats,
                             regular_tags + sent_output_train_test_tags, output_confidence=True)
     """ Write out the accuracy metrics """
     train_wd_metrics = ResultsProcessor.compute_mean_metrics(wd_td_ys_bytag, train_wd_predictions_by_code)
-    test_wd_metrics = ResultsProcessor.compute_mean_metrics(wd_test_A, test_wd_predictions_by_code_A)
-    train_sent_metrics = ResultsProcessor.compute_mean_metrics(sent_test_ys_bycode_A, test_sent_predictions_by_code_A)
-    test_sent_metrics = ResultsProcessor.compute_mean_metrics(sent_test_ys_bycode_A, test_sent_predictions_by_code_A)
+    test_wd_metrics = ResultsProcessor.compute_mean_metrics(wd_test_ys_bytag, test_wd_predictions_by_code)
+    train_sent_metrics = ResultsProcessor.compute_mean_metrics(sent_test_ys_bycode, test_sent_predictions_by_code)
+    test_sent_metrics = ResultsProcessor.compute_mean_metrics(sent_test_ys_bycode, test_sent_predictions_by_code)
     with open(out_metrics_file, "w+") as f_metrics_file:
         s = ""
         pad = ResultsProcessor.pad_str
@@ -218,14 +214,12 @@ def write_results(out_predictions_file, out_predicted_margins_file, out_metrics_
         s += ResultsProcessor.metrics_to_string(train_sent_metrics, test_sent_metrics,
                                                 "\n%s%s%s" % (pad("SENTENCE"), pad("Train"), pad("Test")))
         f_metrics_file.write(s)
-        write_categories(out_predictions_file, "CB", out_categories_file_A)
+        write_categories(out_predictions_file, "CB", out_categories_file)
         print s
 
 
 # Run first split
-sent_test_ys_bycode_A, test_sent_predictions_by_code_A, wd_test_A, test_wd_predictions_by_code_A, test_decision_functions_by_code_A = evaluate_on_test_set(test_essay_feats_A)
-write_results(out_predictions_file_A, out_predicted_margins_file_A, out_metrics_file_A)
+evaluate_on_test_set(test_essay_feats_A, out_predictions_file_A, out_predicted_margins_file_A, out_metrics_file_A, out_categories_file_A)
 
 # Run second
-sent_test_ys_bycode_B, test_sent_predictions_by_code_B, wd_test_B, test_wd_predictions_by_code_B, test_decision_functions_by_code_B = evaluate_on_test_set(test_essay_feats_B)
-write_results(out_predictions_file_B, out_predicted_margins_file_B, out_metrics_file_B)
+evaluate_on_test_set(test_essay_feats_B, out_predictions_file_B, out_predicted_margins_file_B, out_metrics_file_B, out_categories_file_B)
