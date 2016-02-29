@@ -109,9 +109,9 @@ sent_input_feat_tags = list(set(freq_tags + CAUSE_TAGS))
 # find interactions between these predicted tags from the word tagger to feed to the sentence tagger
 sent_input_interaction_tags = list(set(non_causal + CAUSE_TAGS))
 # tags to train (as output) for the sentence based classifier
-#sent_output_train_test_tags = list(set(regular_tags + only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
+sent_output_train_test_tags = list(set(regular_tags + only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
 #sent_output_train_test_tags = list(set(all_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
-sent_output_train_test_tags = list(set(only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
+#sent_output_train_test_tags = list(set(only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
 
 assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against
