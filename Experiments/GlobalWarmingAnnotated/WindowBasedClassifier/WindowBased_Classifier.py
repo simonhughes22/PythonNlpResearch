@@ -56,7 +56,7 @@ LOOK_BACK           = 0     # how many sentences to look back when predicting ta
 """ LOAD DATA """
 with open(serialized_essays, "r+") as f:
     tagged_essays = pickle.load(f)
-logger.info("Essays loaded")
+logger.info("%i Essays loaded" % len(tagged_essays))
 
 with open(serialized_features, "r+") as f:
     essay_feats = pickle.load(f)
@@ -205,5 +205,7 @@ with open(out_metrics_file, "w+") as f_metrics_file:
     s += ResultsProcessor.metrics_to_string(train_wd_metrics,   test_wd_metrics,   "\n%s%s%s" % (pad("TAGGING"), pad("Train"), pad("Test")))
     s += ResultsProcessor.metrics_to_string(train_sent_metrics, test_sent_metrics, "\n%s%s%s" % (pad("SENTENCE"), pad("Train"), pad("Test")))
     f_metrics_file.write(s)
-    write_categories(out_predictions_file, "CB", out_categories_file)
     print s
+    #TODO - need to add logic here for GW
+    #write_categories(out_predictions_file, "CB", out_categories_file)
+

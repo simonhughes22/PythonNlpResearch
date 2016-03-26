@@ -13,10 +13,10 @@ class AveragedPerceptron(object):
         http://honnibal.wordpress.com/2013/09/11/a-good-part-of-speechpos-tagger-in-about-200-lines-of-python/
     '''
 
-    def __init__(self):
+    def __init__(self, classes = set()):
         # Each feature gets its own weight vector, so weights is a dict-of-dicts
         self.weights = {}
-        self.classes = set()
+        self.classes = classes
         # The accumulated values, for the averaging. These will be keyed by
         # feature/clas tuples
         self._totals = defaultdict(int)
@@ -29,6 +29,12 @@ class AveragedPerceptron(object):
 
     def predict(self, features):
         '''Dot-product the features and current weights and return the best label.'''
+        scores = self.decision_function(features)
+        # Do a secondary alphabetic sort, for stability
+        return max(self.classes, key=lambda label: (scores[label], label))
+
+    def decision_function(self, features):
+        '''Dot-product the features and current weights and return the score for each class.'''
         scores = defaultdict(float)
         for feat, value in features.items():
             if feat not in self.weights or value == 0:
@@ -37,7 +43,7 @@ class AveragedPerceptron(object):
             for label, weight in weights.items():
                 scores[label] += value * weight
         # Do a secondary alphabetic sort, for stability
-        return max(self.classes, key=lambda label: (scores[label], label))
+        return scores
 
     def update(self, truth, guess, features):
         '''Update the feature weights.'''

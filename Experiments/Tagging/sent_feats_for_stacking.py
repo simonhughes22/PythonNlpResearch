@@ -130,22 +130,7 @@ def get_sent_feature_for_stacking_from_tagging_model(feat_tags, interaction_tags
     return xs, ys_by_code
 
 # Similar to above, but where we already have the predictions per class
-def get_sent_feature_for_stacking_from_multiclass_tagging_model(feat_tags, interaction_tags, essays, word_feats, ys_bytag,  sparse=False, look_back=0):
-
-    # dicts, key = tag, to a 1D array of word-level predictions
-    real_num_predictions_bytag = dict()
-    predictions_bytag = dict()
-    for tag in feat_tags:
-
-        cls = tag2Classifier[tag]
-        if hasattr(cls, "decision_function"):
-            real_num_predictions = cls.decision_function(word_feats)
-        else:
-            real_num_predictions = cls.predict_proba(word_feats)
-        predictions = cls.predict(word_feats)
-        real_num_predictions_bytag[tag] = real_num_predictions
-        predictions_bytag[tag] = predictions
-        real_num_predictions_bytag[tag] = real_num_predictions
+def get_sent_feature_for_stacking_from_multiclass_tagging_model(feat_tags, interaction_tags, essays, ys_bytag, predictions_bytag, real_num_predictions_bytag, sparse=False, look_back=0):
 
     # features for the sentence level predictions
     td_sent_feats = []

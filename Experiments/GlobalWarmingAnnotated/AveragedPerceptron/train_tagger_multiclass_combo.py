@@ -12,6 +12,8 @@ from IterableFP import flatten
 from collections import defaultdict
 from tagger_config import get_config
 from results_procesor import ResultsProcessor
+from predictions_to_file import predictions_to_file
+from sent_feats_for_stacking import get_sent_feature_for_stacking_from_multiclass_tagging_model
 
 # Classifiers
 from perceptron_tagger_multiclass_combo import PerceptronTaggerMultiClassCombo
@@ -39,7 +41,7 @@ CV_FOLDS            = 5
 MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 
-NUM_TRAIN_ITERATIONS = 1
+NUM_TRAIN_ITERATIONS = 10
 
 TAG_HISTORY          = 10
 TAG_FREQ_THRESHOLD   = 5
@@ -86,7 +88,7 @@ feat_config = dict(config.items() + [("extractors", extractors)])
 mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_prefix)(load_process_essays)
 tagged_essays = mem_process_essays( **config )
 transform_essay_tags(tagged_essays)
-logger.info("Essays loaded")
+logger.info("%i Essays loaded" % len(tagged_essays))
 # most params below exist ONLY for the purposes of the hashing to and from disk
 mem_extract_features = memoize_to_disk(filename_prefix=features_filename_prefix)(extract_features)
 essay_feats = mem_extract_features(tagged_essays, **feat_config)
@@ -109,13 +111,14 @@ CAUSE_TAGS = ["Causer", "Result", "explicit"]
 CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 
 """ works best with all the pair-wise causal relation codes """
+#NOTE this does a power set approach to MLC, predicting unique combinations of classes
 wd_train_tags = regular_tags + CAUSE_TAGS
 wd_test_tags  = regular_tags + CAUSE_TAGS
 
 # tags from tagging model used to train the stacked model
-sent_input_feat_tags = list(set(freq_tags + CAUSE_TAGS))
+sent_input_feat_tags = list(set(wd_train_tags))
 # find interactions between these predicted tags from the word tagger to feed to the sentence tagger
-sent_input_interaction_tags = list(set(non_causal + CAUSE_TAGS))
+sent_input_interaction_tags = list(set(wd_train_tags))
 # tags to train (as output) for the sentence based classifier
 sent_output_train_test_tags = list(set(regular_tags + only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
 
@@ -132,6 +135,9 @@ f_output_file.write("Essay|Sent Number|Processed Sentence|Concept Codes|Predicti
 cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
 cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
 
+cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag = defaultdict(list), defaultdict(list)
+cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
+
 folds = cross_validation(essay_feats, CV_FOLDS)
 def pad_str(val):
     return str(val).ljust(20) + "  "
@@ -146,33 +152,75 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     # of featureextractortransformer.Word objects
     print "\nFold %s" % i
     print "Training Tagging Model"
-    """ Training """
+
+    """ Train TAGGING Model """
 
     # Just get the tags (ys)
     td_feats, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
     vd_feats, vd_tags = flatten_to_wordlevel_feat_tags(essays_VD)
 
-    wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
-    wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
+    wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, sent_output_train_test_tags)
+    wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, sent_output_train_test_tags)
 
     tag2word_classifier, td_wd_predictions_by_code, vd_wd_predictions_by_code = {}, {}, {}
 
     tagger = PerceptronTaggerMultiClassCombo(wd_train_tags, tag_history=TAG_HISTORY, combo_freq_threshold=TAG_FREQ_THRESHOLD)
     tagger.train(essays_TD, nr_iter=NUM_TRAIN_ITERATIONS)
 
+    """ Predict Word Tags """
     td_wd_predictions_by_code = tagger.predict(essays_TD)
-    vd_wd_predictions_by_code = tagger.predict(essays_VD)
+    # perceptron score per class #TODO - fix - This spits out all 0's
+    td_wd_real_num_scores_by_code = tagger.decision_function(essays_TD)
 
+    vd_wd_predictions_by_code = tagger.predict(essays_VD)
+    # perceptron score per class
+    vd_wd_real_num_scores_by_code = tagger.decision_function(essays_VD)
+
+    """ Store Predictions for computing error metrics """
     merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
     merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
     merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
     merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
 
+    """ Train Sentence Classification Ensemble Model """
+
+    sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking_from_multiclass_tagging_model(sent_input_feat_tags,
+                                                                                                sent_input_interaction_tags,
+                                                                                                essays_TD, wd_td_ys_bytag,
+                                                                                                td_wd_predictions_by_code, td_wd_real_num_scores_by_code,
+                                                                                                SPARSE_SENT_FEATS, LOOK_BACK)
+
+    sent_vd_xs, sent_vd_ys_bycode = get_sent_feature_for_stacking_from_multiclass_tagging_model(sent_input_feat_tags,
+                                                                                     sent_input_interaction_tags,
+                                                                                     essays_VD, wd_vd_ys_bytag,
+                                                                                     vd_wd_predictions_by_code, vd_wd_real_num_scores_by_code,
+                                                                                     SPARSE_SENT_FEATS, LOOK_BACK)
+
+    """ Train Stacked Classifier """
+    tag2sent_classifier = train_classifier_per_code(sent_td_xs, sent_td_ys_bycode, fn_create_sent_cls, sent_output_train_test_tags)
+
+    """ Test Stack Classifier """
+    td_sent_predictions_by_code \
+        = test_classifier_per_code(sent_td_xs, tag2sent_classifier, sent_output_train_test_tags)
+
+    vd_sent_predictions_by_code \
+        = test_classifier_per_code(sent_vd_xs, tag2sent_classifier, sent_output_train_test_tags)
+
+    merge_dictionaries(sent_td_ys_bycode, cv_sent_td_ys_by_tag)
+    merge_dictionaries(sent_vd_ys_bycode, cv_sent_vd_ys_by_tag)
+    merge_dictionaries(td_sent_predictions_by_code, cv_sent_td_predictions_by_tag)
+    merge_dictionaries(vd_sent_predictions_by_code, cv_sent_vd_predictions_by_tag)
+
+    predictions_to_file(f_output_file, sent_vd_ys_bycode, vd_sent_predictions_by_code, essays_VD, codes=sent_output_train_test_tags)
+
     print("STOPPING ONE ONE FOLD FOR TESTING")
     break
     pass
 
-CB_TAGGING_TD, CB_TAGGING_VD = "GW_TAGGING_TD", "GW_TAGGING_VD"
+
+SUFFIX = "_CAUSE_EFFECT_LBLS"
+GW_TAGGING_TD, GW_TAGGING_VD, GW_SENT_TD, GW_SENT_VD = "GW_TAGGING_TD" + SUFFIX, "GW_TAGGING_VD" + SUFFIX, "GW_SENT_TD" + SUFFIX, "GW_SENT_VD" + SUFFIX
+
 parameters = dict(config)
 
 parameters["num_iterations"]        = NUM_TRAIN_ITERATIONS
@@ -183,10 +231,29 @@ parameters["tag_history"]           = TAG_HISTORY
 parameters["extractors"]        = map(lambda fn: fn.func_name, extractors)
 
 wd_algo = "AveragedPerceptronMulticlassCombo"
+sent_algo = str(fn_create_sent_cls())
 
-wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
-wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
+wd_td_objectid = processor.persist_results(GW_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
+wd_vd_objectid = processor.persist_results(GW_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
 
-print processor.results_to_string(wd_td_objectid,   CB_TAGGING_TD,  wd_vd_objectid,     CB_TAGGING_VD,  "TAGGING")
+print processor.results_to_string(wd_td_objectid, GW_TAGGING_TD, wd_vd_objectid, GW_TAGGING_VD, "TAGGING")
+
+sent_td_objectid = processor.persist_results(GW_SENT_TD, cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag, parameters, sent_algo, tagger_id=wd_td_objectid)
+sent_vd_objectid = processor.persist_results(GW_SENT_VD, cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag, parameters, sent_algo, tagger_id=wd_vd_objectid)
+
+# This outputs 0's for MEAN CONCEPT CODES as we aren't including those in the outputs
+
+print processor.results_to_string(sent_td_objectid, GW_SENT_TD, sent_vd_objectid, GW_SENT_VD, "SENTENCE")
+logger.info("Results Processed")
 
 """ NOTE THIS DOES QUITE A BIT BETTER ON DETECTING THE RESULT CODES, AND A LITTLE BETTER ON THE CAUSE - EFFECT NODES """
+
+"""
+TODO: Get it working without CAUSE
+TODO: Filter out the none Peter's list Codes (no N's, M's, X.Y and X_Y)
+TODO: Use the full set of inputs codes (N,M, the evidence - to build a stronger sentence classifier, and
+then omit from the final predictions
+TODO: Parallelize the training
+TODO: Verify that this can effectively use the decision function values, given they are not normalized
+
+"""

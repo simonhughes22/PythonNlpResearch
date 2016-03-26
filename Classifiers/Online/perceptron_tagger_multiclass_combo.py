@@ -4,12 +4,12 @@ import os
 import random
 import pickle
 import logging
-import numpy as np
 
 from collections import defaultdict
 from perceptron import AveragedPerceptron
 from results_procesor import ResultsProcessor
 from Rpfa import weighted_mean_rpfa
+import numpy as np
 
 PICKLE = "trontagger-0.1.0.pickle"
 
@@ -49,8 +49,10 @@ class PerceptronTaggerMultiClassCombo(object):
             if prev == self.POSITIVE_CLASS:
                 feats["HIST_TAG " + str(offset) + " " + cls ]  = 1
 
-    def predict(self, essay_feats):
-        '''Tags a string `corpus`.'''
+    def predict(self, essay_feats, output_scores = False):
+        '''Tags a string `corpus`.
+            Outputs a dictionary mapping to a list of binary predictions
+        '''
 
         # Assume untokenized corpus has \n between sentences and ' ' between words
         class2predictions = defaultdict(list)
@@ -72,16 +74,32 @@ class PerceptronTaggerMultiClassCombo(object):
                     tagger_feats = dict(shared_features.items())
                     self._add_tag_features(tagger_feats, wd.word, prev[-1], prev[-2])
 
-                    guess = self.model.predict(tagger_feats)
+                    scores_by_class = self.model.decision_function(tagger_feats)
+                    guess = max(self.model.classes, key=lambda label: (scores_by_class[label], label))
                     prev.append(guess)
-                    for cls in self.individual_tags:
-                        class2predictions[cls].append(1 if cls in guess  else 0)
 
-        # convery dictionary of class2predictions to a np array
+                    if output_scores:
+                        max_score_per_class = defaultdict(float)
+                        for fset_tags, score in scores_by_class.items():
+                            for tag in fset_tags:
+                                max_score_per_class[tag] = max(max_score_per_class[tag], score)
+
+                        for cls in self.individual_tags:
+                            class2predictions[cls].append(max_score_per_class[cls])
+                    else:
+                        for cls in self.individual_tags:
+                            class2predictions[cls].append(1 if cls in guess else 0)
+
         np_class2predictions = dict()
         for key, lst in class2predictions.items():
             np_class2predictions[key] = np.asarray(lst)
         return np_class2predictions
+
+    def decision_function(self, essay_feats):
+        '''Tags a string `corpus`.
+            Outputs a dictionary mapping to a list of scores for each class
+        '''
+        return self.predict(essay_feats, output_scores=True)
 
     def __get_tags_(self, tags):
         return frozenset((t for t in tags if t in self.individual_tags))
@@ -105,9 +123,8 @@ class PerceptronTaggerMultiClassCombo(object):
                     tag_freq[fs_tags] +=1
 
 
-        self.model = AveragedPerceptron()
         self.classes = set([ fs for fs, cnt in tag_freq.items() if cnt >= self.combo_freq_threshold])
-        self.model.classes = self.classes
+        self.model = AveragedPerceptron(self.classes)
 
         for iter_ in range(nr_iter):
             class2predictions = defaultdict(list)
