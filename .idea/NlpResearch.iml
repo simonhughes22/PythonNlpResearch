@@ -56,6 +56,8 @@
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingAnnotated/ConvolutionalNeuralNetwork" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/API" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleaching_ActiveLearning" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/GlobalWarmingAnnotated" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/GlobalWarmingAnnotated/WindowBasedClassifier" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/Notebooks" />
     </content>

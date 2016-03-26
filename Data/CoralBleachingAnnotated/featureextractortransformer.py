@@ -41,7 +41,8 @@ class FeatureExtractorTransformer(object):
     def __init__(self, feature_extractor_fns):
         """ feature_extractor_fns   :   list of fns
                                             fn: FeatureExtractorInput -> dict
-
+            tag_transformer         :   fn str -> str
+                                            tranformation to apply to tags
             returns: a list of Essay objects
         """
         self.feature_extractor_fns = feature_extractor_fns

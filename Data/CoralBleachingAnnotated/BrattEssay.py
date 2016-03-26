@@ -40,6 +40,12 @@ class CompoundTextAnnotation(AnnotationBase):
         first  = self.contents[1]
         second, third = self.contents[2].split(";")
         fourth = self.contents[3]
+        if ";" in fourth:
+            fourth, fifth = fourth.split(";")
+            fifth = int(fifth) + 1
+            sixth = int(self.contents[4]) + 1
+        else:
+            fifth, sixth = None, None
 
         first, second, third, fourth = int(first) + 1, int(second) + 1, int(third) + 1, int(fourth) + 1
 
@@ -48,18 +54,41 @@ class CompoundTextAnnotation(AnnotationBase):
         txt_first  = txt_split[0]
         txt_second = txt_split[-1]
 
-        if len(txt_split) != 2:
-            length = len(txt_split)
-            for i in range(1, length):
-                a = " ".join(txt_split[:i])
-                b = " ".join(txt_split[i:])
-                if a in full_text[first-10:second+10] and b in full_text[third-10:third+10]:
-                    txt_first = a
-                    txt_second = b
-                    break
+        if fifth is None:
+            if len(txt_split) != 2:
+                length = len(txt_split)
+                for i in range(1, length):
+                    a = " ".join(txt_split[:i])
+                    b = " ".join(txt_split[i:])
+                    if a in full_text[first-10:second+10] and b in full_text[third-10:fourth+10]:
+                        txt_first = a
+                        txt_second = b
+                        break
 
-        self.first_part  = TextAnnotation(self.id + "\t" + self.code + " " + str(first) + " " + str(second) + "\t" + txt_first, full_text)
-        self.second_part = TextAnnotation(self.id + "\t" + self.code + " " + str(third) + " " + str(fourth) + "\t" + txt_second, full_text)
+            self.first_part  = TextAnnotation(self.id + "\t" + self.code + " " + str(first) + " " + str(second) + "\t" + txt_first, full_text)
+            self.second_part = TextAnnotation(self.id + "\t" + self.code + " " + str(third) + " " + str(fourth) + "\t" + txt_second, full_text)
+            self.third_part = None
+        else:
+            txt_first = txt_split[0]
+            txt_second = txt_split[-2]
+            txt_third = txt_split[-1]
+
+            if len(txt_split) != 3:
+                length = len(txt_split)
+                for i in range(1, length):
+                    a = " ".join(txt_split[:i])
+                    if a in full_text[first- 10:second+ 10]:
+                        for j in range(i+1, length):
+                            b = " ".join(txt_split[i:j])
+                            c = " ".join(txt_split[j:])
+                            if b in full_text[third - 10:fourth + 10] and c in full_text[fifth- 10:sixth+ 10]:
+                                txt_first = a
+                                txt_second = b
+                                txt_third = c
+                                break
+            self.first_part  = TextAnnotation(self.id + "\t" + self.code + " " + str(first) + " " + str(second) + "\t" + txt_first,  full_text)
+            self.second_part = TextAnnotation(self.id + "\t" + self.code + " " + str(third) + " " + str(fourth) + "\t" + txt_second, full_text)
+            self.third_part  = TextAnnotation(self.id + "\t" + self.code + " " + str(fifth) + " " + str(sixth)  + "\t" + txt_third,  full_text)
         pass
 
 class TextAnnotation(AnnotationBase):
@@ -156,6 +185,11 @@ class EventAnnotation(AnnotationBase):
 
                     self.__dependencies__.append(clonea)
                     self.__dependencies__.append(cloneb)
+
+                    if dep.third_part:
+                        clonec = dep.third_part.clone()
+                        self.__assign_code__(clonec, typ)
+                        self.__dependencies__.append(clonec)
                 else:
                     clone = dep.clone()
                     self.__assign_code__(clone, typ)
@@ -259,6 +293,8 @@ class Essay(object):
                     annotation = CompoundTextAnnotation(line, self.txt)
                     text_annotations.append(annotation.first_part)
                     text_annotations.append(annotation.second_part)
+                    if annotation.third_part:
+                        text_annotations.append(annotation.third_part)
 
                     """ DEBUGGING
                     print ""
