@@ -4,10 +4,11 @@ import os
 import random
 import pickle
 import logging
+import numpy as np
 
 from collections import defaultdict
 from perceptron import AveragedPerceptron
-from results_procesor import compute_metrics
+from results_procesor import ResultsProcessor
 from Rpfa import weighted_mean_rpfa
 
 PICKLE = "trontagger-0.1.0.pickle"
@@ -76,7 +77,11 @@ class PerceptronTaggerMultiClassCombo(object):
                     for cls in self.individual_tags:
                         class2predictions[cls].append(1 if cls in guess  else 0)
 
-        return class2predictions
+        # convery dictionary of class2predictions to a np array
+        np_class2predictions = dict()
+        for key, lst in class2predictions.items():
+            np_class2predictions[key] = np.asarray(lst)
+        return np_class2predictions
 
     def __get_tags_(self, tags):
         return frozenset((t for t in tags if t in self.individual_tags))
@@ -134,7 +139,7 @@ class PerceptronTaggerMultiClassCombo(object):
                             class2tags[cls].append(         1 if cls in actual else 0)
 
             random.shuffle(cp_essay_feats)
-            class2metrics = compute_metrics(class2tags, class2predictions)
+            class2metrics = ResultsProcessor.compute_metrics(class2tags, class2predictions)
             wtd_mean = weighted_mean_rpfa(class2metrics.values())
             logging.info("Iter {0}: Wtd Mean: {1}".format(iter_, str(wtd_mean)))
 

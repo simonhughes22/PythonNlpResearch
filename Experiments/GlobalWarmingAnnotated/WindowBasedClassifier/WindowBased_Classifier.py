@@ -1,6 +1,6 @@
 # coding=utf-8
 
-root        = "/Users/simon.hughes/Google Drive/PhD/Data/GlobalWarming/BrattFiles/globwarm20new/experiment/"
+root        = "/Users/simon.hughes/Google Drive/PhD/Data/GlobalWarming/BrattFiles/globwarm20new/Experiment/"
 f_training_essays = root + "training_essays.txt"
 #f_training_essays = root + "tmp_training_essays.txt"
 f_test_essays     = root + "test_essays.txt"
@@ -10,14 +10,14 @@ serialized_features = root + "essay_feats.pl"
 serialized_essays   = root + "essays.pl"
 
 """ OUTPUT """
-out_predictions_file        = root + "output/predictions.txt"
-out_predicted_margins_file  = root + "output/predicted_confidence.txt"
-out_metrics_file            = root + "output/metrics.txt"
-out_categories_file         = root + "output/categories.txt"
+out_predictions_file        = root + "Output/predictions.txt"
+out_predicted_margins_file  = root + "Output/predicted_confidence.txt"
+out_metrics_file            = root + "Output/metrics.txt"
+out_categories_file         = root + "Output/categories.txt"
 
 # Leave to True for Active learning (SVM is supposed to be better)
 # But set to False for regular predictions as Logistic Regression is more accurate
-USE_SVM = True
+USE_SVM = True # best so far is Log Reg (wds) followed by linear SVM (sentences)
 
 """ END SETTINGS """
 

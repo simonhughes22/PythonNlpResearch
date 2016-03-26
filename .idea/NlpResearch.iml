@@ -58,6 +58,7 @@
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleaching_ActiveLearning" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/GlobalWarmingAnnotated" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/GlobalWarmingAnnotated/WindowBasedClassifier" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/GlobalWarmingAnnotated/AveragedPerceptron" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/Notebooks" />
     </content>

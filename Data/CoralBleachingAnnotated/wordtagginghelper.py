@@ -153,7 +153,17 @@ def predict_for_tag(tag, xs, codeToClassifier):
     return codeToClassifier[tag].predict(xs)
 
 def probability_for_tag(tag, xs, codeToClassifier):
-    return codeToClassifier[tag].predict_proba(xs)[0]
+    # This causes constant issues. Sometimes the output is of one shape, sometimes another
+    # The main issue is that it outputs 2 probabilities, one per class. We just want to take one of those
+    #return codeToClassifier[tag].predict_proba(xs)[0]
+
+    pred = codeToClassifier[tag].predict_proba(xs)
+    # 2D output
+    if len(pred.shape) == 2:
+        # Works for /Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Experiments/GlobalWarmingAnnotated/WindowBasedClassifier/WindowBased_Classifier.py
+        # WHEN USE_SVM = False (i.e. use Log Regression)
+        return pred[:,0]
+    return pred
 
 def decision_function_for_tag(tag, xs, codeToClassifier):
     return codeToClassifier[tag].decision_function(xs)

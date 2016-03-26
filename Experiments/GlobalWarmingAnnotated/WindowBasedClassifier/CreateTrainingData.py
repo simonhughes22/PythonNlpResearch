@@ -9,8 +9,8 @@ root        = "/Users/simon.hughes/Google Drive/PhD/Data/GlobalWarming/BrattFile
 data        = root + "globwarm20new/"    # Location where the data is
 
 """ OUTPUT - two serialized files, one for the pre-processed essays, the other for the features """
-serialized_features = data + "experiment/essay_feats.pl"
-serialized_essays   = data + "experiment/essays.pl"
+serialized_features = data + "Experiment/essay_feats.pl"
+serialized_essays   = data + "Experiment/essays.pl"
 """ END SETTINGS """
 
 from featureextractortransformer import FeatureExtractorTransformer
@@ -18,7 +18,7 @@ from load_data import load_process_essays
 
 from featureextractionfunctions import *
 from window_based_tagger_config import get_config
-from TagTransformer import tag_transformer
+from TagTransformer import transform_essay_tags
 
 import cPickle as pickle
 import logging
@@ -41,13 +41,7 @@ feat_config = dict(config.items() + [("extractors", extractors)])
 
 """ LOAD DATA """
 tagged_essays = load_process_essays( **config )
-
-for essay in tagged_essays:
-    transformed_sentences = []
-    for tagged_sentence in essay.sentences:
-        t_sentence = [(wd, map(tag_transformer, tags)) for (wd, tags) in tagged_sentence]
-        transformed_sentences.append(t_sentence)
-    essay.sentences = transformed_sentences
+transform_essay_tags(tagged_essays)
 
 logger.info("Essays loaded")
 # most params below exist ONLY for the purposes of the hashing to and from disk

@@ -9,7 +9,7 @@ from IterableFP import flatten
 from collections import defaultdict
 from window_based_tagger_config import get_config
 from perceptron_tagger_multiclass_combo import PerceptronTaggerMultiClassCombo
-from results_procesor import ResultsProcessor, compute_metrics
+from results_procesor import ResultsProcessor
 # END Classifiers
 
 import Settings
