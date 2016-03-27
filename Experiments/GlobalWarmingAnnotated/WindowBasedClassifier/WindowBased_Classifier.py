@@ -1,6 +1,6 @@
 # coding=utf-8
 
-root        = "/Users/simon.hughes/Google Drive/PhD/Data/GlobalWarming/BrattFiles/globwarm20new/Experiment/"
+root        = "/Users/simon.hughes/Google Drive/PhD/Data/GlobalWarming/BrattFiles/merged/Experiment/"
 f_training_essays = root + "training_essays.txt"
 #f_training_essays = root + "tmp_training_essays.txt"
 f_test_essays     = root + "test_essays.txt"
@@ -39,7 +39,7 @@ from sklearn.svm import LinearSVC
 from tag_frequency import get_tag_freq, regular_tag
 from predictions_to_file import predictions_to_file
 from wordtagginghelper import test_classifier_per_code, predict_for_tag, probability_for_tag, decision_function_for_tag
-
+from GWCodes import GWConceptCodes
 import logging
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -85,17 +85,17 @@ for i, essay in enumerate(tagged_essays):
         test_essay_feats.append(feats)
 
 """ DEFINE TAGS """
+gw_codes = GWConceptCodes()
+
 tag_freq = get_tag_freq(tagged_essays)
 freq_tags = list(set((tag for tag, freq in tag_freq.items()
-                      if freq >= MIN_TAG_FREQ and regular_tag(tag)
-                      and not "nd" in tag and not "semantic" in tag
-                      and not ":N" in tag and not ":M" in tag)))
+                      if freq >= MIN_TAG_FREQ and gw_codes.is_valid_code(tag))))
 
 non_causal  = [t for t in freq_tags if "->" not in t]
 only_causal = [t for t in freq_tags if "->" in t]
 
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
-regular_tags = list(set((t for t in flatten(lst_all_tags) if t[0].isdigit())))
+regular_tags = list(set((t for t in freq_tags if t[0].isdigit())))
 
 CAUSE_TAGS = ["Causer", "Result", "explicit"]
 CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]

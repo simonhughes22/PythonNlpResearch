@@ -22,3 +22,11 @@ def transform_essay_tags(tagged_essays):
             t_sentence = [(wd, map(__tag_transformer__, tags)) for (wd, tags) in tagged_sentence]
             transformed_sentences.append(t_sentence)
         essay.sentences = transformed_sentences
+
+def replace_periods(tagged_essays):
+    for essay in tagged_essays:
+        transformed_sentences = []
+        for tagged_sentence in essay.sentences:
+            t_sentence = [(wd, map(lambda t: t.replace(".", "-"), tags)) for (wd, tags) in tagged_sentence]
+            transformed_sentences.append(t_sentence)
+        essay.sentences = transformed_sentences

@@ -18,7 +18,6 @@ from load_data import load_process_essays
 
 from featureextractionfunctions import *
 from window_based_tagger_config import get_config
-from TagTransformer import transform_essay_tags
 
 import cPickle as pickle
 import logging
@@ -41,8 +40,6 @@ feat_config = dict(config.items() + [("extractors", extractors)])
 
 """ LOAD DATA """
 tagged_essays = load_process_essays( **config )
-transform_essay_tags(tagged_essays)
-
 logger.info("Essays loaded")
 # most params below exist ONLY for the purposes of the hashing to and from disk
 

@@ -1,9 +1,11 @@
 from Decorators import memoize_to_disk
+from GWCodes import GWConceptCodes
 from sent_feats_for_stacking import *
 from load_data import load_process_essays, extract_features
 
 from featureextractionfunctions import *
 from CrossValidation import cross_validation
+from tag_frequency import get_tag_freq
 from wordtagginghelper import *
 from IterableFP import flatten
 from collections import defaultdict
@@ -14,7 +16,6 @@ from results_procesor import ResultsProcessor
 
 import Settings
 import logging
-from TagTransformer import transform_essay_tags
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
@@ -32,7 +33,7 @@ CV_FOLDS            = 5
 MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 
-NUM_TRAIN_ITERATIONS = 1
+NUM_TRAIN_ITERATIONS = 3
 TAG_HISTORY          = 0
 RIGHT2LEFT           = True
 # end not hashed
@@ -67,7 +68,7 @@ feat_config = dict(config.items() + [("extractors", extractors)])
 """ LOAD DATA """
 mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_prefix)(load_process_essays)
 tagged_essays = mem_process_essays( **config )
-transform_essay_tags(tagged_essays)
+
 logger.info("Essays loaded")
 # most params below exist ONLY for the purposes of the hashing to and from disk
 mem_extract_features = memoize_to_disk(filename_prefix=features_filename_prefix)(extract_features)
@@ -75,22 +76,30 @@ essay_feats = mem_extract_features(tagged_essays, **feat_config)
 logger.info("Features loaded")
 
 """ DEFINE TAGS """
+gw_codes = GWConceptCodes()
+
+tag_freq = get_tag_freq(tagged_essays)
+freq_tags = list(set((tag for tag, freq in tag_freq.items()
+                      if freq >= MIN_TAG_FREQ and gw_codes.is_valid_code(tag))))
+
+non_causal  = [t for t in freq_tags if "->" not in t]
+only_causal = [t for t in freq_tags if "->" in t]
+
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
-regular_tags = list(set((t for t in flatten(lst_all_tags) if t[0].isdigit())))
+regular_tags = list(set((t for t in freq_tags if t[0].isdigit())))
 
 CAUSE_TAGS = ["Causer", "Result", "explicit"]
 CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 
 """ works best with all the pair-wise causal relation codes """
-wd_train_tags = regular_tags + CAUSE_TAGS
-wd_test_tags  = regular_tags + CAUSE_TAGS
+# Include all tags for the output
+wd_train_tags = list(set(freq_tags + CAUSE_TAGS))
+wd_test_tags  = list(set(freq_tags + CAUSE_TAGS))
 
 # tags from tagging model used to train the stacked model
-sent_input_feat_tags = wd_train_tags
+sent_input_feat_tags = list(set(freq_tags + CAUSE_TAGS))
 # find interactions between these predicted tags from the word tagger to feed to the sentence tagger
-sent_input_interaction_tags = wd_train_tags
-# tags to train (as output) for the sentence based classifier
-sent_output_train_test_tags = list(set(regular_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
+sent_input_interaction_tags = list(set(non_causal + CAUSE_TAGS))
 
 assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against

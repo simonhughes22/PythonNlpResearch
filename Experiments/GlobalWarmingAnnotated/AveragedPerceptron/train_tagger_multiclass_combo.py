@@ -14,6 +14,7 @@ from tagger_config import get_config
 from results_procesor import ResultsProcessor
 from predictions_to_file import predictions_to_file
 from sent_feats_for_stacking import get_sent_feature_for_stacking_from_multiclass_tagging_model
+from GWCodes import GWConceptCodes
 
 # Classifiers
 from perceptron_tagger_multiclass_combo import PerceptronTaggerMultiClassCombo
@@ -24,7 +25,7 @@ from sklearn.svm import LinearSVC
 
 import Settings
 import logging
-from TagTransformer import transform_essay_tags
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
@@ -41,7 +42,8 @@ CV_FOLDS            = 5
 MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 
-NUM_TRAIN_ITERATIONS = 10
+# 3 is currently the best
+NUM_TRAIN_ITERATIONS = 3
 
 TAG_HISTORY          = 10
 TAG_FREQ_THRESHOLD   = 5
@@ -60,7 +62,7 @@ else:
 
 settings = Settings.Settings()
 
-folder =                            settings.data_directory + "/GlobalWarming/BrattFiles/globwarm20new/"
+folder =                            settings.data_directory + "/GlobalWarming/BrattFiles/merged/"
 processed_essay_filename_prefix =   folder + "Pickled/essays_proc_pickled_"
 features_filename_prefix =          folder + "Pickled/feats_pickled_"
 
@@ -87,7 +89,8 @@ feat_config = dict(config.items() + [("extractors", extractors)])
 """ LOAD DATA """
 mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_prefix)(load_process_essays)
 tagged_essays = mem_process_essays( **config )
-transform_essay_tags(tagged_essays)
+# causes issues with mongo record saving
+
 logger.info("%i Essays loaded" % len(tagged_essays))
 # most params below exist ONLY for the purposes of the hashing to and from disk
 mem_extract_features = memoize_to_disk(filename_prefix=features_filename_prefix)(extract_features)
@@ -95,11 +98,10 @@ essay_feats = mem_extract_features(tagged_essays, **feat_config)
 logger.info("Features loaded")
 
 """ DEFINE TAGS """
+gw_codes = GWConceptCodes()
 tag_freq = get_tag_freq(tagged_essays)
 freq_tags = list(set((tag for tag, freq in tag_freq.items()
-                      if freq >= MIN_TAG_FREQ and regular_tag(tag)
-                      and not "nd" in tag and not "semantic" in tag
-                      and not ":N" in tag and not ":M" in tag)))
+                      if freq >= MIN_TAG_FREQ and gw_codes.is_valid_code(tag))))
 
 non_causal  = [t for t in freq_tags if "->" not in t]
 only_causal = [t for t in freq_tags if "->" in t]
@@ -110,19 +112,19 @@ regular_tags = list(set((t for t in flatten(lst_all_tags) if t[0].isdigit())))
 CAUSE_TAGS = ["Causer", "Result", "explicit"]
 CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 
-""" works best with all the pair-wise causal relation codes """
-#NOTE this does a power set approach to MLC, predicting unique combinations of classes
-wd_train_tags = regular_tags + CAUSE_TAGS
-wd_test_tags  = regular_tags + CAUSE_TAGS
+"""  """
+#
+wd_train_tags = list(set(freq_tags + CAUSE_TAGS))
+wd_test_tags  = wd_train_tags
 
 # tags from tagging model used to train the stacked model
-sent_input_feat_tags = list(set(wd_train_tags))
+sent_input_feat_tags = list(set(freq_tags + CAUSE_TAGS))
 # find interactions between these predicted tags from the word tagger to feed to the sentence tagger
-sent_input_interaction_tags = list(set(wd_train_tags))
+sent_input_interaction_tags = list(set(non_causal + CAUSE_TAGS))
 # tags to train (as output) for the sentence based classifier
 sent_output_train_test_tags = list(set(regular_tags + only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
 
-assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
+#assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against
 
 """ CLASSIFIERS """
@@ -159,8 +161,8 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     td_feats, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
     vd_feats, vd_tags = flatten_to_wordlevel_feat_tags(essays_VD)
 
-    wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, sent_output_train_test_tags)
-    wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, sent_output_train_test_tags)
+    wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, sent_output_train_test_tags + wd_train_tags)
+    wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, sent_output_train_test_tags + wd_train_tags)
 
     tag2word_classifier, td_wd_predictions_by_code, vd_wd_predictions_by_code = {}, {}, {}
 
@@ -169,7 +171,7 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
     """ Predict Word Tags """
     td_wd_predictions_by_code = tagger.predict(essays_TD)
-    # perceptron score per class #TODO - fix - This spits out all 0's
+    # perceptron score per class
     td_wd_real_num_scores_by_code = tagger.decision_function(essays_TD)
 
     vd_wd_predictions_by_code = tagger.predict(essays_VD)
@@ -249,11 +251,13 @@ logger.info("Results Processed")
 """ NOTE THIS DOES QUITE A BIT BETTER ON DETECTING THE RESULT CODES, AND A LITTLE BETTER ON THE CAUSE - EFFECT NODES """
 
 """
-TODO: Get it working without CAUSE
+TODO: Fix the code so that I can train it on just the concept codes, but train the enemble classifier on everything
 TODO: Filter out the none Peter's list Codes (no N's, M's, X.Y and X_Y)
 TODO: Use the full set of inputs codes (N,M, the evidence - to build a stronger sentence classifier, and
 then omit from the final predictions
 TODO: Parallelize the training
 TODO: Verify that this can effectively use the decision function values, given they are not normalized
 
+# DONE:
+### TODO: Get it working without CAUSE
 """
