@@ -1,4 +1,5 @@
 # coding=utf-8
+from TagTransformer import replace_periods
 
 root        = "/Users/simon.hughes/Google Drive/PhD/Data/GlobalWarming/BrattFiles/merged/Experiment/"
 f_training_essays = root + "training_essays.txt"
@@ -25,11 +26,7 @@ import cPickle as pickle
 from sent_feats_for_stacking import *
 from featurevectorizer import FeatureVectorizer
 from wordtagginghelper import *
-from IterableFP import flatten
 from results_procesor import ResultsProcessor
-from PandasHelper import group_by
-import pandas as pd
-from EssayCategory import essay_category, write_categories
 
 # Classifiers
 from sklearn.linear_model import LogisticRegression
@@ -56,6 +53,7 @@ LOOK_BACK           = 0     # how many sentences to look back when predicting ta
 """ LOAD DATA """
 with open(serialized_essays, "r+") as f:
     tagged_essays = pickle.load(f)
+
 logger.info("%i Essays loaded" % len(tagged_essays))
 
 with open(serialized_features, "r+") as f:
@@ -89,10 +87,12 @@ gw_codes = GWConceptCodes()
 
 tag_freq = get_tag_freq(tagged_essays)
 freq_tags = list(set((tag for tag, freq in tag_freq.items()
-                      if freq >= MIN_TAG_FREQ and gw_codes.is_valid_code(tag))))
+                      if freq >= MIN_TAG_FREQ)))
 
-non_causal  = [t for t in freq_tags if "->" not in t]
-only_causal = [t for t in freq_tags if "->" in t]
+valid_tags = list((t for t in freq_tags if gw_codes.is_valid_code(t)))
+
+non_causal  = [t for t in valid_tags if "->" not in t]
+only_causal = [t for t in valid_tags if "->" in t]
 
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
 regular_tags = list(set((t for t in freq_tags if t[0].isdigit())))

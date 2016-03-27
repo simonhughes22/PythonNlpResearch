@@ -4,9 +4,11 @@
 
 
 """ PETER - CHANGE THESE FILE PATHS """
+from TagTransformer import replace_periods
+
 """ DATA - raw essay files + annotations"""
 root        = "/Users/simon.hughes/Google Drive/PhD/Data/GlobalWarming/BrattFiles/"
-data        = root + "globwarm20new/"    # Location where the data is
+data        = root + "merged/"    # Location where the data is
 
 """ OUTPUT - two serialized files, one for the pre-processed essays, the other for the features """
 serialized_features = data + "Experiment/essay_feats.pl"

@@ -29,12 +29,13 @@ def num_different_tags(pred):
             new_tag = False
     return cnt
 
-def get_sent_feature_for_stacking_from_tagging_model(feat_tags, interaction_tags, essays, word_feats, ys_bytag, tag2Classifier, sparse=False, look_back=0):
+def get_sent_feature_for_stacking_from_tagging_model(sent_input_feats, interaction_tags, essays, word_feats, ys_bytag, tag2Classifier, sparse=False, look_back=0):
 
     # dicts, key = tag, to a 1D array of word-level predictions
     real_num_predictions_bytag = dict()
     predictions_bytag = dict()
-    for tag in feat_tags:
+    sent_input_feats = set(sent_input_feats)
+    for tag in sent_input_feats:
 
         cls = tag2Classifier[tag]
         if hasattr(cls, "decision_function"):
@@ -58,15 +59,19 @@ def get_sent_feature_for_stacking_from_tagging_model(feat_tags, interaction_tags
             tmp_sentence_xs = []
 
             # unique
-            un_tags = set()
+            sent_unique_true_ys = set()
             un_pred_tags = set()
             # ixs into the tagged words
             ixs = range(ix, ix + len(taggged_sentence))
             ix += len(taggged_sentence)
-            for tag in feat_tags:
+
+            for tag in ys_bytag.keys():
                 ys = ys_bytag[tag][ixs]
                 if np.max(ys, axis=0) > 0:
-                    un_tags.add(tag)
+                    sent_unique_true_ys.add(tag)
+
+                if tag not in sent_input_feats:
+                    continue
 
                 real_pred = real_num_predictions_bytag[tag][ixs]
                 pred = predictions_bytag[tag][ixs]
@@ -94,7 +99,7 @@ def get_sent_feature_for_stacking_from_tagging_model(feat_tags, interaction_tags
                         else:
                             tmp_sentence_xs.append(0)
 
-            extract_ys_by_code(un_tags, feat_tags, ys_by_code)
+            extract_ys_by_code(sent_unique_true_ys, sent_input_feats, ys_by_code)
             tmp_essays_xs.append(tmp_sentence_xs)
             # end sentence processing
 
@@ -130,13 +135,14 @@ def get_sent_feature_for_stacking_from_tagging_model(feat_tags, interaction_tags
     return xs, ys_by_code
 
 # Similar to above, but where we already have the predictions per class
-def get_sent_feature_for_stacking_from_multiclass_tagging_model(feat_tags, interaction_tags, essays, ys_bytag, predictions_bytag, real_num_predictions_bytag, sparse=False, look_back=0):
+def get_sent_feature_for_stacking_from_multiclass_tagging_model(sent_input_feats, interaction_tags, essays, ys_bytag, predictions_bytag, real_num_predictions_bytag, sparse=False, look_back=0):
 
     # features for the sentence level predictions
     td_sent_feats = []
     ys_by_code = defaultdict(list)
     ix = 0
     lst_look_back = range(look_back)
+    sent_input_feats = set(sent_input_feats)
     for essay_ix, essay in enumerate(essays):
 
         tmp_essays_xs = []
@@ -144,15 +150,18 @@ def get_sent_feature_for_stacking_from_multiclass_tagging_model(feat_tags, inter
             tmp_sentence_xs = []
 
             # unique
-            un_tags = set()
+            sent_unique_true_ys = set()
             un_pred_tags = set()
             # ixs into the tagged words
             ixs = range(ix, ix + len(taggged_sentence))
             ix += len(taggged_sentence)
-            for tag in feat_tags:
+            for tag in ys_bytag.keys():
                 ys = ys_bytag[tag][ixs]
                 if np.max(ys, axis=0) > 0:
-                    un_tags.add(tag)
+                    sent_unique_true_ys.add(tag)
+
+                if tag not in sent_input_feats:
+                    continue
 
                 real_pred = real_num_predictions_bytag[tag][ixs]
                 pred = predictions_bytag[tag][ixs]
@@ -180,7 +189,7 @@ def get_sent_feature_for_stacking_from_multiclass_tagging_model(feat_tags, inter
                         else:
                             tmp_sentence_xs.append(0)
 
-            extract_ys_by_code(un_tags, feat_tags, ys_by_code)
+            extract_ys_by_code(sent_unique_true_ys, sent_input_feats, ys_by_code)
             tmp_essays_xs.append(tmp_sentence_xs)
             # end sentence processing
 

@@ -43,7 +43,7 @@ MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 
 # 3 is currently the best
-NUM_TRAIN_ITERATIONS = 3
+NUM_TRAIN_ITERATIONS = 1
 
 TAG_HISTORY          = 10
 TAG_FREQ_THRESHOLD   = 5
@@ -107,20 +107,21 @@ non_causal  = [t for t in freq_tags if "->" not in t]
 only_causal = [t for t in freq_tags if "->" in t]
 
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
-regular_tags = list(set((t for t in flatten(lst_all_tags) if t[0].isdigit())))
+regular_tags = list(set((t for t in flatten(lst_all_tags)
+                         if t[0].isdigit() and gw_codes.is_valid_code(t))))
 
 CAUSE_TAGS = ["Causer", "Result", "explicit"]
 CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 
 """  """
 #
-wd_train_tags = list(set(freq_tags + CAUSE_TAGS))
+wd_train_tags = list(set(regular_tags + CAUSE_TAGS))
 wd_test_tags  = wd_train_tags
 
 # tags from tagging model used to train the stacked model
-sent_input_feat_tags = list(set(freq_tags + CAUSE_TAGS))
+sent_input_feat_tags = wd_train_tags
 # find interactions between these predicted tags from the word tagger to feed to the sentence tagger
-sent_input_interaction_tags = list(set(non_causal + CAUSE_TAGS))
+sent_input_interaction_tags = list(set(wd_train_tags))
 # tags to train (as output) for the sentence based classifier
 sent_output_train_test_tags = list(set(regular_tags + only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
 
