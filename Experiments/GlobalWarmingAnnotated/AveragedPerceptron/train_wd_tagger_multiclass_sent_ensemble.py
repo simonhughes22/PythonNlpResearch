@@ -43,7 +43,7 @@ MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 
 # 3 is currently the best
-NUM_TRAIN_ITERATIONS = 5
+NUM_TRAIN_ITERATIONS = 2
 
 TAG_HISTORY          = 10
 TAG_FREQ_THRESHOLD   = 5

@@ -3,6 +3,7 @@ from __future__ import absolute_import
 import os
 import random
 import pickle
+import numpy as np
 import logging
 
 from collections import defaultdict
@@ -87,7 +88,11 @@ class PerceptronTaggerBinary(object):
                     # reverse
                     sent_tags = sent_tags[::-1]
                 class2predictions[cls].extend(sent_tags)
-        return class2predictions
+
+        np_class2predictions = dict()
+        for key, lst in class2predictions.items():
+            np_class2predictions[key] = np.asarray(lst)
+        return np_class2predictions
 
     def __get_yal_(self, wd, tgt_tag):
         return self.POSITIVE_CLASS if tgt_tag in wd.tags else self.NEGATIVE_CLASS
