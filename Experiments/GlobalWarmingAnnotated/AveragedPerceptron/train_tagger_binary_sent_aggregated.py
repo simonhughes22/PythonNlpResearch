@@ -166,6 +166,8 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
     predictions_to_file(f_output_file, sent_vd_ys_bycode, vd_sent_predictions_by_code, essays_VD, codes=training_tags)
 
+    print("STOPPING ONE ONE FOLD FOR TESTING")
+    break
 pass
 
 CB_TAGGING_TD, CB_TAGGING_VD = "GW_TAGGING_TD", "GW_TAGGING_VD"

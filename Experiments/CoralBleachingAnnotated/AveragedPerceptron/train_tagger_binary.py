@@ -137,8 +137,6 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
     merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
 
-    print("STOPPING ONE ONE FOLD FOR TESTING")
-    break
     pass
 
 CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD", "CB_TAGGING_VD"
