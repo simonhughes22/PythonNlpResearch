@@ -7,7 +7,7 @@ import logging
 
 from collections import defaultdict
 from perceptron import AveragedPerceptron
-from results_procesor import compute_metrics
+from results_procesor import ResultsProcessor
 from Rpfa import weighted_mean_rpfa
 
 PICKLE = "trontagger-0.1.0.pickle"
@@ -139,7 +139,7 @@ class PerceptronTaggerBinary(object):
                             class2tags[cls].append(actual)
 
             random.shuffle(cp_essay_feats)
-            class2metrics = compute_metrics(class2tags, class2predictions)
+            class2metrics = ResultsProcessor.compute_metrics(class2tags, class2predictions)
             wtd_mean = weighted_mean_rpfa(class2metrics.values())
             logging.info("Iter {0}: Wtd Mean: {1}".format(iter_, str(wtd_mean)))
 

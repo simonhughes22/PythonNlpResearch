@@ -6,9 +6,13 @@ CAUSAL_REL   = "_CRel"
 RESULT_REL   = "_RRel"
 CAUSE_RESULT = "_C->R"
 
+__CSL_REL__ = set((CAUSAL_REL, RESULT_REL, CAUSE_RESULT))
+
 def extract_ys_by_code(tags, all_codes, ysByCode):
     for code in all_codes:
-        ysByCode[code].append(1 if code in tags else 0 )
+        # prevent duplicating codes below, in case these codes are in all_codes
+        if code not in __CSL_REL__:
+            ysByCode[code].append(1 if code in tags else 0 )
 
     ysByCode[CAUSAL_REL].append(  1 if  "Causer" in tags and "explicit" in tags else 0)
     ysByCode[RESULT_REL].append(  1 if  "Result" in tags and "explicit" in tags else 0)
@@ -135,14 +139,16 @@ def get_sent_feature_for_stacking_from_tagging_model(sent_input_feats, interacti
     return xs, ys_by_code
 
 # Similar to above, but where we already have the predictions per class
-def get_sent_feature_for_stacking_from_multiclass_tagging_model(sent_input_feats, interaction_tags, essays, ys_bytag, predictions_bytag, real_num_predictions_bytag, sparse=False, look_back=0):
+def get_sent_feature_for_stacking_from_multiclass_tagging_model(sent_input_tags, sent_output_tags, interaction_tags, essays, ys_bytag, predictions_bytag, real_num_predictions_bytag, sparse=False, look_back=0):
 
     # features for the sentence level predictions
     td_sent_feats = []
     ys_by_code = defaultdict(list)
     ix = 0
     lst_look_back = range(look_back)
-    sent_input_feats = set(sent_input_feats)
+    sent_input_tags = set(sent_input_tags)
+    all_needed_tags = set(list(sent_input_tags) + list(sent_output_tags))
+
     for essay_ix, essay in enumerate(essays):
 
         tmp_essays_xs = []
@@ -155,12 +161,13 @@ def get_sent_feature_for_stacking_from_multiclass_tagging_model(sent_input_feats
             # ixs into the tagged words
             ixs = range(ix, ix + len(taggged_sentence))
             ix += len(taggged_sentence)
-            for tag in ys_bytag.keys():
+
+            for tag in all_needed_tags:
                 ys = ys_bytag[tag][ixs]
                 if np.max(ys, axis=0) > 0:
                     sent_unique_true_ys.add(tag)
 
-                if tag not in sent_input_feats:
+                if tag not in sent_input_tags:
                     continue
 
                 real_pred = real_num_predictions_bytag[tag][ixs]
@@ -189,7 +196,7 @@ def get_sent_feature_for_stacking_from_multiclass_tagging_model(sent_input_feats
                         else:
                             tmp_sentence_xs.append(0)
 
-            extract_ys_by_code(sent_unique_true_ys, sent_input_feats, ys_by_code)
+            extract_ys_by_code(sent_unique_true_ys, ys_bytag.keys(), ys_by_code)
             tmp_essays_xs.append(tmp_sentence_xs)
             # end sentence processing
 
@@ -223,6 +230,32 @@ def get_sent_feature_for_stacking_from_multiclass_tagging_model(sent_input_feats
     else:
         xs = np.asarray(td_sent_feats)
     return xs, ys_by_code
+
+
+def get_sent_tags_from_word_tags(essays, ys_bytag):
+    """ For taking a tagging model and using it's preduictions as a sentence classifier
+    """
+    # features for the sentence level predictions
+    ys_by_code = defaultdict(list)
+    ix = 0
+    for essay_ix, essay in enumerate(essays):
+        for sent_ix, taggged_sentence in enumerate(essay.sentences):
+            # unique
+            sent_unique_true_ys = set()
+            # ixs into the tagged words
+            ixs = range(ix, ix + len(taggged_sentence))
+            ix += len(taggged_sentence)
+            for tag in ys_bytag.keys():
+                ys = ys_bytag[tag][ixs]
+                if np.max(ys, axis=0) > 0:
+                    sent_unique_true_ys.add(tag)
+            extract_ys_by_code(sent_unique_true_ys, ys_bytag.keys(), ys_by_code)
+            # end sentence processing
+
+    for k in ys_by_code.keys():
+        ys_by_code[k] = np.asarray(ys_by_code[k])
+
+    return ys_by_code
 
 
 def get_sent_feature_for_stacking_from_sentence_model(feat_tags, interaction_tags, sentence_feats, tag2Classifier, sparse=False):
