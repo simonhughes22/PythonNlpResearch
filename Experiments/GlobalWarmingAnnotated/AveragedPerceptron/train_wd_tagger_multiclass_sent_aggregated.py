@@ -43,7 +43,7 @@ MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 
 # 3 is currently the best
-NUM_TRAIN_ITERATIONS = 10
+NUM_TRAIN_ITERATIONS = 3
 
 TAG_HISTORY          = 10
 TAG_FREQ_THRESHOLD   = 5
@@ -89,6 +89,8 @@ feat_config = dict(config.items() + [("extractors", extractors)])
 """ LOAD DATA """
 mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_prefix)(load_process_essays)
 tagged_essays = mem_process_essays( **config )
+
+tagged_essays = tagged_essays
 # causes issues with mongo record saving
 
 logger.info("%i Essays loaded" % len(tagged_essays))
@@ -115,8 +117,8 @@ CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 
 """  """
 #
-training_tags = list(set(regular_tags + only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
-wd_test_tags  = training_tags
+wd_train_tags = list(set(regular_tags + only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
+wd_test_tags  = wd_train_tags
 
 # tags to evaluate against
 
@@ -154,12 +156,12 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     td_feats, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
     vd_feats, vd_tags = flatten_to_wordlevel_feat_tags(essays_VD)
 
-    wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, training_tags)
-    wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, training_tags)
+    wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
+    wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
 
     tag2word_classifier, td_wd_predictions_by_code, vd_wd_predictions_by_code = {}, {}, {}
 
-    tagger = PerceptronTaggerMultiClassCombo(training_tags, tag_history=TAG_HISTORY, combo_freq_threshold=TAG_FREQ_THRESHOLD)
+    tagger = PerceptronTaggerMultiClassCombo(wd_train_tags, tag_history=TAG_HISTORY, combo_freq_threshold=TAG_FREQ_THRESHOLD)
     tagger.train(essays_TD, nr_iter=NUM_TRAIN_ITERATIONS)
 
     """ Predict Word Tags """
@@ -187,7 +189,7 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     merge_dictionaries(td_sent_predictions_by_code, cv_sent_td_predictions_by_tag)
     merge_dictionaries(vd_sent_predictions_by_code, cv_sent_vd_predictions_by_tag)
 
-    predictions_to_file(f_output_file, sent_vd_ys_bycode, vd_sent_predictions_by_code, essays_VD, codes=training_tags)
+    predictions_to_file(f_output_file, sent_vd_ys_bycode, vd_sent_predictions_by_code, essays_VD, codes=wd_train_tags)
 
     print("STOPPING ONE ONE FOLD FOR TESTING")
     break
@@ -225,8 +227,8 @@ logger.info("Results Processed")
 """ NOTE THIS DOES QUITE A BIT BETTER ON DETECTING THE RESULT CODES, AND A LITTLE BETTER ON THE CAUSE - EFFECT NODES """
 
 """
-TODO: Fix the code so that I can train it on just the concept codes, but train the enemble classifier on everything
-TODO: Filter out the none Peter's list Codes (no N's, M's, X.Y and X_Y)
+TODO: Verify the tag history helps
+TODO: Try with an SVM
 TODO: Use the full set of inputs codes (N,M, the evidence - to build a stronger sentence classifier, and
 then omit from the final predictions
 TODO: Parallelize the training
@@ -234,4 +236,6 @@ TODO: Verify that this can effectively use the decision function values, given t
 
 # DONE:
 ### TODO: Get it working without CAUSE
+### TODO: Filter out the none Peter's list Codes (no N's, M's, X.Y and X_Y)
+### TODO: Fix the code so that I can train it on just the concept codes, but train the enemble classifier on everything
 """

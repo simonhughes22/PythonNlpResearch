@@ -170,15 +170,16 @@ def get_sent_feature_for_stacking_from_multiclass_tagging_model(sent_input_tags,
                 if tag not in sent_input_tags:
                     continue
 
-                real_pred = real_num_predictions_bytag[tag][ixs]
                 pred = predictions_bytag[tag][ixs]
 
-                assert ys.shape[0] == real_pred.shape[0] == pred.shape[0]
-                mx = np.max(real_pred, axis=0)
-                mn = np.min(real_pred, axis=0)
+                if real_num_predictions_bytag:
+                    real_pred = real_num_predictions_bytag[tag][ixs]
+                    assert ys.shape[0] == real_pred.shape[0] == pred.shape[0]
+                    mx = np.max(real_pred, axis=0)
+                    mn = np.min(real_pred, axis=0)
 
-                tmp_sentence_xs.append(mx)
-                tmp_sentence_xs.append(mn)
+                    tmp_sentence_xs.append(mx)
+                    tmp_sentence_xs.append(mn)
 
                 yes_no = np.max(pred)
                 tmp_sentence_xs.append(yes_no)
@@ -230,7 +231,6 @@ def get_sent_feature_for_stacking_from_multiclass_tagging_model(sent_input_tags,
     else:
         xs = np.asarray(td_sent_feats)
     return xs, ys_by_code
-
 
 def get_sent_tags_from_word_tags(essays, ys_bytag):
     """ For taking a tagging model and using it's preduictions as a sentence classifier
@@ -309,8 +309,6 @@ def get_sent_feature_for_stacking_from_sentence_model(feat_tags, interaction_tag
     return xs
 
 if __name__ == "__main__":
-
-
     def test(arr):
         print num_different_tags(arr), "->","".join(map(str,arr))
 

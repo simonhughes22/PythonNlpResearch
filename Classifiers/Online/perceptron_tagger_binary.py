@@ -28,8 +28,7 @@ class PerceptronTaggerBinary(object):
     POSITIVE_CLASS = 1.0
     NEGATIVE_CLASS = 0.0
 
-    def __init__(self, classes, tag_history, load=False, right2left=False):
-        self.right2left = right2left
+    def __init__(self, classes, tag_history):
         self.tag_history = tag_history
         self.classes = set(classes)
         self.class2model = {}
@@ -64,10 +63,6 @@ class PerceptronTaggerBinary(object):
                 for cls in self.classes:
                     class2prev[cls] = list(self.START)
 
-                if self.right2left:
-                    taggged_sentence = reversed(taggged_sentence)
-
-                sent_tags = []
                 for wd in taggged_sentence:
                     # Don't mutate the feat dictionary
                     shared_features = dict(wd.features.items())
@@ -82,12 +77,7 @@ class PerceptronTaggerBinary(object):
                         model = self.class2model[cls]
                         guess = model.predict(tagger_feats)
                         class2prev[cls].append(guess)
-                        sent_tags.append(guess)
-
-                if self.right2left:
-                    # reverse
-                    sent_tags = sent_tags[::-1]
-                class2predictions[cls].extend(sent_tags)
+                        class2predictions[cls].append(guess)
 
         np_class2predictions = dict()
         for key, lst in class2predictions.items():
@@ -119,9 +109,6 @@ class PerceptronTaggerBinary(object):
                     for cls in self.classes:
                         class2prev[cls] = list(self.START)
 
-                    if self.right2left:
-                        taggged_sentence = reversed(taggged_sentence)
-
                     for wd in taggged_sentence:
                         # Don't mutate the feat dictionary
                         shared_features = dict(wd.features.items())
@@ -150,7 +137,6 @@ class PerceptronTaggerBinary(object):
 
         for cls in self.classes:
             self.class2model[cls].average_weights()
-
         return None
 
     def _normalize(self, word):

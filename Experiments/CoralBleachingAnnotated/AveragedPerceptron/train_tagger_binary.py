@@ -32,7 +32,6 @@ LOOK_BACK           = 0     # how many sentences to look back when predicting ta
 
 NUM_TRAIN_ITERATIONS = 1
 TAG_HISTORY          = 0
-RIGHT2LEFT           = True
 # end not hashed
 
 # construct unique key using settings for pickling
@@ -126,7 +125,7 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
     tag2word_classifier, td_wd_predictions_by_code, vd_wd_predictions_by_code = {}, {}, {}
 
-    tagger = PerceptronTaggerBinary(wd_train_tags, tag_history=TAG_HISTORY, right2left=RIGHT2LEFT)
+    tagger = PerceptronTaggerBinary(wd_train_tags, tag_history=TAG_HISTORY)
     tagger.train(essays_TD, nr_iter=NUM_TRAIN_ITERATIONS)
 
     td_wd_predictions_by_code = tagger.predict(essays_TD)
