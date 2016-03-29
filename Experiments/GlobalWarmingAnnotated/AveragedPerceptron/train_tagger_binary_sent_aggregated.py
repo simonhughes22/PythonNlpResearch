@@ -86,7 +86,8 @@ only_causal = [t for t in freq_tags if "->" in t]
 
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
 regular_tags = list(set((t for t in flatten(lst_all_tags)
-                         if t[0].isdigit() and gw_codes.is_valid_code(t))))
+                         if "->" in t
+                         and gw_codes.is_valid_code(t))))
 
 CAUSE_TAGS = ["Causer", "Result", "explicit"]
 CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]

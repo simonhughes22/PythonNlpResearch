@@ -45,10 +45,12 @@ LOOK_BACK           = 0     # how many sentences to look back when predicting ta
 # 3 is currently the best
 NUM_TRAIN_ITERATIONS = 3
 
+# History definitely helps
 TAG_HISTORY          = 10
 TAG_FREQ_THRESHOLD   = 5
 
 # Ensemble classifier
+#Log Regression is better
 USE_SVM = False
 
 if USE_SVM:
@@ -108,7 +110,8 @@ only_causal = [t for t in freq_tags if "->" in t]
 
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
 regular_tags = list(set((t for t in flatten(lst_all_tags)
-                         if t[0].isdigit() and gw_codes.is_valid_code(t))))
+                         if "->" not in t and ":" not in t
+                         and gw_codes.is_valid_code(t))))
 
 CAUSE_TAGS = ["Causer", "Result", "explicit"]
 CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
@@ -173,11 +176,14 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     """ Predict Word Tags """
     td_wd_predictions_by_code = tagger.predict(essays_TD)
     # perceptron score per class
+    #this helps slightly
     td_wd_real_num_scores_by_code = tagger.decision_function(essays_TD)
+    #td_wd_real_num_scores_by_code = None
 
     vd_wd_predictions_by_code = tagger.predict(essays_VD)
     # perceptron score per class
     vd_wd_real_num_scores_by_code = tagger.decision_function(essays_VD)
+    #vd_wd_real_num_scores_by_code = None
 
     """ Store Predictions for computing error metrics """
     merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
@@ -254,13 +260,20 @@ logger.info("Results Processed")
 """ NOTE THIS DOES QUITE A BIT BETTER ON DETECTING THE RESULT CODES, AND A LITTLE BETTER ON THE CAUSE - EFFECT NODES """
 
 """
-TODO: Fix the code so that I can train it on just the concept codes, but train the enemble classifier on everything
-TODO: Filter out the none Peter's list Codes (no N's, M's, X.Y and X_Y)
+This is SIGNIFICANTLY better at the tagging - Weighted F1 of 0.48 vs 0.41, but currently worse
+at the sentence classification due to the ensembling method
+"""
+
+"""
+TODO: Try with an SVM
 TODO: Use the full set of inputs codes (N,M, the evidence - to build a stronger sentence classifier, and
 then omit from the final predictions
 TODO: Parallelize the training
-TODO: Verify that this can effectively use the decision function values, given they are not normalized
 
 # DONE:
+### TODO: Verify that this can effectively use the decision function values, given they are not normalized
+### TODO: Verify the tag history helps
 ### TODO: Get it working without CAUSE
+### TODO: Filter out the none Peter's list Codes (no N's, M's, X.Y and X_Y)
+### TODO: Fix the code so that I can train it on just the concept codes, but train the enemble classifier on everything
 """
