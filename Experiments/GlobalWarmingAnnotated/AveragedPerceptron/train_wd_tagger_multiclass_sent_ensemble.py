@@ -1,5 +1,3 @@
-from sklearn.svm import LinearSVC
-
 from Decorators import memoize_to_disk
 from sent_feats_for_stacking import *
 from load_data import load_process_essays, extract_features
@@ -18,9 +16,10 @@ from GWCodes import GWConceptCodes
 
 # Classifiers
 from perceptron_tagger_multiclass_combo import PerceptronTaggerMultiClassCombo
-
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
+from sklearn.ensemble import GradientBoostingClassifier
+
 # END Classifiers
 
 import Settings
@@ -57,6 +56,9 @@ if USE_SVM:
     fn_create_sent_cls  = lambda : LinearSVC(C=1.0)
 else:
     fn_create_sent_cls  = lambda : LogisticRegression(dual=True) # C around 1.0 seems pretty optimal
+    #fn_create_sent_cls   = GradientBoostingClassifier
+    if fn_create_sent_cls == GradientBoostingClassifier:
+        SPARSE_SENT_FEATS = False
 
 # end not hashed
 
@@ -260,8 +262,10 @@ logger.info("Results Processed")
 """ NOTE THIS DOES QUITE A BIT BETTER ON DETECTING THE RESULT CODES, AND A LITTLE BETTER ON THE CAUSE - EFFECT NODES """
 
 """
-This is SIGNIFICANTLY better at the tagging - Weighted F1 of 0.48 vs 0.41, but currently worse
-at the sentence classification due to the ensembling method
+******
+    This is SIGNIFICANTLY better at the tagging - Weighted F1 of 0.48 vs 0.41, but currently worse
+    at the sentence classification due to the ensembling method
+******
 """
 
 """

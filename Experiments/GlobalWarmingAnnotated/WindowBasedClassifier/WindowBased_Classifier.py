@@ -51,6 +51,12 @@ MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 
 """ LOAD DATA """
+with open(f_training_essays) as f:
+    set_training_essays = set(map(lambda s: s.strip(), f.readlines()))
+
+with open(f_test_essays) as f:
+    set_test_essays = set(map(lambda s: s.strip(), f.readlines()))
+
 with open(serialized_essays, "r+") as f:
     tagged_essays = pickle.load(f)
 
@@ -59,12 +65,6 @@ logger.info("%i Essays loaded" % len(tagged_essays))
 with open(serialized_features, "r+") as f:
     essay_feats = pickle.load(f)
 logger.info("Features loaded")
-
-with open(f_training_essays) as f:
-    set_training_essays = set(map(lambda s: s.strip(), f.readlines()))
-
-with open(f_test_essays) as f:
-    set_test_essays = set(map(lambda s: s.strip(), f.readlines()))
 
 #USE_SVM = False
 #set_training_essays = set(list(set_training_essays)[0:50])
@@ -117,7 +117,8 @@ sent_input_interaction_tags = list(set(non_causal + CAUSE_TAGS))
 #sent_output_train_test_tags = list(set(only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
 
 #CAUSAL + CONCEPT CODES
-sent_output_train_test_tags = list(set(non_causal + only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
+sent_output_train_test_tags = list(set(regular_tags + only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
+#sent_output_train_test_tags = list(set(only_causal))
 
 assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against
