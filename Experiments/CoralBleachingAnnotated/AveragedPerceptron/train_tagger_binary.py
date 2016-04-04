@@ -9,7 +9,7 @@ from IterableFP import flatten
 from collections import defaultdict
 from window_based_tagger_config import get_config
 from perceptron_tagger_binary import PerceptronTaggerBinary
-from results_procesor import ResultsProcessor, compute_metrics
+from results_procesor import ResultsProcessor
 # END Classifiers
 
 import Settings
@@ -30,8 +30,8 @@ CV_FOLDS            = 5
 MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 
-NUM_TRAIN_ITERATIONS = 1
-TAG_HISTORY          = 0
+NUM_TRAIN_ITERATIONS = 20   # 20 seems best
+TAG_HISTORY          = 10   # slightly better with than without
 # end not hashed
 
 # construct unique key using settings for pickling
@@ -77,8 +77,8 @@ CAUSE_TAGS = ["Causer", "Result", "explicit"]
 CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 
 """ works best with all the pair-wise causal relation codes """
-wd_train_tags = regular_tags + CAUSE_TAGS
-wd_test_tags  = regular_tags + CAUSE_TAGS
+wd_train_tags = regular_tags #+ CAUSE_TAGS
+wd_test_tags  = regular_tags #+ CAUSE_TAGS
 
 # tags from tagging model used to train the stacked model
 sent_input_feat_tags = wd_train_tags
@@ -87,7 +87,7 @@ sent_input_interaction_tags = wd_train_tags
 # tags to train (as output) for the sentence based classifier
 sent_output_train_test_tags = list(set(regular_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
 
-assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
+#assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against
 
 """ CLASSIFIERS """
@@ -143,7 +143,7 @@ parameters = dict(config)
 parameters["prev_tag_sharing"] = True # don't include tags from other binary models
 """ False: 0.737 - 30 iterations """
 parameters["num_iterations"] = NUM_TRAIN_ITERATIONS
-parameters["right-to-left"] = True
+#parameters["right-to-left"] = True
 parameters["tag_history"]    = TAG_HISTORY
 #parameters["AverageWeights"] = False # Bad - averaging really helps
 parameters["extractors"] = map(lambda fn: fn.func_name, extractors)

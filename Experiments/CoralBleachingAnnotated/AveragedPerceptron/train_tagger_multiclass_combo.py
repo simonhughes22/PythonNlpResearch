@@ -30,7 +30,7 @@ CV_FOLDS            = 5
 MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 
-NUM_TRAIN_ITERATIONS = 30
+NUM_TRAIN_ITERATIONS = 30   # 30 best
 TAG_HISTORY          = 10
 TAG_FREQ_THRESHOLD   = 5
 # end not hashed
@@ -78,8 +78,8 @@ CAUSE_TAGS = ["Causer", "Result", "explicit"]
 CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 
 """ works best with all the pair-wise causal relation codes """
-wd_train_tags = regular_tags + CAUSE_TAGS
-wd_test_tags  = regular_tags + CAUSE_TAGS
+wd_train_tags = regular_tags # + CAUSE_TAGS
+wd_test_tags  = regular_tags # + CAUSE_TAGS
 
 # tags from tagging model used to train the stacked model
 sent_input_feat_tags = wd_train_tags
@@ -88,7 +88,7 @@ sent_input_interaction_tags = wd_train_tags
 # tags to train (as output) for the sentence based classifier
 sent_output_train_test_tags = list(set(regular_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
 
-assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
+#assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against
 
 """ CLASSIFIERS """
@@ -136,6 +136,7 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
     merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
     merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
+
     pass
 
 CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD", "CB_TAGGING_VD"

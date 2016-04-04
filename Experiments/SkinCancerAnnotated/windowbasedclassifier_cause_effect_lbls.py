@@ -39,7 +39,7 @@ SPARSE_SENT_FEATS   = True
 MIN_FEAT_FREQ       = 10        # 5 best so far
 CV_FOLDS            = 5
 
-MIN_TAG_FREQ        = 10
+MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 # end not hashed
 
@@ -120,6 +120,7 @@ sent_input_interaction_tags = list(set(non_causal + CAUSE_TAGS))
 # tags to train (as output) for the sentence based classifier
 #sent_output_train_test_tags = list(set(regular_tags + only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
 #sent_output_train_test_tags = list(set(only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
+#sent_output_train_test_tags = list(set(all_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
 sent_output_train_test_tags = list(set(all_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
 
 assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"

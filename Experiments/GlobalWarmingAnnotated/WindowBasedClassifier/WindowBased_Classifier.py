@@ -117,8 +117,8 @@ sent_input_interaction_tags = list(set(non_causal + CAUSE_TAGS))
 #sent_output_train_test_tags = list(set(only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
 
 #CAUSAL + CONCEPT CODES
-sent_output_train_test_tags = list(set(regular_tags + only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
-#sent_output_train_test_tags = list(set(only_causal))
+#sent_output_train_test_tags = list(set(regular_tags + only_causal + CAUSE_TAGS + CAUSAL_REL_TAGS))
+sent_output_train_test_tags = list(set(only_causal))
 
 assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against
