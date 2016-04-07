@@ -4,8 +4,9 @@
 class GWConceptCodes(object):
 
     def __init__(self):
-        self.CONCEPT_CODES = set("0,1,3,12,20,22,38,40,42,50,P14,P21,P28,P33,P34,P4,P40,P49".split(","))
+        self.CONCEPT_CODES = set("0,1,3,12,20,22,38,40,42,50,P14,P20,P21,P28,P33,P34,P4,P40,P49".split(","))
 
+        # Generate all valid combinations of the codes above when part of cause, effect or causal relations
         tmp = []
         for a in self.CONCEPT_CODES:
             tmp.append("Causer:{0}".format(a))
