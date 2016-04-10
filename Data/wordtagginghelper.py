@@ -8,7 +8,7 @@ import numpy as np
 
 def flatten_to_wordlevel_feat_tags(essay_feats):
     """
-    Splits the essay-level features into
+    Splits the essay-level features into a list of word level features for tagging
 
     Parameters
     ----------
@@ -84,6 +84,78 @@ def get_wordlevel_ys_by_code(lst_tag_sets, expected_tags):
             ys_bycode[tag] = np.zeros(shape=(num_rows,), dtype=np.int)
     return ys_bycode
 
+def get_wordlevel_ys_by_labelpowerset(lst_tag_sets, expected_tags, min_powerset_freq):
+    """
+    Convert a list of tagsets to a dictionary of ys values per tag label
+
+    Parameters
+    ----------
+    @param lst_tag_sets : a list of sets of tags
+        List of labels for each word
+
+    @param min_powerset_freq: int
+        Minimum (word) frequency required for each label powerset to be considered
+
+    Returns
+    ----------
+    @rtype: defaultdict(np.array)
+
+    """
+    sexpected_tags = set(expected_tags)
+    powerset_freq = defaultdict(int)
+    lst_powersets = []
+    for tag_set in lst_tag_sets:
+        tags = frozenset((t for t in tag_set if t in sexpected_tags))
+        powerset_freq[tags] += 1
+        lst_powersets.append(tags)
+
+    freq_powersets = set((t for t, freq in powerset_freq.items()
+                          # only psets above threshold, and non empty ones
+                          if freq >= min_powerset_freq and len(t) > 0))
+
+    tmp_ys_bypowerset = defaultdict(list)
+    for tag_set in lst_powersets:
+        for pset in freq_powersets:
+            tmp_ys_bypowerset[pset].append(1 if tag_set == pset else 0)
+
+    ys_bypowerset = dict()
+    for pset in freq_powersets:
+        lst = tmp_ys_bypowerset[pset]
+        ys_bypowerset[pset] = np.asarray(lst, dtype=np.int).reshape((len(lst), ))
+    return ys_bypowerset
+
+def get_wordlevel_predictions_by_code_from_powerset_predictions(ys_bypowerset, expected_tags):
+
+    """
+
+    Parameters
+    -----------
+    @param ys_bypowerset: defaultdict[frozenset[str], np.array]
+        An array of predictions per label powerset
+    @param expected_tags: list[str]
+        Expected individual labels (powerset are powersets of this set)
+
+    Return
+    ----------
+    @return: defaultdict[str, np.array]
+    """
+
+    rows = len(ys_bypowerset.values()[0])
+    ys_by_code = defaultdict(lambda : np.zeros(shape=(rows,), dtype=np.int))
+
+    for pset, pred in ys_bypowerset.items():
+        if type(pred) != np.ndarray:
+            pred = np.asarray(pred).reshape((rows, ))
+        # Add all predictions for a single code together
+        for y in pset:
+            ys_by_code[y] += pred
+
+    for tag in expected_tags:
+        # force creation of np.zeros if tag is not present
+        predictions = ys_by_code[tag]
+        # where the same code is predicted by more than one classifier, set to 1
+        predictions[predictions > 1] = 1
+    return ys_by_code
 
 class always_false(object):
     def fit(self, x, y):
