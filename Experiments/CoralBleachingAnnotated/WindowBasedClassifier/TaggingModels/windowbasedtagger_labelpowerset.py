@@ -135,8 +135,8 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     vd_wd_predictions_by_code = \
         get_wordlevel_predictions_by_code_from_powerset_predictions(vd_wd_predictions_by_label_powerset, wd_train_tags)
 
-    merge_dictionaries(wd_td_ys_label_powersets, cv_wd_td_ys_by_tag)
-    merge_dictionaries(wd_vd_ys_label_powersets, cv_wd_vd_ys_by_tag)
+    merge_dictionaries(wd_td_ys_by_code, cv_wd_td_ys_by_tag)
+    merge_dictionaries(wd_vd_ys_by_code, cv_wd_vd_ys_by_tag)
     merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
     merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
 
@@ -152,7 +152,6 @@ parameters = dict(config)
 parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
 parameters["min_feat_freq"] = MIN_FEAT_FREQ
 parameters["min_powerset_freq"] = MIN_POWERSET_FREQ
-
 
 wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
 wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
