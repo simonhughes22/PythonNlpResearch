@@ -61,6 +61,9 @@
       <sourceFolder url="file://$MODULE_DIR$/Experiments/GlobalWarmingAnnotated/AveragedPerceptron" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Classifiers/Online" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingAnnotated/WindowBasedClassifier/TaggingModels" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/SkinCancerAnnotated/WindowBasedClassifier" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/SkinCancerAnnotated/AveragedPerceptron" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/SkinCancerAnnotated/WindowBasedClassifier/TaggingModels" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/Notebooks" />
     </content>

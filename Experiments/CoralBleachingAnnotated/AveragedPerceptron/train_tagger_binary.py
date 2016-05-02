@@ -30,7 +30,7 @@ CV_FOLDS            = 5
 MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 
-NUM_TRAIN_ITERATIONS = 20   # 20 seems best
+NUM_TRAIN_ITERATIONS = 30   # 20 seems best
 TAG_HISTORY          = 10   # slightly better with than without
 # end not hashed
 

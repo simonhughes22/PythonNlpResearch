@@ -9,7 +9,8 @@ from datetime import datetime
 __MACRO_F1__ = "MACRO_F1"
 
 def is_a_regular_code(code):
-    return code[0].isdigit()
+    return (code[0].isdigit() or code[0].lower() == 'p') \
+            and "->" not in code and ":" not in code
 
 class ResultsProcessor(object):
 

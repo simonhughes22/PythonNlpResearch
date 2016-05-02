@@ -14,7 +14,7 @@ REPLACE_NUMS        = True     # 1989 -> 0000, 10 -> 00
 MIN_SENTENCE_LENGTH = 3
 REMOVE_STOP_WORDS   = False
 REMOVE_PUNCTUATION  = False
-LOWER_CASE          = False
+LOWER_CASE          = True
 
 # FEATURE SETTINGS
 WINDOW_SIZE         = 7
