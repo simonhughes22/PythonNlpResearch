@@ -64,6 +64,7 @@
       <sourceFolder url="file://$MODULE_DIR$/Experiments/SkinCancerAnnotated/WindowBasedClassifier" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/SkinCancerAnnotated/AveragedPerceptron" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/SkinCancerAnnotated/WindowBasedClassifier/TaggingModels" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingAnnotated/LinearChainProbabilisticModels" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/Notebooks" />
     </content>
