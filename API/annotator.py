@@ -20,7 +20,6 @@ from config import Config
 
 import logging
 
-
 def onlyascii(s):
     out = ""
     for char in s:

@@ -1,4 +1,6 @@
 
+Add a binary feature that indicates if there are 2 codes present in a sentence that are adjacent in the causal model (2 and 3, 6 and 7, etc).
+
 Deep Learning (for the talk and for Peter's research):
 1. Tinker with the Theano implementations
 2. See if you can read thru and understand Socher's code

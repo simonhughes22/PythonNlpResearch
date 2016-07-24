@@ -138,7 +138,7 @@ logger.info("Training completed")
 """ Persist Results to Mongo DB """
 
 SUFFIX = "_CAUSE_EFFECT_LBLS"
-CB_TAGGING_TD, CB_TAGGING_VD, CB_SENT_TD, CB_SENT_VD = "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX, "CB_SENT_TD" + SUFFIX, "CB_SENT_VD" + SUFFIX
+CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
 parameters = dict(config)
 parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
 parameters["min_feat_freq"] = MIN_FEAT_FREQ

@@ -201,7 +201,6 @@ $RECYCLE.BIN/
 *.egg
 *.egg-info
 dist/
-build/
 eggs/
 parts/
 var/
@@ -210,6 +209,7 @@ develop-eggs/
 .installed.cfg
 
 */.ipynb_checkpoints/
+*/.ipynb_checkpoints
 
 # Installer logs
 pip-log.txt
@@ -223,4 +223,7 @@ pip-log.txt
 
 #Mr Developer
 .mr.developer.cfg
-.idea/workspace.xml
+
+.idea/*
+
+MongoDb/journal/
