@@ -1,6 +1,22 @@
 
 Add a binary feature that indicates if there are 2 codes present in a sentence that are adjacent in the causal model (2 and 3, 6 and 7, etc).
 
+NEW:
+
+Peter - evaluate causal relation extraction accuracy using golden labels (or train model using those instead of
+predicted labels).
+
+Ideas from discourse analyis -
+ 1. Look at Joty et al's 2013 paper, has a binary classifier to detertmine connections and a
+    second classifier to determine discourse relation types, and then constructs a joint model from both
+ 2. Use structural features -  see Stab and Gureyvch paper on argumentative discourse relations (things like
+    location of sentence in paragraph, location of paragraph in essay, length of sentence, position of
+    word within sentence, etc).
+ 3. *** presence of modal verbs *** - find a large list of modal verbs and use as a feature for causal relation extraction
+ 4. See Barbara Di Eugenio's 2009 paper - uses a shift-reduce parser to parse discourse relations.
+
+OLD:
+
 Deep Learning (for the talk and for Peter's research):
 1. Tinker with the Theano implementations
 2. See if you can read thru and understand Socher's code
