@@ -7,7 +7,7 @@ Peter - evaluate causal relation extraction accuracy using golden labels (or tra
 predicted labels).
 
 Ideas from discourse analyis -
- 1. Look at Joty et al's 2013 paper, has a binary classifier to detertmine connections and a
+ 1. Look at Joty et al's 2013 paper, has a binary classifier to determine connections and a
     second classifier to determine discourse relation types, and then constructs a joint model from both
  2. Use structural features -  see Stab and Gureyvch paper on argumentative discourse relations (things like
     location of sentence in paragraph, location of paragraph in essay, length of sentence, position of
