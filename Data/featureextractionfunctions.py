@@ -25,8 +25,23 @@ TODO - SpaCy - Try brown cluster labels
      >>>>>>> DO for target word ONLY, and for positional features !!!!
 """
 
+def attach_function_identifier(fn, d):
+    s = fn.func_name + "["
+    for k, v in sorted(d.items(), key = lambda tpl: tpl[0]):
+        if k == fn.func_name:
+            continue
+        if type(v) == dict:
+            continue
+        s +=   "%s:%s " % (str(k), str(v))
+    fn.func_name = s.strip() + "]"
+    return fn
+
+@memoize
+def __parse__(tokens):
+    return parser.parse(tokens)
+
 def extract_dependency_children(input, val=1):
-    relations = parser.parse(input.sentence)
+    relations = __parse__(input.sentence)
     relation = relations[input.wordix]
     bin_relations = relation.binary_relations()
     feats = {}
@@ -35,7 +50,7 @@ def extract_dependency_children(input, val=1):
     return feats
 
 def extract_dependency_child_words(input, val=1):
-    relations = parser.parse(input.sentence)
+    relations = __parse__(input.sentence)
     relation = relations[input.wordix]
     bin_relations = relation.binary_relations()
     feats = {}
@@ -44,7 +59,7 @@ def extract_dependency_child_words(input, val=1):
     return feats
 
 def extract_dependency_children_plus_target(input, val=1):
-    relations = parser.parse(input.sentence)
+    relations = __parse__(input.sentence)
     relation = relations[input.wordix]
     bin_relations = relation.binary_relations()
     feats = {}
@@ -53,25 +68,25 @@ def extract_dependency_children_plus_target(input, val=1):
     return feats
 
 def extract_dependency_head(input, val=1):
-    relations = parser.parse(input.sentence)
+    relations = __parse__(input.sentence)
     relation = relations[input.wordix]
     feats = { "HEAD_DEP:" + relation.head + "->" + relation.relation : val }
     return feats
 
 def extract_dependency_head_word(input, val=1):
-    relations = parser.parse(input.sentence)
+    relations = __parse__(input.sentence)
     relation = relations[input.wordix]
     feats = { "HEAD_WORD_DEP:" + relation.head: val }
     return feats
 
 def extract_dependency_head_plus_target(input, val=1):
-    relations = parser.parse(input.sentence)
+    relations = __parse__(input.sentence)
     relation = relations[input.wordix]
     feats = { "HEAD_DEP_TGT[" + input.sentence[input.wordix] + "]:" + relation.head + "->" + relation.relation: val }
     return feats
 
 def extract_dependency_relation(input, val=1):
-    relations = parser.parse(input.sentence)
+    relations = __parse__(input.sentence)
     relation = relations[input.wordix]
     bin_relations = relation.binary_relations()
     feats = {}
@@ -92,10 +107,11 @@ def fact_extract_positional_head_word_features(offset):
         returns     :   fn
                             feature extractor function: FeatureExtactorInput -> dict
     """
+    lcls = locals()
     # curry offset
     def fn_pos_hd_wd_feats(input, val=1):
         return extract_positional_head_word_features(offset, input, val)
-    return fn_pos_hd_wd_feats
+    return attach_function_identifier(fn_pos_hd_wd_feats, lcls)
 
 def extract_positional_head_word_features(offset, input, val = 1):
     """ offset      :   int
@@ -130,10 +146,11 @@ def fact_extract_positional_word_features(offset):
         returns     :   fn
                             feature extractor function: FeatureExtactorInput -> dict
     """
+    lcls = locals()
     # curry offset
     def fn_pos_wd_feats(input, val=1):
         return extract_positional_word_features(offset, input, val)
-    return fn_pos_wd_feats
+    return attach_function_identifier(fn_pos_wd_feats, lcls)
 
 def extract_positional_word_features(offset, input, val = 1):
     """ offset      :   int
@@ -166,10 +183,11 @@ def fact_extract_positional_word_features_stemmed(offset):
         returns     :   fn
                             feature extractor function: FeatureExtactorInput -> dict
     """
+    lcls = locals()
     # curry offset
     def fn_pos_wd_feats_stemmed(input, val=1):
         return extract_positional_word_features_stemmed(offset, input, val)
-    return fn_pos_wd_feats_stemmed # recently renamed for mongodob logging
+    return attach_function_identifier(fn_pos_wd_feats_stemmed, lcls) # recently renamed for mongodob logging
 
 def extract_positional_word_features_stemmed(offset, input, val = 1):
     """ offset      :   int
@@ -203,9 +221,10 @@ def fact_extract_first_3_chars(offset):
                             feature extractor function: FeatureExtactorInput -> dict
     """
     # curry offset
+    lcls = locals()
     def fn_extract_first_3_chars(input, val=1):
         return extract_first_3_chars(offset, input, val)
-    return fn_extract_first_3_chars # recently renamed for mongodob logging
+    return attach_function_identifier(fn_extract_first_3_chars, lcls) # recently renamed for mongodob logging
 
 def extract_first_3_chars(offset, input, val = 1):
     """ offset      :   int
@@ -229,9 +248,9 @@ def extract_first_3_chars(offset, input, val = 1):
             feats["First3:" + relative_offset + "->" + offset_word[:3]] = val
     return feats
 
-""" POSITIONAL NGRAMS
+""" BOW NGRAMS
 """
-def fact_extract_ngram_features(offset, ngram_size):
+def fact_extract_bow_ngram_features(offset, ngram_size):
     """ offset      :   int
                             the number of words either side of the input to extract features from
         ngram_size  :   int
@@ -240,11 +259,68 @@ def fact_extract_ngram_features(offset, ngram_size):
                             feature extractor function: FeatureExtactorInput -> dict
     """
     # curry offset and ngram size
-    def fn_ngram_feat(input, val=1):
-        return extract_ngram_features(offset, ngram_size, input, val)
-    return fn_ngram_feat
+    lcls = locals()
+    def fn_bow_ngram_feat(input, val=1):
+        return extract_bow_ngram_features(offset, ngram_size, input, val)
+    return attach_function_identifier(fn_bow_ngram_feat, lcls)
 
-def extract_ngram_features(offset, ngram_size, input, val = 1):
+def extract_bow_ngram_features(offset, ngram_size, input, val = 1):
+    """ offset      :   int
+                           the number of words either side of the input to extract features from
+        ngram_size  :   int
+                            the size of the ngrams
+        input      :    FeatureExtactorInput
+                            input to feature extractor
+        returns     :   dict
+                            dictionary of features
+    """
+
+    feats = {}
+    end = len(input.sentence) - 1
+
+    # fix to within bounds only
+    start = max(0, input.wordix - offset)
+    stop  = min(end, input.wordix + offset)
+
+    window = list(input.sentence[start:stop+1])
+    if input.wordix < offset:
+        diff = offset - input.wordix
+        for i in range(diff):
+            window.insert(0,__START__)
+    if input.wordix + offset > end:
+        diff = input.wordix + offset - end
+        for i in range(diff):
+            window.append(__END__)
+
+    ngrams = compute_ngrams(window, ngram_size, ngram_size)
+    str_num_ngrams = str(ngram_size)
+
+    for i, offset_ngram in enumerate(ngrams):
+        relative_offset = str(i - offset)
+        str_ngram = ",".join(offset_ngram)
+        feats["POS_" + str_num_ngrams + "GRAMS:BOW" + "->" + str_ngram] = val
+
+    return feats
+
+""" POSITIONAL NGRAMS
+"""
+def fact_extract_positional_ngram_features(offset, ngram_size):
+    """ offset      :   int
+                            the number of words either side of the input to extract features from
+        ngram_size  :   int
+                            the size of the ngrams
+        returns     :   fn
+                            feature extractor function: FeatureExtactorInput -> dict
+    """
+    # curry offset and ngram size
+    lcls = locals()
+    def fn_pos_ngram_feat(input, val=1):
+        return extract_positiomal_ngram_features(offset, ngram_size, input, val)
+
+    attach_function_identifier(fn_pos_ngram_feat, lcls)
+    return fn_pos_ngram_feat
+
+def extract_positiomal_ngram_features(offset, ngram_size, input, val = 1):
     """ offset      :   int
                            the number of words either side of the input to extract features from
         ngram_size  :   int
@@ -290,10 +366,11 @@ def fact_extract_ngram_features_stemmed(offset, ngram_size):
         returns     :   fn
                             feature extractor function: FeatureExtactorInput -> dict
     """
+    lcls = locals()
     # curry offset and ngram size
-    def fn_ngram_feat_stemmed(input, val=1):
+    def fn_pos_ngram_feat_stemmed(input, val=1):
         return extract_ngram_features_stemmed(offset, ngram_size, input, val)
-    return fn_ngram_feat_stemmed
+    return attach_function_identifier(fn_pos_ngram_feat_stemmed, lcls)
 
 def extract_ngram_features_stemmed(offset, ngram_size, input, val = 1):
     """ offset      :   int
@@ -338,6 +415,45 @@ __pos_tagger__ = PosTagger.PosTagger()
 @memoize
 def __tag__(tokens):
     return __pos_tagger__.tag(tokens)
+
+def fact_extract_bow_POS_features(offset):
+    """ offset      :   int
+                            the number of words either side of the input to extract POS features from
+        returns     :   fn
+                            feature extractor function: FeatureExtactorInput -> dict
+    """
+    # curry offset
+    lcls = locals()
+    def fn_bow_POS_feats_stemmed(input, val=1):
+        return extract_bow_POS_features(offset, input, val)
+    return attach_function_identifier(fn_bow_POS_feats_stemmed, lcls)
+
+def extract_bow_POS_features(offset, input, val = 1):
+    """ offset      :   int
+                           the number of words either side of the input to extract features from
+        input      :    FeatureExtactorInput
+                            input to feature extractor
+        returns     :   dict
+                            dictionary of features
+    """
+
+    feats = {}
+    start = input.wordix - offset
+    stop  = input.wordix + offset
+
+    end = len(input.sentence) - 1
+    tag_pairs = __tag__(input.sentence)
+    tags = zip(*tag_pairs)[1]
+
+    for i in range(start, stop+1):
+        if i < 0:
+            feats["POS_TAG" + __START__ + ":BOW"] = val
+        elif i > end:
+            feats["POS_TAG" + __END__ + ":BOW"] = val
+        else:
+            offset_word = tags[i]
+            feats["POS_TAG:BOW" + "->" + offset_word] = val
+    return feats
 
 def fact_extract_positional_POS_features(offset):
     """ offset      :   int
@@ -408,10 +524,11 @@ def fact_extract_positional_POS_features_plus_word(offset):
         returns     :   fn
                             feature extractor function: FeatureExtactorInput -> dict
     """
+    lcls = locals()
     # curry offset
     def fn_pos_POS_feats_stemmed_plus_word(input, val=1):
         return extract_positional_POS_features_plus_word(offset, input, val)
-    return fn_pos_POS_feats_stemmed_plus_word
+    return attach_function_identifier(fn_pos_POS_feats_stemmed_plus_word, lcls)
 
 def extract_positional_POS_features_plus_word(offset, input, val = 1):
     """ offset      :   int
@@ -498,12 +615,13 @@ def fact_extract_positional_dependency_vectors(offset):
         returns     :   fn
                             feature extractor function: FeatureExtactorInput -> dict
     """
+    lcls = locals()
     # curry offset
     def fn_extract_positional_dependency_vectors(input, val=1):
-        return extract_extract_positional_dependency_vectors(offset, input, val)
-    return fn_extract_positional_dependency_vectors
+        return extract_positional_dependency_vectors(offset, input, val)
+    return attach_function_identifier(fn_extract_positional_dependency_vectors, lcls)
 
-def extract_extract_positional_dependency_vectors(offset, input, val = 1):
+def extract_positional_dependency_vectors(offset, input, val = 1):
     """ offset      :   int
                            the number of words either side of the input to extract features from
         input      :    FeatureExtactorInput
@@ -531,3 +649,17 @@ def extract_extract_positional_dependency_vectors(offset, input, val = 1):
             d = __vector_to_dict_(vectors[input.wordix], positional_prefix)
             feats.update(d)
     return feats
+
+if __name__ == "__main__":
+
+    bigram_win = fact_extract_positional_ngram_features(5, 2)
+    print(bigram_win.func_name)
+
+    from featureextractortransformer import FeatureExtractorInput
+
+    sentence = "Mary had a little lamb".split(" ")
+    tagged = [(wd, set()) for wd in sentence]
+    input = FeatureExtractorInput(1, tagged,1, None)
+    rels = extract_dependency_relation(input)
+    for rel in rels:
+        print(rel)

@@ -145,6 +145,11 @@ class ResultsProcessor(object):
 
         return ResultsProcessor.metrics_to_string(td_metrics, vd_metrics, header)
 
+    def get_metric(self, collection, objectid, metric_key):
+
+        metrics = self.db[collection].find_one({"_id": objectid})
+        return metrics[metric_key]
+
 if __name__ == "__main__":
 
     import pymongo

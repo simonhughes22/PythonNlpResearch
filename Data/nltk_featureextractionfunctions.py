@@ -2,6 +2,7 @@
 from NgramGenerator import compute_ngrams
 from Decorators import memoize
 from SpaCyParserWrapper import Parser
+from featureextractionfunctions import attach_function_identifier
 import PosTagger
 
 from nltk import PorterStemmer
@@ -31,12 +32,6 @@ def fact_composite_feature_extractor(extraction_fns):
             feats.extend(fts)
         return feats
     return composite_feature_extractor
-
-def attach_function_identifier(fn, d):
-    s = fn.func_name
-    for k, v in sorted(d.items(), key = lambda tpl: tpl[0]):
-        s +=   "_%s_%s" % (str(k), str(v))
-    fn.id = s
 
 def fact_extract_positional_word_features(offset, positional=True, stem_words=False):
 

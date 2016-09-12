@@ -13,9 +13,10 @@ from IterableFP import flatten
 from nltk.tag.crf import CRFTagger
 from wordtagginghelper import merge_dictionaries
 from nltk_datahelper import to_sentences, to_flattened_binary_tags, to_tagged_sentences_by_code
+from random import randint
 
 import Settings
-import logging
+import logging, os
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
@@ -61,6 +62,7 @@ only_causal = [t for t in freq_tags if "->" in t]
 regular_tags = [t for t in freq_tags if t[0].isdigit()]
 
 """ FEATURE EXTRACTION """
+config["window_size"] = 1
 offset = (config["window_size"] - 1) / 2
 
 unigram_stem_features = fact_extract_positional_word_features(offset, True)
@@ -78,7 +80,7 @@ cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict
 cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
 
 folds = cross_validation(tagged_essays, CV_FOLDS)
-#TODO Parallelize
+#TODO Parallelize (if so, make sure model files are unique)
 for fold, (essays_TD, essays_VD) in enumerate(folds):
     td_sents_by_code = to_tagged_sentences_by_code(essays_TD, regular_tags)
     vd_sents_by_code = to_tagged_sentences_by_code(essays_VD, regular_tags)
@@ -95,8 +97,9 @@ for fold, (essays_TD, essays_VD) in enumerate(folds):
         print("Fold %i Training code: %s" % (fold, code))
         td, vd = td_sents_by_code[code], vd_sents_by_code[code]
 
+        model_filename = models_folder + "/" + "%i_%s__%s" % (fold, code, str(randint(0, 9999999)))
         model = CRFTagger(feature_func=comp_feat_extactor, verbose=False)
-        model.train(td, models_folder + "/" + "%i_%s" % (fold, code))
+        model.train(td, model_filename)
         code2model[code] = model
 
         wd_td_ys_bytag[code] = to_flattened_binary_tags(td)
@@ -104,6 +107,8 @@ for fold, (essays_TD, essays_VD) in enumerate(folds):
 
         td_predictions = model.tag_sents(to_sentences(td))
         vd_predictions = model.tag_sents(to_sentences(vd))
+        # Delete model file now predictions obtained
+        os.remove(model_filename)
 
         td_wd_predictions_by_code[code] = to_flattened_binary_tags(td_predictions)
         vd_wd_predictions_by_code[code] = to_flattened_binary_tags(vd_predictions)
@@ -121,7 +126,7 @@ wd_algo = "CRF"
 SUFFIX = "_CRF"
 CB_TAGGING_TD, CB_TAGGING_VD= "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
 parameters = dict(config)
-parameters["extractors"] = map(lambda fn: fn.id, extraction_fns)
+parameters["extractors"] = map(lambda fn: fn.func_name, extraction_fns)
 parameters["min_feat_freq"] = MIN_FEAT_FREQ
 
 wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters,
