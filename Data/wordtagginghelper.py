@@ -171,7 +171,7 @@ class always_false(object):
         return -1.0 * np.ones((x.shape[0],), dtype=np.float64)
 
 #TODO Parallelize
-def train_classifier_per_code(xs, ysByCode, fn_create_cls, tags=None):
+def train_classifier_per_code(xs, ysByCode, fn_create_cls, tags=None, verbose=True):
     """
     Trains an instance of the classifier per code in codes
 
@@ -197,7 +197,8 @@ def train_classifier_per_code(xs, ysByCode, fn_create_cls, tags=None):
         tags = ysByCode.keys()
     tag2classifier = OrderedDict()
     for code in sorted(tags):
-        print "Training for :", code
+        if verbose:
+            print("Training for :" + code)
         ys = np.asarray(ysByCode[code])
         if len(ys) == 0 or max(ys) == 0:
             cls = always_false()

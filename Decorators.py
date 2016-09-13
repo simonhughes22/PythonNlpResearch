@@ -110,8 +110,9 @@ def memoize(f):
 
 class memoize_to_disk(object):
 
-    def __init__(self, filename_prefix):
+    def __init__(self, filename_prefix, verbose=True):
         self.filename_prefix = filename_prefix
+        self.verbose = verbose
 
     def __call__(self, f):
         # decorate f
@@ -120,9 +121,10 @@ class memoize_to_disk(object):
             s_pickle_key = "_".join(map(lambda (k, v): k + "_" + self.__value2str__(v), sorted(kwargs.items())))
             # hash long filesnames
             #if len(pickle_key) > 225:
-            print("Pickle Key:", s_pickle_key)
-            pickle_key = str(hash(s_pickle_key))
+            if self.verbose:
+                print("Pickle Key:", s_pickle_key)
 
+            pickle_key = str(hash(s_pickle_key))
             pickle_file = self.filename_prefix + pickle_key
             if os.path.exists(pickle_file):
                 return pickle.load(open(pickle_file, "r+"))
