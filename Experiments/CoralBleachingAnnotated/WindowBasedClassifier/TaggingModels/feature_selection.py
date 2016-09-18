@@ -102,7 +102,7 @@ def evaluate_window_size(config, window_size, features_filename_prefix):
     existing_extractors = []
     best_avg_f1 = 0.0
 
-    while len(existing_extractors) <= 5:
+    while len(existing_extractors) <= 3:
         f1_improved = False
         new_best_feature_set = None
         hs_existing_extractors = set(map(lambda fn: fn.func_name, existing_extractors))
@@ -124,7 +124,7 @@ def evaluate_window_size(config, window_size, features_filename_prefix):
             break
         else:
             existing_extractors.append(new_best_feature_set)
-    return avg_f1
+    return best_avg_f1
 
 def evaluate_feature_set(config, existing_extractors, new_extractor, features_filename_prefix):
 
@@ -132,8 +132,9 @@ def evaluate_feature_set(config, existing_extractors, new_extractor, features_fi
     feat_config = dict(config.items() + [("extractors", feat_extractors)])
     """ LOAD FEATURES """
     # most params below exist ONLY for the purposes of the hashing to and from disk
-    mem_extract_features = memoize_to_disk(filename_prefix=features_filename_prefix, verbose=False)(extract_features)
-    essay_feats = mem_extract_features(tagged_essays, **feat_config)
+    #mem_extract_features = memoize_to_disk(filename_prefix=features_filename_prefix, verbose=False)(extract_features)
+    #essay_feats = mem_extract_features(tagged_essays, **feat_config)
+    essay_feats = extract_features(tagged_essays, **feat_config)
     """ DEFINE TAGS """
     _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
     regular_tags = list(set((t for t in flatten(lst_all_tags) if t[0].isdigit())))
@@ -149,9 +150,30 @@ def evaluate_feature_set(config, existing_extractors, new_extractor, features_fi
     cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
     folds = cross_validation(essay_feats, CV_FOLDS)
 
-    results = Parallel(n_jobs=CV_FOLDS)(
-            delayed(train_tagger)(essays_TD, essays_VD, wd_test_tags, wd_train_tags)
-                for (essays_TD, essays_VD) in folds)
+    def train_tagger(essays_TD, essays_VD, wd_test_tags, wd_train_tags):
+        # TD and VD are lists of Essay objects. The sentences are lists
+        # of featureextractortransformer.Word objects
+        """ Data Partitioning and Training """
+        td_feats, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
+        vd_feats, vd_tags = flatten_to_wordlevel_feat_tags(essays_VD)
+        feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ, sparse=SPARSE_WD_FEATS)
+        td_X, vd_X = feature_transformer.fit_transform(td_feats), feature_transformer.transform(vd_feats)
+        wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
+        wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
+        """ TRAIN Tagger """
+        tag2word_classifier = train_classifier_per_code(td_X, wd_td_ys_bytag, lambda: LogisticRegression(),
+                                                        wd_train_tags, verbose=False)
+        """ TEST Tagger """
+        td_wd_predictions_by_code = test_classifier_per_code(td_X, tag2word_classifier, wd_test_tags)
+        vd_wd_predictions_by_code = test_classifier_per_code(vd_X, tag2word_classifier, wd_test_tags)
+        return td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag
+
+    #results = Parallel(n_jobs=CV_FOLDS)(
+    #        delayed(train_tagger)(essays_TD, essays_VD, wd_test_tags, wd_train_tags)
+    #            for (essays_TD, essays_VD) in folds)
+
+    results = [train_tagger(essays_TD, essays_VD, wd_test_tags, wd_train_tags)
+               for (essays_TD, essays_VD) in folds]
 
     for result in results:
         td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag = result
@@ -177,32 +199,15 @@ def evaluate_feature_set(config, existing_extractors, new_extractor, features_fi
     return avg_f1
 
 
-def train_tagger(essays_TD, essays_VD, wd_test_tags, wd_train_tags):
-    # TD and VD are lists of Essay objects. The sentences are lists
-    # of featureextractortransformer.Word objects
-    """ Data Partitioning and Training """
-    td_feats, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
-    vd_feats, vd_tags = flatten_to_wordlevel_feat_tags(essays_VD)
-    feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ, sparse=SPARSE_WD_FEATS)
-    td_X, vd_X = feature_transformer.fit_transform(td_feats), feature_transformer.transform(vd_feats)
-    wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
-    wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
-    """ TRAIN Tagger """
-    tag2word_classifier = train_classifier_per_code(td_X, wd_td_ys_bytag, lambda: LogisticRegression(), wd_train_tags, verbose=False)
-    """ TEST Tagger """
-    td_wd_predictions_by_code = test_classifier_per_code(td_X, tag2word_classifier, wd_test_tags)
-    vd_wd_predictions_by_code = test_classifier_per_code(vd_X, tag2word_classifier, wd_test_tags)
-    return td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag
-
-
 """ FIND BEST WINDOW SIZE """
 
 best_win_size = -1
 best_macro_f1 = 0
-for win_size in [1, 7, 3, 5, 9]:
+#for win_size in [1, 7, 3, 5, 9]:
+for win_size in [11, 13]:
     macro_f1 = evaluate_window_size(config=config, window_size=win_size, features_filename_prefix=features_filename_prefix)
     if macro_f1 > best_macro_f1:
-        print(("!" * 8) + " NEW BEST MACRO F1 FOR WINDOW SIZE " + ("!" * 8))
+        print(("!" * 8) + " NEW BEST AVERAGE F1 FOR WINDOW SIZE " + ("!" * 8))
     print("Best average F1 for window size: " + str(win_size) + " is " + str(macro_f1))
 
 

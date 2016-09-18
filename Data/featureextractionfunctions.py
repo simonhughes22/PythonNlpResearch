@@ -424,9 +424,9 @@ def fact_extract_bow_POS_features(offset):
     """
     # curry offset
     lcls = locals()
-    def fn_bow_POS_feats_stemmed(input, val=1):
+    def fn_bow_POS_feats(input, val=1):
         return extract_bow_POS_features(offset, input, val)
-    return attach_function_identifier(fn_bow_POS_feats_stemmed, lcls)
+    return attach_function_identifier(fn_bow_POS_feats, lcls)
 
 def extract_bow_POS_features(offset, input, val = 1):
     """ offset      :   int
@@ -461,10 +461,11 @@ def fact_extract_positional_POS_features(offset):
         returns     :   fn
                             feature extractor function: FeatureExtactorInput -> dict
     """
+    lcls = locals()
     # curry offset
-    def fn_pos_POS_feats_stemmed(input, val=1):
+    def fn_pos_POS_feats(input, val=1):
         return extract_positional_POS_features(offset, input, val)
-    return fn_pos_POS_feats_stemmed
+    return attach_function_identifier(fn_pos_POS_feats, lcls)
 
 def extract_positional_POS_features(offset, input, val = 1):
     """ offset      :   int

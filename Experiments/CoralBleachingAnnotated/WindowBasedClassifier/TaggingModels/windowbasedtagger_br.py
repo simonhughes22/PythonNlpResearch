@@ -21,6 +21,7 @@ from sklearn.lda import LDA
 
 from window_based_tagger_config import get_config
 from tag_frequency import get_tag_freq, regular_tag
+from joblib import Parallel, delayed
 # END Classifiers
 
 import Settings
@@ -104,33 +105,40 @@ cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict
 cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
 
 folds = cross_validation(essay_feats, CV_FOLDS)
-#TODO Parallelize
-for i,(essays_TD, essays_VD) in enumerate(folds):
 
+def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags):
     # TD and VD are lists of Essay objects. The sentences are lists
     # of featureextractortransformer.Word objects
-    print "\nFold %s" % i
+    print "\nFold %s" % fold
     print "Training Tagging Model"
+
     """ Data Partitioning and Training """
     td_feats, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
     vd_feats, vd_tags = flatten_to_wordlevel_feat_tags(essays_VD)
-
     feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ, sparse=SPARSE_WD_FEATS)
     td_X, vd_X = feature_transformer.fit_transform(td_feats), feature_transformer.transform(vd_feats)
     wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
     wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
-
     """ TRAIN Tagger """
-    tag2word_classifier = train_classifier_per_code(td_X, wd_td_ys_bytag, fn_create_wd_cls, wd_train_tags)
-
+    tag2word_classifier = train_classifier_per_code(td_X, wd_td_ys_bytag, fn_create_wd_cls,
+                                                    wd_train_tags, verbose=True)
     """ TEST Tagger """
     td_wd_predictions_by_code = test_classifier_per_code(td_X, tag2word_classifier, wd_test_tags)
     vd_wd_predictions_by_code = test_classifier_per_code(vd_X, tag2word_classifier, wd_test_tags)
+    return td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag
 
+""" This doesn't run in parallel ! """
+results = Parallel(n_jobs=CV_FOLDS, verbose=5, backend='multiprocessing')(
+        delayed(train_tagger)(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags)
+            for fold, (essays_TD, essays_VD) in enumerate(folds))
+
+for result in results:
+    td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag = result
     merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
     merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
     merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
     merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
+
 
 # print results for each code
 logger.info("Training completed")

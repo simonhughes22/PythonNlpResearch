@@ -62,18 +62,20 @@ only_causal = [t for t in freq_tags if "->" in t]
 regular_tags = [t for t in freq_tags if t[0].isdigit()]
 
 """ FEATURE EXTRACTION """
-config["window_size"] = 1
+config["window_size"] = 9
 offset = (config["window_size"] - 1) / 2
 
 unigram_stem_features = fact_extract_positional_word_features(offset, True)
 bigram_stem_featues   = fact_extract_ngram_features(offset=offset, ngram_size=2, stem_words=True)
+unigram_bow_window_unstemmed = fact_extract_ngram_features(offset=offset, ngram_size=1, positional=False, stem_words=False)
 
-extraction_fns = [
+extractors = [
     unigram_stem_features,
-    bigram_stem_featues
+    bigram_stem_featues,
+    unigram_bow_window_unstemmed
 ]
 
-comp_feat_extactor = fact_composite_feature_extractor(extraction_fns)
+comp_feat_extactor = fact_composite_feature_extractor(extractors)
 
 fold_models = []
 cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
@@ -126,7 +128,7 @@ wd_algo = "CRF"
 SUFFIX = "_CRF"
 CB_TAGGING_TD, CB_TAGGING_VD= "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
 parameters = dict(config)
-parameters["extractors"] = map(lambda fn: fn.func_name, extraction_fns)
+parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
 parameters["min_feat_freq"] = MIN_FEAT_FREQ
 
 wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters,
