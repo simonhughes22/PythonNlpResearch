@@ -1,5 +1,5 @@
 from Decorators import memoize_to_disk
-from featureextractionfunctions import fact_extract_bow_ngram_features
+from brill_rule_templates import *
 from load_data import load_process_essays
 
 from CrossValidation import cross_validation
@@ -9,7 +9,6 @@ from window_based_tagger_config import get_config
 from nltk_featureextractionfunctions import stem
 
 from collections import defaultdict
-from IterableFP import flatten
 
 from nltk.tag.hmm import HiddenMarkovModelTrainer
 from nltk.tag import brill
@@ -17,10 +16,10 @@ from nltk.tag.brill_trainer import BrillTaggerTrainer
 
 from wordtagginghelper import merge_dictionaries
 from nltk_datahelper import to_sentences, to_flattened_binary_tags, to_tagged_sentences_by_code
-from random import randint
 
 import Settings
 import logging, os
+import dill
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
@@ -30,16 +29,21 @@ logger = logging.getLogger()
 # Create persister (mongo client) - fail fast if mongo service not initialized
 processor = ResultsProcessor()
 
-CV_FOLDS = 2
+CV_FOLDS = 5
 
 MIN_TAG_FREQ = 5
 STEM = True
+
+# Brill parameters
+MAX_RULES = 500
+MIN_SCORE = 2
 # end not hashed
 
 # construct unique key using settings for pickling
 settings = Settings.Settings()
 folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
 processed_essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
+hmm_model_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/hmm_pickled_"
 out_metrics_file = settings.data_directory + "CoralBleaching/Results/metrics.txt"
 
 config = get_config(folder)
@@ -73,6 +77,15 @@ projection = lambda x : x
 if STEM:
     projection = stem
 
+extractors = [
+    brill_rules_pos_wd_feats_offset_4,
+    brill_rules_pos_bigram_feats_offset_4
+]
+
+templates = []
+for ext in extractors:
+    templates.extend(ext())
+
 #TODO Parallelize (if so, make sure model files are unique)
 for fold, (essays_TD, essays_VD) in enumerate(folds):
     td_sents_by_code = to_tagged_sentences_by_code(essays_TD, regular_tags, projection=projection)
@@ -90,15 +103,21 @@ for fold, (essays_TD, essays_VD) in enumerate(folds):
         print("Fold %i Training code: %s" % (fold, code))
         td, vd = td_sents_by_code[code], vd_sents_by_code[code]
 
-        hmm_trainer = HiddenMarkovModelTrainer()
-        hmm_model = hmm_trainer.train_supervised(td)
+        hmm_fname = "%s_cv-%i_fold-%i_code-%s.pl" % (hmm_model_prefix, CV_FOLDS, fold, code)
+        if os.path.exists(hmm_fname):
+            with open(hmm_fname, "r+") as f:
+                base_tagger = dill.load(f)
+        else:
+            hmm_trainer = HiddenMarkovModelTrainer()
+            base_tagger = hmm_trainer.train_supervised(td)
+            with open(hmm_fname, "w+") as f:
+                dill.dump(base_tagger, f)
 
         #See: http://streamhacker.com/2008/12/03/part-of-speech-tagging-with-nltk-part-3/
         #and http://streamhacker.com/2014/12/02/nltk-3/ for changes to interface
 
-        templates = brill.brill24()
-        trainer = BrillTaggerTrainer(hmm_model, templates)
-        model = trainer.train(td, max_rules=100)
+        trainer = BrillTaggerTrainer(base_tagger, templates)
+        model = trainer.train(td, max_rules=MAX_RULES, min_score=MIN_SCORE)
         code2model[code] = model
 
         wd_td_ys_bytag[code] = to_flattened_binary_tags(td)
@@ -127,6 +146,11 @@ if STEM:
     parameters["extractors"] = "stemmed_unigrams"
 else:
     parameters["extractors"] = "unigrams"
+
+parameters["MAX_RULES"] = MAX_RULES
+parameters["MIN_SCORE"] = MIN_SCORE
+parameters["BASE_TAGGER"] = "hmm"
+parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
 
 wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
 wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)

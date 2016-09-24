@@ -9,6 +9,12 @@ db.getCollection('CB_TAGGING_VD_FEAT_SELECTION').aggregate(
             "_id":0
     }
 },
+{
+    $match:{
+        //count: {  $eq:2 },
+        window_size: { $eq:9 }
+    }
+},
 {    $sort:{
         //count: 1,
         "weighted_f1_score":-1,
