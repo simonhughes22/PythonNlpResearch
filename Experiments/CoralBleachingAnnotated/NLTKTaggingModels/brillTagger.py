@@ -12,6 +12,9 @@ from collections import defaultdict
 from IterableFP import flatten
 
 from nltk.tag.hmm import HiddenMarkovModelTrainer
+from nltk.tag import brill
+from nltk.tag.brill_trainer import BrillTaggerTrainer
+
 from wordtagginghelper import merge_dictionaries
 from nltk_datahelper import to_sentences, to_flattened_binary_tags, to_tagged_sentences_by_code
 from random import randint
@@ -27,7 +30,7 @@ logger = logging.getLogger()
 # Create persister (mongo client) - fail fast if mongo service not initialized
 processor = ResultsProcessor()
 
-CV_FOLDS = 5
+CV_FOLDS = 2
 
 MIN_TAG_FREQ = 5
 STEM = True
@@ -90,27 +93,22 @@ for fold, (essays_TD, essays_VD) in enumerate(folds):
         hmm_trainer = HiddenMarkovModelTrainer()
         hmm_model = hmm_trainer.train_supervised(td)
 
-        raise Exception("TODO - add brill tagger")
-        """
-        See: http://streamhacker.com/2008/12/03/part-of-speech-tagging-with-nltk-part-3/
+        #See: http://streamhacker.com/2008/12/03/part-of-speech-tagging-with-nltk-part-3/
+        #and http://streamhacker.com/2014/12/02/nltk-3/ for changes to interface
 
+        templates = brill.brill24()
+        trainer = BrillTaggerTrainer(hmm_model, templates)
+        model = trainer.train(td, max_rules=100)
         code2model[code] = model
 
         wd_td_ys_bytag[code] = to_flattened_binary_tags(td)
         wd_vd_ys_bytag[code] = to_flattened_binary_tags(vd)
 
-        td_predictions = []
-        for sent in to_sentences(td):
-            td_predictions.append(model.tag(sent))
-
-        vd_predictions = []
-        for sent in to_sentences(vd):
-            vd_predictions.append(model.tag(sent))
+        td_predictions = model.tag_sents(to_sentences(td))
+        vd_predictions = model.tag_sents(to_sentences(vd))
 
         td_wd_predictions_by_code[code] = to_flattened_binary_tags(td_predictions)
         vd_wd_predictions_by_code[code] = to_flattened_binary_tags(vd_predictions)
-
-        """
 
     merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
     merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
@@ -121,8 +119,8 @@ logger.info("Training completed")
 
 """ Persist Results to Mongo DB """
 
-wd_algo = "HMM"
-SUFFIX = "_HMM"
+wd_algo = "BrillTagger_HMM"
+SUFFIX = "_BrillTagger_HMM"
 CB_TAGGING_TD, CB_TAGGING_VD= "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
 parameters = dict(config)
 if STEM:
@@ -130,13 +128,12 @@ if STEM:
 else:
     parameters["extractors"] = "unigrams"
 
-wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters,
-                                           wd_algo)
-wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters,
-                                           wd_algo)
+wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
+wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
 
 # This outputs 0's for MEAN CONCEPT CODES as we aren't including those in the outputs
-
 print processor.results_to_string(wd_td_objectid, CB_TAGGING_TD, wd_vd_objectid, CB_TAGGING_VD, "TAGGING")
 logger.info("Results Processed")
+
+# See http://streamhacker.com/2008/12/03/part-of-speech-tagging-with-nltk-part-3/
 

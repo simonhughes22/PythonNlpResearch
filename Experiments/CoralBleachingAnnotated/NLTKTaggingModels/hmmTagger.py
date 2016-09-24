@@ -1,5 +1,4 @@
 from Decorators import memoize_to_disk
-from featureextractionfunctions import fact_extract_bow_ngram_features
 from load_data import load_process_essays
 
 from CrossValidation import cross_validation
@@ -9,12 +8,10 @@ from window_based_tagger_config import get_config
 from nltk_featureextractionfunctions import stem
 
 from collections import defaultdict
-from IterableFP import flatten
 
 from nltk.tag.hmm import HiddenMarkovModelTrainer
 from wordtagginghelper import merge_dictionaries
 from nltk_datahelper import to_sentences, to_flattened_binary_tags, to_tagged_sentences_by_code
-from random import randint
 
 import Settings
 import logging, os
@@ -94,13 +91,8 @@ for fold, (essays_TD, essays_VD) in enumerate(folds):
         wd_td_ys_bytag[code] = to_flattened_binary_tags(td)
         wd_vd_ys_bytag[code] = to_flattened_binary_tags(vd)
 
-        td_predictions = []
-        for sent in to_sentences(td):
-            td_predictions.append(model.tag(sent))
-
-        vd_predictions = []
-        for sent in to_sentences(vd):
-            vd_predictions.append(model.tag(sent))
+        td_predictions = model.tag_sents(to_sentences(td))
+        vd_predictions = model.tag_sents(to_sentences(vd))
 
         td_wd_predictions_by_code[code] = to_flattened_binary_tags(td_predictions)
         vd_wd_predictions_by_code[code] = to_flattened_binary_tags(vd_predictions)
