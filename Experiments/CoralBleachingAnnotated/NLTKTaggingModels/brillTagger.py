@@ -103,14 +103,14 @@ for fold, (essays_TD, essays_VD) in enumerate(folds):
         print("Fold %i Training code: %s" % (fold, code))
         td, vd = td_sents_by_code[code], vd_sents_by_code[code]
 
-        hmm_fname = "%s_cv-%i_fold-%i_code-%s.pl" % (hmm_model_prefix, CV_FOLDS, fold, code)
+        hmm_fname = "%s_cv-%i_fold-%i_code-%s.dill" % (hmm_model_prefix, CV_FOLDS, fold, code)
         if os.path.exists(hmm_fname):
-            with open(hmm_fname, "r+") as f:
+            with open(hmm_fname, "rb") as f:
                 base_tagger = dill.load(f)
         else:
             hmm_trainer = HiddenMarkovModelTrainer()
             base_tagger = hmm_trainer.train_supervised(td)
-            with open(hmm_fname, "w+") as f:
+            with open(hmm_fname, "wb") as f:
                 dill.dump(base_tagger, f)
 
         #See: http://streamhacker.com/2008/12/03/part-of-speech-tagging-with-nltk-part-3/
