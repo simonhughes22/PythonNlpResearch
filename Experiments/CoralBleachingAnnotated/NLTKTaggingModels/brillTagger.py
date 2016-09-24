@@ -103,7 +103,7 @@ for fold, (essays_TD, essays_VD) in enumerate(folds):
         print("Fold %i Training code: %s" % (fold, code))
         td, vd = td_sents_by_code[code], vd_sents_by_code[code]
 
-        hmm_fname = "%s_cv-%i_fold-%i_code-%s.dill" % (hmm_model_prefix, CV_FOLDS, fold, code)
+        hmm_fname = "%s_cv-%i_fold-%i_code-%s_stemed-%s.dill" % (hmm_model_prefix, CV_FOLDS, fold, code, str(STEM))
         if os.path.exists(hmm_fname):
             with open(hmm_fname, "rb") as f:
                 base_tagger = dill.load(f)
@@ -150,7 +150,7 @@ else:
 parameters["MAX_RULES"] = MAX_RULES
 parameters["MIN_SCORE"] = MIN_SCORE
 parameters["BASE_TAGGER"] = "hmm"
-parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
+parameters["extractors"] = map(lambda fn: fn.func_name + ("_stemmed" if STEM else ""), extractors)
 
 wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
 wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
