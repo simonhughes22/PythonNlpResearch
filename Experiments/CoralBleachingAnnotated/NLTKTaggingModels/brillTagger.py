@@ -116,7 +116,7 @@ for fold, (essays_TD, essays_VD) in enumerate(folds):
         #See: http://streamhacker.com/2008/12/03/part-of-speech-tagging-with-nltk-part-3/
         #and http://streamhacker.com/2014/12/02/nltk-3/ for changes to interface
 
-        trainer = BrillTaggerTrainer(base_tagger, templates)
+        trainer = BrillTaggerTrainer(base_tagger, templates, deterministic=True)
         model = trainer.train(td, max_rules=MAX_RULES, min_score=MIN_SCORE)
         code2model[code] = model
 

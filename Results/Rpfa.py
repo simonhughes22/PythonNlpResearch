@@ -4,12 +4,13 @@ class rpfa(object):
     def __repr__(self):
         return self.to_str(True)
 
-    def __init__(self, r, p, f, a, nc=-1):
+    def __init__(self, r, p, f, a, nc=-1, data_points=-1):
         self.recall = r
         self.precision = p
         self.f1_score = f
         self.accuracy = a
         self.num_codes = nc
+        self.data_points = data_points
 
     def to_str(self, print_count=False):
         fmt = "Recall: {0:.4f}, Precision: {1:.4f}, F1: {2:.4f}, Accuracy: {3:.4f}"

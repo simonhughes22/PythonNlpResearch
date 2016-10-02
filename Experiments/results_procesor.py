@@ -35,7 +35,7 @@ class ResultsProcessor(object):
                 if len(ys) == 0:
                     continue
                 r, p, f1, acc = rpf1a(ys, pred_ys)
-                metric = rpfa(r, p, f1, acc, nc=len([1 for y in ys if y > 0.0]))
+                metric = rpfa(r, p, f1, acc, nc=len([1 for y in ys if y > 0.0]), data_points=len(ys))
                 metrics_by_tag[tag] = metric
             except Exception as e:
                 print("Exception processing tag: %s" % str(tag))
