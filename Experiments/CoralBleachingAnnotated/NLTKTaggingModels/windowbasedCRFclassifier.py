@@ -100,6 +100,8 @@ for fold, (essays_TD, essays_VD) in enumerate(folds):
         td, vd = td_sents_by_code[code], vd_sents_by_code[code]
 
         model_filename = models_folder + "/" + "%i_%s__%s" % (fold, code, str(randint(0, 9999999)))
+
+        # documentation: http://www.chokkan.org/software/crfsuite/manual.html
         model = CRFTagger(feature_func=comp_feat_extactor, verbose=False)
         model.train(td, model_filename)
         code2model[code] = model

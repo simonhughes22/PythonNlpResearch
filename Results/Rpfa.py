@@ -15,13 +15,13 @@ class rpfa(object):
 
         if data_points:
             self.data_points = data_points
-        if tp:
+        if tp is not None:
             self.tp = tp
-        if tn:
+        if tn is not None:
             self.tn = tn
-        if fp:
+        if fp is not None:
             self.fp = fp
-        if fn:
+        if fn is not None:
             self.fn = fn
 
     def to_str(self, print_count=False):
