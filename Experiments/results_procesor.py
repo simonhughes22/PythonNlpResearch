@@ -139,10 +139,17 @@ class ResultsProcessor(object):
         std_metrics = sorted(td_metrics.items(), key=lambda (k, v): ResultsProcessor.__sort_key_(k))
         svd_metrics = sorted(vd_metrics.items(), key=lambda (k, v): ResultsProcessor.__sort_key_(k))
 
+        micro_f1 = ""
         for ((tag, td_rpfa), (_, vd_rpfa)) in zip(std_metrics, svd_metrics):
             if type(td_rpfa) == dict and "f1_score" in td_rpfa:
-                s_metrics += ResultsProcessor.__metrics_to_str__(ResultsProcessor.pad_str, tag, td_rpfa, vd_rpfa)
+                s_metric = ResultsProcessor.__metrics_to_str__(ResultsProcessor.pad_str, tag, td_rpfa, vd_rpfa)
+                if tag == __MICRO_F1__:
+                    micro_f1 = s_metric
+                else:
+                    s_metrics += s_metric
 
+        # Make sure this is at the end
+        s_metrics += micro_f1
         s_metrics += "\nMacro F1:  " + ResultsProcessor.pad_str(td_metrics[__MACRO_F1__]) + ResultsProcessor.pad_str(vd_metrics[__MACRO_F1__])
         s_metrics += "\n"
         return s_metrics

@@ -7,7 +7,7 @@ from featureextractionfunctions import *
 from CrossValidation import cross_validation
 from wordtagginghelper import *
 from IterableFP import flatten
-from results_procesor import ResultsProcessor, __MACRO_F1__
+from results_procesor import ResultsProcessor, __MACRO_F1__, __MICRO_F1__
 from window_based_tagger_config import get_config
 
 from joblib import Parallel, delayed
@@ -190,23 +190,23 @@ def evaluate_feature_set(config, existing_extractors, new_extractor, features_fi
     parameters["extractors"] = map(lambda fn: fn.func_name, feat_extractors)
     parameters["min_feat_freq"] = MIN_FEAT_FREQ
 
-    wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag,
-                                               parameters, wd_algo)
-    wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag,
-                                               parameters, wd_algo)
+    wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag,
+                                               cv_wd_td_predictions_by_tag, parameters, wd_algo)
+    wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag,
+                                               cv_wd_vd_predictions_by_tag, parameters, wd_algo)
 
-    avg_f1 = float(processor.get_metric(CB_TAGGING_VD, wd_vd_objectid, "WEIGHTED_MEAN")["f1_score"])
+    avg_f1 = float(processor.get_metric(CB_TAGGING_VD, wd_vd_objectid, __MICRO_F1__)["f1_score"])
     return avg_f1
 
 
 """ FIND BEST WINDOW SIZE """
 
 best_win_size = -1
-best_macro_f1 = 0
+best_micro_f1 = 0
 #for win_size in [1, 7, 3, 5, 9]:
-for win_size in [11, 13]:
+for win_size in [7, 9, 11]:
     macro_f1 = evaluate_window_size(config=config, window_size=win_size, features_filename_prefix=features_filename_prefix)
-    if macro_f1 > best_macro_f1:
+    if macro_f1 > best_micro_f1:
         print(("!" * 8) + " NEW BEST AVERAGE F1 FOR WINDOW SIZE " + ("!" * 8))
     print("Best average F1 for window size: " + str(win_size) + " is " + str(macro_f1))
 
