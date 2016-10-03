@@ -5,7 +5,7 @@ Created on Mar 30, 2013
 '''
 
 
-def __tally_results__(expected, actual, class_value):
+def compute_tp_fp_fn(expected, actual, class_value=1):
     """ Counts the number of true positives, false positives and false negatives
     """
 
@@ -73,7 +73,7 @@ def __precision__(tp, fp, fn):
     return tp / (tp + fp)
 
 def precision(expected, actual, class_value = 1):
-    tp, fp, fn = __tally_results__(expected, actual, class_value)
+    tp, fp, fn = compute_tp_fp_fn(expected, actual, class_value)
     return __precision__(tp, fp, fn)
 
 def __recall__(tp, fp, fn):
@@ -82,7 +82,7 @@ def __recall__(tp, fp, fn):
     return tp / (tp + fn)
 
 def recall(expected, actual, class_value = 1):
-    tp, fp, fn = __tally_results__(expected, actual, class_value)
+    tp, fp, fn = compute_tp_fp_fn(expected, actual, class_value)
     return __recall__(tp, fp, fn)
     
 def __f_beta__(r, p, beta):
@@ -94,7 +94,7 @@ def __f_beta__(r, p, beta):
 
 def f_beta(expected, actual, class_value = 1, beta = 1.0):
     
-    tp, fp, fn = __tally_results__(expected, actual, class_value)
+    tp, fp, fn = compute_tp_fp_fn(expected, actual, class_value)
     r = __recall__(tp, fp, fn)
     p = __precision__(tp, fp, fn)
     return __f_beta__(r, p, beta)
@@ -107,11 +107,11 @@ def __accuracy__(tp, fp, fn, actual):
     return (ln - (fp + fn)) / ln 
 
 def accuracy(expected, actual, class_value = 1):
-    tp, fp, fn = __tally_results__(expected, actual, class_value)
+    tp, fp, fn = compute_tp_fp_fn(expected, actual, class_value)
     return __accuracy__(tp, fp, fn, actual)
 
 def rpf1(expected, actual, class_value = 1):
-    tp, fp, fn = __tally_results__(expected, actual, class_value)
+    tp, fp, fn = compute_tp_fp_fn(expected, actual, class_value)
     
     r = __recall__(tp, fp, fn)
     p = __precision__(tp, fp, fn)
@@ -120,7 +120,7 @@ def rpf1(expected, actual, class_value = 1):
 
 def rpf1a(expected, actual, class_value = 1):
     
-    tp, fp, fn = __tally_results__(expected, actual, class_value)
+    tp, fp, fn = compute_tp_fp_fn(expected, actual, class_value)
     
     r  = __recall__(tp, fp, fn)
     p  = __precision__(tp, fp, fn)
@@ -128,6 +128,14 @@ def rpf1a(expected, actual, class_value = 1):
     a  = __accuracy__(tp, fp, fn, actual)
     
     return (r,p,f1,a)
+
+def rpf1a_from_tp_fp_tn_fn(tp, fp, tn, fn):
+    r = __recall__(tp, fp, fn)
+    p = __precision__(tp, fp, fn)
+    f1 = __f_beta__(r, p, 1.0)
+
+    a = (tp + tn) / (tp + fp + tn + fn)
+    return (r, p, f1, a)
 
 def rpf1a_with_indices(expected, actual, class_value = 1):
 

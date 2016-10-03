@@ -2,11 +2,12 @@ __author__ = 'simon.hughes'
 
 import pymongo
 from Rpfa import mean_rpfa, weighted_mean_rpfa, rpfa
-from Metrics import rpf1a
+from Metrics import compute_tp_fp_fn, rpf1a_from_tp_fp_tn_fn
 from collections import defaultdict
 from datetime import datetime
 
 __MACRO_F1__ = "MACRO_F1"
+__MICRO_F1__ = "MICRO_F1"
 
 def is_a_regular_code(code):
     return (code[0].isdigit() or code[0].lower() == 'p') \
@@ -34,8 +35,13 @@ class ResultsProcessor(object):
                 ys = ys_by_tag[tag]
                 if len(ys) == 0:
                     continue
-                r, p, f1, acc = rpf1a(ys, pred_ys)
-                metric = rpfa(r, p, f1, acc, nc=len([1 for y in ys if y > 0.0]), data_points=len(ys))
+
+                tp, fp, fn = compute_tp_fp_fn(ys, pred_ys)
+                tn = len(ys) - (tp + fp + fn)
+                r, p, f1, acc = rpf1a_from_tp_fp_tn_fn(tp, fp, tn, fn)
+                metric = rpfa(r, p, f1, acc,
+                              nc=len([1 for y in ys if y > 0.0]), data_points=len(ys),
+                              tp=tp, tn=tn, fp=fp)
                 metrics_by_tag[tag] = metric
             except Exception as e:
                 print("Exception processing tag: %s" % str(tag))
