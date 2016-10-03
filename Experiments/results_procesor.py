@@ -1,7 +1,7 @@
 __author__ = 'simon.hughes'
 
 import pymongo
-from Rpfa import mean_rpfa, weighted_mean_rpfa, rpfa
+from Rpfa import mean_rpfa, weighted_mean_rpfa, rpfa, micro_rpfa
 from Metrics import compute_tp_fp_fn, rpf1a_from_tp_fp_tn_fn
 from collections import defaultdict
 from datetime import datetime
@@ -41,7 +41,7 @@ class ResultsProcessor(object):
                 r, p, f1, acc = rpf1a_from_tp_fp_tn_fn(tp, fp, tn, fn)
                 metric = rpfa(r, p, f1, acc,
                               nc=len([1 for y in ys if y > 0.0]), data_points=len(ys),
-                              tp=tp, tn=tn, fp=fp)
+                              tp=tp, fp=fp, tn=tn, fn=fn)
                 metrics_by_tag[tag] = metric
             except Exception as e:
                 print("Exception processing tag: %s" % str(tag))
@@ -58,7 +58,7 @@ class ResultsProcessor(object):
 
         mean_metrics = dict(dict_mean_metrics.items())
         code_metrics = []
-        # Fitlers to conceot codes by default
+        # Filters to concept codes by default
         for tag, metric in mean_metrics.items():
             if fltr(tag):
                 code_metrics.append(metric)
@@ -66,6 +66,7 @@ class ResultsProcessor(object):
         """ All Tags """
         mean_metric = mean_rpfa(mean_metrics.values())
         weighted_mean_metric = weighted_mean_rpfa(mean_metrics.values())
+        micro_f1_metric = micro_rpfa(mean_metrics.values())
 
         """ Concept Codes """
         mean_metric_codes = mean_rpfa(code_metrics)
@@ -79,6 +80,8 @@ class ResultsProcessor(object):
         mean_metrics[
             "WEIGHTED_MEAN_CONCEPT_CODES"] = weighted_mean_metric_codes  # convert values to dicts from rpfa objects for mongodb
 
+        """ Micro and Macro F1 """
+        mean_metrics[__MICRO_F1__] = micro_f1_metric
         macro_f1 = ResultsProcessor.f1(mean_metric_codes.recall, mean_metric_codes.precision)
         return dict(map(lambda (k, v): (k, v.__dict__), mean_metrics.items()) + [(__MACRO_F1__, macro_f1)])
 
