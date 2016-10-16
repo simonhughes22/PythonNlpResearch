@@ -103,7 +103,7 @@ def evaluate_window_size(config, window_size, features_filename_prefix):
     existing_extractors = []
     best_avg_f1 = 0.0
 
-    while len(existing_extractors) <= 3:
+    while len(existing_extractors) <= 5:
         f1_improved = False
         new_best_feature_set = None
         hs_existing_extractors = set(map(lambda fn: fn.func_name, existing_extractors))
@@ -186,17 +186,17 @@ def evaluate_feature_set(config, existing_extractors, new_extractor, features_fi
     # print results for each code
     """ Persist Results to Mongo DB """
     SUFFIX = "_FEAT_SELECTION"
-    CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
+    SC_TAGGING_TD, SC_TAGGING_VD = "SC_TAGGING_TD" + SUFFIX, "SC_TAGGING_VD" + SUFFIX
     parameters = dict(config)
     parameters["extractors"] = map(lambda fn: fn.func_name, feat_extractors)
     parameters["min_feat_freq"] = MIN_FEAT_FREQ
 
-    wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag,
+    wd_td_objectid = processor.persist_results(SC_TAGGING_TD, cv_wd_td_ys_by_tag,
                                                cv_wd_td_predictions_by_tag, parameters, wd_algo)
-    wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag,
+    wd_vd_objectid = processor.persist_results(SC_TAGGING_VD, cv_wd_vd_ys_by_tag,
                                                cv_wd_vd_predictions_by_tag, parameters, wd_algo)
 
-    avg_f1 = float(processor.get_metric(CB_TAGGING_VD, wd_vd_objectid, __MICRO_F1__)["f1_score"])
+    avg_f1 = float(processor.get_metric(SC_TAGGING_VD, wd_vd_objectid, __MICRO_F1__)["f1_score"])
     return avg_f1
 
 
@@ -205,7 +205,8 @@ def evaluate_feature_set(config, existing_extractors, new_extractor, features_fi
 best_win_size = -1
 best_micro_f1 = 0
 #for win_size in [1, 7, 3, 5, 9]:
-for win_size in [7, 9, 11]:
+#for win_size in [9, 11, 13]:
+for win_size in [1, 3, 5, 7, 9, 11, 13]:
     macro_f1 = evaluate_window_size(config=config, window_size=win_size, features_filename_prefix=features_filename_prefix)
     if macro_f1 > best_micro_f1:
         print(("!" * 8) + " NEW BEST AVERAGE F1 FOR WINDOW SIZE " + ("!" * 8))
