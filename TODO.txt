@@ -6,7 +6,10 @@ NEW:
 Peter - evaluate causal relation extraction accuracy using golden labels (or train model using those instead of
 predicted labels).
 
+Look into keras functionality for integration Keras into parsing framework: https://explosion.ai/blog/spacy-deep-learning-keras
+
 Ideas from discourse analyis -
+
  1. Look at Joty et al's 2013 paper, has a binary classifier to determine connections and a
     second classifier to determine discourse relation types, and then constructs a joint model from both
  2. Use structural features -  see Stab and Gureyvch paper on argumentative discourse relations (things like

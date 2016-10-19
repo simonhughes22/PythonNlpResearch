@@ -116,7 +116,7 @@ def evaluate_window_size(config, window_size, features_filename_prefix):
                 f1_improved = True
                 new_best_feature_set = feat_extractor
                 print(("*" * 8) + " NEW BEST F1 " + ("*" * 8))
-            print("Window Size: " + str(window_size) + "\tFeature Set: " + ",".join(hs_existing_extractors) + ","
+            print("Window Size: " + str(window_size) + "\tFeature Set (" + str(len(existing_extractors)) + "): " + ",".join(hs_existing_extractors) + ","
                   + feat_extractor.func_name.ljust(50) + " attained F1: " + str(avg_f1))
         # end 'for each feat extractor'
 
