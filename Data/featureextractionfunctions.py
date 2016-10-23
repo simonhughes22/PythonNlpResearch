@@ -296,7 +296,6 @@ def extract_bow_ngram_features(offset, ngram_size, input, val = 1):
     str_num_ngrams = str(ngram_size)
 
     for i, offset_ngram in enumerate(ngrams):
-        relative_offset = str(i - offset)
         str_ngram = ",".join(offset_ngram)
         feats["POS_" + str_num_ngrams + "GRAMS:BOW" + "->" + str_ngram] = val
 

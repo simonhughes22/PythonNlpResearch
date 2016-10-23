@@ -62,16 +62,18 @@ only_causal = [t for t in freq_tags if "->" in t]
 regular_tags = [t for t in freq_tags if t[0].isdigit()]
 
 """ FEATURE EXTRACTION """
-config["window_size"] = 9
+config["window_size"] = 11
 offset = (config["window_size"] - 1) / 2
 
 unigram_stem_features = fact_extract_positional_word_features(offset, True)
+trigram_stem_featues   = fact_extract_ngram_features(offset=offset, ngram_size=3, stem_words=True)
 bigram_stem_featues   = fact_extract_ngram_features(offset=offset, ngram_size=2, stem_words=True)
 unigram_bow_window_unstemmed = fact_extract_ngram_features(offset=offset, ngram_size=1, positional=False, stem_words=False)
 
 extractors = [
     unigram_stem_features,
     bigram_stem_featues,
+    trigram_stem_featues,
     unigram_bow_window_unstemmed
 ]
 

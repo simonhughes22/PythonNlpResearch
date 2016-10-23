@@ -152,8 +152,10 @@ def evaluate_tagger(num_iterations, tag_history):
 
 
 best_f1 = 0
-for iterations in [10, 20, 30, 40, 50]:
-    for tag_hist in [0, 1, 3, 5, 10, 15, 20]:
+#for iterations in [10, 20, 30, 40, 50]:
+for iterations in [1, 3, 5]:
+    #for tag_hist in [0, 1, 3, 5, 10, 15, 20]:
+    for tag_hist in [0, 1, 2, 3, 5]:
         new_f1 = evaluate_tagger(num_iterations=iterations, tag_history=tag_hist)
         if new_f1 > best_f1:
             best_f1 = new_f1

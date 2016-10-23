@@ -141,11 +141,25 @@ def fact_extract_positional_POS_tags(offset, positional=True):
     attach_function_identifier(extract_positional_POS_tags, lcls)
     return extract_positional_POS_tags
 
+@memoize
+def __brown_clusters__(tokens):
+    return parser.brown_cluster(tokens)
+
+def extract_brown_cluster(tokens, idx):
+    """ input      :    FeatureExtactorInput
+                            input to feature extractor
+        returns     :   dict
+                            dictionary of features
+    """
+
+    clusters = __brown_clusters__(tokens)
+    return ["BRN_CL:" + clusters[idx]]
+
 if __name__ == "__main__":
 
     def test(sentence, fn):
         print(sentence)
-        print(fn.id)
+        print(fn.func_name)
         tokens = sentence.split(" ")
         for i, tok in enumerate(tokens):
             feats = fn(tokens, i)
@@ -158,3 +172,4 @@ if __name__ == "__main__":
     test("the cat was sitting on the oven", fact_extract_positional_word_features(2, positional=True, stem_words=False))
     test("the cat was sitting on the oven", fact_extract_positional_word_features(1, positional=False, stem_words=True))
     test("the cat was sitting on the oven", fact_extract_ngram_features(1, 3, positional=True, stem_words=False))
+    test("the cat was sitting on the oven", extract_brown_cluster)
