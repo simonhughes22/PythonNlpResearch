@@ -46,6 +46,7 @@ config = get_config(folder)
 
 """ FEATURE EXTRACTION """
 offset = 5 # window size 11
+config["window_size"] = (2*offset)+1
 unigram_window_stemmed  = fact_extract_positional_word_features_stemmed(offset)
 biigram_window_stemmed  = fact_extract_ngram_features_stemmed(offset, 2)
 triigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
@@ -117,7 +118,7 @@ def evaluate_tagger(num_iterations, tag_history):
 
         tagger = PerceptronTaggerMultiClassCombo(wd_train_tags, tag_history=tag_history,
                                                  combo_freq_threshold=TAG_FREQ_THRESHOLD)
-        tagger.train(essays_TD, nr_iter=num_iterations, verbose=True)
+        tagger.train(essays_TD, nr_iter=num_iterations, verbose=False)
 
         td_wd_predictions_by_code = tagger.predict(essays_TD)
         vd_wd_predictions_by_code = tagger.predict(essays_VD)
@@ -138,7 +139,7 @@ def evaluate_tagger(num_iterations, tag_history):
     parameters["combo_freq_threshold"] = TAG_FREQ_THRESHOLD
 
     parameters["extractors"] = extractor_names
-    wd_algo = "AveragedPerceptronBinary"
+    wd_algo = "AveragedPerceptronMultiClass"
 
     wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag,
                                                parameters, wd_algo)
@@ -155,4 +156,4 @@ for iterations in [10, 20, 30, 40, 50]:
         if new_f1 > best_f1:
             best_f1 = new_f1
             print(("!" * 8) + " NEW BEST MICRO F1 " + ("!" * 8))
-        print(" Micro F1 for iterations [%i] and tag history [%i]" % (iterations, tag_hist))
+        print(" Micro F1 %f for iterations [%i] and tag history [%i]" % (new_f1, iterations, tag_hist))
