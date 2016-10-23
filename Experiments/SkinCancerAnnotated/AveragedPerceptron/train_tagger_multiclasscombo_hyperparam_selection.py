@@ -53,7 +53,7 @@ biigram_window_stemmed  = fact_extract_ngram_features_stemmed(offset, 2)
 triigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
 unigram_bow_window      = fact_extract_bow_ngram_features(offset, 1)
 
-#optimal CB feature set
+#optimal SC feature set (same as with CB)
 extractors = [
     unigram_window_stemmed,
     biigram_window_stemmed,
