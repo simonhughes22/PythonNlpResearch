@@ -23,7 +23,8 @@ db.getCollection('CB_TAGGING_VD_FEAT_SELECTION')
 {    $sort:{
         //count: 1,
         //"macro_f1":-1,
-        "micro_f1_score":-1,
+        "weighted_f1_score":-1,
+        //"micro_f1_score":-1,
         //asof: -1
         
     }

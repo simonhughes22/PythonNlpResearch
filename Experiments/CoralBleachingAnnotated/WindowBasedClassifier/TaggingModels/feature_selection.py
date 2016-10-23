@@ -205,7 +205,7 @@ best_win_size = -1
 best_micro_f1 = 0
 #for win_size in [1, 7, 3, 5, 9]:
 #for win_size in [1, 3, 5, 7, 9, 11, 13]:
-for win_size in [9, 11, 13]:
+for win_size in [15]:
     macro_f1 = evaluate_window_size(config=config, window_size=win_size, features_filename_prefix=features_filename_prefix)
     if macro_f1 > best_micro_f1:
         print(("!" * 8) + " NEW BEST AVERAGE F1 FOR WINDOW SIZE " + ("!" * 8))

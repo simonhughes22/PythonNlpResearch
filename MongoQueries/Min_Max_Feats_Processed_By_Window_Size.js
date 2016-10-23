@@ -1,4 +1,5 @@
 db.getCollection('CB_TAGGING_VD_FEAT_SELECTION').aggregate(
+//db.getCollection('SC_TAGGING_VD_FEAT_SELECTION').aggregate(
 [ 
     {
         $project: { 

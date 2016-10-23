@@ -104,7 +104,7 @@ class PerceptronTaggerMultiClassCombo(object):
     def __get_tags_(self, tags):
         return frozenset((t for t in tags if t in self.individual_tags))
 
-    def train(self, essay_feats, save_loc=None, nr_iter=5):
+    def train(self, essay_feats, save_loc=None, nr_iter=5, verbose=True):
         '''Train a model from sentences, and save it at ``save_loc``. ``nr_iter``
         controls the number of Perceptron training iterations.
         :param sentences: A list of (words, tags) tuples.
@@ -158,7 +158,8 @@ class PerceptronTaggerMultiClassCombo(object):
             random.shuffle(cp_essay_feats)
             class2metrics = ResultsProcessor.compute_metrics(class2tags, class2predictions)
             wtd_mean = weighted_mean_rpfa(class2metrics.values())
-            logging.info("Iter {0}: Wtd Mean: {1}".format(iter_, str(wtd_mean)))
+            if verbose:
+                logging.info("Iter {0}: Wtd Mean: {1}".format(iter_, str(wtd_mean)))
 
         self.model.average_weights()
         return None

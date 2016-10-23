@@ -87,7 +87,7 @@ class PerceptronTaggerBinary(object):
     def __get_yal_(self, wd, tgt_tag):
         return self.POSITIVE_CLASS if tgt_tag in wd.tags else self.NEGATIVE_CLASS
 
-    def train(self, essay_feats, save_loc=None, nr_iter=5):
+    def train(self, essay_feats, save_loc=None, nr_iter=5, verbose=True):
         '''Train a model from sentences, and save it at ``save_loc``. ``nr_iter``
         controls the number of Perceptron training iterations.
         :param sentences: A list of (words, tags) tuples.
@@ -133,7 +133,8 @@ class PerceptronTaggerBinary(object):
             random.shuffle(cp_essay_feats)
             class2metrics = ResultsProcessor.compute_metrics(class2tags, class2predictions)
             wtd_mean = weighted_mean_rpfa(class2metrics.values())
-            logging.info("Iter {0}: Wtd Mean: {1}".format(iter_, str(wtd_mean)))
+            if verbose:
+                logging.info("Iter {0}: Wtd Mean: {1}".format(iter_, str(wtd_mean)))
 
         for cls in self.classes:
             self.class2model[cls].average_weights()
