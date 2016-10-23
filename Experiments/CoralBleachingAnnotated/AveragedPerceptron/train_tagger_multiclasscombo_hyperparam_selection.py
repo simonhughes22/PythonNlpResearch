@@ -116,8 +116,8 @@ def evaluate_tagger(num_iterations, tag_history):
         tag2word_classifier, td_wd_predictions_by_code, vd_wd_predictions_by_code = {}, {}, {}
 
         tagger = PerceptronTaggerMultiClassCombo(wd_train_tags, tag_history=tag_history,
-                                                 combo_freq_threshold=TAG_FREQ_THRESHOLD, verbose=True)
-        tagger.train(essays_TD, nr_iter=num_iterations, verbose=False)
+                                                 combo_freq_threshold=TAG_FREQ_THRESHOLD)
+        tagger.train(essays_TD, nr_iter=num_iterations, verbose=True)
 
         td_wd_predictions_by_code = tagger.predict(essays_TD)
         vd_wd_predictions_by_code = tagger.predict(essays_VD)
