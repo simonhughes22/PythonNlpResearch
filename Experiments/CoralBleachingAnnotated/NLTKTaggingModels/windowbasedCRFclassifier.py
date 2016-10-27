@@ -74,7 +74,9 @@ extractors = [
     unigram_stem_features,
     bigram_stem_featues,
     trigram_stem_featues,
-    unigram_bow_window_unstemmed
+    unigram_bow_window_unstemmed,
+    extract_brown_cluster,
+    extract_dependency_relation
 ]
 
 comp_feat_extactor = fact_composite_feature_extractor(extractors)

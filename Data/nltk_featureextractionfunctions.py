@@ -20,6 +20,9 @@ def __tag__(tokens):
 # initialize spaCy parser
 # http://honnibal.github.io/spaCy/quickstart.html#install
 parser = Parser()
+@memoize
+def __parse__(tokens):
+    return parser.parse(tokens)
 
 __START__ = "<START>"
 __END__   = "<END>"
@@ -146,14 +149,17 @@ def __brown_clusters__(tokens):
     return parser.brown_cluster(tokens)
 
 def extract_brown_cluster(tokens, idx):
-    """ input      :    FeatureExtactorInput
-                            input to feature extractor
-        returns     :   dict
-                            dictionary of features
-    """
-
     clusters = __brown_clusters__(tokens)
     return ["BRN_CL:" + clusters[idx]]
+
+def extract_dependency_relation(tokens, idx):
+    relations = __parse__(tokens)
+    relation = relations[idx]
+    bin_relations = relation.binary_relations()
+    feats = []
+    for bin_rel in bin_relations:
+        feats.append("DEP_RELN[" + bin_rel.relation + "]:" + bin_rel.head + "->" + bin_rel.child)
+    return feats
 
 if __name__ == "__main__":
 
@@ -168,8 +174,9 @@ if __name__ == "__main__":
         print("")
 
 
+    test("the cat was sitting on the oven", extract_dependency_relation)
+    test("the cat was sitting on the oven", extract_brown_cluster)
     test("the cat was sitting on the oven", fact_extract_positional_POS_tags(1, positional=True))
     test("the cat was sitting on the oven", fact_extract_positional_word_features(2, positional=True, stem_words=False))
     test("the cat was sitting on the oven", fact_extract_positional_word_features(1, positional=False, stem_words=True))
     test("the cat was sitting on the oven", fact_extract_ngram_features(1, 3, positional=True, stem_words=False))
-    test("the cat was sitting on the oven", extract_brown_cluster)
