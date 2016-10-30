@@ -12,42 +12,41 @@ from joblib import Parallel, delayed
 
 from nltk.tag.crf import CRFTagger
 from wordtagginghelper import merge_dictionaries
-from nltk_datahelper import to_sentences, to_flattened_binary_tags, to_tagged_sentences_by_code
+from nltk_datahelper import to_sentences, to_flattened_binary_tags_by_code
+from nltk_datahelper import to_label_powerset_tagged_sentences
 from random import randint
 
 import Settings
 import logging, os
 
 def train_classifer_on_fold(essays_TD, essays_VD, regular_tags, fold):
-    td_sents_by_code = to_tagged_sentences_by_code(essays_TD, regular_tags)
-    vd_sents_by_code = to_tagged_sentences_by_code(essays_VD, regular_tags)
 
-    wd_td_ys_bytag = dict()
-    wd_vd_ys_bytag = dict()
-    td_wd_predictions_by_code = dict()
-    vd_wd_predictions_by_code = dict()
+    # Start Training
+    print("Fold %i Training code" % fold)
 
-    for code in sorted(regular_tags):
-        print("Fold %i Training code: %s" % (fold, code))
-        td, vd = td_sents_by_code[code], vd_sents_by_code[code]
+    # For training
+    td_sents = to_label_powerset_tagged_sentences(essays_TD, regular_tags)
+    vd_sents = to_label_powerset_tagged_sentences(essays_VD, regular_tags)
 
-        model_filename = models_folder + "/" + "%i_%s__%s" % (fold, code, str(randint(0, 9999999)))
+    model_filename = models_folder + "/" + "%i_%s__%s" % (fold, "power_set", str(randint(0, 9999999)))
 
-        # documentation: http://www.chokkan.org/software/crfsuite/manual.html
-        model = CRFTagger(feature_func=comp_feat_extactor, verbose=False)
-        model.train(td, model_filename)
+    model = CRFTagger(feature_func=comp_feat_extactor, verbose=False)
+    model.train(td_sents, model_filename)
 
-        wd_td_ys_bytag[code] = to_flattened_binary_tags(td)
-        wd_vd_ys_bytag[code] = to_flattened_binary_tags(vd)
+    td_predictions = model.tag_sents(to_sentences(td_sents))
+    vd_predictions = model.tag_sents(to_sentences(vd_sents))
 
-        td_predictions = model.tag_sents(to_sentences(td))
-        vd_predictions = model.tag_sents(to_sentences(vd))
-        # Delete model file now predictions obtained
-        # Note, we are randomizing name above, so we need to clean up here
-        os.remove(model_filename)
+    # for evaluation - binary tags
+    # YS (ACTUAL)
+    wd_td_ys_bytag = to_flattened_binary_tags_by_code(td_sents, regular_tags)
+    wd_vd_ys_bytag = to_flattened_binary_tags_by_code(vd_sents, regular_tags)
 
-        td_wd_predictions_by_code[code] = to_flattened_binary_tags(td_predictions)
-        vd_wd_predictions_by_code[code] = to_flattened_binary_tags(vd_predictions)
+    # YS (PREDICTED)
+    td_wd_predictions_by_code = to_flattened_binary_tags_by_code(td_predictions, regular_tags)
+    vd_wd_predictions_by_code = to_flattened_binary_tags_by_code(vd_predictions, regular_tags)
+
+    os.remove(model_filename)
+
     return wd_td_ys_bytag, wd_vd_ys_bytag, td_wd_predictions_by_code, vd_wd_predictions_by_code
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -130,8 +129,8 @@ for result in results:
 logger.info("Training completed")
 
 """ Persist Results to Mongo DB """
-wd_algo = "CRF"
-SUFFIX = "_CRF"
+wd_algo = "CRF_LBL_POWERSET"
+SUFFIX = "_CRF_LBL_POWERSET"
 CB_TAGGING_TD, CB_TAGGING_VD= "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
 
 parameters = dict(config)
