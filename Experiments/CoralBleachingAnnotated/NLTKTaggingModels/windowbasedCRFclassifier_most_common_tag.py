@@ -31,9 +31,6 @@ def train_classifer_on_fold(essays_TD, essays_VD, regular_tags, fold):
     td_sents = to_most_common_code_tagged_sentences(essays_TD, regular_tags, code_freq)
     vd_sents = to_most_common_code_tagged_sentences(essays_VD, regular_tags, code_freq)
 
-    # Start Training
-    print("Fold %i Training code" % (fold))
-
     model_filename = models_folder + "/" + "%i_%s__%s" % (fold, "most_freq_code", str(randint(0, 9999999)))
 
     model = CRFTagger(feature_func=comp_feat_extactor, verbose=False)
@@ -138,8 +135,8 @@ for result in results:
 logger.info("Training completed")
 
 """ Persist Results to Mongo DB """
-wd_algo = "CRF_LBL_POWERSET"
-SUFFIX = "_CRF_LBL_POWERSET"
+wd_algo = "CRF_MOST_COMMON_TAG"
+SUFFIX = "_CRF_MOST_COMMON_TAG"
 CB_TAGGING_TD, CB_TAGGING_VD= "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
 
 parameters = dict(config)
