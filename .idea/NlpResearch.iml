@@ -67,7 +67,7 @@
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingAnnotated/NLTKTaggingModels" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/SkinCancerAnnotated/NLTKTaggingModels" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
-      <excludeFolder url="file://$MODULE_DIR$/Notebooks" />
+      <excludeFolder url="file://$MODULE_DIR$/notebooks" />
     </content>
     <orderEntry type="jdk" jdkName="Python 2.7.10 (~/anaconda/envs/phd/bin/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
