@@ -186,9 +186,9 @@ Build model...
 Train...
 Epoch 0
 Traceback (most recent call last):
-  File "/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Experiments/CoralBleachingAnnotated/ConvolutionalNeuralNetwork/keras_merged_convnet_test.py", line 152, in <module>
+  File "/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Experiments/CoralBleachingWordTagger/ConvolutionalNeuralNetwork/keras_merged_convnet_test.py", line 152, in <module>
     accuracy = test(1)
-  File "/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Experiments/CoralBleachingAnnotated/ConvolutionalNeuralNetwork/keras_merged_convnet_test.py", line 143, in test
+  File "/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Experiments/CoralBleachingWordTagger/ConvolutionalNeuralNetwork/keras_merged_convnet_test.py", line 143, in test
     results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, show_accuracy=True, verbose=1)
   File "build/bdist.macosx-10.6-x86_64/egg/keras/models.py", line 204, in fit
   File "/Users/simon.hughes/Library/Enthought/Canopy_64bit/User/lib/python2.7/site-packages/Theano-0.6.0-py2.7.egg/theano/compile/function_module.py", line 497, in __call__
