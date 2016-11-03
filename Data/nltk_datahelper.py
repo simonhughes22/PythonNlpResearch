@@ -40,13 +40,14 @@ def to_tagged_sentences_by_code(essays, codes, projection = lambda x:x):
 # and returns a list tagged sentences, where a tagged sentence
 # is a list of tuples of (word, TAG) where tag is the most common
 # associated TAG (only use for training and NOT for evaluation)
-def to_most_common_code_tagged_sentences(essays, codes, code_freq):
+def to_most_common_code_tagged_sentences(essays, codes, code_freq, projection = lambda x:x):
     codes = set(codes)
     tagged = []
     for essay in essays:
         for i, sentence in enumerate(essay.sentences):
             sent = []
             for wd, tags in sentence:
+                wd = projection(wd)
                 # filter to target codes only
                 tags = codes.intersection(tags)
                 if len(tags) > 0:
@@ -61,13 +62,14 @@ def to_most_common_code_tagged_sentences(essays, codes, code_freq):
 # and returns a list tagged sentences, where a tagged sentence
 # is a list of tuples of (word, POWERSET) where POWERSET is a
 # conjunction of unique codes (where there are multiple tags for a word)
-def to_label_powerset_tagged_sentences(essays, codes):
+def to_label_powerset_tagged_sentences(essays, codes, projection = lambda x:x):
     codes = set(codes)
     tagged = []
     for essay in essays:
         for i, sentence in enumerate(essay.sentences):
             sent = []
             for wd, tags in sentence:
+                wd = projection(wd)
                 # filter to target codes only
                 isect_tags = ",".join(sorted(codes.intersection(tags)))
                 if len(isect_tags) > 0:
