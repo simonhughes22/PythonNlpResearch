@@ -34,7 +34,11 @@ def train_classifer_on_fold(essays_TD, essays_VD, regular_tags, fold):
         model_filename = models_folder + "/" + "%i_%s__%s" % (fold, code, str(randint(0, 9999999)))
 
         # documentation: http://www.chokkan.org/software/crfsuite/manual.html
-        model = CRFTagger(feature_func=comp_feat_extactor, verbose=False)
+        training_opt = {"feature.possible_states": False,
+                        "feature.possible_transitions": False,
+                        "c2": 2.0
+                        }
+        model = CRFTagger(feature_func=comp_feat_extactor, verbose=False, training_opt=training_opt)
         model.train(td, model_filename)
 
         wd_td_ys_bytag[code] = to_flattened_binary_tags(td)
