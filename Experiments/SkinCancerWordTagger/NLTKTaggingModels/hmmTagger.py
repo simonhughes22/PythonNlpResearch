@@ -27,7 +27,7 @@ processor = ResultsProcessor()
 CV_FOLDS = 5
 
 MIN_TAG_FREQ = 5
-STEM = False
+STEM = True
 # end not hashed
 
 # construct unique key using settings for pickling

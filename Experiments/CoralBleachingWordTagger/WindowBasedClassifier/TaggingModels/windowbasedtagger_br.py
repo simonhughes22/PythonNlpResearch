@@ -117,6 +117,7 @@ def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags):
     vd_feats, vd_tags = flatten_to_wordlevel_feat_tags(essays_VD)
     feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ, sparse=SPARSE_WD_FEATS)
     td_X, vd_X = feature_transformer.fit_transform(td_feats), feature_transformer.transform(vd_feats)
+
     wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
     wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
     """ TRAIN Tagger """

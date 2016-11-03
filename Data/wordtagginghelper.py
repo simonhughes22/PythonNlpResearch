@@ -84,6 +84,37 @@ def get_wordlevel_ys_by_code(lst_tag_sets, expected_tags):
             ys_bycode[tag] = np.zeros(shape=(num_rows,), dtype=np.int)
     return ys_bycode
 
+def get_wordlevel_powerset_ys(lst_tag_sets, expected_tags):
+    """
+    Convert a list of tagsets to a dictionary of ys values per tag label
+
+    Parameters
+    ----------
+    lst_tag_sets : a list of sets of tags
+        List of labels for each word
+
+    expected_tags : array like
+        tags we care about
+
+    Returns
+    -----------
+    list of labels
+    """
+
+    expected_tags = set(expected_tags)
+
+    ys = []
+    for tag_set in lst_tag_sets:
+        isect = expected_tags.intersection(tag_set)
+        if isect:
+            lbl_powerset = ",".join(sorted(isect))
+        else:
+            lbl_powerset = "O"
+
+        ys.append(lbl_powerset)
+
+    return ys
+
 def get_wordlevel_ys_by_labelpowerset(lst_tag_sets, expected_tags, min_powerset_freq):
     """
     Convert a list of tagsets to a dictionary of ys values per tag label
