@@ -107,12 +107,10 @@ def get_wordlevel_powerset_ys(lst_tag_sets, expected_tags):
     for tag_set in lst_tag_sets:
         isect = expected_tags.intersection(tag_set)
         if isect:
-            lbl_powerset = ",".join(sorted(isect))
+            lbl = ",".join(sorted(isect))
         else:
-            lbl_powerset = "O"
-
-        ys.append(lbl_powerset)
-
+            lbl = "O"
+        ys.append(lbl)
     return ys
 
 def get_wordlevel_ys_by_labelpowerset(lst_tag_sets, expected_tags, min_powerset_freq):
@@ -187,6 +185,17 @@ def get_wordlevel_predictions_by_code_from_powerset_predictions(ys_bypowerset, e
         # where the same code is predicted by more than one classifier, set to 1
         predictions[predictions > 1] = 1
     return ys_by_code
+
+def get_by_code_from_powerset_predictions(predictions, expected_tags):
+    pred_by_code = defaultdict(list)
+    for pred in predictions:
+        pred_labels = set(pred.split(","))
+        for lbl in expected_tags:
+            if lbl in pred_labels:
+                pred_by_code[lbl].append(1)
+            else:
+                pred_by_code[lbl].append(0)
+    return pred_by_code
 
 class always_false(object):
     def fit(self, x, y):
