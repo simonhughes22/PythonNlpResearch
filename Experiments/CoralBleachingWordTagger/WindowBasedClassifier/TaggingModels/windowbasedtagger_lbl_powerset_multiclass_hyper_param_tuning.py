@@ -144,7 +144,7 @@ def evaluate_tagger(dual, C, penalty, fit_intercept, multi_class):
 
     """ This doesn't run in parallel ! """
     for fold, (essays_TD, essays_VD) in enumerate(folds):
-        result = train_tagger(fold, essays_VD, essays_VD, wd_test_tags, wd_train_tags,
+        result = train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags,
                               dual=dual, C=C, penalty=penalty, fit_intercept=fit_intercept, multi_class=multi_class)
 
         td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag = result
