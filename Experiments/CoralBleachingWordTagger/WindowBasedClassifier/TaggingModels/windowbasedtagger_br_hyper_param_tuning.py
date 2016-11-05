@@ -9,7 +9,7 @@ from CrossValidation import cross_validation
 from wordtagginghelper import *
 from IterableFP import flatten
 from predictions_to_file import predictions_to_file
-from results_procesor import ResultsProcessor
+from results_procesor import ResultsProcessor,__MICRO_F1__
 # Classifiers
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -105,17 +105,10 @@ fn_create_wd_cls   = lambda: LogisticRegression() # C=1, dual = False seems opti
 wd_algo   = str(fn_create_wd_cls())
 print "Classifier:", wd_algo
 
-# Gather metrics per fold
-cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
-cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
+def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags, dual, C, penalty, fit_intercept):
 
-folds = cross_validation(essay_feats, CV_FOLDS)
-
-def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags):
     # TD and VD are lists of Essay objects. The sentences are lists
     # of featureextractortransformer.Word objects
-    print "\nFold %s" % fold
-    print "Training Tagging Model"
 
     """ Data Partitioning and Training """
     td_feats, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
@@ -126,52 +119,74 @@ def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags):
     wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
     wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
     """ TRAIN Tagger """
-    tag2word_classifier = train_classifier_per_code(td_X, wd_td_ys_bytag, fn_create_wd_cls,
-                                                    wd_train_tags, verbose=True)
+
+    create_classifier = lambda : LogisticRegression(dual=dual, C=C, penalty=penalty, fit_intercept=fit_intercept)
+    tag2word_classifier = train_classifier_per_code(
+        td_X, wd_td_ys_bytag, create_classifier, wd_train_tags, verbose=False)
     """ TEST Tagger """
     td_wd_predictions_by_code = test_classifier_per_code(td_X, tag2word_classifier, wd_test_tags)
     vd_wd_predictions_by_code = test_classifier_per_code(vd_X, tag2word_classifier, wd_test_tags)
     return td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag
 
-""" This doesn't run in parallel ! Sequential operation takes exactly same duration """
-# results = Parallel(n_jobs=CV_FOLDS, verbose=5, backend='multiprocessing')(
-#         delayed(train_tagger)(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags)
-#             for fold, (essays_TD, essays_VD) in enumerate(folds))
-#
-# for result in results:
-#     td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag = result
-#     merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
-#     merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
-#     merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
-#     merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
+folds = cross_validation(essay_feats, CV_FOLDS)
 
+def evaluate_tagger(dual, C, penalty, fit_intercept):
 
-#logger.info("Training started")
-for fold, (essays_TD, essays_VD) in enumerate(folds):
-    result = train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags)
-    td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag = result
-    merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
-    merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
-    merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
-    merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
+    # Gather metrics per fold
+    cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
+    cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
 
-# print results for each code
-logger.info("Training completed")
+    """ This doesn't run in parallel ! Sequential operation takes exactly same duration """
+    # results = Parallel(n_jobs=CV_FOLDS, verbose=0, backend='multiprocessing')(
+    #         delayed(train_tagger)(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags, dual, C, penalty, fit_intercept)
+    #             for fold, (essays_TD, essays_VD) in enumerate(folds))
+    #
+    # for result in results:
+    #     td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag = result
+    #     merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
+    #     merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
+    #     merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
+    #     merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
 
-""" Persist Results to Mongo DB """
+    for fold, (essays_TD, essays_VD) in enumerate(folds):
+        result = train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags, dual, C, penalty, fit_intercept)
+        td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag = result
+        merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
+        merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
+        merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
+        merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
 
-#SUFFIX = "_CAUSE_EFFECT_LBLS"
-SUFFIX = "_WINDOW_CLASSIFIER_BR"
-CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
-parameters = dict(config)
-parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
-parameters["min_feat_freq"] = MIN_FEAT_FREQ
+    # print results for each code
+    logger.info("Training completed")
 
-wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
-wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
+    """ Persist Results to Mongo DB """
+    SUFFIX = "_WINDOW_CLASSIFIER_BR_HYPER_PARAM_TUNING"
+    CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
+    parameters = dict(config)
+    parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
+    parameters["min_feat_freq"] = MIN_FEAT_FREQ
 
-# This outputs 0's for MEAN CONCEPT CODES as we aren't including those in the outputs
+    wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
+    wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
 
-print processor.results_to_string(wd_td_objectid,   CB_TAGGING_TD,  wd_vd_objectid,     CB_TAGGING_VD,  "TAGGING")
-logger.info("Results Processed")
+    # This outputs 0's for MEAN CONCEPT CODES as we aren't including those in the outputs
+    avg_f1 = float(processor.get_metric(CB_TAGGING_VD, wd_vd_objectid, __MICRO_F1__)["f1_score"])
+    return avg_f1
+
+from traceback import format_exc
+
+for dual in [True, False]:
+    for fit_intercept in [True, False]:
+        for penalty in ["l1", "l2"]:
+            # dual only support l2
+            if dual and penalty != "l2":
+                continue
+            for C in [0.1, 0.5, 1.0, 10.0, 100.0]:
+                try:
+                    avg_f1 = evaluate_tagger(dual=dual, C=C, penalty=penalty, fit_intercept=fit_intercept)
+                    logger.info("AVG: F1: %s\n\tdual: %s penalty: %s fit_intercept: %s C:%s"
+                                % (str(round(avg_f1, 6)).rjust(8), str(dual), str(penalty), str(fit_intercept), str(round(C, 3).rjust(5))))
+                except:
+                    print(format_exc())
+
 

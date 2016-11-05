@@ -1,4 +1,4 @@
-db.getCollection('CB_TAGGING_VD_FEAT_SELECTION')
+db.getCollection('CB_TAGGING_VD_WINDOW_CLASSIFIER_LBL_POWERSET_MULTICLASS')
 .aggregate(
 [{
     $project: { 
@@ -8,7 +8,7 @@ db.getCollection('CB_TAGGING_VD_FEAT_SELECTION')
             window_size: "$parameters.window_size",
             feats: "$parameters.extractors",
             count: { $size:"$parameters.extractors" },
-            //asof: 0,
+            asof: 1,
             "_id":0
     }
 },

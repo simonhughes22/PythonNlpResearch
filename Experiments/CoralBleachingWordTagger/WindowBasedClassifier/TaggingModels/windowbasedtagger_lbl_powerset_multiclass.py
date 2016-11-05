@@ -52,6 +52,7 @@ out_metrics_file     =              settings.data_directory + "CoralBleaching/Re
 config = get_config(folder)
 
 """ FEATURE EXTRACTION """
+config["window_size"] = 11
 offset = (config["window_size"] - 1) / 2
 
 unigram_bow_window = fact_extract_bow_ngram_features(offset, 1)
@@ -66,7 +67,7 @@ extractors = [unigram_bow_window,
               trigram_window_stemmed,
               extract_brown_cluster,
               extract_dependency_relation
-             ]
+]
 
 feat_config = dict(config.items() + [("extractors", extractors)])
 
