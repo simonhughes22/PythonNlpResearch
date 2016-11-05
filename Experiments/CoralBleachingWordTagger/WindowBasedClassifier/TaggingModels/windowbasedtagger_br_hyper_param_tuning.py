@@ -121,6 +121,8 @@ def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags, dual, 
     """ TRAIN Tagger """
 
     create_classifier = lambda : LogisticRegression(dual=dual, C=C, penalty=penalty, fit_intercept=fit_intercept)
+    if fold == 0:
+        print(create_classifier())
     tag2word_classifier = train_classifier_per_code(
         td_X, wd_td_ys_bytag, create_classifier, wd_train_tags, verbose=False)
     """ TEST Tagger """
@@ -132,6 +134,7 @@ folds = cross_validation(essay_feats, CV_FOLDS)
 
 def evaluate_tagger(dual, C, penalty, fit_intercept):
 
+    hyper_opt_params = locals()
     # Gather metrics per fold
     cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
     cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
@@ -157,7 +160,6 @@ def evaluate_tagger(dual, C, penalty, fit_intercept):
         merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
 
     # print results for each code
-    logger.info("Training completed")
 
     """ Persist Results to Mongo DB """
     SUFFIX = "_WINDOW_CLASSIFIER_BR_HYPER_PARAM_TUNING"
@@ -165,6 +167,7 @@ def evaluate_tagger(dual, C, penalty, fit_intercept):
     parameters = dict(config)
     parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
     parameters["min_feat_freq"] = MIN_FEAT_FREQ
+    parameters.update(hyper_opt_params)
 
     wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
     wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
@@ -185,7 +188,7 @@ for dual in [True, False]:
                 try:
                     avg_f1 = evaluate_tagger(dual=dual, C=C, penalty=penalty, fit_intercept=fit_intercept)
                     logger.info("AVG: F1: %s\n\tdual: %s penalty: %s fit_intercept: %s C:%s"
-                                % (str(round(avg_f1, 6)).rjust(8), str(dual), str(penalty), str(fit_intercept), str(round(C, 3).rjust(5))))
+                                % (str(round(avg_f1, 6)).rjust(8), str(dual), str(penalty), str(fit_intercept), str(round(C, 3)).rjust(5)))
                 except:
                     print(format_exc())
 
