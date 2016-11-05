@@ -183,8 +183,12 @@ for dual in [True, False]:
                 # fof multinomial, we force solver from liblinear to lbfgs, as required by sklearn implementation
                 for multi_class in ['ovr', 'multinomial']:
                     try:
-                        avg_f1 = evaluate_tagger(dual=dual, C=C, penalty=penalty, fit_intercept=fit_intercept)
+                        avg_f1 = evaluate_tagger(dual=dual, C=C, penalty=penalty,
+                                                 fit_intercept=fit_intercept, multi_class=multi_class)
+
                         logger.info("AVG: F1: %s\n\tmulti_class: %s dual: %s penalty: %s fit_intercept: %s C:%s"
-                                    % (str(round(avg_f1, 6)).rjust(8), multi_class.ljust(12), str(dual), str(penalty), str(fit_intercept), str(round(C, 3)).rjust(5)))
+                                    % (str(round(avg_f1, 6)).rjust(8),
+                                       multi_class.ljust(12), str(dual), str(penalty),
+                                       str(fit_intercept), str(round(C, 3)).rjust(5)))
                     except:
                         print(format_exc())

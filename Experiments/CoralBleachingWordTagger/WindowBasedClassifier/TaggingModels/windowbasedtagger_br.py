@@ -97,7 +97,8 @@ wd_test_tags  = regular_tags
 
 """ CLASSIFIERS """
 """ Log Reg + Log Reg is best!!! """
-fn_create_wd_cls   = lambda: LogisticRegression() # C=1, dual = False seems optimal
+fn_create_wd_cls   = lambda: LogisticRegression(C=100.0, penalty="l1", dual=False, fit_intercept=True)
+# C=1, dual = False seems optimal
 #fn_create_wd_cls   = lambda : LinearSVC(C=1.0)
 #fn_create_wd_cls    = lambda : RandomForestClassifier(n_jobs=8, max_depth=100)
 #fn_create_wd_cls   = lambda : GradientBoostingClassifier()
