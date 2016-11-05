@@ -105,7 +105,6 @@ fn_create_wd_cls   = lambda: LogisticRegression()
 #fn_create_wd_cls   = lambda : GradientBoostingClassifier()
 
 wd_algo   = str(fn_create_wd_cls())
-print "Classifier:", wd_algo
 
 # Gather metrics per fold
 cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
@@ -136,19 +135,6 @@ def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags):
     return td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag
 
 """ This doesn't run in parallel ! Sequential operation takes exactly same duration """
-# results = Parallel(n_jobs=CV_FOLDS, verbose=5, backend='multiprocessing')(
-#         delayed(train_tagger)(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags)
-#             for fold, (essays_TD, essays_VD) in enumerate(folds))
-#
-# for result in results:
-#     td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag = result
-#     merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
-#     merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
-#     merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
-#     merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
-
-
-#logger.info("Training started")
 for fold, (essays_TD, essays_VD) in enumerate(folds):
     result = train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags)
     td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag = result
