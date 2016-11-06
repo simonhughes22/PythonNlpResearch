@@ -156,17 +156,17 @@ def evaluate_tagger(dual, C, penalty, fit_intercept, multi_class):
     """ Persist Results to Mongo DB """
 
     SUFFIX = "_WINDOW_CLASSIFIER_LBL_POWERSET_MULTICLASS_HYPER_PARAM_TUNING"
-    CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
+    SC_TAGGING_TD, SC_TAGGING_VD = "SC_TAGGING_TD" + SUFFIX, "SC_TAGGING_VD" + SUFFIX
     parameters = dict(config)
     parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
     parameters["min_feat_freq"] = MIN_FEAT_FREQ
     parameters.update(hyper_opt_params)
 
-    wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
-    wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
+    wd_td_objectid = processor.persist_results(SC_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
+    wd_vd_objectid = processor.persist_results(SC_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
 
     # This outputs 0's for MEAN CONCEPT CODES as we aren't including those in the outputs
-    avg_f1 = float(processor.get_metric(CB_TAGGING_VD, wd_vd_objectid, __MICRO_F1__)["f1_score"])
+    avg_f1 = float(processor.get_metric(SC_TAGGING_VD, wd_vd_objectid, __MICRO_F1__)["f1_score"])
     return avg_f1
 
 
