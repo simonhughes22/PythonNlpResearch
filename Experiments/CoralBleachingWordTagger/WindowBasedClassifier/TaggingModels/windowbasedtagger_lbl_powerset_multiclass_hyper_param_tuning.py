@@ -106,6 +106,7 @@ def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags,
     """ Data Partitioning and Training """
     td_feats, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
     vd_feats, vd_tags = flatten_to_wordlevel_feat_tags(essays_VD)
+
     feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ, sparse=SPARSE_WD_FEATS)
     td_X, vd_X = feature_transformer.fit_transform(td_feats), feature_transformer.transform(vd_feats)
 

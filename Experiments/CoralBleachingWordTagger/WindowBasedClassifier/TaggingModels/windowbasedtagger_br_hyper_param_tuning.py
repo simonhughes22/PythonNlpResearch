@@ -178,9 +178,9 @@ def evaluate_tagger(dual, C, penalty, fit_intercept):
 
 from traceback import format_exc
 
-#for dual in [True, False]:
+for dual in [True, False]:
 #already ran full run for dual=True
-for dual in [False]:
+#for dual in [False]:
     for fit_intercept in [True, False]:
         for penalty in ["l1", "l2"]:
             # dual only support l2
