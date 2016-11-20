@@ -78,7 +78,6 @@ folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
 processed_essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
 features_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/feats_pickled_"
 models_folder = settings.data_directory + "CoralBleaching/models/CRF"
-out_metrics_file = settings.data_directory + "CoralBleaching/Results/metrics.txt"
 
 config = get_config(folder)
 print(config)
