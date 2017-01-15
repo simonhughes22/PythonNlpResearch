@@ -11,17 +11,9 @@ from IterableFP import flatten
 from predictions_to_file import predictions_to_file
 from results_procesor import ResultsProcessor,__MICRO_F1__
 # Classifiers
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
-from sklearn.svm import SVC
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 
 from window_based_tagger_config import get_config
-from tag_frequency import get_tag_freq, regular_tag
-from joblib import Parallel, delayed
 # END Classifiers
 
 import Settings

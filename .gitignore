@@ -8,7 +8,7 @@ workspace.xml
 #################
 ## Eclipse
 #################
-
+*/.ipynb_checkpoints
 *.pydevproject
 .project
 .metadata 

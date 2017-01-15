@@ -12,7 +12,7 @@ db.getCollection('CB_TAGGING_VD_FEAT_SELECTION').aggregate(
 },
 {
     $match:{
-        count: {  $eq:1 },
+        count: {  $eq:1},
         window_size: { $eq:13 },
         micro_f1_score: { $exists : true }
     }
