@@ -18,6 +18,8 @@ from sklearn.svm import LinearSVC
 
 import Settings
 import logging
+from collections import defaultdict
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
