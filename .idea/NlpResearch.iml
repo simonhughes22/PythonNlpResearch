@@ -32,7 +32,7 @@
       <sourceFolder url="file://$MODULE_DIR$/VectorSpace/WordVectors/Word2Vec" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Classifiers/RegEx" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/DeepLearning/MyCode" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/DeepLearning/WordVectors" isTestSource="false" />
+      <sourceFolder url="" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Classifiers/Trees" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Data/CoralBleaching" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Data/GlobalWarmingAnnotated" isTestSource="false" />
