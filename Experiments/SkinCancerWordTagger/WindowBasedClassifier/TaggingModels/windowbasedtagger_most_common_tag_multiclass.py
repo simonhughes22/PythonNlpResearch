@@ -1,4 +1,6 @@
 # coding=utf-8
+from collections import Counter
+
 from Decorators import memoize_to_disk
 from load_data import load_process_essays, extract_features
 
@@ -9,17 +11,8 @@ from wordtagginghelper import *
 from IterableFP import flatten
 from results_procesor import ResultsProcessor
 # Classifiers
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
-from sklearn.svm import SVC
-from sklearn.lda import LDA
-
 from window_based_tagger_config import get_config
-from tag_frequency import get_tag_freq, regular_tag
-from joblib import Parallel, delayed
 # END Classifiers
 
 import Settings
@@ -41,13 +34,14 @@ LOOK_BACK           = 0     # how many sentences to look back when predicting ta
 # end not hashed
 
 # construct unique key using settings for pickling
-
 settings = Settings.Settings()
-folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
-processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
-features_filename_prefix =          settings.data_directory + "CoralBleaching/BrattData/Pickled/feats_pickled_"
 
-out_metrics_file     =              settings.data_directory + "CoralBleaching/Results/metrics.txt"
+folder  =                           settings.data_directory + "SkinCancer/EBA1415_Merged/"
+processed_essay_filename_prefix =   settings.data_directory + "SkinCancer/Pickled/essays_proc_pickled_"
+features_filename_prefix =          settings.data_directory + "SkinCancer/Pickled/feats_pickled_"
+
+out_metrics_file     =              settings.data_directory + "SkinCancer/Results/metrics.txt"
+out_predictions_file =              settings.data_directory + "SkinCancer/Results/predictions.txt"
 
 config = get_config(folder)
 
@@ -92,9 +86,6 @@ wd_test_tags  = regular_tags
 """ CLASSIFIERS """
 """ Log Reg + Log Reg is best!!! """
 fn_create_wd_cls   = lambda: LogisticRegression() # C=1, dual = False seems optimal
-#fn_create_wd_cls   = lambda : LinearSVC(C=1.0)
-#fn_create_wd_cls    = lambda : RandomForestClassifier(n_jobs=8, max_depth=100)
-#fn_create_wd_cls   = lambda : GradientBoostingClassifier()
 
 wd_algo   = str(fn_create_wd_cls())
 print "Classifier:", wd_algo
@@ -106,10 +97,16 @@ cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict
 folds = cross_validation(essay_feats, CV_FOLDS)
 
 def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags):
+
+    wd_train_tags = set(wd_train_tags)
+
     # TD and VD are lists of Essay objects. The sentences are lists
     # of featureextractortransformer.Word objects
     print "\nFold %s" % fold
     print "Training Tagging Model"
+
+    _, lst_every_tag = flatten_to_wordlevel_feat_tags(essay_feats)
+    tag_freq = Counter(flatten(lst_every_tag))
 
     """ Data Partitioning and Training """
     td_feats, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
@@ -117,11 +114,14 @@ def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags):
     feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ, sparse=SPARSE_WD_FEATS)
     td_X, vd_X = feature_transformer.fit_transform(td_feats), feature_transformer.transform(vd_feats)
 
-    wd_td_ys = get_wordlevel_powerset_ys(td_tags, wd_train_tags)
-    wd_vd_ys = get_wordlevel_powerset_ys(vd_tags, wd_train_tags)
+    #TODO: compute most common tags per word for training only (but not for evaluation)
+    wd_td_ys = get_wordlevel_mostfrequent_ys(td_tags, wd_train_tags, tag_freq)
 
-    wd_td_ys_by_code = get_by_code_from_powerset_predictions(wd_td_ys, wd_test_tags)
-    wd_vd_ys_by_code = get_by_code_from_powerset_predictions(wd_vd_ys, wd_test_tags)
+    # Get Actual Ys by code (dict of label to predictions
+    wd_td_ys_by_code = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
+    wd_vd_ys_by_code = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
+
+    #TODO: get most common tags for each word, predict from that using multi class method
 
     """ TRAIN Tagger """
     model = fn_create_wd_cls()
@@ -136,6 +136,7 @@ def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags):
 
     return td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_by_code, wd_vd_ys_by_code
 
+""" This doesn't run in parallel ! """
 results = [train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags)
             for fold, (essays_TD, essays_VD) in enumerate(folds)]
 
@@ -152,17 +153,17 @@ logger.info("Training completed")
 
 """ Persist Results to Mongo DB """
 
-SUFFIX = "_WINDOW_CLASSIFIER_LBL_POWERSET_MULTICLASS"
-CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
+SUFFIX = "_WINDOW_CLASSIFIER_MOST_COMMON_TAG_MULTICLASS"
+SC_TAGGING_TD, SC_TAGGING_VD = "SC_TAGGING_TD" + SUFFIX, "SC_TAGGING_VD" + SUFFIX
 parameters = dict(config)
 parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
 parameters["min_feat_freq"] = MIN_FEAT_FREQ
 
-wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
-wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
+wd_td_objectid = processor.persist_results(SC_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
+wd_vd_objectid = processor.persist_results(SC_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
 
 # This outputs 0's for MEAN CONCEPT CODES as we aren't including those in the outputs
 
-print processor.results_to_string(wd_td_objectid,   CB_TAGGING_TD,  wd_vd_objectid,     CB_TAGGING_VD,  "TAGGING")
+print processor.results_to_string(wd_td_objectid, SC_TAGGING_TD, wd_vd_objectid, SC_TAGGING_VD, "TAGGING")
 logger.info("Results Processed")
 

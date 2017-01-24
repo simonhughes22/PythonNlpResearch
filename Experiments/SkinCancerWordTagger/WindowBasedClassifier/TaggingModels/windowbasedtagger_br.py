@@ -21,6 +21,7 @@ from sklearn.lda import LDA
 
 from window_based_tagger_config import get_config
 from tag_frequency import get_tag_freq, regular_tag
+from joblib import Parallel, delayed
 # END Classifiers
 
 import Settings
@@ -59,18 +60,23 @@ config = get_config(folder)
 #config["lower_case"] = True
 
 """ FEATURE EXTRACTION """
+config["window_size"] = 11
 offset = (config["window_size"] - 1) / 2
+
+unigram_bow_window = fact_extract_bow_ngram_features(offset, 1)
 
 unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
 biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
+trigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
 
-#pos_tag_window = fact_extract_positional_POS_features(offset)
-#pos_tag_plus_wd_window = fact_extract_positional_POS_features_plus_word(offset)
-#head_wd_window = fact_extract_positional_head_word_features(offset)
-#pos_dep_vecs = fact_extract_positional_dependency_vectors(offset)
-#first3_window  = fact_extract_first_3_chars(offset)
+extractors = [unigram_bow_window,
+              unigram_window_stemmed,
+              biigram_window_stemmed,
+              trigram_window_stemmed,
+              extract_brown_cluster,
+              extract_dependency_relation
+]
 
-extractors = [unigram_window_stemmed, biigram_window_stemmed]
 feat_config = dict(config.items() + [("extractors", extractors)])
 
 """ LOAD DATA """
@@ -93,42 +99,43 @@ wd_test_tags  = regular_tags
 
 """ CLASSIFIERS """
 """ Log Reg + Log Reg is best!!! """
-fn_create_wd_cls   = lambda: LogisticRegression() # C=1, dual = False seems optimal
-#fn_create_wd_cls   = lambda : LinearSVC(C=1.0)
-#fn_create_wd_cls    = lambda : RandomForestClassifier(n_jobs=8, max_depth=100)
-#fn_create_wd_cls   = lambda : GradientBoostingClassifier()
+fn_create_wd_cls   = lambda: LogisticRegression()
+# C=1, dual = False seems optimal
 
 wd_algo   = str(fn_create_wd_cls())
-print "Classifier:", wd_algo
 
 # Gather metrics per fold
 cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
 cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
 
 folds = cross_validation(essay_feats, CV_FOLDS)
-#TODO Parallelize
-for i,(essays_TD, essays_VD) in enumerate(folds):
 
+def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags):
     # TD and VD are lists of Essay objects. The sentences are lists
     # of featureextractortransformer.Word objects
-    print "\nFold %s" % i
+    print "\nFold %s" % fold
     print "Training Tagging Model"
+
     """ Data Partitioning and Training """
     td_feats, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
     vd_feats, vd_tags = flatten_to_wordlevel_feat_tags(essays_VD)
-
     feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ, sparse=SPARSE_WD_FEATS)
     td_X, vd_X = feature_transformer.fit_transform(td_feats), feature_transformer.transform(vd_feats)
+
     wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
     wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
-
     """ TRAIN Tagger """
-    tag2word_classifier = train_classifier_per_code(td_X, wd_td_ys_bytag, fn_create_wd_cls, wd_train_tags)
-
+    tag2word_classifier = train_classifier_per_code(td_X, wd_td_ys_bytag, fn_create_wd_cls,
+                                                    wd_train_tags, verbose=True)
     """ TEST Tagger """
     td_wd_predictions_by_code = test_classifier_per_code(td_X, tag2word_classifier, wd_test_tags)
     vd_wd_predictions_by_code = test_classifier_per_code(vd_X, tag2word_classifier, wd_test_tags)
+    return td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag
 
+""" This doesn't run in parallel ! Sequential operation takes exactly same duration """
+for fold, (essays_TD, essays_VD) in enumerate(folds):
+    result = train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags)
+    td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag = result
     merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
     merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
     merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
@@ -139,7 +146,7 @@ logger.info("Training completed")
 
 """ Persist Results to Mongo DB """
 
-SUFFIX = "_CAUSE_EFFECT_LBLS"
+SUFFIX = "_WINDOW_CLASSIFIER_BR"
 SC_TAGGING_TD, SC_TAGGING_VD = "SC_TAGGING_TD" + SUFFIX, "SC_TAGGING_VD" + SUFFIX
 parameters = dict(config)
 parameters["extractors"] = map(lambda fn: fn.func_name, extractors)

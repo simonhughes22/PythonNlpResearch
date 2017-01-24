@@ -1,10 +1,13 @@
 # coding=utf-8
+from collections import Counter
+
 from Decorators import memoize_to_disk
 from load_data import load_process_essays, extract_features
 
 from featurevectorizer import FeatureVectorizer
 from featureextractionfunctions import *
 from CrossValidation import cross_validation
+from nltk_datahelper import tally_code_frequencies
 from wordtagginghelper import *
 from IterableFP import flatten
 from results_procesor import ResultsProcessor
@@ -106,10 +109,16 @@ cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict
 folds = cross_validation(essay_feats, CV_FOLDS)
 
 def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags):
+
+    wd_train_tags = set(wd_train_tags)
+
     # TD and VD are lists of Essay objects. The sentences are lists
     # of featureextractortransformer.Word objects
     print "\nFold %s" % fold
     print "Training Tagging Model"
+
+    _, lst_every_tag = flatten_to_wordlevel_feat_tags(essay_feats)
+    tag_freq = Counter(flatten(lst_every_tag))
 
     """ Data Partitioning and Training """
     td_feats, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
@@ -117,11 +126,14 @@ def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags):
     feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ, sparse=SPARSE_WD_FEATS)
     td_X, vd_X = feature_transformer.fit_transform(td_feats), feature_transformer.transform(vd_feats)
 
-    wd_td_ys = get_wordlevel_powerset_ys(td_tags, wd_train_tags)
-    wd_vd_ys = get_wordlevel_powerset_ys(vd_tags, wd_train_tags)
+    #TODO: compute most common tags per word for training only (but not for evaluation)
+    wd_td_ys = get_wordlevel_mostfrequent_ys(td_tags, wd_train_tags, tag_freq)
 
-    wd_td_ys_by_code = get_by_code_from_powerset_predictions(wd_td_ys, wd_test_tags)
-    wd_vd_ys_by_code = get_by_code_from_powerset_predictions(wd_vd_ys, wd_test_tags)
+    # Get Actual Ys by code (dict of label to predictions
+    wd_td_ys_by_code = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
+    wd_vd_ys_by_code = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
+
+    #TODO: get most common tags for each word, predict from that using multi class method
 
     """ TRAIN Tagger """
     model = fn_create_wd_cls()
@@ -136,6 +148,7 @@ def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags):
 
     return td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_by_code, wd_vd_ys_by_code
 
+""" This doesn't run in parallel ! """
 results = [train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags)
             for fold, (essays_TD, essays_VD) in enumerate(folds)]
 
@@ -152,7 +165,7 @@ logger.info("Training completed")
 
 """ Persist Results to Mongo DB """
 
-SUFFIX = "_WINDOW_CLASSIFIER_LBL_POWERSET_MULTICLASS"
+SUFFIX = "_WINDOW_CLASSIFIER_MOST_COMMON_TAG_MULTICLASS"
 CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
 parameters = dict(config)
 parameters["extractors"] = map(lambda fn: fn.func_name, extractors)

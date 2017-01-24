@@ -66,6 +66,10 @@ def get_wordlevel_ys_by_code(lst_tag_sets, expected_tags):
     lst_tag_sets : a list of sets of tags
         List of labels for each word
 
+    Returns
+    ----------
+    A dictionary of codes mapping to binary labels for that code
+
     """
     unique_tags = set(flatten(lst_tag_sets))
     tmp_ys_bycode = defaultdict(list)
@@ -108,6 +112,39 @@ def get_wordlevel_powerset_ys(lst_tag_sets, expected_tags):
         isect = expected_tags.intersection(tag_set)
         if isect:
             lbl = ",".join(sorted(isect))
+        else:
+            lbl = "O"
+        ys.append(lbl)
+    return ys
+
+def get_wordlevel_mostfrequent_ys(lst_tag_sets, expected_tags, tag_freq):
+    """
+    Convert a list of tagsets to a dictionary of ys values per tag label
+
+    Parameters
+    ----------
+    lst_tag_sets : a list of sets of tags
+        List of labels for each word
+
+    expected_tags : array like
+        tags we care about
+
+    tag_freq : dict[str] -> int
+        frequency of tags
+
+    Returns
+    -----------
+    list of labels
+    """
+
+    expected_tags = set(expected_tags)
+
+    ys = []
+    for tag_set in lst_tag_sets:
+        isect = expected_tags.intersection(tag_set)
+        if len(isect) > 0:
+            most_common = max(isect, key=lambda tag: tag_freq[tag])
+            lbl = most_common
         else:
             lbl = "O"
         ys.append(lbl)

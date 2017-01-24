@@ -1,29 +1,19 @@
 # coding=utf-8
-from Decorators import memoize_to_disk
-from load_data import load_process_essays, extract_features
+import logging
 
-from featurevectorizer import FeatureVectorizer
-from featureextractionfunctions import *
-from CrossValidation import cross_validation
-from wordtagginghelper import *
-from IterableFP import flatten
-from results_procesor import ResultsProcessor
-# Classifiers
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
-from sklearn.svm import SVC
-from sklearn.lda import LDA
-
-from window_based_tagger_config import get_config
-from tag_frequency import get_tag_freq, regular_tag
-from joblib import Parallel, delayed
-# END Classifiers
 
 import Settings
-import logging
+from CrossValidation import cross_validation
+from Decorators import memoize_to_disk
+from IterableFP import flatten
+from featureextractionfunctions import *
+from featurevectorizer import FeatureVectorizer
+from load_data import load_process_essays, extract_features
+from results_procesor import ResultsProcessor
+from window_based_tagger_config import get_config
+from wordtagginghelper import *
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
@@ -43,11 +33,12 @@ LOOK_BACK           = 0     # how many sentences to look back when predicting ta
 # construct unique key using settings for pickling
 
 settings = Settings.Settings()
-folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
-processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
-features_filename_prefix =          settings.data_directory + "CoralBleaching/BrattData/Pickled/feats_pickled_"
+folder  =                           settings.data_directory + "SkinCancer/EBA1415_Merged/"
+processed_essay_filename_prefix =   settings.data_directory + "SkinCancer/Pickled/essays_proc_pickled_"
+features_filename_prefix =          settings.data_directory + "SkinCancer/Pickled/feats_pickled_"
 
-out_metrics_file     =              settings.data_directory + "CoralBleaching/Results/metrics.txt"
+out_metrics_file     =              settings.data_directory + "SkinCancer/Results/metrics.txt"
+out_predictions_file =              settings.data_directory + "SkinCancer/Results/predictions.txt"
 
 config = get_config(folder)
 
@@ -92,9 +83,6 @@ wd_test_tags  = regular_tags
 """ CLASSIFIERS """
 """ Log Reg + Log Reg is best!!! """
 fn_create_wd_cls   = lambda: LogisticRegression() # C=1, dual = False seems optimal
-#fn_create_wd_cls   = lambda : LinearSVC(C=1.0)
-#fn_create_wd_cls    = lambda : RandomForestClassifier(n_jobs=8, max_depth=100)
-#fn_create_wd_cls   = lambda : GradientBoostingClassifier()
 
 wd_algo   = str(fn_create_wd_cls())
 print "Classifier:", wd_algo
@@ -153,16 +141,16 @@ logger.info("Training completed")
 """ Persist Results to Mongo DB """
 
 SUFFIX = "_WINDOW_CLASSIFIER_LBL_POWERSET_MULTICLASS"
-CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
+SC_TAGGING_TD, SC_TAGGING_VD = "SC_TAGGING_TD" + SUFFIX, "SC_TAGGING_VD" + SUFFIX
 parameters = dict(config)
 parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
 parameters["min_feat_freq"] = MIN_FEAT_FREQ
 
-wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
-wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
+wd_td_objectid = processor.persist_results(SC_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
+wd_vd_objectid = processor.persist_results(SC_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
 
 # This outputs 0's for MEAN CONCEPT CODES as we aren't including those in the outputs
 
-print processor.results_to_string(wd_td_objectid,   CB_TAGGING_TD,  wd_vd_objectid,     CB_TAGGING_VD,  "TAGGING")
+print processor.results_to_string(wd_td_objectid, SC_TAGGING_TD, wd_vd_objectid, SC_TAGGING_VD, "TAGGING")
 logger.info("Results Processed")
 
