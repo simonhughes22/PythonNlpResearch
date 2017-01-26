@@ -126,14 +126,12 @@ def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags):
     feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ, sparse=SPARSE_WD_FEATS)
     td_X, vd_X = feature_transformer.fit_transform(td_feats), feature_transformer.transform(vd_feats)
 
-    #TODO: compute most common tags per word for training only (but not for evaluation)
+    """ Compute most common tags per word for training only (but not for evaluation) """
     wd_td_ys = get_wordlevel_mostfrequent_ys(td_tags, wd_train_tags, tag_freq)
 
     # Get Actual Ys by code (dict of label to predictions
     wd_td_ys_by_code = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
     wd_vd_ys_by_code = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
-
-    #TODO: get most common tags for each word, predict from that using multi class method
 
     """ TRAIN Tagger """
     model = fn_create_wd_cls()
