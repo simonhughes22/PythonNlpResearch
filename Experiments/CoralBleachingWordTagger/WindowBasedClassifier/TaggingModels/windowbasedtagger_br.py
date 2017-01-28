@@ -1,31 +1,19 @@
 # coding=utf-8
-from Decorators import memoize_to_disk
-from sent_feats_for_stacking import *
-from load_data import load_process_essays, extract_features
+import logging
 
-from featurevectorizer import FeatureVectorizer
-from featureextractionfunctions import *
-from CrossValidation import cross_validation
-from wordtagginghelper import *
-from IterableFP import flatten
-from predictions_to_file import predictions_to_file
-from results_procesor import ResultsProcessor
-# Classifiers
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
-from sklearn.svm import SVC
-from sklearn.lda import LDA
-
-from window_based_tagger_config import get_config
-from tag_frequency import get_tag_freq, regular_tag
-from joblib import Parallel, delayed
-# END Classifiers
 
 import Settings
-import logging
+from CrossValidation import cross_validation
+from Decorators import memoize_to_disk
+from IterableFP import flatten
+from featureextractionfunctions import *
+from featurevectorizer import FeatureVectorizer
+from load_data import load_process_essays, extract_features
+from results_procesor import ResultsProcessor
+from window_based_tagger_config import get_config
+from wordtagginghelper import *
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
@@ -52,10 +40,6 @@ features_filename_prefix =          settings.data_directory + "CoralBleaching/Br
 out_metrics_file     =              settings.data_directory + "CoralBleaching/Results/metrics.txt"
 
 config = get_config(folder)
-
-#Doesn't seem to make much of a difference
-#config["stem"] = True
-#config["lower_case"] = True
 
 """ FEATURE EXTRACTION """
 config["window_size"] = 11
@@ -97,12 +81,8 @@ wd_test_tags  = regular_tags
 
 """ CLASSIFIERS """
 """ Log Reg + Log Reg is best!!! """
-#fn_create_wd_cls   = lambda: LogisticRegression(C=100.0, penalty="l1", dual=False, fit_intercept=True)
 fn_create_wd_cls   = lambda: LogisticRegression()
 # C=1, dual = False seems optimal
-#fn_create_wd_cls   = lambda : LinearSVC(C=1.0)
-#fn_create_wd_cls    = lambda : RandomForestClassifier(n_jobs=8, max_depth=100)
-#fn_create_wd_cls   = lambda : GradientBoostingClassifier()
 
 wd_algo   = str(fn_create_wd_cls())
 

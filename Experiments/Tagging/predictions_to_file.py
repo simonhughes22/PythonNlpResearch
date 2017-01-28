@@ -1,6 +1,9 @@
+from collections import defaultdict
+
 __author__ = 'simon.hughes'
 
 from traceback import format_exc
+import numpy as np
 
 def predictions_to_file(file, ys_by_code, predictions_by_code, essays, codes = None, output_confidence=False):
 
@@ -41,3 +44,44 @@ def predictions_to_file(file, ys_by_code, predictions_by_code, essays, codes = N
             file.write("\n")
             ix += 1
     pass
+
+def word_predictions_to_file(file, essays, word_feats, ys_bytag, tag2Classifier):
+
+    # dicts, key = tag, to a 1D array of word-level predictions
+    real_num_predictions_bytag = dict()
+    for tag in tag2Classifier.keys():
+
+        cls = tag2Classifier[tag]
+        if hasattr(cls, "decision_function"):
+            real_num_predictions = cls.decision_function(word_feats)
+        else:
+            real_num_predictions = cls.predict_proba(word_feats)
+        real_num_predictions_bytag[tag] = real_num_predictions
+
+    stags = sorted(ys_bytag.keys())
+
+    # features for the sentence level predictions
+    ix = 0
+    for essay_ix, essay in enumerate(essays):
+
+        for sent_ix, taggged_sentence in enumerate(essay.sentences):
+            file.write(essay.name + "|")
+            file.write(str(sent_ix + 1) + "|")
+
+            # ixs into the tagged words
+            ixs = range(ix, ix + len(taggged_sentence))
+            ix += len(taggged_sentence)
+
+            words = map(lambda ft: ft.word, taggged_sentence)
+            for wix, word in enumerate(words):
+                if wix > 0:
+                    file.write(" ")
+                word_ix = ixs[wix]
+                file.write(word + "{")
+                preds = []
+                for tag in stags:
+                    real_pred = real_num_predictions_bytag[tag][word_ix]
+                    preds.append("%s:%f" % (tag, round(real_pred, 4)))
+                file.write(",".join(preds))
+                file.write("}")
+            file.write("\n")

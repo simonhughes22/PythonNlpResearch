@@ -14,10 +14,9 @@ db.getCollection('CB_TAGGING_VD_AVG_PERCEPTRON_MULTICLASS')
             window_size: "$parameters.window_size",
             tag_history: "$parameters.tag_history",
             num_iterations: "$parameters.num_iterations",
-            feats: "$parameters.extractors",
+            //feats: "$parameters.extractors",
             count: { $size:"$parameters.extractors" },
             "_id":0,
-            
             //params: "$parameters",
             asof: 1,            
     }
@@ -31,9 +30,6 @@ db.getCollection('CB_TAGGING_VD_AVG_PERCEPTRON_MULTICLASS')
     }
 },
 {    $sort:{
-        //count: 1,
-        //"macro_f1":-1,
-        //"weighted_f1_score":-1,
         "micro_f1_score":-1,
         //asof: -1
         

@@ -12,6 +12,7 @@ serialized_essays   = root + "essays.pl"
 
 """ OUTPUT """
 out_predictions_file        = root + "output/predictions.txt"
+out_word_predictions_file   = root + "output/word_predictions.txt"
 out_predicted_margins_file  = root + "output/predicted_confidence.txt"
 out_metrics_file            = root + "output/metrics.txt"
 out_categories_file         = root + "output/categories.txt"
@@ -23,25 +24,21 @@ USE_SVM = True
 """ END SETTINGS """
 
 import cPickle as pickle
-from sent_feats_for_stacking import *
-from featurevectorizer import FeatureVectorizer
-from wordtagginghelper import *
-from IterableFP import flatten
-from results_procesor import ResultsProcessor
-from PandasHelper import group_by
-import pandas as pd
-from EssayCategory import essay_category, write_categories
+import logging
 
-# Classifiers
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import LinearSVC
 
-# END Classifiers
+from EssayCategory import write_categories
+from IterableFP import flatten
+from featurevectorizer import FeatureVectorizer
+from predictions_to_file import predictions_to_file, word_predictions_to_file
+from results_procesor import ResultsProcessor
+from sent_feats_for_stacking import *
 from tag_frequency import get_tag_freq, regular_tag
-from predictions_to_file import predictions_to_file
-from wordtagginghelper import test_classifier_per_code, predict_for_tag, probability_for_tag, decision_function_for_tag
+from wordtagginghelper import *
+from wordtagginghelper import test_classifier_per_code, probability_for_tag, decision_function_for_tag
 
-import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
@@ -167,7 +164,8 @@ test_wd_predictions_by_code = test_classifier_per_code(test_x, tag2word_classifi
 print "\nRunning Sentence Model"
 """ SENTENCE LEVEL PREDICTIONS FROM STACKING """
 
-sent_test_xs, sent_test_ys_bycode = get_sent_feature_for_stacking_from_tagging_model(sent_input_feat_tags, sent_input_interaction_tags, test_essay_feats, test_x, wd_test_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
+sent_test_xs, sent_test_ys_bycode = get_sent_feature_for_stacking_from_tagging_model(
+    sent_input_feat_tags, sent_input_interaction_tags, test_essay_feats, test_x, wd_test_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
 
 """ Test Stack Classifier """
 test_sent_predictions_by_code \
@@ -179,6 +177,10 @@ else:
     test_decision_functions_by_code = test_classifier_per_code(sent_test_xs, tag2sent_classifier, sent_output_train_test_tags, predict_fn=probability_for_tag)
 
 """ Write out the predicted classes """
+with open(out_word_predictions_file, "w+") as f_output_file:
+    f_output_file.write("Essay|Sent Number|Words with Predictions\n")
+    word_predictions_to_file(f_output_file, test_essay_feats, test_x, wd_test_ys_bytag, tag2word_classifier)
+
 with open(out_predictions_file, "w+") as f_output_file:
     f_output_file.write("Essay|Sent Number|Processed Sentence|Concept Codes|Predictions\n")
     predictions_to_file(f_output_file, sent_test_ys_bycode, test_sent_predictions_by_code, test_essay_feats, regular_tags + sent_output_train_test_tags)
