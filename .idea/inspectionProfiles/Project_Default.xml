@@ -15,7 +15,7 @@
     <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoredPackages">
         <value>
-          <list size="191">
+          <list size="192">
             <item index="0" class="java.lang.String" itemvalue="gensim" />
             <item index="1" class="java.lang.String" itemvalue="numba" />
             <item index="2" class="java.lang.String" itemvalue="wabbit-wappa" />
@@ -207,6 +207,7 @@
             <item index="188" class="java.lang.String" itemvalue="prompt-toolkit" />
             <item index="189" class="java.lang.String" itemvalue="wcwidth" />
             <item index="190" class="java.lang.String" itemvalue="nb-conda-kernels" />
+            <item index="191" class="java.lang.String" itemvalue="functools32" />
           </list>
         </value>
       </option>
