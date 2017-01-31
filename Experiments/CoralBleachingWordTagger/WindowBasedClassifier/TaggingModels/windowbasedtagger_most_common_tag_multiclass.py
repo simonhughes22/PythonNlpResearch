@@ -1,32 +1,19 @@
 # coding=utf-8
+import logging
 from collections import Counter
 
-from Decorators import memoize_to_disk
-from load_data import load_process_essays, extract_features
-
-from featurevectorizer import FeatureVectorizer
-from featureextractionfunctions import *
-from CrossValidation import cross_validation
-from nltk_datahelper import tally_code_frequencies
-from wordtagginghelper import *
-from IterableFP import flatten
-from results_procesor import ResultsProcessor
-# Classifiers
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
-from sklearn.svm import SVC
-from sklearn.lda import LDA
-
-from window_based_tagger_config import get_config
-from tag_frequency import get_tag_freq, regular_tag
-from joblib import Parallel, delayed
-# END Classifiers
 
 import Settings
-import logging
+from CrossValidation import cross_validation
+from Decorators import memoize_to_disk
+from IterableFP import flatten
+from featureextractionfunctions import *
+from featurevectorizer import FeatureVectorizer
+from load_data import load_process_essays, extract_features
+from results_procesor import ResultsProcessor
+from window_based_tagger_config import get_config
+from wordtagginghelper import *
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
@@ -44,13 +31,12 @@ LOOK_BACK           = 0     # how many sentences to look back when predicting ta
 # end not hashed
 
 # construct unique key using settings for pickling
-
 settings = Settings.Settings()
-folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
-processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
-features_filename_prefix =          settings.data_directory + "CoralBleaching/BrattData/Pickled/feats_pickled_"
 
-out_metrics_file     =              settings.data_directory + "CoralBleaching/Results/metrics.txt"
+root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
+folder =                            root_folder + "Training/"
+processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
+features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
 
 config = get_config(folder)
 
