@@ -38,9 +38,10 @@ LOOK_BACK           = 0     # how many sentences to look back when predicting ta
 
 settings = Settings.Settings()
 
-folder = settings.data_directory + "SkinCancer/EBA1415_Merged/"
-processed_essay_filename_prefix = settings.data_directory + "SkinCancer/Pickled/essays_proc_pickled_"
-features_filename_prefix =          settings.data_directory + "SkinCancer/Pickled/feats_pickled_"
+root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
+folder =                            root_folder + "Training/"
+processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
+features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
 
 config = get_config(folder)
 
@@ -204,9 +205,9 @@ def evaluate_feature_set(config, existing_extractors, new_extractor, features_fi
 
 best_win_size = -1
 best_micro_f1 = 0
-#for win_size in [1, 7, 3, 5, 9]:
+for win_size in [1, 3, 7, 5]:
 #for win_size in [9, 11, 13]:
-for win_size in [15]:
+#for win_size in [9,13]:
     macro_f1 = evaluate_window_size(config=config, window_size=win_size, features_filename_prefix=features_filename_prefix)
     if macro_f1 > best_micro_f1:
         print(("!" * 8) + " NEW BEST AVERAGE F1 FOR WINDOW SIZE " + ("!" * 8))
