@@ -1,31 +1,19 @@
 # coding=utf-8
-from Decorators import memoize_to_disk
-from sent_feats_for_stacking import *
-from load_data import load_process_essays, extract_features
+import logging
 
-from featurevectorizer import FeatureVectorizer
-from featureextractionfunctions import *
-from CrossValidation import cross_validation
-from wordtagginghelper import *
-from IterableFP import flatten
-from predictions_to_file import predictions_to_file
-from results_procesor import ResultsProcessor,__MICRO_F1__
-# Classifiers
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
-from sklearn.svm import SVC
-from sklearn.lda import LDA
-
-from window_based_tagger_config import get_config
-from tag_frequency import get_tag_freq, regular_tag
-from joblib import Parallel, delayed
-# END Classifiers
 
 import Settings
-import logging
+from CrossValidation import cross_validation
+from Decorators import memoize_to_disk
+from IterableFP import flatten
+from featureextractionfunctions import *
+from featurevectorizer import FeatureVectorizer
+from load_data import load_process_essays, extract_features
+from results_procesor import ResultsProcessor,__MICRO_F1__
+from window_based_tagger_config import get_config
+from wordtagginghelper import *
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
@@ -46,14 +34,15 @@ LOOK_BACK           = 0     # how many sentences to look back when predicting ta
 
 settings = Settings.Settings()
 
-folder  =                           settings.data_directory + "SkinCancer/EBA1415_Merged/"
-processed_essay_filename_prefix =   settings.data_directory + "SkinCancer/Pickled/essays_proc_pickled_"
-features_filename_prefix =          settings.data_directory + "SkinCancer/Pickled/feats_pickled_"
+root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
+folder =                            root_folder + "Training/"
+processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
+features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
 
 config = get_config(folder)
 
 """ FEATURE EXTRACTION """
-config["window_size"] = 11
+config["window_size"] = 9
 offset = (config["window_size"] - 1) / 2
 
 unigram_bow_window = fact_extract_bow_ngram_features(offset, 1)
@@ -62,12 +51,13 @@ unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
 biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
 trigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
 
+# modified to use new optimal feats
 extractors = [unigram_bow_window,
               unigram_window_stemmed,
               biigram_window_stemmed,
-              trigram_window_stemmed,
+              #trigram_window_stemmed,
               extract_brown_cluster,
-              extract_dependency_relation
+              #extract_dependency_relation
 ]
 
 feat_config = dict(config.items() + [("extractors", extractors)])
@@ -92,6 +82,8 @@ wd_test_tags  = regular_tags
 
 """ CLASSIFIERS """
 """ Log Reg + Log Reg is best!!! """
+fn_create_wd_cls   = lambda: LogisticRegression() # C=1, dual = False seems optimal
+wd_algo   = str(fn_create_wd_cls())
 
 def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags, dual, C, penalty, fit_intercept):
 

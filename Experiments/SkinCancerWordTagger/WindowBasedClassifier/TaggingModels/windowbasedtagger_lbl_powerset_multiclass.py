@@ -35,6 +35,7 @@ LOOK_BACK           = 0     # how many sentences to look back when predicting ta
 settings = Settings.Settings()
 
 root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
+
 folder =                            root_folder + "Training/"
 processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
 features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
@@ -42,7 +43,7 @@ features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
 config = get_config(folder)
 
 """ FEATURE EXTRACTION """
-config["window_size"] = 11
+config["window_size"] = 9
 offset = (config["window_size"] - 1) / 2
 
 unigram_bow_window = fact_extract_bow_ngram_features(offset, 1)
@@ -54,9 +55,9 @@ trigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
 extractors = [unigram_bow_window,
               unigram_window_stemmed,
               biigram_window_stemmed,
-              trigram_window_stemmed,
+              #trigram_window_stemmed,
               extract_brown_cluster,
-              extract_dependency_relation
+              #extract_dependency_relation
 ]
 
 feat_config = dict(config.items() + [("extractors", extractors)])
@@ -82,6 +83,7 @@ wd_test_tags  = regular_tags
 """ CLASSIFIERS """
 """ Log Reg + Log Reg is best!!! """
 fn_create_wd_cls   = lambda: LogisticRegression() # C=1, dual = False seems optimal
+wd_algo   = str(fn_create_wd_cls())
 
 wd_algo   = str(fn_create_wd_cls())
 print "Classifier:", wd_algo

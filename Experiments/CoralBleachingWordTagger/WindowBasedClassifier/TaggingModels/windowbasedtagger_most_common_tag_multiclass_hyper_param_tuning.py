@@ -34,16 +34,16 @@ LOOK_BACK           = 0     # how many sentences to look back when predicting ta
 # construct unique key using settings for pickling
 
 settings = Settings.Settings()
-folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
-processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
-features_filename_prefix =          settings.data_directory + "CoralBleaching/BrattData/Pickled/feats_pickled_"
 
-out_metrics_file     =              settings.data_directory + "CoralBleaching/Results/metrics.txt"
+root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
+folder =                            root_folder + "Training/"
+processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
+features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
 
 config = get_config(folder)
 
 """ FEATURE EXTRACTION """
-config["window_size"] = 11
+config["window_size"] = 9
 offset = (config["window_size"] - 1) / 2
 
 unigram_bow_window = fact_extract_bow_ngram_features(offset, 1)

@@ -18,7 +18,7 @@ REMOVE_PUNCTUATION  = False
 LOWER_CASE          = True
 
 # FEATURE SETTINGS
-WINDOW_SIZE         = 7
+WINDOW_SIZE         = 9
 # END FEATURE SETTINGS
 
 def get_config(folder):

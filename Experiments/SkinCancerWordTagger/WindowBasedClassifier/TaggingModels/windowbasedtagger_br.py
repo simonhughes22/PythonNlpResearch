@@ -40,12 +40,8 @@ processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
 features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
 config = get_config(folder)
 
-#Doesn't seem to make much of a difference
-#config["stem"] = True
-#config["lower_case"] = True
-
 """ FEATURE EXTRACTION """
-config["window_size"] = 11
+config["window_size"] = 9
 offset = (config["window_size"] - 1) / 2
 
 unigram_bow_window = fact_extract_bow_ngram_features(offset, 1)
@@ -54,12 +50,13 @@ unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
 biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
 trigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
 
+# modified to use new optimal feats
 extractors = [unigram_bow_window,
               unigram_window_stemmed,
               biigram_window_stemmed,
-              trigram_window_stemmed,
+              #trigram_window_stemmed,
               extract_brown_cluster,
-              extract_dependency_relation
+              #extract_dependency_relation
 ]
 
 feat_config = dict(config.items() + [("extractors", extractors)])
@@ -141,7 +138,6 @@ wd_td_objectid = processor.persist_results(SC_TAGGING_TD, cv_wd_td_ys_by_tag, cv
 wd_vd_objectid = processor.persist_results(SC_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
 
 # This outputs 0's for MEAN CONCEPT CODES as we aren't including those in the outputs
-
 print processor.results_to_string(wd_td_objectid, SC_TAGGING_TD, wd_vd_objectid, SC_TAGGING_VD, "TAGGING")
 logger.info("Results Processed")
 

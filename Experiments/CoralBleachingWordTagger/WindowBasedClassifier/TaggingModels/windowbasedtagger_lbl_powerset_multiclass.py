@@ -42,7 +42,7 @@ features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
 config = get_config(folder)
 
 """ FEATURE EXTRACTION """
-config["window_size"] = 11
+config["window_size"] = 9
 offset = (config["window_size"] - 1) / 2
 
 unigram_bow_window = fact_extract_bow_ngram_features(offset, 1)
