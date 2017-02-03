@@ -1,3 +1,5 @@
+raise Exception("Fix errors with dataset first")
+
 from Decorators import memoize_to_disk
 from sent_feats_for_stacking import *
 from load_data import load_process_essays, extract_features
