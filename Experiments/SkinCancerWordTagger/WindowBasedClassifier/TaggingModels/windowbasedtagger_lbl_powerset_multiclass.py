@@ -1,5 +1,3 @@
-raise Exception("Fix errors with dataset first")
-
 # coding=utf-8
 import logging
 
