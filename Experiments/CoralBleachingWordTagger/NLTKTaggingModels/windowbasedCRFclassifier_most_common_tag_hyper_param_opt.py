@@ -12,20 +12,19 @@ from joblib import Parallel, delayed
 
 from nltk.tag.crf import CRFTagger
 from wordtagginghelper import merge_dictionaries
-from nltk_datahelper import to_sentences, to_flattened_binary_tags_by_code
-from nltk_datahelper import to_most_common_code_tagged_sentences, to_label_powerset_tagged_sentences, tally_code_frequencies
+from nltk_datahelper import to_sentences, to_flattened_binary_tags_by_code, to_most_common_code_tagged_sentences, \
+    tally_code_frequencies
+from nltk_datahelper import to_label_powerset_tagged_sentences
 from random import randint
 
 import Settings
 import logging, os
 
-def train_classifer_on_fold(essays_TD, essays_VD, regular_tags, fold):
+def train_classifer_on_fold(essays_TD, essays_VD, regular_tags, fold, code_freq):
 
     # Start Training
+    # Start Training
     print("Fold %i Training code" % fold)
-
-    # Important - only compute code frequency from training data (NO CHEATING)
-    code_freq = tally_code_frequencies(essays_TD)
 
     # For training
     td_sents = to_most_common_code_tagged_sentences(essays_TD, regular_tags, code_freq)
@@ -116,37 +115,54 @@ extractors = [
 
 comp_feat_extactor = fact_composite_feature_extractor(extractors)
 
-cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
-cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
+code_freq = tally_code_frequencies(tagged_essays)
 folds = cross_validation(tagged_essays, CV_FOLDS)
 
-results = Parallel(n_jobs=CV_FOLDS)(
-            delayed(train_classifer_on_fold)(essays_TD, essays_VD, regular_tags, fold)
-                for fold, (essays_TD, essays_VD) in enumerate(folds))
+for feat_poss_state in [False]:
+    for feat_poss_transitions in [False, True]:
+        for c2 in [0.1, 1.0, 10.0, 100.0]:
+        #for c2 in [0.1, 0.5, 2.0, 3.0, 4.0, 5.0]:
+            cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
+            cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
 
-for result in results:
-    wd_td_ys_bytag, wd_vd_ys_bytag, td_wd_predictions_by_code, vd_wd_predictions_by_code = result
+            training_opt = {"feature.possible_states" :     feat_poss_state,
+                            "feature.possible_transitions": feat_poss_transitions,
+                            "c2": c2
+                            }
 
-    merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
-    merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
-    merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
-    merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
+            training_opt_copy = dict([(k.replace(".", "_"),v) for k,v in training_opt.items()])
 
-logger.info("Training completed")
+            results = Parallel(n_jobs=CV_FOLDS)(
+                        delayed(train_classifer_on_fold)(essays_TD, essays_VD, regular_tags, fold, code_freq)
+                            for fold, (essays_TD, essays_VD) in enumerate(folds))
 
-""" Persist Results to Mongo DB """
-wd_algo = "CRF_MOST_COMMON_TAG"
-SUFFIX = "_CRF_MOST_COMMON_TAG"
-CB_TAGGING_TD, CB_TAGGING_VD= "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
+            #results = [train_classifer_on_fold(essays_TD, essays_VD, regular_tags, fold, code_freq)
+            #            for fold, (essays_TD, essays_VD) in enumerate(folds)]
 
-parameters = dict(config)
-parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
-parameters["min_feat_freq"] = MIN_FEAT_FREQ
+            for result in results:
+                wd_td_ys_bytag, wd_vd_ys_bytag, td_wd_predictions_by_code, vd_wd_predictions_by_code = result
 
-wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
-wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
+                merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
+                merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
+                merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
+                merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
 
-# This outputs 0's for MEAN CONCEPT CODES as we aren't including those in the outputs
-print processor.results_to_string(wd_td_objectid, CB_TAGGING_TD, wd_vd_objectid, CB_TAGGING_VD, "TAGGING")
-logger.info("Results Processed")
+            logger.info("Training completed")
+
+            """ Persist Results to Mongo DB """
+            wd_algo = "CRF_MOST_COMMON_TAG"
+            SUFFIX = "_CRF_MOST_COMMON_TAG_HYPERPARAM_OPT"
+            CB_TAGGING_TD, CB_TAGGING_VD= "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
+
+            parameters = dict(config)
+            parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
+            parameters["min_feat_freq"] = MIN_FEAT_FREQ
+            parameters.update(training_opt_copy)
+
+            wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
+            wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
+
+            # This outputs 0's for MEAN CONCEPT CODES as we aren't including those in the outputs
+            print processor.results_to_string(wd_td_objectid, CB_TAGGING_TD, wd_vd_objectid, CB_TAGGING_VD, "TAGGING")
+            logger.info("Results Processed")
 

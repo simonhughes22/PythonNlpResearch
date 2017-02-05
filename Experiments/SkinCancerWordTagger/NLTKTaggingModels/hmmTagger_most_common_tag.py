@@ -10,16 +10,22 @@ from nltk_featureextractionfunctions import *
 from collections import defaultdict
 from joblib import Parallel, delayed
 
-from nltk.tag.crf import CRFTagger
+from nltk.tag.hmm import HiddenMarkovModelTrainer
 from wordtagginghelper import merge_dictionaries
-from nltk_datahelper import to_sentences, to_flattened_binary_tags_by_code
-from nltk_datahelper import to_most_common_code_tagged_sentences, to_label_powerset_tagged_sentences, tally_code_frequencies
-from random import randint
+from nltk_datahelper import to_sentences, to_flattened_binary_tags_by_code, tally_code_frequencies, \
+    to_most_common_code_tagged_sentences
+from nltk_datahelper import to_label_powerset_tagged_sentences
 
 import Settings
-import logging, os
+import logging
+
+STEM = True
 
 def train_classifer_on_fold(essays_TD, essays_VD, regular_tags, fold):
+
+    projection = lambda x: x
+    if STEM:
+        projection = stem
 
     # Start Training
     print("Fold %i Training code" % fold)
@@ -28,13 +34,11 @@ def train_classifer_on_fold(essays_TD, essays_VD, regular_tags, fold):
     code_freq = tally_code_frequencies(essays_TD)
 
     # For training
-    td_sents = to_most_common_code_tagged_sentences(essays_TD, regular_tags, code_freq)
-    vd_sents = to_most_common_code_tagged_sentences(essays_VD, regular_tags, code_freq)
+    td_sents = to_most_common_code_tagged_sentences(essays_TD, regular_tags, code_freq, projection=projection)
+    vd_sents = to_most_common_code_tagged_sentences(essays_VD, regular_tags, code_freq, projection=projection)
 
-    model_filename = models_folder + "/" + "%i_%s__%s" % (fold, "most_freq_code", str(randint(0, 9999999)))
-
-    model = CRFTagger(feature_func=comp_feat_extactor, verbose=False)
-    model.train(td_sents, model_filename)
+    trainer = HiddenMarkovModelTrainer()
+    model = trainer.train_supervised(td_sents)
 
     td_predictions = model.tag_sents(to_sentences(td_sents))
     vd_predictions = model.tag_sents(to_sentences(vd_sents))
@@ -50,9 +54,9 @@ def train_classifer_on_fold(essays_TD, essays_VD, regular_tags, fold):
     # YS (PREDICTED)
     td_wd_predictions_by_code = to_flattened_binary_tags_by_code(td_predictions, regular_tags)
     vd_wd_predictions_by_code = to_flattened_binary_tags_by_code(vd_predictions, regular_tags)
-    os.remove(model_filename)
 
     return wd_td_ys_bytag, wd_vd_ys_bytag, td_wd_predictions_by_code, vd_wd_predictions_by_code
+
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
@@ -70,16 +74,14 @@ CV_FOLDS = 5
 
 MIN_TAG_FREQ = 5
 LOOK_BACK = 0  # how many sentences to look back when predicting tags
+
 # end not hashed
 
 # construct unique key using settings for pickling
 settings = Settings.Settings()
-root_folder =           settings.data_directory + "CoralBleaching/Thesis_Dataset/"
+root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
 folder =                            root_folder + "Training/"
 processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
-features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
-
-models_folder = settings.data_directory + "CoralBleaching/models/CRF"
 
 config = get_config(folder)
 print(config)
@@ -97,24 +99,8 @@ freq_tags = list(set((tag for tag, freq in tag_freq.items() if freq >= MIN_TAG_F
 regular_tags = [t for t in freq_tags if t[0].isdigit()]
 
 """ FEATURE EXTRACTION """
-config["window_size"] = 9
+config["window_size"] = 11
 offset = (config["window_size"] - 1) / 2
-
-unigram_stem_features = fact_extract_positional_word_features(offset, True)
-trigram_stem_featues   = fact_extract_ngram_features(offset=offset, ngram_size=3, stem_words=True)
-bigram_stem_featues   = fact_extract_ngram_features(offset=offset, ngram_size=2, stem_words=True)
-unigram_bow_window_unstemmed = fact_extract_ngram_features(offset=offset, ngram_size=1, positional=False, stem_words=False)
-
-extractors = [
-    unigram_stem_features,
-    bigram_stem_featues,
-    trigram_stem_featues,
-    unigram_bow_window_unstemmed,
-    extract_brown_cluster,
-    extract_dependency_relation
-]
-
-comp_feat_extactor = fact_composite_feature_extractor(extractors)
 
 cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
 cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
@@ -135,18 +121,22 @@ for result in results:
 logger.info("Training completed")
 
 """ Persist Results to Mongo DB """
-wd_algo = "CRF_MOST_COMMON_TAG"
-SUFFIX = "_CRF_MOST_COMMON_TAG"
-CB_TAGGING_TD, CB_TAGGING_VD= "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
+wd_algo = "HMM_MOST_COMMON_TAG_MULTICLASS"
+SUFFIX = "_HMM_MOST_COMMON_TAG_MULTICLASS"
+SC_TAGGING_TD, SC_TAGGING_VD= "SC_TAGGING_TD" + SUFFIX, "SC_TAGGING_VD" + SUFFIX
 
 parameters = dict(config)
-parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
 parameters["min_feat_freq"] = MIN_FEAT_FREQ
+if STEM:
+    parameters["extractors"] = "stemmed_unigrams"
+else:
+    parameters["extractors"] = "unigrams"
 
-wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
-wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
+
+wd_td_objectid = processor.persist_results(SC_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
+wd_vd_objectid = processor.persist_results(SC_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
 
 # This outputs 0's for MEAN CONCEPT CODES as we aren't including those in the outputs
-print processor.results_to_string(wd_td_objectid, CB_TAGGING_TD, wd_vd_objectid, CB_TAGGING_VD, "TAGGING")
+print processor.results_to_string(wd_td_objectid, SC_TAGGING_TD, wd_vd_objectid, SC_TAGGING_VD, "TAGGING")
 logger.info("Results Processed")
 

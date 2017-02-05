@@ -70,11 +70,12 @@ LOOK_BACK = 0  # how many sentences to look back when predicting tags
 
 # construct unique key using settings for pickling
 settings = Settings.Settings()
-folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
-processed_essay_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
-features_filename_prefix = settings.data_directory + "CoralBleaching/BrattData/Pickled/feats_pickled_"
+root_folder =           settings.data_directory + "CoralBleaching/Thesis_Dataset/"
+folder =                            root_folder + "Training/"
+processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
+features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
+
 models_folder = settings.data_directory + "CoralBleaching/models/CRF"
-out_metrics_file = settings.data_directory + "CoralBleaching/Results/metrics.txt"
 
 config = get_config(folder)
 print(config)
@@ -92,7 +93,7 @@ freq_tags = list(set((tag for tag, freq in tag_freq.items() if freq >= MIN_TAG_F
 regular_tags = [t for t in freq_tags if t[0].isdigit()]
 
 """ FEATURE EXTRACTION """
-config["window_size"] = 11
+config["window_size"] = 9
 offset = (config["window_size"] - 1) / 2
 
 unigram_stem_features = fact_extract_positional_word_features(offset, True)

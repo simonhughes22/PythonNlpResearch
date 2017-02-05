@@ -38,9 +38,10 @@ TAG_FREQ_THRESHOLD   = 5
 # construct unique key using settings for pickling
 
 settings = Settings.Settings()
-folder =                            settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
-processed_essay_filename_prefix =   settings.data_directory + "CoralBleaching/BrattData/Pickled/essays_proc_pickled_"
-features_filename_prefix =          settings.data_directory + "CoralBleaching/BrattData/Pickled/feats_pickled_"
+root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
+folder =                            root_folder + "Training/"
+processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
+features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
 
 out_metrics_file     =              settings.data_directory + "CoralBleaching/Results/metrics.txt"
 out_predictions_file =              settings.data_directory + "CoralBleaching/Results/predictions.txt"
@@ -50,15 +51,23 @@ config = get_config(folder)
 """ FEATURE EXTRACTION """
 offset = (config["window_size"] - 1) / 2
 
-unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
-biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
+unigram_window_stemmed  = fact_extract_positional_word_features_stemmed(offset)
+biigram_window_stemmed  = fact_extract_ngram_features_stemmed(offset, 2)
+triigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
+unigram_bow_window      = fact_extract_bow_ngram_features(offset, 1)
 
-#pos_tag_window = fact_extract_positional_POS_features(offset)
-#pos_tag_plus_wd_window = fact_extract_positional_POS_features_plus_word(offset)
-#head_wd_window = fact_extract_positional_head_word_features(offset)
-#pos_dep_vecs = fact_extract_positional_dependency_vectors(offset)
+#optimal CB feature set
+extractors = [
+    unigram_window_stemmed,
+    biigram_window_stemmed,
+    triigram_window_stemmed,
 
-extractors = [unigram_window_stemmed, biigram_window_stemmed]
+    unigram_bow_window,
+
+    extract_dependency_relation,
+    extract_brown_cluster
+]
+
 feat_config = dict(config.items() + [("extractors", extractors)])
 
 """ LOAD DATA """
