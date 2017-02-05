@@ -31,8 +31,8 @@ CV_FOLDS            = 5
 MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 
-NUM_TRAIN_ITERATIONS = 30   # 30 best
-TAG_HISTORY          = 10
+NUM_TRAIN_ITERATIONS = 10   # 30 best
+TAG_HISTORY          = 5
 # end not hashed
 
 # construct unique key using settings for pickling
@@ -80,7 +80,7 @@ logger.info("Features loaded")
 
 """ DEFINE TAGS """
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
-all_regular_tags = list(set((t for t in flatten(lst_all_tags) if t[0].isdigit())))
+all_regular_tags = list((t for t in flatten(lst_all_tags) if t[0].isdigit()))
 
 tag_freq = Counter(all_regular_tags )
 regular_tags = list(tag_freq.keys())

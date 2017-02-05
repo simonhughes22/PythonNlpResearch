@@ -8,7 +8,7 @@ import logging
 from collections import defaultdict
 from perceptron import AveragedPerceptron
 from results_procesor import ResultsProcessor
-from Rpfa import weighted_mean_rpfa
+from Rpfa import weighted_mean_rpfa, micro_rpfa
 import numpy as np
 
 PICKLE = "trontagger-0.1.0.pickle"
@@ -155,9 +155,9 @@ class PerceptronTaggerMultiClassCombo(object):
 
             random.shuffle(cp_essay_feats)
             class2metrics = ResultsProcessor.compute_metrics(class2tags, class2predictions)
-            wtd_mean = weighted_mean_rpfa(class2metrics.values())
+            micro_metrics = micro_rpfa(class2metrics.values())
             if verbose:
-                logging.info("Iter {0}: Wtd Mean: {1}".format(iter_, str(wtd_mean)))
+                logging.info("Iter {0}: Micro Avg Metrics: {1}".format(iter_, str(micro_metrics)))
 
         self.model.average_weights()
         return None

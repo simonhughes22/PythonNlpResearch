@@ -3,9 +3,6 @@ __author__ = 'simon.hughes'
 from Metrics import rpf1a, rpf1a_from_tp_fp_tn_fn
 
 class rpfa(object):
-    def __repr__(self):
-        return self.to_str(True)
-
     def __init__(self, r, p, f, a, nc=-1, data_points=None, tp=None, tn=None, fp=None, fn=None):
         self.recall = r
         self.precision = p
@@ -23,6 +20,9 @@ class rpfa(object):
             self.fp = fp
         if fn is not None:
             self.fn = fn
+
+    def __repr__(self):
+        return self.to_str(True)
 
     def to_str(self, print_count=False):
         fmt = "Recall: {0:.4f}, Precision: {1:.4f}, F1: {2:.4f}, Accuracy: {3:.4f}"
