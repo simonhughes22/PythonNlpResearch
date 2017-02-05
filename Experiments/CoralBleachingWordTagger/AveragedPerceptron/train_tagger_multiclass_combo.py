@@ -38,7 +38,7 @@ TAG_FREQ_THRESHOLD   = 5
 # construct unique key using settings for pickling
 
 settings = Settings.Settings()
-root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
+root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
 folder =                            root_folder + "Training/"
 processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
 features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
@@ -49,23 +49,21 @@ out_predictions_file =              settings.data_directory + "CoralBleaching/Re
 config = get_config(folder)
 
 """ FEATURE EXTRACTION """
+config["window_size"] = 9
 offset = (config["window_size"] - 1) / 2
 
-unigram_window_stemmed  = fact_extract_positional_word_features_stemmed(offset)
-biigram_window_stemmed  = fact_extract_ngram_features_stemmed(offset, 2)
-triigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
-unigram_bow_window      = fact_extract_bow_ngram_features(offset, 1)
+unigram_bow_window = fact_extract_bow_ngram_features(offset, 1)
 
-#optimal CB feature set
-extractors = [
-    unigram_window_stemmed,
-    biigram_window_stemmed,
-    triigram_window_stemmed,
+unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
+biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
+trigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
 
-    unigram_bow_window,
-
-    extract_dependency_relation,
-    extract_brown_cluster
+extractors = [unigram_bow_window,
+              unigram_window_stemmed,
+              biigram_window_stemmed,
+              trigram_window_stemmed,
+              extract_brown_cluster,
+              extract_dependency_relation
 ]
 
 feat_config = dict(config.items() + [("extractors", extractors)])
@@ -77,6 +75,7 @@ logger.info("Essays loaded")
 # most params below exist ONLY for the purposes of the hashing to and from disk
 mem_extract_features = memoize_to_disk(filename_prefix=features_filename_prefix)(extract_features)
 essay_feats = mem_extract_features(tagged_essays, **feat_config)
+
 logger.info("Features loaded")
 
 """ DEFINE TAGS """
@@ -133,8 +132,6 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
     wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
 
-    tag2word_classifier, td_wd_predictions_by_code, vd_wd_predictions_by_code = {}, {}, {}
-
     tagger = PerceptronTaggerMultiClassCombo(wd_train_tags, tag_history=TAG_HISTORY, combo_freq_threshold=TAG_FREQ_THRESHOLD)
     tagger.train(essays_TD, nr_iter=NUM_TRAIN_ITERATIONS)
 
@@ -148,7 +145,8 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
     pass
 
-CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD", "CB_TAGGING_VD"
+suffix = "_AVG_PERCEPTRON_LBL_POWERSET"
+CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD" + suffix, "CB_TAGGING_VD" + suffix
 parameters = dict(config)
 
 parameters["num_iterations"]        = NUM_TRAIN_ITERATIONS

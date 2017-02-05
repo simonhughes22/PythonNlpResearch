@@ -32,6 +32,7 @@ MIN_TAG_FREQ        = 5
 LOOK_BACK           = 0     # how many sentences to look back when predicting tags
 
 # Combo tags
+#NOTE: this essentially forces it to ignore lbl powersets
 TAG_FREQ_THRESHOLD   = 5
 
 # end not hashed
@@ -39,7 +40,7 @@ TAG_FREQ_THRESHOLD   = 5
 # construct unique key using settings for pickling
 
 settings = Settings.Settings()
-root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
+root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
 folder =                            root_folder + "Training/"
 processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
 features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
@@ -47,8 +48,9 @@ features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
 config = get_config(folder)
 
 """ FEATURE EXTRACTION """
-offset = 5 # window size 11
-config["window_size"] = (2*offset)+1
+config["window_size"] = 9
+offset = (config["window_size"] - 1) / 2
+
 unigram_window_stemmed  = fact_extract_positional_word_features_stemmed(offset)
 biigram_window_stemmed  = fact_extract_ngram_features_stemmed(offset, 2)
 triigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
@@ -131,7 +133,7 @@ def evaluate_tagger(num_iterations, tag_history):
         merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
         pass
 
-    suffix = "_AVG_PERCEPTRON_MULTICLASS"
+    suffix = "_AVG_PERCEPTRON_LBL_POWERSET_HYPER_PARAM_TUNING"
     CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD" + suffix, "CB_TAGGING_VD" + suffix
     parameters = dict(config)
     parameters["prev_tag_sharing"] = True  # don't include tags from other binary models

@@ -40,35 +40,29 @@ TAG_FREQ_THRESHOLD   = 5
 
 settings = Settings.Settings()
 
-
-folder  =                           settings.data_directory + "SkinCancer/EBA1415_Merged/"
-processed_essay_filename_prefix =   settings.data_directory + "SkinCancer/Pickled/essays_proc_pickled_"
+root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
+folder =                            root_folder + "Training/"
 
 config = get_config(folder)
 
 """ FEATURE EXTRACTION """
-offset = 5 # window size 11
-config["window_size"] = (2*offset)+1
-unigram_window_stemmed  = fact_extract_positional_word_features_stemmed(offset)
-biigram_window_stemmed  = fact_extract_ngram_features_stemmed(offset, 2)
-triigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
-unigram_bow_window      = fact_extract_bow_ngram_features(offset, 1)
+config["window_size"] = 9
+offset = (config["window_size"] - 1) / 2
 
-#optimal SC feature set (same as with CB)
-extractors = [
-    unigram_window_stemmed,
-    biigram_window_stemmed,
-    triigram_window_stemmed,
+unigram_bow_window = fact_extract_bow_ngram_features(offset, 1)
 
-    unigram_bow_window,
+unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
+biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
+trigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
 
-    extract_dependency_relation,
-    extract_brown_cluster
+# modified to use new optimal feats
+extractors = [unigram_bow_window,
+              unigram_window_stemmed,
+              biigram_window_stemmed,
+              #trigram_window_stemmed,
+              extract_brown_cluster,
+              #extract_dependency_relation
 ]
-
-# For mongo
-extractor_names = map(lambda fn: fn.func_name, extractors)
-print("Extractors\n\t" + "\n\t".join(extractor_names))
 
 feat_config = dict(config.items() + [("extractors", extractors)])
 
@@ -140,7 +134,7 @@ def evaluate_tagger(num_iterations, tag_history):
     parameters["tag_history"] = tag_history
     parameters["combo_freq_threshold"] = TAG_FREQ_THRESHOLD
 
-    parameters["extractors"] = extractor_names
+    parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
     wd_algo = "AveragedPerceptronMultiClass"
 
     wd_td_objectid = processor.persist_results(SC_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag,

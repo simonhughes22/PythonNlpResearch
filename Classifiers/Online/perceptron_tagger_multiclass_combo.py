@@ -43,11 +43,10 @@ class PerceptronTaggerMultiClassCombo(object):
         feats["TAG -2 wd " + sprev2 + "|" + word] =      1
         feats["TAG -1, -2 " + sprev + "|" + sprev2]=     1
 
-    def _add_secondary_tag_features(self, feats, word, cls, prev_tags):
+    def _add_secondary_tag_features(self, feats, prev_tags):
         for ix, prev in enumerate(prev_tags[-self.tag_history:]):
             offset = ix - self.tag_history
-            if prev == self.POSITIVE_CLASS:
-                feats["HIST_TAG " + str(offset) + " " + cls ]  = 1
+            feats["HIST_TAG " + str(offset) + " " + str(prev)] = 1
 
     def predict(self, essay_feats, output_scores = False):
         '''Tags a string `corpus`.
@@ -69,7 +68,7 @@ class PerceptronTaggerMultiClassCombo(object):
                     shared_features = dict(wd.features.items())
                     # get all tagger predictions for previous 2 tags
                     for cls in self.classes:
-                        self._add_secondary_tag_features(shared_features, wd.word, cls, prev)
+                        self._add_secondary_tag_features(shared_features, prev)
 
                     tagger_feats = dict(shared_features.items())
                     self._add_tag_features(tagger_feats, wd.word, prev[-1], prev[-2])
@@ -140,7 +139,7 @@ class PerceptronTaggerMultiClassCombo(object):
                         shared_features = dict(wd.features.items())
                         # get all tagger predictions for previous 2 tags
                         for cls in self.classes:
-                            self._add_secondary_tag_features(shared_features, wd.word, cls, prev)
+                            self._add_secondary_tag_features(shared_features, prev)
 
                         tagger_feats = dict(shared_features.items())
                         # add more in depth features for this tag

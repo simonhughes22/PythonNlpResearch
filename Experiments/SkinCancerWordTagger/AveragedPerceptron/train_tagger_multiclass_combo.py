@@ -38,9 +38,10 @@ TAG_FREQ_THRESHOLD   = 5
 # construct unique key using settings for pickling
 
 settings = Settings.Settings()
-folder  =                           settings.data_directory + "SkinCancer/EBA1415_Merged/"
-processed_essay_filename_prefix =   settings.data_directory + "SkinCancer/Pickled/essays_proc_pickled_"
-features_filename_prefix =          settings.data_directory + "SkinCancer/Pickled/feats_pickled_"
+root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
+folder =                            root_folder + "Training/"
+processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
+features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
 
 out_metrics_file     =              settings.data_directory + "SkinCancer/Results/metrics.txt"
 out_predictions_file =              settings.data_directory + "SkinCancer/Results/predictions.txt"
@@ -48,17 +49,24 @@ out_predictions_file =              settings.data_directory + "SkinCancer/Result
 config = get_config(folder)
 
 """ FEATURE EXTRACTION """
+config["window_size"] = 9
 offset = (config["window_size"] - 1) / 2
+
+unigram_bow_window = fact_extract_bow_ngram_features(offset, 1)
 
 unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
 biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
+trigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
 
-#pos_tag_window = fact_extract_positional_POS_features(offset)
-#pos_tag_plus_wd_window = fact_extract_positional_POS_features_plus_word(offset)
-#head_wd_window = fact_extract_positional_head_word_features(offset)
-#pos_dep_vecs = fact_extract_positional_dependency_vectors(offset)
+# modified to use new optimal feats
+extractors = [unigram_bow_window,
+              unigram_window_stemmed,
+              biigram_window_stemmed,
+              #trigram_window_stemmed,
+              extract_brown_cluster,
+              #extract_dependency_relation
+]
 
-extractors = [unigram_window_stemmed, biigram_window_stemmed]
 feat_config = dict(config.items() + [("extractors", extractors)])
 
 """ LOAD DATA """

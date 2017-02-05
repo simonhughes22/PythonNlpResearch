@@ -37,7 +37,7 @@ TAG_HISTORY          = 10   # slightly better with than without
 # construct unique key using settings for pickling
 
 settings = Settings.Settings()
-root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
+root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
 folder =                            root_folder + "Training/"
 processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
 
