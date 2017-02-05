@@ -1,9 +1,8 @@
-from collections import defaultdict
+from featureextractortransformer import Word
+from processessays import Essay
 
 __author__ = 'simon.hughes'
-
 from traceback import format_exc
-import numpy as np
 
 def predictions_to_file(file, ys_by_code, predictions_by_code, essays, codes = None, output_confidence=False):
 

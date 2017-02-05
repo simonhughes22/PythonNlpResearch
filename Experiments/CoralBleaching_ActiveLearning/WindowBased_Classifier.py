@@ -1,6 +1,8 @@
 # coding=utf-8
 
 """ PETER - CHANGE THESE FILE PATHS """
+from replace_essay_labels_with_predictions import replace_essay_labels_with_predictions
+
 root        = "/Users/simon.hughes/Google Drive/PhD/Data/ActiveLearning/"
 f_training_essays = root + "training_essays.txt"
 #f_training_essays = root + "tmp_training_essays.txt"
@@ -175,6 +177,10 @@ if USE_SVM:
     test_decision_functions_by_code = test_classifier_per_code(sent_test_xs, tag2sent_classifier, sent_output_train_test_tags, predict_fn=decision_function_for_tag)
 else:
     test_decision_functions_by_code = test_classifier_per_code(sent_test_xs, tag2sent_classifier, sent_output_train_test_tags, predict_fn=probability_for_tag)
+
+
+""" TEST REPLACING ESSAYS WITH PREDICTED TAGS """
+predicted_test_essay_feats = replace_essay_labels_with_predictions(test_essay_feats, test_x, tag2Classifier=tag2word_classifier, confidence_threshold=0.0)
 
 """ Write out the predicted classes """
 with open(out_word_predictions_file, "w+") as f_output_file:
