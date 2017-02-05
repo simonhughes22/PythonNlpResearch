@@ -20,8 +20,6 @@ from random import randint
 import Settings
 import logging, os
 
-raise Exception("TODO - fix features first to be the top 4")
-
 def train_classifer_on_fold(essays_TD, essays_VD, regular_tags, fold, code_freq, training_opt):
 
     # Start Training
@@ -101,18 +99,20 @@ regular_tags = [t for t in freq_tags if t[0].isdigit()]
 config["window_size"] = 9
 offset = (config["window_size"] - 1) / 2
 
-unigram_stem_features = fact_extract_positional_word_features(offset, True)
-trigram_stem_featues   = fact_extract_ngram_features(offset=offset, ngram_size=3, stem_words=True)
-bigram_stem_featues   = fact_extract_ngram_features(offset=offset, ngram_size=2, stem_words=True)
-unigram_bow_window_unstemmed = fact_extract_ngram_features(offset=offset, ngram_size=1, positional=False, stem_words=False)
+unigram_window_stemmed = fact_extract_positional_word_features(offset, True)
+biigram_window_stemmed   = fact_extract_ngram_features(offset=offset, ngram_size=2, stem_words=True)
+trigram_window_stemmed   = fact_extract_ngram_features(offset=offset, ngram_size=3, stem_words=True)
+unigram_bow_window = fact_extract_ngram_features(offset=offset, ngram_size=1, positional=False, stem_words=False)
 
 extractors = [
-    unigram_stem_features,
-    bigram_stem_featues,
-    trigram_stem_featues,
-    unigram_bow_window_unstemmed,
+    unigram_bow_window,
+
+    unigram_window_stemmed,
+    biigram_window_stemmed,
+    #trigram_window_stemmed,
+
     extract_brown_cluster,
-    extract_dependency_relation
+    #extract_dependency_relation
 ]
 
 comp_feat_extactor = fact_composite_feature_extractor(extractors)
