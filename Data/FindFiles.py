@@ -1,7 +1,7 @@
 import os
 import re
 
-def find_files(folder, regex, remove_empty = False):
+def find_files(folder, regex=".*", remove_empty = False):
     """
     Find all files matching the [regex] pattern in [folder]
 
