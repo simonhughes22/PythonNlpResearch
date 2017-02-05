@@ -1,24 +1,24 @@
 # coding=utf-8
+import logging
+import os
+from collections import Counter
 from random import randint
 
-from Decorators import memoize_to_disk
-from FindFiles import find_files
-from sent_feats_for_stacking import *
-import dill, os
-from load_data import load_process_essays, extract_features
-
-from featureextractionfunctions import *
-from CrossValidation import cross_validation
-from wordtagginghelper import *
-from IterableFP import flatten
-from collections import defaultdict, Counter
-from window_based_tagger_config import get_config
-from perceptron_tagger_multiclass_combo import PerceptronTaggerMultiClassCombo
-from results_procesor import ResultsProcessor, __MICRO_F1__
-# END Classifiers
+import dill
+from joblib import Parallel
+from joblib import delayed
 
 import Settings
-import logging
+from CrossValidation import cross_validation
+from Decorators import memoize_to_disk
+from FindFiles import find_files
+from featureextractionfunctions import *
+from load_data import load_process_essays, extract_features
+from perceptron_tagger_multiclass_combo import PerceptronTaggerMultiClassCombo
+from results_procesor import ResultsProcessor, __MICRO_F1__
+from window_based_tagger_config import get_config
+from wordtagginghelper import *
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
@@ -37,7 +37,7 @@ LOOK_BACK           = 0     # how many sentences to look back when predicting ta
 
 # Combo tags
 #NOTE: this essentially forces it to ignore lbl powersets
-TAG_FREQ_THRESHOLD   = 5
+#TAG_FREQ_THRESHOLD   = 5
 
 # end not hashed
 
@@ -107,26 +107,40 @@ def pad_str(val):
 def toDict(obj):
     return obj.__dict__
 
-def evaluate_tagger(num_iterations, tag_history, k_fold_data_fnames):
+def evaluate_tagger_on_fold(kfold, data_filename, wd_train_tags, use_tag_features, num_iterations, tag_history):
 
+    logger.log("Loading pickled files for fold %i" % kfold)
+    with open(data_filename, "rb") as f:
+        k_fold_data = dill.load(f)
+
+    essays_VD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag = k_fold_data
+    logger.log("LOADED pickled files for fold %i" % kfold)
+
+    """ TRAINING """
+    tagger = PerceptronTaggerMultiClassCombo(wd_train_tags, tag_history=tag_history,
+                                             combo_freq_threshold=1, use_tag_features=use_tag_features)
+    tagger.train(essays_TD_most_freq, nr_iter=num_iterations, verbose=False)
+
+    """ PREDICT """
+    td_wd_predictions_by_code = tagger.predict(essays_TD)
+    vd_wd_predictions_by_code = tagger.predict(essays_VD)
+
+    """ Aggregate results """
+    return td_wd_predictions_by_code, vd_wd_predictions_by_code
+
+def evaluate_tagger(wd_train_tags, use_tag_features, num_iterations, tag_history, k_fold_data_fnames):
+
+    """ Run K Fold CV in parallel """
+    print("New Evaluate Run - Use Tag Features: %s Num Iterations: %i Tag History: %i" \
+          % (str(use_tag_features), num_iterations, tag_history))
+
+    results = Parallel(n_jobs=len(k_fold_data_fnames.keys()))(
+         delayed(evaluate_tagger_on_fold)(kfold, data_filename, wd_train_tags, use_tag_features, num_iterations, tag_history)
+            for kfold, data_filename in k_fold_data_fnames.items())
+
+    # Merge results of parallel processing
     cv_wd_td_predictions_by_tag, cv_wd_vd_predictions_by_tag    = defaultdict(list), defaultdict(list)
-    for kfold, data_filename in k_fold_data_fnames.items():
-
-        with open(data_filename, "rb") as f:
-            k_fold_data = dill.load(f)
-
-        essays_VD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag = k_fold_data
-
-        """ TRAINING """
-        tagger = PerceptronTaggerMultiClassCombo(wd_train_tags, tag_history=tag_history,
-                                                 combo_freq_threshold=TAG_FREQ_THRESHOLD)
-        tagger.train(essays_TD_most_freq, nr_iter=num_iterations, verbose=False)
-
-        """ PREDICT """
-        td_wd_predictions_by_code = tagger.predict(essays_TD)
-        vd_wd_predictions_by_code = tagger.predict(essays_VD)
-
-        """ Aggregate results """
+    for td_wd_predictions_by_code, vd_wd_predictions_by_code in results:
         merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
         merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
         pass
@@ -136,22 +150,21 @@ def evaluate_tagger(num_iterations, tag_history, k_fold_data_fnames):
     parameters = dict(config)
     parameters["prev_tag_sharing"] = True  # don't include tags from other binary models
     """ False: 0.737 - 30 iterations """
+    parameters["use_tag_features"] = str(use_tag_features).lower()
     parameters["num_iterations"] = num_iterations
     parameters["tag_history"] = tag_history
-    parameters["combo_freq_threshold"] = TAG_FREQ_THRESHOLD
+    #parameters["combo_freq_threshold"] = TAG_FREQ_THRESHOLD
 
     parameters["extractors"] = extractor_names
-    wd_algo = "AveragedPerceptronMultiClass"
+    wd_algo = "AveragedPerceptronMultiClass_TagHistoryFixed"
 
-    _ = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag,
-                                               parameters, wd_algo)
-    wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag,
-                                               parameters, wd_algo)
+    _              = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
+    wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
+
     avg_f1 = float(processor.get_metric(CB_TAGGING_VD, wd_vd_objectid, __MICRO_F1__)["f1_score"])
     return avg_f1
 
-
-""" Prepare the folds (pre-process to avoid unnecessary computation """
+""" Prepare the folds (pre-process to avoid unnecessary computation) """
 # Build this up once
 cv_wd_td_ys_by_tag, cv_wd_vd_ys_by_tag = defaultdict(list), defaultdict(list)
 # Store the random pickled file names for use in training
@@ -178,22 +191,27 @@ for kfold, (essays_TD, essays_VD) in enumerate(folds):
         dill.dump(k_fold_data, f)
 
 best_f1 = 0
-#for iterations in [10, 20, 30, 40, 50]:
-for iterations in [10]:
-    #for tag_hist in [0, 1, 3, 5, 10, 15, 20]:
-    if iterations == 1:
-        tag_history = [0]
-    else:
-        tag_history = [8, 12, 15]
+for num_iterations in [1, 2, 5, 10, 20, 40]:          # Number of training iterations before stopping - Should we use early stopping instead?
 
-    for tag_hist in tag_history:
-        new_f1 = evaluate_tagger(num_iterations=iterations, tag_history=tag_hist, k_fold_data_fnames=k_fold_data_fnames)
-        if new_f1 > best_f1:
-            best_f1 = new_f1
-            print(("!" * 8) + " NEW BEST MICRO F1 " + ("!" * 8))
-        print(" Micro F1 %f for iterations [%i] and tag history [%i]" % (new_f1, iterations, tag_hist))
+    if num_iterations == 1:
+        # For just one iteration, not point in computing all of the history based measure, as predictions are too noisy
+        p_tag_history = [0]
+        p_use_tag_features  = [False]
+    else:
+        p_tag_history = [0, 1, 3, 5, 10, 20]
+        p_use_tag_features = [True, False]
+
+    for use_tag_feat in p_use_tag_features:         # Whether or not to use the various features used to look at combinations of words with prior tags
+        for tag_hist in p_tag_history:              # Tag history used to train the classifier
+
+            new_f1 = evaluate_tagger(use_tag_features=use_tag_feat, num_iterations=num_iterations, tag_history=tag_hist, k_fold_data_fnames=k_fold_data_fnames)
+            if new_f1 > best_f1:
+                best_f1 = new_f1
+                print(("!" * 8) + " NEW BEST MICRO F1 " + ("!" * 8))
+            print(" Micro F1 %f for iterations [%i] and tag history [%i]" % (new_f1, num_iterations, tag_hist))
 
 # Clean up tmp folder
+
 files = find_files(tmp_folder, ".*", False)
 for file in files:
     os.remove(file)

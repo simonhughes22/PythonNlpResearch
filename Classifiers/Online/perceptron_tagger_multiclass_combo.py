@@ -28,7 +28,8 @@ class PerceptronTaggerMultiClassCombo(object):
     POSITIVE_CLASS = 1.0
     NEGATIVE_CLASS = 0.0
 
-    def __init__(self, individual_tags, tag_history, combo_freq_threshold, load=False):
+    def __init__(self, individual_tags, tag_history, combo_freq_threshold, load=False, use_tag_features=True):
+        self.use_tag_features = use_tag_features
         self.combo_freq_threshold = combo_freq_threshold
         self.tag_history = tag_history
         self.classes = set()
@@ -71,7 +72,8 @@ class PerceptronTaggerMultiClassCombo(object):
                     self._add_secondary_tag_features(shared_features, prev)
 
                     tagger_feats = dict(shared_features.items())
-                    self._add_tag_features(tagger_feats, wd.word, prev[-1], prev[-2])
+                    if self.use_tag_features:
+                        self._add_tag_features(tagger_feats, wd.word, prev[-1], prev[-2])
 
                     scores_by_class = self.model.decision_function(tagger_feats)
                     guess = max(self.model.classes, key=lambda label: (scores_by_class[label], label))
@@ -143,7 +145,9 @@ class PerceptronTaggerMultiClassCombo(object):
                         tagger_feats = dict(shared_features.items())
                         # add more in depth features for this tag
                         actual = self.__get_tags_(wd.tags)
-                        self._add_tag_features(tagger_feats, wd.word, prev[-1], prev[-2])
+
+                        if self.use_tag_features:
+                            self._add_tag_features(tagger_feats, wd.word, prev[-1], prev[-2])
 
                         guess = self.model.predict(tagger_feats)
                         self.model.update(actual, guess, tagger_feats)
