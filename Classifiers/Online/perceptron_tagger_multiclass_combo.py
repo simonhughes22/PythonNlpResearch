@@ -38,6 +38,8 @@ class PerceptronTaggerMultiClassCombo(object):
     def _add_tag_features(self, feats, word, prev, prev2):
         sprev, sprev2 = str(prev), str(prev2)
         feats["bias"] = 1
+        # Commenting out the single previous tag features as included with the
+        # tag history parameter
         #feats["TAG -1 " + sprev]                  =      1     # included in other
         feats["TAG -1 wd " + sprev + "|" + word]  =      1
         #feats["TAG -2 " + sprev2]                 =      1     # included in other

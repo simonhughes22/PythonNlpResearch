@@ -204,7 +204,7 @@ for num_iterations in [1, 2, 5, 10, 20, 40]:          # Number of training itera
     for use_tag_feat in p_use_tag_features:         # Whether or not to use the various features used to look at combinations of words with prior tags
         for tag_hist in p_tag_history:              # Tag history used to train the classifier
 
-            new_f1 = evaluate_tagger(use_tag_features=use_tag_feat, num_iterations=num_iterations, tag_history=tag_hist, k_fold_data_fnames=k_fold_data_fnames)
+            new_f1 = evaluate_tagger(wd_train_tags=wd_train_tags, use_tag_features=use_tag_feat, num_iterations=num_iterations, tag_history=tag_hist, k_fold_data_fnames=k_fold_data_fnames)
             if new_f1 > best_f1:
                 best_f1 = new_f1
                 print(("!" * 8) + " NEW BEST MICRO F1 " + ("!" * 8))

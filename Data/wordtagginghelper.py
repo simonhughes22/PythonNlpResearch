@@ -337,7 +337,7 @@ def test_classifier_per_code(xs, tagToClassifier, tags=None, predict_fn=predict_
         A function to predict the labels for a given tag
     Returns
     -------
-    ys_by_code, predictions_by_code : a pair of dict's mapping tags to their actual labels \ predictions
+    predictions_by_code : a pair of dict's mapping tags to their actual labels \ predictions
     """
     if tags == None:
         tags = tagToClassifier.keys()
