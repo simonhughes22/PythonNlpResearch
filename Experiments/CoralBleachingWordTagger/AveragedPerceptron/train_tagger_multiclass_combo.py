@@ -89,13 +89,6 @@ CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
 wd_train_tags = regular_tags # + CAUSE_TAGS
 wd_test_tags  = regular_tags # + CAUSE_TAGS
 
-# tags from tagging model used to train the stacked model
-sent_input_feat_tags = wd_train_tags
-# find interactions between these predicted tags from the word tagger to feed to the sentence tagger
-sent_input_interaction_tags = wd_train_tags
-# tags to train (as output) for the sentence based classifier
-sent_output_train_test_tags = list(set(regular_tags + CAUSE_TAGS + CAUSAL_REL_TAGS))
-
 #assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against
 

@@ -1,10 +1,12 @@
 __author__ = 'simon.hughes'
 from collections import defaultdict, OrderedDict
-from IterableFP import flatten
-from Metrics import rpf1a
-from Rpfa import rpfa, weighted_mean_rpfa, mean_rpfa
-import scipy
+
 import numpy as np
+import scipy
+
+from IterableFP import flatten
+from processessays import Essay, Sentence
+
 
 def flatten_to_wordlevel_feat_tags(essay_feats):
     """
@@ -346,3 +348,37 @@ def test_classifier_per_code(xs, tagToClassifier, tags=None, predict_fn=predict_
 
     return predictions_by_code
 
+def essaysfeats_to_most_common_tags(essay_feats, tag_freq):
+    """
+    Returns a set of essay features with the labels filtered to the most frequent labels
+
+    Parameters
+    ----------
+    essay_feats : a list of lists of lists of Word objects
+        Tag level features for the essays
+    tag_freq : dict[str, int]
+        a dictionary mapping each tag to its frequency
+
+    Returns
+    -------
+    essay_feats
+    """
+
+    new_essay_feats = []
+    for essay_ix, essay in enumerate(essay_feats):
+
+        new_sentences = []
+        new_essay = Essay(essay.name, sentences=new_sentences)
+        new_essay_feats.append(new_essay)
+
+        for sent_ix, taggged_sentence in enumerate(essay):
+            new_sentence = Sentence(taggged_sentence.t)
+
+            for word_ix, (wd) in enumerate(taggged_sentence):
+                temp_features.append(wd.vector)
+                tags.append(wd.tags)
+
+    if sparse:
+        return scipy.sparse.csr_matrix(temp_features), tags
+    else:
+        return np.asarray(temp_features), tags
