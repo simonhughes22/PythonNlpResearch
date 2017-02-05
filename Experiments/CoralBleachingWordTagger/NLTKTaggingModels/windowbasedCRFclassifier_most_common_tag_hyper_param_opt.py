@@ -20,7 +20,7 @@ from random import randint
 import Settings
 import logging, os
 
-def train_classifer_on_fold(essays_TD, essays_VD, regular_tags, fold, code_freq):
+def train_classifer_on_fold(essays_TD, essays_VD, regular_tags, fold, code_freq, training_opt):
 
     # Start Training
     # Start Training
@@ -32,7 +32,7 @@ def train_classifer_on_fold(essays_TD, essays_VD, regular_tags, fold, code_freq)
 
     model_filename = models_folder + "/" + "%i_%s__%s" % (fold, "most_freq_code", str(randint(0, 9999999)))
 
-    model = CRFTagger(feature_func=comp_feat_extactor, verbose=False)
+    model = CRFTagger(feature_func=comp_feat_extactor, verbose=False, training_opt=training_opt)
     model.train(td_sents, model_filename)
 
     td_predictions = model.tag_sents(to_sentences(td_sents))
@@ -133,7 +133,7 @@ for feat_poss_state in [False]:
             training_opt_copy = dict([(k.replace(".", "_"),v) for k,v in training_opt.items()])
 
             results = Parallel(n_jobs=CV_FOLDS)(
-                        delayed(train_classifer_on_fold)(essays_TD, essays_VD, regular_tags, fold, code_freq)
+                        delayed(train_classifer_on_fold)(essays_TD, essays_VD, regular_tags, fold, code_freq, training_opt)
                             for fold, (essays_TD, essays_VD) in enumerate(folds))
 
             #results = [train_classifer_on_fold(essays_TD, essays_VD, regular_tags, fold, code_freq)

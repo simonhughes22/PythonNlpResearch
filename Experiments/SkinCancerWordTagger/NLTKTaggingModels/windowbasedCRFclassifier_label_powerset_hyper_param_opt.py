@@ -69,10 +69,9 @@ LOOK_BACK = 0  # how many sentences to look back when predicting tags
 
 # construct unique key using settings for pickling
 settings = Settings.Settings()
-folder = settings.data_directory + "SkinCancer/EBA1415_Merged/"
-processed_essay_filename_prefix = settings.data_directory + "SkinCancer/Pickled/essays_proc_pickled_"
-out_metrics_file = settings.data_directory + "SkinCancer/Results/metrics.txt"
-models_folder = settings.data_directory + "SkinCancer/models/CRF"
+root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
+folder =                            root_folder + "Training/"
+processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
 
 config = get_config(folder)
 print(config)
