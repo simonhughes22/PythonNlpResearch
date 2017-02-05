@@ -5,7 +5,8 @@ import numpy as np
 import scipy
 
 from IterableFP import flatten
-from processessays import Essay, Sentence
+from processessays import Essay
+from featureextractortransformer import Word
 
 
 def flatten_to_wordlevel_feat_tags(essay_feats):
@@ -354,15 +355,17 @@ def essaysfeats_to_most_common_tags(essay_feats, tag_freq):
 
     Parameters
     ----------
-    essay_feats : a list of lists of lists of Word objects
-        Tag level features for the essays
+    essay_feats : list[Essay]
+        a list of Essay objects objects/
     tag_freq : dict[str, int]
-        a dictionary mapping each tag to its frequency
+        a dictionary mapping each tag to its frequency in the dataset
 
     Returns
     -------
-    essay_feats
+    essay_feats : list[Essay]
     """
+
+    valid_tags = set(tag_freq.keys())
 
     new_essay_feats = []
     for essay_ix, essay in enumerate(essay_feats):
@@ -371,14 +374,27 @@ def essaysfeats_to_most_common_tags(essay_feats, tag_freq):
         new_essay = Essay(essay.name, sentences=new_sentences)
         new_essay_feats.append(new_essay)
 
-        for sent_ix, taggged_sentence in enumerate(essay):
-            new_sentence = Sentence(taggged_sentence.t)
+        # The essay class is used in 2 different variants. Here, the
+        # sentences are lists of Word objects
+        for sent_ix, taggged_sentence in enumerate(essay.sentences):
 
+            new_sentence = []
+            new_sentences.append(new_sentence)
             for word_ix, (wd) in enumerate(taggged_sentence):
-                temp_features.append(wd.vector)
-                tags.append(wd.tags)
 
-    if sparse:
-        return scipy.sparse.csr_matrix(temp_features), tags
-    else:
-        return np.asarray(temp_features), tags
+                fltrd_tags = set()
+                # if we have tags, filter to most frequent recognized tag
+                if len(wd.tags) > 0:
+                    # need to filter to just those that are in tag_freq
+                    recognized_tags = valid_tags.intersection(wd.tags)
+                    if len(recognized_tags) > 0:
+                        most_frequent = max(recognized_tags, key=lambda tag: tag_freq[tag])
+                        fltrd_tags.add(most_frequent)
+
+                new_word = Word(wd.word, fltrd_tags)
+                # make sure to copy over the features
+                new_word.features = dict(wd.features)
+                # leave the vector as None (this isn't used I don't think)
+                new_sentence.append(new_word)
+
+    return new_essay_feats

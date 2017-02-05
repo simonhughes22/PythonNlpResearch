@@ -6,10 +6,11 @@ from featureextractionfunctions import *
 from CrossValidation import cross_validation
 from wordtagginghelper import *
 from IterableFP import flatten
-from collections import defaultdict
+from collections import defaultdict, Counter
 from window_based_tagger_config import get_config
 from perceptron_tagger_multiclass_combo import PerceptronTaggerMultiClassCombo
 from results_procesor import ResultsProcessor
+from wordtagginghelper import essaysfeats_to_most_common_tags
 # END Classifiers
 
 import Settings
@@ -32,7 +33,6 @@ LOOK_BACK           = 0     # how many sentences to look back when predicting ta
 
 NUM_TRAIN_ITERATIONS = 30   # 30 best
 TAG_HISTORY          = 10
-TAG_FREQ_THRESHOLD   = 5
 # end not hashed
 
 # construct unique key using settings for pickling
@@ -80,23 +80,18 @@ logger.info("Features loaded")
 
 """ DEFINE TAGS """
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
-regular_tags = list(set((t for t in flatten(lst_all_tags) if t[0].isdigit())))
+all_regular_tags = list(set((t for t in flatten(lst_all_tags) if t[0].isdigit())))
 
-CAUSE_TAGS = ["Causer", "Result", "explicit"]
-CAUSAL_REL_TAGS = [CAUSAL_REL, CAUSE_RESULT, RESULT_REL]# + ["explicit"]
+tag_freq = Counter(all_regular_tags )
+regular_tags = list(tag_freq.keys())
 
-""" works best with all the pair-wise causal relation codes """
-wd_train_tags = regular_tags # + CAUSE_TAGS
-wd_test_tags  = regular_tags # + CAUSE_TAGS
+wd_train_tags = regular_tags
+wd_test_tags  = regular_tags
 
-#assert set(CAUSE_TAGS).issubset(set(sent_input_feat_tags)), "To extract causal relations, we need Causer tags"
 # tags to evaluate against
 
 """ CLASSIFIERS """
 """ Log Reg + Log Reg is best!!! """
-
-f_output_file = open(out_predictions_file, "w+")
-f_output_file.write("Essay|Sent Number|Processed Sentence|Concept Codes|Predictions\n")
 
 # Gather metrics per fold
 cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
@@ -118,15 +113,19 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     print "Training Tagging Model"
     """ Training """
 
-    # Just get the tags (ys)
+    """ Compute the target labels (ys) """
     _, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
     _, vd_tags = flatten_to_wordlevel_feat_tags(essays_VD)
-
     wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
     wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
 
-    tagger = PerceptronTaggerMultiClassCombo(wd_train_tags, tag_history=TAG_HISTORY, combo_freq_threshold=TAG_FREQ_THRESHOLD)
-    tagger.train(essays_TD, nr_iter=NUM_TRAIN_ITERATIONS)
+    """ Transform the xs into most frequent labels only """
+    #NOTE: we just need to do this for the TD only (as just for training purposes)
+    essays_TD_most_freq = essaysfeats_to_most_common_tags(essays_TD, tag_freq=tag_freq)
+
+    tagger = PerceptronTaggerMultiClassCombo(wd_train_tags, tag_history=TAG_HISTORY, combo_freq_threshold=1)
+    # Train on most frequent labels only
+    tagger.train(essays_TD_most_freq, nr_iter=NUM_TRAIN_ITERATIONS)
 
     td_wd_predictions_by_code = tagger.predict(essays_TD)
     vd_wd_predictions_by_code = tagger.predict(essays_VD)
@@ -138,12 +137,12 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
     pass
 
-suffix = "_AVG_PERCEPTRON_LBL_POWERSET"
+suffix = "_AVG_PERCEPTRON_MOST_COMMON_TAG"
 CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD" + suffix, "CB_TAGGING_VD" + suffix
 parameters = dict(config)
 
 parameters["num_iterations"]        = NUM_TRAIN_ITERATIONS
-parameters["tag_freq_threshold"]    = TAG_FREQ_THRESHOLD
+#parameters["tag_freq_threshold"]    = TAG_FREQ_THRESHOLD
 parameters["tag_history"]           = TAG_HISTORY
 
 #parameters["use_other_class_prev_labels"] = False

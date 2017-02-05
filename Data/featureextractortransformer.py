@@ -6,6 +6,13 @@ class Word(object):
     """ Holds a word for a sequence tagger approach.
     """
     def __init__(self, word, tags):
+        """
+        Holds a word and its associated tag(s)
+        @param word: str
+            word from a sentence
+        @param tags: enumerable
+            and enumerable of tags. Get's turned into a set of tags
+        """
         self.word = word
         self.tags = set(tags)
         self.features = {}
