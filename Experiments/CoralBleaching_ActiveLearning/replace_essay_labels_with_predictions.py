@@ -1,3 +1,7 @@
+from featureextractortransformer import Word
+from processessays import Essay
+
+
 def replace_essay_labels_with_predictions(essay_feats, word_feats, tag2Classifier, confidence_threshold=None):
 
     if not confidence_threshold:
