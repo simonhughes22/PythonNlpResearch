@@ -67,8 +67,8 @@ class PerceptronTaggerMultiClassCombo(object):
                     # Don't mutate the feat dictionary
                     shared_features = dict(wd.features.items())
                     # get all tagger predictions for previous 2 tags
-                    for cls in self.classes:
-                        self._add_secondary_tag_features(shared_features, prev)
+
+                    self._add_secondary_tag_features(shared_features, prev)
 
                     tagger_feats = dict(shared_features.items())
                     self._add_tag_features(tagger_feats, wd.word, prev[-1], prev[-2])
@@ -138,8 +138,7 @@ class PerceptronTaggerMultiClassCombo(object):
                         # Don't mutate the feat dictionary
                         shared_features = dict(wd.features.items())
                         # get all tagger predictions for previous 2 tags
-                        for cls in self.classes:
-                            self._add_secondary_tag_features(shared_features, prev)
+                        self._add_secondary_tag_features(shared_features, prev)
 
                         tagger_feats = dict(shared_features.items())
                         # add more in depth features for this tag
