@@ -109,12 +109,12 @@ def toDict(obj):
 
 def evaluate_tagger_on_fold(kfold, data_filename, wd_train_tags, use_tag_features, num_iterations, tag_history):
 
-    logger.log("Loading pickled files for fold %i" % kfold)
+    logger.info("Loading pickled files for fold %i" % kfold)
     with open(data_filename, "rb") as f:
         k_fold_data = dill.load(f)
 
     essays_VD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag = k_fold_data
-    logger.log("LOADED pickled files for fold %i" % kfold)
+    logger.info("LOADED pickled files for fold %i" % kfold)
 
     """ TRAINING """
     tagger = PerceptronTaggerMultiClassCombo(wd_train_tags, tag_history=tag_history,
