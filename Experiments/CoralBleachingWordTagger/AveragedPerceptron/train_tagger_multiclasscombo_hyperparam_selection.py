@@ -140,7 +140,7 @@ def evaluate_tagger_on_fold(kfold, wd_train_tags, use_tag_features, num_iteratio
 def evaluate_tagger(wd_train_tags, use_tag_features, num_iterations, tag_history):
 
     """ Run K Fold CV in parallel """
-    print("New Run - Use Tag Feats: '%s'\t Num Iterations: %i \t Tag History: %i" \
+    print("\nNew Run - Use Tag Feats: '%s'\t Num Iterations: %i \t Tag History: %i" \
           % (str(use_tag_features), num_iterations, tag_history))
 
     results = Parallel(n_jobs=(CV_FOLDS))(
@@ -192,4 +192,4 @@ for num_iterations in [1, 2, 5, 10, 20, 40]:          # Number of training itera
             if new_f1 > best_f1:
                 best_f1 = new_f1
                 print(("!" * 8) + " NEW BEST MICRO F1 " + ("!" * 8))
-            print(" Micro F1 %f for iterations [%i] and tag history [%i]" % (new_f1, num_iterations, tag_hist))
+            print(" Micro F1 %f - Use Tag Feats: '%s'\t Num Iterations: %i \t Tag History: %i" % (str(use_tag_feat), num_iterations, tag_hist))
