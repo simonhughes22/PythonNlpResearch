@@ -1,17 +1,13 @@
 # coding=utf-8
 import logging
-import os
 from collections import Counter
-from random import randint
 
-import dill
 from joblib import Parallel
 from joblib import delayed
 
 import Settings
 from CrossValidation import cross_validation
 from Decorators import memoize_to_disk
-from FindFiles import find_files
 from featureextractionfunctions import *
 from load_data import load_process_essays, extract_features
 from perceptron_tagger_multiclass_combo import PerceptronTaggerMultiClassCombo
@@ -47,7 +43,6 @@ root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
 folder =                            root_folder + "Training/"
 processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
 features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
-tmp_folder =                        root_folder + "tmp/"
 
 config = get_config(folder)
 
@@ -198,9 +193,3 @@ for num_iterations in [1, 2, 5, 10, 20, 40]:          # Number of training itera
                 best_f1 = new_f1
                 print(("!" * 8) + " NEW BEST MICRO F1 " + ("!" * 8))
             print(" Micro F1 %f for iterations [%i] and tag history [%i]" % (new_f1, num_iterations, tag_hist))
-
-# Clean up tmp folder
-
-files = find_files(tmp_folder, ".*", False)
-for file in files:
-    os.remove(file)
