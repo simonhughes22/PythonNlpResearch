@@ -101,20 +101,34 @@ wd_test_tags  = regular_tags
 
 """ CLASSIFIERS """
 folds = cross_validation(essay_feats, CV_FOLDS)
-def pad_str(val):
-    return str(val).ljust(20) + "  "
 
-def toDict(obj):
-    return obj.__dict__
+""" Prepare the folds (pre-process to avoid unnecessary computation) """
+# Build this up once
+cv_wd_td_ys_by_tag, cv_wd_vd_ys_by_tag = defaultdict(list), defaultdict(list)
+# Store the random pickled file names for use in training
+k_fold_2data = {}
+for kfold, (essays_TD, essays_VD) in enumerate(folds):
+    """ Compute the target labels (ys) """
+    # Just get the tags (ys)
+    _, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
+    _, vd_tags = flatten_to_wordlevel_feat_tags(essays_VD)
+    wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
+    wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
 
-def evaluate_tagger_on_fold(kfold, data_filename, wd_train_tags, use_tag_features, num_iterations, tag_history):
+    merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
+    merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
 
-    logger.info("Loading pickled files for fold %i" % kfold)
-    with open(data_filename, "rb") as f:
-        k_fold_data = dill.load(f)
+    """ Transform TD to only have most frequent tags """
+    essays_TD_most_freq = essaysfeats_to_most_common_tags(essays_TD, tag_freq=tag_freq)
 
+    k_fold_2data[kfold] = (essays_TD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag)
+
+def evaluate_tagger_on_fold(kfold, wd_train_tags, use_tag_features, num_iterations, tag_history):
+
+    logger.info("Loading data for fold %i" % kfold)
+    k_fold_data = k_fold_2data[kfold]
     essays_TD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag = k_fold_data
-    logger.info("LOADED pickled files for fold %i" % kfold)
+    logger.info("Fold: %i - loaded %i td essays and %i vd essays" % (kfold, len(essays_TD), len(essays_VD)))
 
     """ TRAINING """
     tagger = PerceptronTaggerMultiClassCombo(wd_train_tags, tag_history=tag_history,
@@ -128,15 +142,15 @@ def evaluate_tagger_on_fold(kfold, data_filename, wd_train_tags, use_tag_feature
     """ Aggregate results """
     return kfold, td_wd_predictions_by_code, vd_wd_predictions_by_code
 
-def evaluate_tagger(wd_train_tags, use_tag_features, num_iterations, tag_history, k_fold_data_fnames):
+def evaluate_tagger(wd_train_tags, use_tag_features, num_iterations, tag_history):
 
     """ Run K Fold CV in parallel """
     print("New Evaluate Run - Use Tag Features: %s Num Iterations: %i Tag History: %i" \
           % (str(use_tag_features), num_iterations, tag_history))
 
-    results = Parallel(n_jobs=len(k_fold_data_fnames.keys()))(
-         delayed(evaluate_tagger_on_fold)(kfold, data_filename, wd_train_tags, use_tag_features, num_iterations, tag_history)
-            for kfold, data_filename in k_fold_data_fnames.items())
+    results = Parallel(n_jobs=(CV_FOLDS))(
+         delayed(evaluate_tagger_on_fold)(kfold, wd_train_tags, use_tag_features, num_iterations, tag_history)
+            for kfold in range(CV_FOLDS))
 
     # Merge results of parallel processing
     cv_wd_td_predictions_by_tag, cv_wd_vd_predictions_by_tag    = defaultdict(list), defaultdict(list)
@@ -165,32 +179,6 @@ def evaluate_tagger(wd_train_tags, use_tag_features, num_iterations, tag_history
     avg_f1 = float(processor.get_metric(CB_TAGGING_VD, wd_vd_objectid, __MICRO_F1__)["f1_score"])
     return avg_f1
 
-""" Prepare the folds (pre-process to avoid unnecessary computation) """
-# Build this up once
-cv_wd_td_ys_by_tag, cv_wd_vd_ys_by_tag = defaultdict(list), defaultdict(list)
-# Store the random pickled file names for use in training
-k_fold_data_fnames = {}
-for kfold, (essays_TD, essays_VD) in enumerate(folds):
-    """ Compute the target labels (ys) """
-    # Just get the tags (ys)
-    _, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
-    _, vd_tags = flatten_to_wordlevel_feat_tags(essays_VD)
-    wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
-    wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
-
-    merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
-    merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
-
-    """ Transform TD to only have most frequent tags """
-    essays_TD_most_freq = essaysfeats_to_most_common_tags(essays_TD, tag_freq=tag_freq)
-
-    data_filename = tmp_folder + "fold_%i_avg_prcptron_%s.dill" % (kfold, str(randint(0, 9999999)))
-    k_fold_data_fnames[kfold] = data_filename
-
-    k_fold_data = (essays_TD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag)
-    with open(data_filename, "wb+") as f:
-        dill.dump(k_fold_data, f)
-
 best_f1 = 0
 for num_iterations in [1, 2, 5, 10, 20, 40]:          # Number of training iterations before stopping - Should we use early stopping instead?
 
@@ -205,7 +193,7 @@ for num_iterations in [1, 2, 5, 10, 20, 40]:          # Number of training itera
     for use_tag_feat in p_use_tag_features:         # Whether or not to use the various features used to look at combinations of words with prior tags
         for tag_hist in p_tag_history:              # Tag history used to train the classifier
 
-            new_f1 = evaluate_tagger(wd_train_tags=wd_train_tags, use_tag_features=use_tag_feat, num_iterations=num_iterations, tag_history=tag_hist, k_fold_data_fnames=k_fold_data_fnames)
+            new_f1 = evaluate_tagger(wd_train_tags=wd_train_tags, use_tag_features=use_tag_feat, num_iterations=num_iterations, tag_history=tag_hist)
             if new_f1 > best_f1:
                 best_f1 = new_f1
                 print(("!" * 8) + " NEW BEST MICRO F1 " + ("!" * 8))
