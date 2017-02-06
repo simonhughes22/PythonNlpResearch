@@ -128,7 +128,6 @@ def evaluate_tagger_on_fold(kfold, wd_train_tags, use_tag_features, num_iteratio
     logger.info("Loading data for fold %i" % kfold)
     k_fold_data = k_fold_2data[kfold]
     essays_TD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag = k_fold_data
-    logger.info("Fold: %i - loaded %i td essays and %i vd essays" % (kfold, len(essays_TD), len(essays_VD)))
 
     """ TRAINING """
     tagger = PerceptronTaggerMultiClassCombo(wd_train_tags, tag_history=tag_history,
@@ -139,13 +138,14 @@ def evaluate_tagger_on_fold(kfold, wd_train_tags, use_tag_features, num_iteratio
     td_wd_predictions_by_code = tagger.predict(essays_TD)
     vd_wd_predictions_by_code = tagger.predict(essays_VD)
 
+    logger.info("Fold %i finished" % kfold)
     """ Aggregate results """
     return kfold, td_wd_predictions_by_code, vd_wd_predictions_by_code
 
 def evaluate_tagger(wd_train_tags, use_tag_features, num_iterations, tag_history):
 
     """ Run K Fold CV in parallel """
-    print("New Evaluate Run - Use Tag Features: %s Num Iterations: %i Tag History: %i" \
+    print("New Run - Use Tag Feats: '%s'\t Num Iterations: %i \t Tag History: %i" \
           % (str(use_tag_features), num_iterations, tag_history))
 
     results = Parallel(n_jobs=(CV_FOLDS))(
