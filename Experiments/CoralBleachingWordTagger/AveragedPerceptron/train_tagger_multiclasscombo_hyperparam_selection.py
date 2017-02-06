@@ -193,3 +193,5 @@ for num_iterations in [1, 2, 5, 10, 20, 40]:          # Number of training itera
                 best_f1 = new_f1
                 print(("!" * 8) + " NEW BEST MICRO F1 " + ("!" * 8))
             print(" Micro F1 %f - Use Tag Feats: '%s'\t Num Iterations: %i \t Tag History: %i" % (str(use_tag_feat), num_iterations, tag_hist))
+
+#TODO - add tag hist = 2, and num_iterations = 3
