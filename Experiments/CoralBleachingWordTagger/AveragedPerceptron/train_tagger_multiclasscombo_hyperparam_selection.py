@@ -175,14 +175,15 @@ def evaluate_tagger(wd_train_tags, use_tag_features, num_iterations, tag_history
     return avg_f1
 
 best_f1 = 0
-for num_iterations in [1, 2, 5, 10, 20, 40]:          # Number of training iterations before stopping - Should we use early stopping instead?
+#for num_iterations in [1, 2, 3, 5, 10, 20, 40]:          # Number of training iterations before stopping - Should we use early stopping instead?
+for num_iterations in [10, 20, 40]:          # Number of training iterations before stopping - Should we use early stopping instead?
 
     if num_iterations == 1:
         # For just one iteration, not point in computing all of the history based measure, as predictions are too noisy
         p_tag_history = [0]
         p_use_tag_features  = [False]
     else:
-        p_tag_history = [0, 1, 3, 5, 10, 20]
+        p_tag_history = [0, 1, 2, 3, 5, 10, 20]
         p_use_tag_features = [False, True]
 
     for use_tag_feat in p_use_tag_features:         # Whether or not to use the various features used to look at combinations of words with prior tags
@@ -192,6 +193,6 @@ for num_iterations in [1, 2, 5, 10, 20, 40]:          # Number of training itera
             if new_f1 > best_f1:
                 best_f1 = new_f1
                 print(("!" * 8) + " NEW BEST MICRO F1 " + ("!" * 8))
-            print(" Micro F1 %f - Use Tag Feats: '%s'\t Num Iterations: %i \t Tag History: %i" % (str(use_tag_feat), num_iterations, tag_hist))
+            print(" Micro F1 %f - Use Tag Feats: '%s'\t Num Iterations: %i \t Tag History: %i" % (new_f1, str(use_tag_feat), num_iterations, tag_hist))
 
 #TODO - add tag hist = 2, and num_iterations = 3

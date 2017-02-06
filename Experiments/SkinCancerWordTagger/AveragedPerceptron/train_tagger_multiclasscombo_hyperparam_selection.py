@@ -172,14 +172,14 @@ def evaluate_tagger(wd_train_tags, use_tag_features, num_iterations, tag_history
     return avg_f1
 
 best_f1 = 0
-for num_iterations in [1, 2, 5, 10, 20, 40]:          # Number of training iterations before stopping - Should we use early stopping instead?
+for num_iterations in [1, 2, 3, 5, 10, 20, 40]:          # Number of training iterations before stopping - Should we use early stopping instead?
 
     if num_iterations == 1:
         # For just one iteration, not point in computing all of the history based measure, as predictions are too noisy
         p_tag_history = [0]
         p_use_tag_features  = [False]
     else:
-        p_tag_history = [0, 1, 3, 5, 10, 20]
+        p_tag_history = [0, 1, 2, 3, 5, 10, 20]
         p_use_tag_features = [False, True]
 
     for use_tag_feat in p_use_tag_features:         # Whether or not to use the various features used to look at combinations of words with prior tags
