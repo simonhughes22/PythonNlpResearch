@@ -113,7 +113,7 @@ def evaluate_tagger_on_fold(kfold, data_filename, wd_train_tags, use_tag_feature
     with open(data_filename, "rb") as f:
         k_fold_data = dill.load(f)
 
-    essays_VD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag = k_fold_data
+    essays_TD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag = k_fold_data
     logger.info("LOADED pickled files for fold %i" % kfold)
 
     """ TRAINING """
@@ -126,7 +126,7 @@ def evaluate_tagger_on_fold(kfold, data_filename, wd_train_tags, use_tag_feature
     vd_wd_predictions_by_code = tagger.predict(essays_VD)
 
     """ Aggregate results """
-    return td_wd_predictions_by_code, vd_wd_predictions_by_code
+    return kfold, td_wd_predictions_by_code, vd_wd_predictions_by_code
 
 def evaluate_tagger(wd_train_tags, use_tag_features, num_iterations, tag_history, k_fold_data_fnames):
 
@@ -140,7 +140,8 @@ def evaluate_tagger(wd_train_tags, use_tag_features, num_iterations, tag_history
 
     # Merge results of parallel processing
     cv_wd_td_predictions_by_tag, cv_wd_vd_predictions_by_tag    = defaultdict(list), defaultdict(list)
-    for td_wd_predictions_by_code, vd_wd_predictions_by_code in results:
+    # important to sort by k value
+    for kfold, td_wd_predictions_by_code, vd_wd_predictions_by_code in sorted(results, key = lambda (k, td, vd): k):
         merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
         merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
         pass
@@ -186,7 +187,7 @@ for kfold, (essays_TD, essays_VD) in enumerate(folds):
     data_filename = tmp_folder + "fold_%i_avg_prcptron_%s.dill" % (kfold, str(randint(0, 9999999)))
     k_fold_data_fnames[kfold] = data_filename
 
-    k_fold_data = (essays_VD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag)
+    k_fold_data = (essays_TD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag)
     with open(data_filename, "wb+") as f:
         dill.dump(k_fold_data, f)
 
@@ -199,7 +200,7 @@ for num_iterations in [1, 2, 5, 10, 20, 40]:          # Number of training itera
         p_use_tag_features  = [False]
     else:
         p_tag_history = [0, 1, 3, 5, 10, 20]
-        p_use_tag_features = [True, False]
+        p_use_tag_features = [False, True]
 
     for use_tag_feat in p_use_tag_features:         # Whether or not to use the various features used to look at combinations of words with prior tags
         for tag_hist in p_tag_history:              # Tag history used to train the classifier
