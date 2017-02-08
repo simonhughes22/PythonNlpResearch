@@ -126,7 +126,7 @@ for kfold, (essays_TD, essays_VD) in enumerate(folds):
 
 def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, tag_ngram, split=0.2):
 
-    logger.info("Loading data for fold %i" % kfold)
+    # logger.info("Loading data for fold %i" % kfold)
     k_fold_data = k_fold_2data[kfold]
     essays_TD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag = k_fold_data
 
@@ -180,7 +180,7 @@ def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, ta
     td_wd_predictions_by_code = final_tagger.predict(essays_TD)
     vd_wd_predictions_by_code = final_tagger.predict(essays_VD)
 
-    logger.info("Fold %i finished" % kfold)
+    # logger.info("Fold %i finished" % kfold)
     """ Aggregate results """
     return kfold, td_wd_predictions_by_code, vd_wd_predictions_by_code, optimal_num_iterations
 
