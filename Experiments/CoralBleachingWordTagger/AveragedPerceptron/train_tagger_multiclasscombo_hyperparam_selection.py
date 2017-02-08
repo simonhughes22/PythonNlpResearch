@@ -8,9 +8,11 @@ from joblib import delayed
 import Settings
 from CrossValidation import cross_validation
 from Decorators import memoize_to_disk
+from Rpfa import micro_rpfa
 from featureextractionfunctions import *
 from load_data import load_process_essays, extract_features
 from perceptron_tagger_multiclass_combo import PerceptronTaggerMultiClassCombo
+from perceptron_tagger_multiclass_combo_new import PerceptronTaggerLabelPowerset
 from results_procesor import ResultsProcessor, __MICRO_F1__
 from window_based_tagger_config import get_config
 from wordtagginghelper import *
@@ -79,8 +81,12 @@ tagged_essays = mem_process_essays( **config )
 logger.info("Essays loaded")
 
 # most params below exist ONLY for the purposes of the hashing to and from disk
-essay_feats = extract_features(tagged_essays, **feat_config)
+mem_extract_features = memoize_to_disk(filename_prefix=features_filename_prefix)(extract_features)
+essay_feats = mem_extract_features(tagged_essays, **feat_config)
 logger.info("Features loaded")
+
+""" For quick testing """
+#essay_feats = essay_feats[:100]
 
 """ DEFINE TAGS """
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
@@ -118,39 +124,83 @@ for kfold, (essays_TD, essays_VD) in enumerate(folds):
 
     k_fold_2data[kfold] = (essays_TD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag)
 
-def evaluate_tagger_on_fold(kfold, wd_train_tags, use_tag_features, num_iterations, tag_history):
+def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, tag_ngram, split=0.2):
 
-    logger.info("Loading data for fold %i" % kfold)
+    # logger.info("Loading data for fold %i" % kfold)
     k_fold_data = k_fold_2data[kfold]
     essays_TD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag = k_fold_data
 
     """ TRAINING """
-    tagger = PerceptronTaggerMultiClassCombo(wd_train_tags, tag_history=tag_history,
-                                             combo_freq_threshold=1, use_tag_features=use_tag_features)
-    tagger.train(essays_TD_most_freq, nr_iter=num_iterations, verbose=False)
+    tagger = PerceptronTaggerLabelPowerset(wd_train_tags,
+                                           combo_freq_threshold=1,
+                                           tag_history=tag_history,
+                                           tag_plus_word=tag_plus_word,
+                                           tag_ngram_size=tag_ngram)
+
+    # Split into train and test set
+    np_essays = np.asarray(essays_TD_most_freq)
+    ixs = np.arange(len(essays_TD_most_freq))
+    np.random.shuffle(ixs)
+    split_size = int(split * len(essays_TD_most_freq))
+
+    test, train = np_essays[ixs[:split_size]], np_essays[ixs[split_size:]]
+    _, test_tags = flatten_to_wordlevel_feat_tags(test)
+    class2ys = get_wordlevel_ys_by_code(test_tags, wd_train_tags)
+
+    optimal_num_iterations = -1
+    last_f1 = -1
+    """ EARLY STOPPING USING TEST SET """
+    for i in range(30):
+        tagger.train(train, nr_iter=1, verbose=False, average_weights=False)
+        wts_copy = dict(tagger.model.weights.items())
+        tagger.model.average_weights()
+
+        class2predictions = tagger.predict(test)
+        #Compute F1 score, stop early if worse than previous
+        class2metrics = ResultsProcessor.compute_metrics(class2ys, class2predictions)
+        micro_metrics = micro_rpfa(class2metrics.values())
+        current_f1 = micro_metrics.f1_score
+        if current_f1 <= last_f1:
+            optimal_num_iterations = i # i.e. this number minus 1, but 0 based
+            break
+        # Reset weights (as we are averaging weights)
+        tagger.model.weights = wts_copy
+        last_f1 = current_f1
+
+    # print("fold %i - Optimal F1 obtained at iteration %i " % (kfold, optimal_num_iterations))
+    """ Re-train model using stopping criterion on full training set """
+    final_tagger = PerceptronTaggerLabelPowerset(wd_train_tags,
+                                           combo_freq_threshold=1,
+                                           tag_history=tag_history,
+                                           tag_plus_word=tag_plus_word,
+                                           tag_ngram_size=tag_ngram)
+
+    final_tagger.train(essays_TD_most_freq, nr_iter=optimal_num_iterations, verbose=False)
 
     """ PREDICT """
-    td_wd_predictions_by_code = tagger.predict(essays_TD)
-    vd_wd_predictions_by_code = tagger.predict(essays_VD)
+    td_wd_predictions_by_code = final_tagger.predict(essays_TD)
+    vd_wd_predictions_by_code = final_tagger.predict(essays_VD)
 
-    logger.info("Fold %i finished" % kfold)
+    # logger.info("Fold %i finished" % kfold)
     """ Aggregate results """
-    return kfold, td_wd_predictions_by_code, vd_wd_predictions_by_code
+    return kfold, td_wd_predictions_by_code, vd_wd_predictions_by_code, optimal_num_iterations
 
-def evaluate_tagger(wd_train_tags, use_tag_features, num_iterations, tag_history):
+def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram):
 
     """ Run K Fold CV in parallel """
-    print("\nNew Run - Use Tag Feats: '%s'\t Num Iterations: %i \t Tag History: %i" \
-          % (str(use_tag_features), num_iterations, tag_history))
+    print("\nNew Run - Tag History: %i\tTag + Wd: %i\tTag Ngram: %i" % (tag_history, tag_plus_word, tag_ngram))
 
     results = Parallel(n_jobs=(CV_FOLDS))(
-         delayed(evaluate_tagger_on_fold)(kfold, wd_train_tags, use_tag_features, num_iterations, tag_history)
+         delayed(evaluate_tagger_on_fold)(kfold, wd_train_tags, tag_history, tag_plus_word, tag_ngram)
             for kfold in range(CV_FOLDS))
 
     # Merge results of parallel processing
     cv_wd_td_predictions_by_tag, cv_wd_vd_predictions_by_tag    = defaultdict(list), defaultdict(list)
     # important to sort by k value
-    for kfold, td_wd_predictions_by_code, vd_wd_predictions_by_code in sorted(results, key = lambda (k, td, vd): k):
+
+    optimal_traning_iterations = []
+    for kf, td_wd_predictions_by_code, vd_wd_predictions_by_code, opt_iter in sorted(results, key = lambda (k, td, vd, iter): k):
+        optimal_traning_iterations.append(opt_iter)
         merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
         merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
         pass
@@ -158,11 +208,14 @@ def evaluate_tagger(wd_train_tags, use_tag_features, num_iterations, tag_history
     suffix = "_AVG_PERCEPTRON_MOST_COMMON_TAG_HYPER_PARAM_TUNING"
     CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD" + suffix, "CB_TAGGING_VD" + suffix
     parameters = dict(config)
-    parameters["prev_tag_sharing"] = True  # don't include tags from other binary models
+    #parameters["prev_tag_sharing"] = True  # don't include tags from other binary models
     """ False: 0.737 - 30 iterations """
-    parameters["use_tag_features"] = str(use_tag_features).lower()
-    parameters["num_iterations"] = num_iterations
-    parameters["tag_history"] = tag_history
+    parameters["tag_history"]    = tag_history
+    parameters["tag_plus_word"]  = tag_plus_word
+    parameters["tag_ngram_size"] = tag_ngram
+
+    # store optimal number of iterations from early stopping. Not really parameters
+    parameters["early_stopping_training_iterations"] = optimal_traning_iterations
     #parameters["combo_freq_threshold"] = TAG_FREQ_THRESHOLD
 
     parameters["extractors"] = extractor_names
@@ -175,24 +228,15 @@ def evaluate_tagger(wd_train_tags, use_tag_features, num_iterations, tag_history
     return avg_f1
 
 best_f1 = 0
-#for num_iterations in [1, 2, 3, 5, 10, 20, 40]:          # Number of training iterations before stopping - Should we use early stopping instead?
-for num_iterations in [10, 20, 40]:          # Number of training iterations before stopping - Should we use early stopping instead?
+for tag_history in [0, 1, 2, 3, 5]:
+    for tag_plus_word in [0, 1, 2, 3, 5]:
+        for tag_ngram in [0, 1, 2]:
 
-    if num_iterations == 1:
-        # For just one iteration, not point in computing all of the history based measure, as predictions are too noisy
-        p_tag_history = [0]
-        p_use_tag_features  = [False]
-    else:
-        p_tag_history = [0, 1, 2, 3, 5, 10, 20]
-        p_use_tag_features = [False, True]
-
-    for use_tag_feat in p_use_tag_features:         # Whether or not to use the various features used to look at combinations of words with prior tags
-        for tag_hist in p_tag_history:              # Tag history used to train the classifier
-
-            new_f1 = evaluate_tagger(wd_train_tags=wd_train_tags, use_tag_features=use_tag_feat, num_iterations=num_iterations, tag_history=tag_hist)
+            new_f1 = evaluate_tagger(wd_train_tags=wd_train_tags,
+                                     tag_history=tag_history,
+                                     tag_plus_word=tag_plus_word,
+                                     tag_ngram=tag_ngram)
             if new_f1 > best_f1:
                 best_f1 = new_f1
                 print(("!" * 8) + " NEW BEST MICRO F1 " + ("!" * 8))
-            print(" Micro F1 %f - Use Tag Feats: '%s'\t Num Iterations: %i \t Tag History: %i" % (new_f1, str(use_tag_feat), num_iterations, tag_hist))
-
-#TODO - add tag hist = 2, and num_iterations = 3
+            print(" Micro F1 %f - Tag History: %i\tTag + Wd: %i\tTag Ngram: %i" % (new_f1, tag_history, tag_plus_word, tag_ngram))
