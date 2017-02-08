@@ -28,7 +28,7 @@ class PerceptronTaggerLabelPowerset(object):
     POSITIVE_CLASS = 1.0
     NEGATIVE_CLASS = 0.0
 
-    def __init__(self, individual_tags, tag_history, combo_freq_threshold, tag_plus_word=0, tag_ngram_size=0):
+    def __init__(self, individual_tags, tag_history, combo_freq_threshold=1, tag_plus_word=0, tag_ngram_size=0):
 
         self.combo_freq_threshold = combo_freq_threshold
         self.classes = set()
@@ -49,7 +49,8 @@ class PerceptronTaggerLabelPowerset(object):
             feats["[HIST_TAG | wd] " + str(offset) + " : " + str(prev) + "|" + wd] = 1
 
         if self.tag_ngram_size > 0:
-            tag_ngram = "|".join(prev_tags[-self.tag_ngram_size:])
+            tag_hist = prev_tags[-self.tag_ngram_size:]
+            tag_ngram = "|".join(map(str, tag_hist))
             feats["HIST_TAG_NGRAM: " + tag_ngram] = 1
 
     def predict(self, essay_feats, output_scores = False):
@@ -156,9 +157,9 @@ class PerceptronTaggerLabelPowerset(object):
                             class2tags[cls].append(         1 if cls in actual else 0)
 
             random.shuffle(cp_essay_feats)
-            class2metrics = ResultsProcessor.compute_metrics(class2tags, class2predictions)
-            micro_metrics = micro_rpfa(class2metrics.values())
             if verbose:
+                class2metrics = ResultsProcessor.compute_metrics(class2tags, class2predictions)
+                micro_metrics = micro_rpfa(class2metrics.values())
                 logging.info("Iter {0}: Micro Avg Metrics: {1}".format(iter_, str(micro_metrics)))
 
         if average_weights:

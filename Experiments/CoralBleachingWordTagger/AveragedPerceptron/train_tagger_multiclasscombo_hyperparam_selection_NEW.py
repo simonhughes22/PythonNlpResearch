@@ -81,8 +81,12 @@ tagged_essays = mem_process_essays( **config )
 logger.info("Essays loaded")
 
 # most params below exist ONLY for the purposes of the hashing to and from disk
-essay_feats = extract_features(tagged_essays, **feat_config)
+mem_extract_features = memoize_to_disk(filename_prefix=features_filename_prefix)(extract_features)
+essay_feats = mem_extract_features(tagged_essays, **feat_config)
 logger.info("Features loaded")
+
+""" For quick testing """
+#essay_feats = essay_feats[:100]
 
 """ DEFINE TAGS """
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
@@ -128,6 +132,7 @@ def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, ta
 
     """ TRAINING """
     tagger = PerceptronTaggerLabelPowerset(wd_train_tags,
+                                           combo_freq_threshold=1,
                                            tag_history=tag_history,
                                            tag_plus_word=tag_plus_word,
                                            tag_ngram_size=tag_ngram)
@@ -140,7 +145,7 @@ def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, ta
 
     test, train = np_essays[ixs[:split_size]], np_essays[ixs[split_size:]]
     _, test_tags = flatten_to_wordlevel_feat_tags(test)
-    wd_test_ys_bytag = get_wordlevel_ys_by_code(test_tags, wd_train_tags)
+    class2ys = get_wordlevel_ys_by_code(test_tags, wd_train_tags)
 
     optimal_num_iterations = -1
     last_f1 = -1
@@ -152,25 +157,32 @@ def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, ta
 
         class2predictions = tagger.predict(test)
         #Compute F1 score, stop early if worse than previous
-        class2metrics = ResultsProcessor.compute_metrics(wd_test_ys_bytag, class2predictions)
+        class2metrics = ResultsProcessor.compute_metrics(class2ys, class2predictions)
         micro_metrics = micro_rpfa(class2metrics.values())
         current_f1 = micro_metrics.f1_score
         if current_f1 <= last_f1:
             optimal_num_iterations = i # i.e. this number minus 1, but 0 based
             break
+        # Reset weights (as we are averaging weights)
         tagger.model.weights = wts_copy
         last_f1 = current_f1
 
+    # print("fold %i - Optimal F1 obtained at iteration %i " % (kfold, optimal_num_iterations))
     """ Re-train model using stopping criterion on full training set """
-    tagger.train(essays_TD_most_freq, nr_iter=optimal_num_iterations, verbose=False)
+    final_tagger = PerceptronTaggerLabelPowerset(wd_train_tags,
+                                           tag_history=tag_history,
+                                           tag_plus_word=tag_plus_word,
+                                           tag_ngram_size=tag_ngram)
+
+    final_tagger.train(essays_TD_most_freq, nr_iter=optimal_num_iterations, verbose=False)
 
     """ PREDICT """
-    td_wd_predictions_by_code = tagger.predict(essays_TD)
-    vd_wd_predictions_by_code = tagger.predict(essays_VD)
+    td_wd_predictions_by_code = final_tagger.predict(essays_TD)
+    vd_wd_predictions_by_code = final_tagger.predict(essays_VD)
 
     logger.info("Fold %i finished" % kfold)
     """ Aggregate results """
-    return kfold, td_wd_predictions_by_code, vd_wd_predictions_by_code
+    return kfold, td_wd_predictions_by_code, vd_wd_predictions_by_code, optimal_num_iterations
 
 def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram):
 
@@ -184,7 +196,10 @@ def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram):
     # Merge results of parallel processing
     cv_wd_td_predictions_by_tag, cv_wd_vd_predictions_by_tag    = defaultdict(list), defaultdict(list)
     # important to sort by k value
-    for kfold, td_wd_predictions_by_code, vd_wd_predictions_by_code in sorted(results, key = lambda (k, td, vd): k):
+
+    optimal_traning_iterations = []
+    for kf, td_wd_predictions_by_code, vd_wd_predictions_by_code, opt_iter in sorted(results, key = lambda (k, td, vd, iter): k):
+        optimal_traning_iterations.append(opt_iter)
         merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
         merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
         pass
@@ -197,6 +212,9 @@ def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram):
     parameters["tag_history"]    = tag_history
     parameters["tag_plus_word"]  = tag_plus_word
     parameters["tag_ngram_size"] = tag_ngram
+
+    # store optimal number of iterations from early stopping. Not really parameters
+    parameters["early_stopping_training_iterations"] = optimal_traning_iterations
     #parameters["combo_freq_threshold"] = TAG_FREQ_THRESHOLD
 
     parameters["extractors"] = extractor_names
@@ -209,10 +227,9 @@ def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram):
     return avg_f1
 
 best_f1 = 0
-for tag_history in [0,1,2,3,5,10]:
-
-    for tag_plus_word in [0,1,2,3,5]:
-        for tag_ngram in [0, 1, 2, 3, 5]:
+for tag_history in [0, 1, 2, 3, 5]:
+    for tag_plus_word in [0, 1, 2, 3, 5]:
+        for tag_ngram in [0, 1, 2]:
 
             new_f1 = evaluate_tagger(wd_train_tags=wd_train_tags,
                                      tag_history=tag_history,
@@ -222,5 +239,3 @@ for tag_history in [0,1,2,3,5,10]:
                 best_f1 = new_f1
                 print(("!" * 8) + " NEW BEST MICRO F1 " + ("!" * 8))
             print(" Micro F1 %f - Tag History: %i\tTag + Wd: %i\tTag Ngram: %i" % (new_f1, tag_history, tag_plus_word, tag_ngram))
-
-#TODO - add tag hist = 2, and num_iterations = 3
