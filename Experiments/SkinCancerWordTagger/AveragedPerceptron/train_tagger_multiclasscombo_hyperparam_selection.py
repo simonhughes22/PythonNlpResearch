@@ -222,7 +222,7 @@ def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram):
     return avg_f1
 
 best_f1 = 0
-for tag_history in [0, 1, 2, 3, 5]:
+for tag_history in [5, 3, 2, 1, 0]:
     for tag_plus_word in [0, 1, 2, 3, 5]:
         for tag_ngram in [0, 1, 2]:
 
