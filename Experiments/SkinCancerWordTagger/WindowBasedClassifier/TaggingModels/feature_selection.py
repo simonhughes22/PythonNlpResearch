@@ -122,10 +122,10 @@ def evaluate_window_size(config, window_size, features_filename_prefix):
                   + feat_extractor.func_name.ljust(50) + " attained F1: " + str(avg_f1))
         # end 'for each feat extractor'
 
-        if not f1_improved:
-            break
-        else:
-            existing_extractors.append(new_best_feature_set)
+        # if not f1_improved:
+        #     break
+        # else:
+        existing_extractors.append(new_best_feature_set)
     return best_avg_f1
 
 def evaluate_feature_set(config, existing_extractors, new_extractor, features_filename_prefix):
@@ -205,7 +205,8 @@ def evaluate_feature_set(config, existing_extractors, new_extractor, features_fi
 
 best_win_size = -1
 best_micro_f1 = 0
-for win_size in [1, 3, 7, 5]:
+#for win_size in [1, 3, 7, 5]:
+for win_size in [9]:
 #for win_size in [9, 11, 13]:
 #for win_size in [9,13]:
     macro_f1 = evaluate_window_size(config=config, window_size=win_size, features_filename_prefix=features_filename_prefix)
