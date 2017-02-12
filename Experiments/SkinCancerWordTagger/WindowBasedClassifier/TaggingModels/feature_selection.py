@@ -61,12 +61,15 @@ def evaluate_window_size(config, window_size, features_filename_prefix):
     unigram_window = fact_extract_positional_word_features(offset)
     bigram_window = fact_extract_positional_ngram_features(offset, 2)
     trigram_window = fact_extract_positional_ngram_features(offset, 3)
+
     unigram_bow_window = fact_extract_bow_ngram_features(offset, 1)
     bigram_bow_window = fact_extract_bow_ngram_features(offset, 2)
     trigram_bow_window = fact_extract_bow_ngram_features(offset, 3)
+
     unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
     bigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
     trigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
+
     pos_tag_window = fact_extract_positional_POS_features(offset)
     bow_pos_tag_bow_window = fact_extract_bow_POS_features(offset)
 
@@ -101,11 +104,17 @@ def evaluate_window_size(config, window_size, features_filename_prefix):
     if window_size >= 3:
         all_extractors += trigram_extractors
 
-    existing_extractors = []
+    existing_extractors = [
+        # unigram_window_stemmed,
+        # bigram_window_stemmed,
+        # extract_brown_cluster,
+        # unigram_bow_window,
+        # extract_dependency_relation
+    ]
+
     best_avg_f1 = 0.0
 
     while len(existing_extractors) <= 5:
-        f1_improved = False
         new_best_feature_set = None
         hs_existing_extractors = set(map(lambda fn: fn.func_name, existing_extractors))
 
@@ -115,7 +124,6 @@ def evaluate_window_size(config, window_size, features_filename_prefix):
             avg_f1 = evaluate_feature_set(config, existing_extractors, feat_extractor, features_filename_prefix)
             if avg_f1 > best_avg_f1:
                 best_avg_f1 = avg_f1
-                f1_improved = True
                 new_best_feature_set = feat_extractor
                 print(("*" * 8) + " NEW BEST F1 " + ("*" * 8))
             print("Window Size: " + str(window_size) + "\tFeature Set (" + str(len(existing_extractors)) + "): " + ",".join(hs_existing_extractors) + ","
