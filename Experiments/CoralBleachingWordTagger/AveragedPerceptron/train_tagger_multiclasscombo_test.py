@@ -127,7 +127,7 @@ for kfold, (essays_TD, essays_VD) in enumerate(folds):
 
     k_fold_2data[kfold] = (essays_TD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag)
 
-def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, tag_ngram, split=0.2):
+def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, tag_ngram, avg_weights=True, split=0.2):
 
     # logger.info("Loading data for fold %i" % kfold)
     k_fold_data = k_fold_2data[kfold]
@@ -156,7 +156,8 @@ def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, ta
     for i in range(30):
         tagger.train(train, nr_iter=1, verbose=False, average_weights=False)
         wts_copy = dict(tagger.model.weights.items())
-        tagger.model.average_weights()
+        if avg_weights:
+            tagger.model.average_weights()
 
         class2predictions = tagger.predict(test)
         #Compute F1 score, stop early if worse than previous
@@ -178,7 +179,7 @@ def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, ta
                                            tag_plus_word=tag_plus_word,
                                            tag_ngram_size=tag_ngram)
 
-    final_tagger.train(essays_TD_most_freq, nr_iter=optimal_num_iterations, verbose=False)
+    final_tagger.train(essays_TD_most_freq, nr_iter=optimal_num_iterations, verbose=False, average_weights=avg_weights)
 
     """ PREDICT """
     td_wd_predictions_by_code = final_tagger.predict(essays_TD)
@@ -188,13 +189,13 @@ def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, ta
     """ Aggregate results """
     return kfold, td_wd_predictions_by_code, vd_wd_predictions_by_code, optimal_num_iterations
 
-def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram):
+def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram, average_weights):
 
     """ Run K Fold CV in parallel """
     print("\nNew Run - Tag History: %i\tTag + Wd: %i\tTag Ngram: %i" % (tag_history, tag_plus_word, tag_ngram))
 
     results = Parallel(n_jobs=(len(folds)))(
-         delayed(evaluate_tagger_on_fold)(kfold, wd_train_tags, tag_history, tag_plus_word, tag_ngram)
+         delayed(evaluate_tagger_on_fold)(kfold, wd_train_tags, tag_history, tag_plus_word, tag_ngram, average_weights)
             for kfold in range(len(folds)))
 
     # Merge results of parallel processing
@@ -216,6 +217,7 @@ def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram):
     parameters["tag_history"]    = tag_history
     parameters["tag_plus_word"]  = tag_plus_word
     parameters["tag_ngram_size"] = tag_ngram
+    parameters["average_weights"] = avg_weights
 
     # store optimal number of iterations from early stopping. Not really parameters
     parameters["early_stopping_training_iterations"] = optimal_traning_iterations
@@ -231,14 +233,16 @@ def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram):
     return avg_f1
 
 best_f1 = 0
-for tag_history in [1]:
-    for tag_plus_word in [5]:
-        for tag_ngram in [1]:
+for average_weights in [True]:
+    for tag_history in [1]:
+        for tag_plus_word in [0]:
+            for tag_ngram in [0]:
+                new_f1 = evaluate_tagger(wd_train_tags=wd_train_tags,
+                                         tag_history=tag_history,
+                                         tag_plus_word=tag_plus_word,
+                                         tag_ngram=tag_ngram,
+                                         average_weights=average_weights)
 
-            new_f1 = evaluate_tagger(wd_train_tags=wd_train_tags,
-                                     tag_history=tag_history,
-                                     tag_plus_word=tag_plus_word,
-                                     tag_ngram=tag_ngram)
             if new_f1 > best_f1:
                 best_f1 = new_f1
                 print(("!" * 8) + " NEW BEST MICRO F1 " + ("!" * 8))
