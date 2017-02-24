@@ -67,6 +67,8 @@
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingWordTagger/NLTKTaggingModels" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/SkinCancerWordTagger/NLTKTaggingModels" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingWordTagger/FastText" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingWordTagger/SeqLearnTaggingModels" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/SkinCancerWordTagger/SeqLearnTaggingModels" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/notebooks" />
     </content>

@@ -11,6 +11,7 @@ clyent==1.2.2
 configparser==3.5.0
 cycler==0.10.0
 cymem==1.31.2
+Cython==0.25.2
 decorator==4.0.10
 dill==0.2.6
 enum34==1.1.6
@@ -63,6 +64,7 @@ scikit-learn==0.18.1
 scipy==0.18.1
 seaborn==0.7.1
 semver==2.7.3
+seqlearn==0.2
 simplegeneric==0.8.1
 singledispatch==3.4.0.3
 six==1.10.0

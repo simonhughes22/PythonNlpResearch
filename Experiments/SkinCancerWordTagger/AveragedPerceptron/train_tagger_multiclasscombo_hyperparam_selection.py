@@ -57,7 +57,7 @@ biigram_window_stemmed  = fact_extract_ngram_features_stemmed(offset, 2)
 triigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
 unigram_bow_window      = fact_extract_bow_ngram_features(offset, 1)
 
-#optimal CB feature set
+# modified to use new optimal feats
 extractors = [unigram_bow_window,
               unigram_window_stemmed,
               biigram_window_stemmed,
@@ -81,6 +81,9 @@ logger.info("Essays loaded")
 mem_extract_features = memoize_to_disk(filename_prefix=features_filename_prefix)(extract_features)
 essay_feats = mem_extract_features(tagged_essays, **feat_config)
 logger.info("Features loaded")
+
+""" For quick testing """
+#essay_feats = essay_feats[:100]
 
 """ DEFINE TAGS """
 _, lst_all_tags = flatten_to_wordlevel_feat_tags(essay_feats)
@@ -118,7 +121,7 @@ for kfold, (essays_TD, essays_VD) in enumerate(folds):
 
     k_fold_2data[kfold] = (essays_TD, essays_VD, essays_TD_most_freq, wd_td_ys_bytag, wd_vd_ys_bytag)
 
-def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, tag_ngram, split=0.2):
+def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, tag_ngram, avg_weights=True, split=0.2):
 
     # logger.info("Loading data for fold %i" % kfold)
     k_fold_data = k_fold_2data[kfold]
@@ -147,7 +150,8 @@ def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, ta
     for i in range(30):
         tagger.train(train, nr_iter=1, verbose=False, average_weights=False)
         wts_copy = dict(tagger.model.weights.items())
-        tagger.model.average_weights()
+        if avg_weights:
+            tagger.model.average_weights()
 
         class2predictions = tagger.predict(test)
         #Compute F1 score, stop early if worse than previous
@@ -169,7 +173,7 @@ def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, ta
                                            tag_plus_word=tag_plus_word,
                                            tag_ngram_size=tag_ngram)
 
-    final_tagger.train(essays_TD_most_freq, nr_iter=optimal_num_iterations, verbose=False)
+    final_tagger.train(essays_TD_most_freq, nr_iter=optimal_num_iterations, verbose=False, average_weights=avg_weights)
 
     """ PREDICT """
     td_wd_predictions_by_code = final_tagger.predict(essays_TD)
@@ -179,13 +183,14 @@ def evaluate_tagger_on_fold(kfold, wd_train_tags, tag_history, tag_plus_word, ta
     """ Aggregate results """
     return kfold, td_wd_predictions_by_code, vd_wd_predictions_by_code, optimal_num_iterations
 
-def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram):
+def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram, avg_weights):
 
     """ Run K Fold CV in parallel """
-    print("\nNew Run - Tag History: %i\tTag + Wd: %i\tTag Ngram: %i" % (tag_history, tag_plus_word, tag_ngram))
+    #print("\nNew Run - Tag History: %i\tTag + Wd: %i\tTag Ngram: %i" % (tag_history, tag_plus_word, tag_ngram))
+    print("\nNew Run - Tag History: %i\tAvg Wts: %s\tTag + Wd: %i\tTag Ngram: %i" % (tag_history, str(avg_weights), tag_plus_word, tag_ngram))
 
     results = Parallel(n_jobs=(CV_FOLDS))(
-         delayed(evaluate_tagger_on_fold)(kfold, wd_train_tags, tag_history, tag_plus_word, tag_ngram)
+         delayed(evaluate_tagger_on_fold)(kfold, wd_train_tags, tag_history, tag_plus_word, tag_ngram, avg_weights)
             for kfold in range(CV_FOLDS))
 
     # Merge results of parallel processing
@@ -199,7 +204,7 @@ def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram):
         merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
         pass
 
-    suffix = "_AVG_PERCEPTRON_MOST_COMMON_TAG_HYPER_PARAM_TUNING"
+    suffix = "_AVG_PERCEPTRON_MOST_COMMON_TAG_HYPER_PARAM_TUNING_NEW"
     SC_TAGGING_TD, SC_TAGGING_VD = "SC_TAGGING_TD" + suffix, "SC_TAGGING_VD" + suffix
     parameters = dict(config)
     #parameters["prev_tag_sharing"] = True  # don't include tags from other binary models
@@ -207,6 +212,7 @@ def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram):
     parameters["tag_history"]    = tag_history
     parameters["tag_plus_word"]  = tag_plus_word
     parameters["tag_ngram_size"] = tag_ngram
+    parameters["average_weights"] = avg_weights
 
     # store optimal number of iterations from early stopping. Not really parameters
     parameters["early_stopping_training_iterations"] = optimal_traning_iterations
@@ -222,15 +228,20 @@ def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram):
     return avg_f1
 
 best_f1 = 0
-for tag_history in [5, 3, 2, 1, 0]:
-    for tag_plus_word in [0, 1, 2, 3, 5]:
-        for tag_ngram in [0, 1, 2]:
+for average_weights in [True, False]:
+    #for tag_history in [0, 1, 2, 3, 5]:
+    for tag_history in [0, 1]:
+        for tag_plus_word in [0]:
+        #for tag_plus_word in [0, 1, 2, 3, 5]:
+            for tag_ngram in [0]:
+            #for tag_ngram in [0, 1, 2]:
 
-            new_f1 = evaluate_tagger(wd_train_tags=wd_train_tags,
-                                     tag_history=tag_history,
-                                     tag_plus_word=tag_plus_word,
-                                     tag_ngram=tag_ngram)
-            if new_f1 > best_f1:
-                best_f1 = new_f1
-                print(("!" * 8) + " NEW BEST MICRO F1 " + ("!" * 8))
-            print(" Micro F1 %f - Tag History: %i\tTag + Wd: %i\tTag Ngram: %i" % (new_f1, tag_history, tag_plus_word, tag_ngram))
+                new_f1 = evaluate_tagger(wd_train_tags=wd_train_tags,
+                                         tag_history=tag_history,
+                                         tag_plus_word=tag_plus_word,
+                                         tag_ngram=tag_ngram,
+                                         avg_weights=average_weights)
+                if new_f1 > best_f1:
+                    best_f1 = new_f1
+                    print(("!" * 8) + " NEW BEST MICRO F1 " + ("!" * 8))
+                print(" Micro F1 %f - Tag History: %i\tTag + Wd: %i\tTag Ngram: %i" % (new_f1, tag_history, tag_plus_word, tag_ngram))
