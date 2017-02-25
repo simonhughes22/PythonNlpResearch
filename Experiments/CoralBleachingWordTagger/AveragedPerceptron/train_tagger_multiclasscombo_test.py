@@ -217,7 +217,7 @@ def evaluate_tagger(wd_train_tags, tag_history, tag_plus_word, tag_ngram, averag
     parameters["tag_history"]    = tag_history
     parameters["tag_plus_word"]  = tag_plus_word
     parameters["tag_ngram_size"] = tag_ngram
-    parameters["average_weights"] = avg_weights
+    parameters["average_weights"] = average_weights
 
     # store optimal number of iterations from early stopping. Not really parameters
     parameters["early_stopping_training_iterations"] = optimal_traning_iterations
