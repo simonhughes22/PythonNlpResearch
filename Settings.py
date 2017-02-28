@@ -26,10 +26,10 @@ class Settings(object):
         self.results_directory = "/Users/simon.hughes/Google Drive/Phd/Results/"
         self.data_directory    = "/Users/simon.hughes/Google Drive/Phd/Data/"
 
-        print "Results Dir: "   + self.results_directory
-        print "Data Dir:    "   + self.data_directory
-        print "Root Dir:    "   + self.root_path
-        print "Public Data: "   + self.public_data_dir
+        print("Results Dir: "   + self.results_directory)
+        print("Data Dir:    "   + self.data_directory)
+        print("Root Dir:    "   + self.root_path)
+        print("Public Data: "   + self.public_data_dir)
 
 if __name__ == "__main__":
 

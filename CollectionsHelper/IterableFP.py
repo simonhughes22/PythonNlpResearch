@@ -165,7 +165,7 @@ def recursive_print(nested_iterable, padding_str="\t"):
             for i in iterble:
                 r_print(level + 1, i)
         else:
-            print padding_str * level, str(iterble)
+            print(padding_str * level, str(iterble))
     r_print(-1, nested_iterable)
 
 """ Aliases """
@@ -183,15 +183,15 @@ if __name__ == "__main__":
         1
     ]
 
-    print "Before Mapping"
+    print("Before Mapping")
     recursive_print(l)
 
-    print "\nAfter Mapping"
+    print("\nAfter Mapping")
     str_l = recursive_map(str, l)
     mapped = recursive_map(lambda i: i * 2, str_l)
     recursive_print(mapped)
 
-    print "\nReduced (max)"
-    print str(recursive_reduce(max, l))
-    print "\nReduced (min)"
-    print str(recursive_reduce(min, l))
+    print("\nReduced (max)")
+    print(str(recursive_reduce(max, l)))
+    print("\nReduced (min)")
+    print(str(recursive_reduce(min, l)))

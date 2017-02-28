@@ -284,7 +284,7 @@ class Essay(object):
                 continue
 
             if not line[1].isdigit():
-                print "Skipping annotation line: %s \n\tin essay %s" % (line.strip(), self.file_name)
+                print("Skipping annotation line: %s \n\tin essay %s" % (line.strip(), self.file_name))
                 continue
 
             first_char = line[0]
@@ -313,9 +313,9 @@ class Essay(object):
                             continue
                         else:
                             text_annotations.append(annotation)
-                    except Exception, e:
+                    except Exception as e:
                         import traceback
-                        print traceback.format_exc()
+                        print(traceback.format_exc())
                         raise e
 
             elif first_char == "A":
@@ -370,8 +370,8 @@ class Essay(object):
 
             if len(grp_causer) > 0 and len(grp_result) > 0:
                 if len(grp_causer) == 1 and len(grp_result) == 1:
-                    causer = grp_causer.values()[0]
-                    result = grp_result.values()[0]
+                    causer = list(grp_causer.values())[0]
+                    result = list(grp_result.values())[0]
                     process_causal_relations(causer, result)
                 elif len(grp_causer) == len(grp_result):
                     for key in grp_causer.keys():
@@ -379,11 +379,11 @@ class Essay(object):
                         result = grp_result[key]
                         process_causal_relations(causer, result)
                 elif len(grp_causer) == 1:
-                    causer = grp_causer.values()[0]
+                    causer = list(grp_causer.values())[0]
                     for key, result in grp_result.items():
                         process_causal_relations(causer, result)
                 elif len(grp_result) == 1:
-                    result = grp_result.values()[0]
+                    result = list(grp_result.values())[0]
                     for key, causer in grp_causer.items():
                         process_causal_relations(causer, result)
                 else:
@@ -425,7 +425,7 @@ class Essay(object):
         def add_sentence(sentence, str_sent):
 
             sents = filter(lambda s: len(s) > 1 and s != '//', sent_tokenize(onlyascii(str_sent.strip())))
-            sents = map(lambda s: s.replace("/", " ").replace("-", " - ").replace(")", " ) ").replace("  "," ").strip(), sents)
+            sents = list(map(lambda s: s.replace("/", " ").replace("-", " - ").replace(")", " ) ").replace("  "," ").strip(), sents))
 
             # the code below handles cases where the sentences are not properly split and we get multiple sentences here
             if len(sents) > 1:
@@ -444,9 +444,9 @@ class Essay(object):
             if len(sents) > 1:
 
                 # filter to # of full sentences, and we should get at least this many out
-                expected_min_sents = len([s for s in sents if s.strip().split(" ") > 1])
+                expected_min_sents = len([s for s in sents if len(s.strip().split(" ")) > 1])
 
-                unique_wds = set(map(lambda s: s.lower(), zip(*sentence)[0]))
+                unique_wds = set(map(lambda s: s.lower(), list(zip(*sentence))[0]))
 
                 processed = []
                 partitions = []
@@ -492,12 +492,12 @@ class Essay(object):
                             nextWd, nextTg = sentence[j + 1]
                             if first.startswith(nextWd):
                                 self.tagged_sentences.append(current)
-                                processed.append(zip(*current)[0])
+                                processed.append(list(zip(*current))[0])
                                 current = []
                                 partitions = partitions[1:]
                 current.append(sentence[-1])
                 self.tagged_sentences.append(current)
-                processed.append(zip(*current)[0])
+                processed.append(list(zip(*current))[0])
                 assert len(processed) >= max(2,expected_min_sents)
                 self.split_sents.append(processed)
             else:
@@ -531,7 +531,7 @@ class Essay(object):
         if len(current_sentence) > 0:
             self.tagged_sentences.append(current_sentence)
         for sent in self.tagged_sentences:
-            tags = zip(*sent)[1]
+            tags = list(zip(*sent))[1]
             self.sentence_tags.append(set(flatten(tags)))
 
         #if len(self.tagged_sentences) > 60:
@@ -550,7 +550,7 @@ def load_bratt_essays(directory = None, include_vague = True, include_normal = T
         files = find_files(bratt_root_folder, "\.ann$", remove_empty=True)
     else:
         files = find_files(bratt_root_folder, "\.txt$", remove_empty=True)
-    print len(files), "files found"
+    print(len(files), "files found")
 
     essays = []
     for f in files:
@@ -559,20 +559,22 @@ def load_bratt_essays(directory = None, include_vague = True, include_normal = T
             with open(txt_file) as fin:
                 contents = fin.read().strip().lower()
                 if "no essay" in contents[:20] or "no text" in contents[0:20]:
-                    print "Skipping %s file as .txt file is %s'" % (f, contents)
+                    print("Skipping %s file as .txt file is %s'" % (f, contents))
                     continue
 
             essay = Essay(f, include_vague=include_vague, include_normal=include_normal, load_annotations=load_annotations)
             if len(essay.tagged_sentences) > 60:
                 warnings.warn("Too many sentences (%s) in essay %s" % (str(len(essay.sentence_tags)), essay.file_name))
-                print "Too many sentences (%s) in essay %s" % (str(len(essay.sentence_tags)), essay.file_name)
+                print("Too many sentences (%s) in essay %s" % (str(len(essay.sentence_tags)), essay.file_name))
             else:
                 essays.append(essay)
-        except Exception, e:
-            print "Error processing file: ", e.message, f
+        except Exception as ex:
+            from traceback import format_exc
+            print(format_exc())
+            print("Error processing file: ", f)
             pass
 
-    print "%s essays processed" % str(len(essays))
+    print("%s essays processed" % str(len(essays)))
     return essays
 
 
@@ -587,18 +589,18 @@ if __name__ == "__main__":
     print("ABORTED SPLITS")
     for essay in essays:
         if essay.aborted_splits:
-            print essay.full_path
+            print(essay.full_path)
             for sent in essay.aborted_splits:
-                print sent
-            print ""
+                print(sent)
+            print("")
 
     print("\n\nSPLIT SENTENCES")
     for essay in essays:
         if essay.split_sents:
-            print essay.full_path
+            print(essay.full_path)
             for splt_sent in essay.split_sents:
                 for splt in splt_sent:
-                    print " ".join(splt)
-                print ""
+                    print(" ".join(splt))
+                print("")
 
-    print "Done"
+    print("Done")
