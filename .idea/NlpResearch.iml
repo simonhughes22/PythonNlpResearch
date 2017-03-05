@@ -69,6 +69,9 @@
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingWordTagger/FastText" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingWordTagger/SeqLearnTaggingModels" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Experiments/SkinCancerWordTagger/SeqLearnTaggingModels" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DeepLearning/WordVectors" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DeepLearning/TensorFlow" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/DeepLearning/TensorFlow/SyntaxNet" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/notebooks" />
     </content>

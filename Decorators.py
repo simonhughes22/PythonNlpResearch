@@ -4,7 +4,11 @@
 
 import time
 import os
-import cPickle as pickle
+try:
+    import cPickle as pickle
+except:
+    import pickle
+
 from collections import defaultdict
 from argument_hasher import argument_hasher
 import hashlib
@@ -36,8 +40,8 @@ def timeit(method):
             args_str = "(" + args_str[:-2] + ") "
 
         # Don't print huge args list
-        print 'timeit: %s%stook %2.2f secs' % \
-            (method.__name__, args_str, te - ts)
+        print('timeit: %s%stook %2.2f secs' % \
+            (method.__name__, args_str, te - ts))
         return result
 
     return timed
@@ -57,7 +61,7 @@ class __memodict_(dict):
 class ArgHashMixin(object):
     def hash_args(self, *args, **kwargs):
         hargs = "_".join(map(lambda v: "_" + self.__value2str__(v), args))
-        hkwargs = "_".join(map(lambda (k, v): k + "_" + self.__value2str__(v), sorted(kwargs.items())))
+        hkwargs = "_".join(map(lambda tpl: tpl[0] + "_" + self.__value2str__(tpl[1]), sorted(kwargs.items())))
         return hargs + "|" + hkwargs
 
     def __value2str__(self, value):
@@ -118,7 +122,7 @@ class memoize_to_disk(object):
         # decorate f
         def wrapped_f(*args, **kwargs):
             # don't hash args, just kwargs
-            s_pickle_key = "_".join(map(lambda (k, v): k + "_" + self.__value2str__(v), sorted(kwargs.items())))
+            s_pickle_key = "_".join(map(lambda tpl: tpl[0] + "_" + self.__value2str__(tpl[1]), sorted(kwargs.items())))
             # hash long filesnames
             #if len(pickle_key) > 225:
             if self.verbose:
@@ -156,24 +160,24 @@ if __name__ == "__main__":
     def bar(a,b):
         return a + b
 
-    print "foo"
-    print foo(4, 2)
-    print foo(4, 2)
-    print foo
+    print("foo")
+    print(foo(4, 2))
+    print(foo(4, 2))
+    print(foo)
 
-    print "bar"
-    print bar(4, 2)
-    print bar(4, 2)
-    print bar
+    print("bar")
+    print(bar(4, 2))
+    print(bar(4, 2))
+    print(bar)
 
-    print "foo", foo, "bar", bar
+    print("foo", foo, "bar", bar)
 
-    print "foo"
-    print foo('xo', 3)
-    print foo('xo', 3)
-    print foo
+    print("foo")
+    print(foo('xo', 3))
+    print(foo('xo', 3))
+    print(foo)
 
-    print "bar"
-    print bar('xo', "3")
-    print bar('xo', "3")
-    print bar
+    print("bar")
+    print(bar('xo', "3"))
+    print(bar('xo', "3"))
+    print(bar)

@@ -93,10 +93,10 @@ class SpellingCorrector(object):
 if __name__ == "__main__":
     sc = SpellingCorrector()
 
-    print "eappl  ",  sc.correct("eappl")
-    print "Coral ", sc.correct("Coral")
-    print "Appe  ",  sc.correct("Appe")
-    print "APPLE ", sc.correct("APPLE")
-    print "APLE  ",  sc.correct("APLE")
-    print "appplE",sc.correct("appplE")
+    print("eappl ",  sc.correct("eappl"))
+    print("Coral ",  sc.correct("Coral"))
+    print("Appe  ",  sc.correct("Appe"))
+    print("APPLE ",  sc.correct("APPLE"))
+    print("APLE  ",  sc.correct("APLE"))
+    print("appplE",  sc.correct("appplE"))
     
