@@ -83,7 +83,7 @@ class ResultsProcessor(object):
         """ Micro and Macro F1 """
         mean_metrics[__MICRO_F1__] = micro_f1_metric
         macro_f1 = ResultsProcessor.f1(mean_metric_codes.recall, mean_metric_codes.precision)
-        return dict(map(lambda (k, v): (k, v.__dict__), mean_metrics.items()) + [(__MACRO_F1__, macro_f1)])
+        return dict(map(lambda tpl: (tpl[0], tpl[1].__dict__), mean_metrics.items()) + [(__MACRO_F1__, macro_f1)])
 
     @staticmethod
     def f1(r, p):
@@ -136,8 +136,8 @@ class ResultsProcessor(object):
         s_metrics = ""
         s_metrics += header + "\n"
 
-        std_metrics = sorted(td_metrics.items(), key=lambda (k, v): ResultsProcessor.__sort_key_(k))
-        svd_metrics = sorted(vd_metrics.items(), key=lambda (k, v): ResultsProcessor.__sort_key_(k))
+        std_metrics = sorted(td_metrics.items(), key=lambda tpl: ResultsProcessor.__sort_key_(tpl[0]))
+        svd_metrics = sorted(vd_metrics.items(), key=lambda tpl: ResultsProcessor.__sort_key_(tpl[0]))
 
         micro_f1 = ""
         for ((tag, td_rpfa), (_, vd_rpfa)) in zip(std_metrics, svd_metrics):
@@ -181,4 +181,4 @@ if __name__ == "__main__":
 
     processor = ResultsProcessor()
     s = processor.results_to_string(td_m["_id"], td_collection, vd_m["_id"], vd_collection, "TAGGING")
-    print s
+    print(s)
