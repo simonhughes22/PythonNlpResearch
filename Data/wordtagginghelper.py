@@ -82,6 +82,7 @@ def get_wordlevel_ys_by_code(lst_tag_sets, expected_tags):
 
     num_rows = len(tmp_ys_bycode.values()[0])
 
+    # Convert to a dict of numpy arrays
     ys_bycode = dict()
     for tag in expected_tags:
         if tag in tmp_ys_bycode and len(tmp_ys_bycode[tag]) > 0:
