@@ -23,7 +23,7 @@ def __ensure_column_vector__(arr):
 
 
 def cross_validation_edges(n, folds):
-    split = n / folds
+    split = n // folds
     rem = n % folds
     
     #List of lists
@@ -180,18 +180,18 @@ if __name__ == '__main__':
     
     def prnt(cv):
         for a,b in cv:
-            print a,b, len(b)
+            print(a,b, len(b))
     
     l = range(0,13)
     cv = cross_validation(l, 3)
     prnt(cv)
        
-    print "\n"
+    print("\n")
     l = range(0,15)
     cv = cross_validation(l, 3)
     prnt(cv)
     
-    print "\n"
+    print("\n")
     l = range(0,16)
     cv = cross_validation(l, 3)
     prnt(cv)
