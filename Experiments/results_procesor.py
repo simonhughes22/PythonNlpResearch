@@ -83,7 +83,7 @@ class ResultsProcessor(object):
         """ Micro and Macro F1 """
         mean_metrics[__MICRO_F1__] = micro_f1_metric
         macro_f1 = ResultsProcessor.f1(mean_metric_codes.recall, mean_metric_codes.precision)
-        return dict(map(lambda tpl: (tpl[0], tpl[1].__dict__), mean_metrics.items()) + [(__MACRO_F1__, macro_f1)])
+        return dict(list(map(lambda tpl: (tpl[0], tpl[1].__dict__), mean_metrics.items())) + [(__MACRO_F1__, macro_f1)])
 
     @staticmethod
     def f1(r, p):
