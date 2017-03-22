@@ -3,6 +3,8 @@ import os
 import numpy as np
 import pickle
 
+""" NEED TO BE RUN IN PYTHON 3 """
+
 GLOVE_DIR = "/Users/simon.hughes/data/word_embeddings/glove.6B"
 DATA_SET = "CoralBleaching"
 GLOVE_EMBEDDINGS_FILE = 'glove.6B.100d.txt'
