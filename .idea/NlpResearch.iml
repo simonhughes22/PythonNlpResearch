@@ -72,10 +72,12 @@
       <sourceFolder url="file://$MODULE_DIR$/DeepLearning/WordVectors" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/DeepLearning/TensorFlow" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/DeepLearning/TensorFlow/SyntaxNet" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/CoralBleachingWordTagger/RNN_Tagger" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Experiments/SkinCancerWordTagger/RNN_Tagger" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.idea" />
       <excludeFolder url="file://$MODULE_DIR$/notebooks" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 2.7.13 (~/anaconda3/envs/phd/bin/python)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.5.3 (~/anaconda3/envs/keras_and_theano_bleeding_edge/bin/python3.5)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
