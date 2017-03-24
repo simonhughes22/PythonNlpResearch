@@ -5,7 +5,6 @@
 # NOTE - need to run this in the right environment
 # This is based on this code: https://github.com/codekansas/keras-language-modeling/blob/master/keras_models.py
 
-import datetime
 import logging
 import pickle
 from collections import defaultdict
@@ -44,7 +43,6 @@ models_folder = root_folder + "Models/Bi-LSTM/"
 
 train_config = get_config(training_folder)
 processor = ResultsProcessor()
-tagged_essays_tmp = load_process_essays(**train_config)
 
 """ LOAD DATA """
 train_tagged_essays = load_process_essays(**train_config)
@@ -57,7 +55,7 @@ test_config["folder"] = test_folder
 test_tagged_essays = load_process_essays(**test_config)
 logger.info("Essays loaded- Train: %i Test %i" % (len(train_tagged_essays), len(test_tagged_essays)))
 
-print("Started at: " + str(datetime.datetime.now()))
+print("Started at: " + str(datetime.now()))
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
