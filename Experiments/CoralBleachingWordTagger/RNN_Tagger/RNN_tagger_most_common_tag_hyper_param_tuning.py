@@ -347,6 +347,7 @@ def cross_validation(use_pretrained_embedding, bi_directional, num_rnns, merge_m
     parameters["bi-directional"] = bi_directional
     parameters["hidden_size"] = 128
     parameters["merge_mode"] = merge_mode
+    parameters["num_rnns"] = num_rnns
 
     wd_algo = "RNN"
     wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag,
@@ -375,6 +376,56 @@ for use_pretrained_embedding in [True, False]:
                                                 hidden_size)
                     print("MicroF1={micro_f1}".format(micro_f1=micro_f1))
 
+"""
+[1] Params - Embeddings=True, Bi-Direct=True Num_Rnns=1 Hidden_Size=64
+MicroF1=0.8326578597283669
+[2] Params - Embeddings=True, Bi-Direct=True Num_Rnns=1 Hidden_Size=128
+MicroF1=0.8264333453333125
+[3] Params - Embeddings=True, Bi-Direct=True Num_Rnns=1 Hidden_Size=256
+MicroF1=0.831110907452382
+[4] Params - Embeddings=True, Bi-Direct=True Num_Rnns=2 Hidden_Size=64
+MicroF1=0.8322361370525737
+[5] Params - Embeddings=True, Bi-Direct=True Num_Rnns=2 Hidden_Size=128
+MicroF1=0.8336374601800018
+[6] Params - Embeddings=True, Bi-Direct=True Num_Rnns=2 Hidden_Size=256
+MicroF1=0.837360281733272
+[7] Params - Embeddings=True, Bi-Direct=False Num_Rnns=1 Hidden_Size=64
+MicroF1=0.7572687639180755
+[8] Params - Embeddings=True, Bi-Direct=False Num_Rnns=1 Hidden_Size=128
+MicroF1=0.7564489636292531
+[9] Params - Embeddings=True, Bi-Direct=False Num_Rnns=1 Hidden_Size=256
+MicroF1=0.75808232140041
+[10] Params - Embeddings=True, Bi-Direct=False Num_Rnns=2 Hidden_Size=64
+MicroF1=0.7515037298782883
+[11] Params - Embeddings=True, Bi-Direct=False Num_Rnns=2 Hidden_Size=128
+MicroF1=0.7513165778436505
+[12] Params - Embeddings=True, Bi-Direct=False Num_Rnns=2 Hidden_Size=256
+MicroF1=0.7600908016667703
+[13] Params - Embeddings=False, Bi-Direct=True Num_Rnns=1 Hidden_Size=64
+MicroF1=0.8152469856087124
+[14] Params - Embeddings=False, Bi-Direct=True Num_Rnns=1 Hidden_Size=128
+MicroF1=0.8157361341440943
+[15] Params - Embeddings=False, Bi-Direct=True Num_Rnns=1 Hidden_Size=256
+MicroF1=0.8183929400836043
+[16] Params - Embeddings=False, Bi-Direct=True Num_Rnns=2 Hidden_Size=64
+MicroF1=0.8135185387728316
+[17] Params - Embeddings=False, Bi-Direct=True Num_Rnns=2 Hidden_Size=128
+MicroF1=0.8148204457688448
+[18] Params - Embeddings=False, Bi-Direct=True Num_Rnns=2 Hidden_Size=256
+MicroF1=0.8124626625614632
+[19] Params - Embeddings=False, Bi-Direct=False Num_Rnns=1 Hidden_Size=64
+MicroF1=0.7356213464076938
+[20] Params - Embeddings=False, Bi-Direct=False Num_Rnns=1 Hidden_Size=128
+MicroF1=0.7401467704181691
+[21] Params - Embeddings=False, Bi-Direct=False Num_Rnns=1 Hidden_Size=256
+MicroF1=0.7381212322589832
+[22] Params - Embeddings=False, Bi-Direct=False Num_Rnns=2 Hidden_Size=64
+MicroF1=0.7357359719360066
+[23] Params - Embeddings=False, Bi-Direct=False Num_Rnns=2 Hidden_Size=128
+MicroF1=0.738551926732331
+[24] Params - Embeddings=False, Bi-Direct=False Num_Rnns=2 Hidden_Size=256
+MicroF1=0.7347975923896644
+"""
 
 
 
