@@ -19,10 +19,15 @@ from Settings import Settings
 
 settings = Settings()
 root_folder = settings.data_directory + DATA_SET + "/Thesis_Dataset/"
-training_folder = root_folder + "Training" + "/"
+training_folder = root_folder + "Training/"
+test_folder     = root_folder + "Test/"
 config = get_config(training_folder)
 
 tagged_essays = load_process_essays(**config)
+
+test_config = dict(config.items())
+test_config["folder"] = test_folder
+test_tagged_essays = load_process_essays(**test_config)
 
 """
 LOAD WORD VECTORS
@@ -41,6 +46,11 @@ print('Found %s word vectors.' % len(embeddings_index))
 
 unique_words = set()
 for essay in tagged_essays:
+    for sentence in essay.sentences:
+        for word, tags in sentence:
+            unique_words.add(word)
+
+for essay in test_tagged_essays:
     for sentence in essay.sentences:
         for word, tags in sentence:
             unique_words.add(word)

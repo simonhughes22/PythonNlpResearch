@@ -89,6 +89,13 @@ for essay in train_tagged_essays:
             id = generator.get_id(word)  # starts at 0, but 0 used to pad sequences
         maxlen = max(maxlen, len(sentence) + 2)
 
+# test essays may be longer
+for essay in test_tagged_essays:
+    for sentence in essay.sentences:
+        for word, tags in sentence:
+            id = generator.get_id(word)  # starts at 0, but 0 used to pad sequences
+        maxlen = max(maxlen, len(sentence) + 2)
+
 def ids2tags(ids):
     return [generator.get_key(j) for j in ids]
 
@@ -309,6 +316,7 @@ def evaluate_fold(fold_ix, use_pretrained_embedding, bi_directional, num_rnns, m
         epochs = 1  # epochs per training instance
         results = model.fit(X_train, y_train, batch_size=batch_size, nb_epoch=epochs, validation_split=0.0, verbose=0)
         micro_metrics, _ = score_predictions(model, X_dev, dev_ys_by_tag, seq_len_dev)
+        print(micro_metrics)
 
         f1_score = micro_metrics.f1_score
         best_f1_score = max(f1_scores)
