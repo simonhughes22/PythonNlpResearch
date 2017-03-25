@@ -359,8 +359,9 @@ def cross_validation(use_pretrained_embedding, bi_directional, num_rnns, merge_m
 
     parameters["use_pretrained_embedding"] = use_pretrained_embedding
     parameters["bi-directional"] = bi_directional
-    parameters["hidden_size"] = 128
+    parameters["hidden_size"] = hidden_size
     parameters["merge_mode"] = merge_mode
+    parameters["num_rnns"] = num_rnns
 
     wd_algo = "RNN"
     wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag,

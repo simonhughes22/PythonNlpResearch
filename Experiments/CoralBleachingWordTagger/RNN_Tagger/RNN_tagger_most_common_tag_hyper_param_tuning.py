@@ -345,7 +345,7 @@ def cross_validation(use_pretrained_embedding, bi_directional, num_rnns, merge_m
 
     parameters["use_pretrained_embedding"] = use_pretrained_embedding
     parameters["bi-directional"] = bi_directional
-    parameters["hidden_size"] = 128
+    parameters["hidden_size"] = hidden_size
     parameters["merge_mode"] = merge_mode
     parameters["num_rnns"] = num_rnns
 
