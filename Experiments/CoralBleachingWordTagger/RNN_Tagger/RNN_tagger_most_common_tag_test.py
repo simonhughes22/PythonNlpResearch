@@ -5,6 +5,10 @@
 # NOTE - need to run this in the right environment
 # This is based on this code: https://github.com/codekansas/keras-language-modeling/blob/master/keras_models.py
 
+import os
+os.environ["THEANO_FLAGS"] = 'mode=FAST_RUN,device=cpu,floatX=float32'
+os.environ["KERAS_BACKEND"] = 'theano'
+
 import logging
 import pickle
 from collections import defaultdict

@@ -4,6 +4,11 @@
 
 # This is based on this code: https://github.com/codekansas/keras-language-modeling/blob/master/keras_models.py
 
+
+import os
+os.environ["THEANO_FLAGS"] = 'mode=FAST_RUN,device=cpu,floatX=float32'
+os.environ["KERAS_BACKEND"] = 'theano'
+
 import pickle
 from collections import defaultdict
 
@@ -375,6 +380,7 @@ for use_pretrained_embedding in [True, False]:
                     micro_f1 = cross_validation(use_pretrained_embedding, bi_directional, num_rnns, merge_mode,
                                                 hidden_size)
                     print("MicroF1={micro_f1}".format(micro_f1=micro_f1))
+
 
 """
 [1] Params - Embeddings=True, Bi-Direct=True Num_Rnns=1 Hidden_Size=64

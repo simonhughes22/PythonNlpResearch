@@ -4,6 +4,10 @@
 
 # This is based on this code: https://github.com/codekansas/keras-language-modeling/blob/master/keras_models.py
 
+import os
+os.environ["THEANO_FLAGS"] = 'mode=FAST_RUN,device=cpu,floatX=float32'
+os.environ["KERAS_BACKEND"] = 'theano'
+
 import pickle
 from collections import defaultdict
 
@@ -295,6 +299,7 @@ def evaluate_fold(fold_ix, use_pretrained_embedding, bi_directional, num_rnns, m
     f1_scores = [-1]
     num_since_best_score = 0
     patience = 3
+    #patience = 5
     best_weights = None
 
     for i in range(30):
