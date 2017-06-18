@@ -45,8 +45,8 @@ def process_essays(essays, min_df = 5,
     """
 
     INFREQUENT = "INFREQUENT"
-
     VALID_CHARS = {".", "?", "!", "=", "/", ":", ";", "&", "+", "-", "=", "%", "'", ",", "\\", "(", ")", "\""}
+
     if remove_stop_words:
         stop_wds = stopwords.words("english")
 
