@@ -18,21 +18,21 @@ if __name__ == "__main__":
     
     def print_ngrams(ngrams):
         for n in ngrams:
-            print len(n), n
+            print(len(n), n)
         
     tokens = range(1,5)
     ngrams = compute_ngrams(tokens)
     print_ngrams(ngrams)
     
-    print ""
+    print("")
     ngrams = compute_ngrams(tokens, 3)
     print_ngrams(ngrams)
-    
-    print ""
+
+    print("")
     ngrams = compute_ngrams(tokens, 3, 3)
     print_ngrams(ngrams)
 
-    print ""
+    print("")
     ngrams = compute_ngrams(tokens, 4, 2)
     print_ngrams(ngrams)
 

@@ -88,8 +88,7 @@ if __name__ == "__main__":
     parser = Parser()
     split = "The increasing levels of carbon dioxide caused coral bleaching".split(" ")
     parsed = parser.parse(split)
-    print parsed
+    print(parsed)
 
     tags = parser.pos_tag(split)
-    print tags
-    pass
+    print(tags)

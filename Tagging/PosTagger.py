@@ -14,5 +14,5 @@ class PosTagger(object):
 if __name__ == "__main__":
 
     tagger = PosTagger()
-    print tagger.tag("A man was walking his dog in the rain .".split())
-    print tagger.tag("The dog chased the cat up the tall oak tree.".split())
+    print(tagger.tag("A man was walking his dog in the rain .".split()))
+    print(tagger.tag("The dog chased the cat up the tall oak tree.".split()))

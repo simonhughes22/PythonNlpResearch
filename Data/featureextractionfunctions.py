@@ -26,7 +26,12 @@ TODO - SpaCy - Try brown cluster labels
 """
 
 def attach_function_identifier(fn, d):
-    s = fn.func_name + "["
+    try:
+        s = fn.func_name + "["
+    except:
+        s = fn.__name__ + "["
+        fn.func_name = fn.__name__
+
     for k, v in sorted(d.items(), key = lambda tpl: tpl[0]):
         if k == fn.func_name:
             continue
@@ -390,7 +395,7 @@ def extract_ngram_features_stemmed(offset, ngram_size, input, val = 1):
     stop  = min(end, input.wordix + offset)
 
     window = list(input.sentence[start:stop+1])
-    window = map(stem, window)
+    window = list(map(stem, window))
     if input.wordix < offset:
         diff = offset - input.wordix
         for i in range(diff):
