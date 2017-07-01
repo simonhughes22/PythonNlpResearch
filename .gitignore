@@ -227,4 +227,5 @@ pip-log.txt
 .idea/*
 
 MongoDb/journal/
-!/Experiments/SkinCancerWordTagger/RNN_Tagger/RNN_tagger_most_common_tag_test.py
+MongoDb/mongod.lock
+
