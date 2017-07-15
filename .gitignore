@@ -10,6 +10,7 @@ workspace.xml
 #################
 */.ipynb_checkpoints
 **/.ipynb_checkpoints/*
+.ipynb_checkpoints
 *.pydevproject
 .project
 .metadata 
