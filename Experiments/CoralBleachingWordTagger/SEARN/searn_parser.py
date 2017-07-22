@@ -155,6 +155,7 @@ class SearnModel(object):
                 continue
 
             # Prevent invalid parse actions
+            #TODO is the best option?
             if action in (REDUCE, LARC) and oracle.tos() == ROOT:
                 action_costs[action] = 10
                 continue
@@ -179,6 +180,7 @@ class SearnModel(object):
         for action in PARSE_ACTIONS:
             prob_by_label[action] = self.current_parser_models[action].predict_proba(xs)[0][-1]
 
+        # TODO - prevent predicting invalid actions here (in case of TOS == ROOT)
         max_act, max_prob = max(prob_by_label.items(), key=lambda tpl: tpl[1])
         return max_act
 
