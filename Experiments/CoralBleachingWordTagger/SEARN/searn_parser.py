@@ -2,8 +2,10 @@ from collections import defaultdict
 from sklearn.feature_extraction import DictVectorizer
 
 from NgramGenerator import compute_ngrams
+from Rpfa import micro_rpfa
 from oracle import Oracle
 from parser import Parser
+from results_procesor import ResultsProcessor
 from shift_reduce_helper import *
 from stack import Stack
 from weighted_examples import WeightedExamples
@@ -55,9 +57,32 @@ class SearnModel(object):
         self.training_datasets_crel = {}
         self.current_model = None
 
+    def add_labels(self, observed_tags, ys_bytag_sent):
+        for tag in self.cr_tags:
+            if tag in observed_tags:
+                ys_bytag_sent[tag].append(1)
+            else:
+                ys_bytag_sent[tag].append(0)
+
+    def get_ys_by_sent(self, tagged_essays):
+
+        # outputs
+        ys_bytag_sent = defaultdict(list)
+
+        # cut texts after this number of words (among top max_features most common words)
+        for essay in tagged_essays:
+            for sentence in essay.sentences:
+                unique_tags = set()
+                for word, tags in sentence:
+                    unique_tags.update(self.cr_tags.intersection(tags))
+                self.add_labels(unique_tags, ys_bytag_sent)
+        return ys_bytag_sent
+
     def train(self, tagged_essays, max_epochs):
 
         trained_with_beta0 = False
+        ys_by_sent = self.get_ys_by_sent(tagged_essays)
+
         for i in range(0, max_epochs):
             if self.beta < 0:
                 trained_with_beta0 = True
@@ -70,10 +95,17 @@ class SearnModel(object):
             parse_examples = WeightedExamples(labels=PARSE_ACTIONS, positive_value=self.positive_val)
             crel_examples  = WeightedExamples(labels=None,          positive_value=self.positive_val)
 
+            pred_ys_by_sent = defaultdict(list)
             for essay_ix, essay in enumerate(tagged_essays):
                 for sent_ix, taggged_sentence in enumerate(essay.sentences):
                     predicted_tags = essay.pred_tagged_sentences[sent_ix]
-                    relations = self.parse_sentence(taggged_sentence, predicted_tags, parse_examples, crel_examples)
+                    pred_relations = self.parse_sentence(taggged_sentence, predicted_tags, parse_examples, crel_examples)
+                    # Store predictions for evaluation
+                    self.add_labels(pred_relations, pred_ys_by_sent)
+
+            class2metrics = ResultsProcessor.compute_metrics(ys_by_sent, pred_ys_by_sent)
+            micro_metrics = micro_rpfa(class2metrics.values()) # type: rpfa
+            print("Training Metrics: {metrics}".format(metrics=micro_metrics))
 
             # TODO, dictionary vectorize examples, train a weighted binary classifier for each separate parsing action
             self.train_parse_models(parse_examples)
@@ -312,7 +344,7 @@ class SearnModel(object):
                 if oracle.is_stack_empty():
                     break
 
-        pred_relns = [denormalize_cr(cr) for cr in predicted_relations]
+        pred_relns = set((denormalize_cr(cr) for cr in predicted_relations))
         return pred_relns
 
     def crel_features(self, action, tos, buffer):

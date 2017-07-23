@@ -90,7 +90,8 @@ feat_extractor = FeatureExtractor([
 from sklearn.linear_model import LogisticRegression
 from searn_parser import SearnModel
 
-parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression)
-parse_model.train(pred_tagged_essays, 2)
+parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.3)
+parse_model.train(pred_tagged_essays, 12)
 
 #TODO * Need to make sure the tagger tags EXCPLICT tags. These can then be skipped by the parser, but will be included in the features used to train the parser and taggger. Do we want to train a separate tagger that determines if a tagged word is a cause, explict or result. That will then resolve the direction of the relation?
+#TODO - recall is v low on training data. Test it with perfect tagging predictions
