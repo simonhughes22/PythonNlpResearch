@@ -78,8 +78,7 @@ vtags = set(regular_tags)
 
 # In[14]:
 
-from parser_feature_extractor import *
-from shift_reduce_helper import *
+from parser_feature_extractor import FeatureExtractor, bag_of_word_extractor, bag_of_word_plus_tag_extractor
 
 feat_extractor = FeatureExtractor([
     bag_of_word_extractor,
