@@ -10,9 +10,9 @@ class WeightedExamples(object):
         @param positive_value: int
         """
         self.xs = []
-        self.labels = labels
+        self.classes = labels
         self.positive_value = positive_value
-        self.labels = defaultdict(list)  # list of ints
+        self.labels  = defaultdict(list)  # list of ints
         self.weights = defaultdict(list)  # list of floats
         self.all_labels = []
 
@@ -20,8 +20,8 @@ class WeightedExamples(object):
         self.xs.append(x)
         self.all_labels.append(actual_lbl)
 
-        if self.labels:
-            for lbl in self.labels:
+        if self.classes:
+            for lbl in self.classes:
                 val = self.positive_value if lbl == actual_lbl else -1
                 self.labels[lbl].append(val)
                 weight = 1
@@ -33,11 +33,11 @@ class WeightedExamples(object):
         return self.all_labels
 
     def get_labels_for(self, lbl):
-        if not self.labels:
+        if not self.classes:
             raise Exception("Labels not supported, multi-class use case")
         return self.labels[lbl]
 
     def get_weights_for(self, lbl):
-        if not self.labels:
+        if not self.classes:
             raise Exception("Weights not supported, multi-class use case")
         return self.weights[lbl]

@@ -103,6 +103,7 @@ class SearnModel(object):
             # TODO - train cost sensitive classifier
             mdl.fit(xs, ys)
             models[action] = mdl
+        self.current_parser_models = models
         self.parser_models.append(models)
 
     def train_crel_models(self, examples):
@@ -114,6 +115,7 @@ class SearnModel(object):
         ys = examples.get_labels()
         model.fit(xs, ys)
 
+        self.current_crel_model = model
         self.crel_models.append(model)
 
     def add_relation(self, action, tos, buffer, ground_truth, relations):
@@ -143,6 +145,9 @@ class SearnModel(object):
                     break
         return relns
 
+    def allowed_action(self, action, tos):
+        return not(tos == ROOT and action in (REDUCE, LARC, RARC))
+
     def compute_cost(self, ground_truth, remaining_buffer, oracle):
 
         tos = oracle.tos()
@@ -156,8 +161,9 @@ class SearnModel(object):
 
             # Prevent invalid parse actions
             #TODO is the best option?
-            if action in (REDUCE, LARC) and oracle.tos() == ROOT:
-                action_costs[action] = 10
+            if not self.allowed_action(action, tos):
+                # cost is number of relations that will be missed or at least 1
+                action_costs[action] = max(1, len(gold_parse))
                 continue
 
             parse = self.relations_for_action(action, ground_truth, remaining_buffer, oracle)
@@ -174,13 +180,15 @@ class SearnModel(object):
         action_costs[gold_action] = np.mean(list(action_costs.values()))
         return action_costs
 
-    def predict_parse_action(self, feats):
+    def predict_parse_action(self, feats, tos):
         xs = self.current_parser_dict_vectorizer.transform(feats)
         prob_by_label = {}
         for action in PARSE_ACTIONS:
+            if not self.allowed_action(action, tos):
+                continue
+
             prob_by_label[action] = self.current_parser_models[action].predict_proba(xs)[0][-1]
 
-        # TODO - prevent predicting invalid actions here (in case of TOS == ROOT)
         max_act, max_prob = max(prob_by_label.items(), key=lambda tpl: tpl[1])
         return max_act
 
@@ -212,6 +220,10 @@ class SearnModel(object):
             min_ixs[ptag] = min(min_ixs[ptag], i)
             max_ixs[ptag] = max(max_ixs[ptag], i)
 
+        # Need at least 2 tags for a causal relation to be detected
+        if len(all_predicted_tags) < 2:
+            return []
+
         ground_truth = all_tags.intersection(self.cr_tags)
         ground_truth = set([normalize_cr(crel) for crel in ground_truth])
         # Filter to only those crels that have support in the predicted tags
@@ -223,7 +235,7 @@ class SearnModel(object):
         ground_truth = supported_crels
 
         # Initialize stack, basic parser and oracle
-        stack = Stack(False)
+        stack = Stack(verbose=False)
         stack.push(ROOT)
         parser = Parser(stack)
         oracle = Oracle(ground_truth, parser)
@@ -252,8 +264,8 @@ class SearnModel(object):
                 # Consult Oracle or Model based on coin toss
                 rand_float = np.random.random_sample()  # between [0,1) (half-open interval, includes 0 but not 1)
                 # If no trained models, always use Oracle
-                if rand_float >= self.beta and len(self.self.parser_models) > 0:
-                    action = self.predict_parse_action(feats)
+                if rand_float >= self.beta and len(self.parser_models) > 0:
+                    action = self.predict_parse_action(feats, tos)
                 else:
                     action = gold_action
 
@@ -264,10 +276,6 @@ class SearnModel(object):
                 # make a copy as changing later
                 parse_examples.add(dict(feats), gold_action, cost_per_action)
 
-                # Prevent invalid action
-                if action in (REDUCE, LARC) and oracle.tos() == ROOT:
-                    action = gold_action
-
                 # Decide the direction of the causal relation
                 if action in [LARC, RARC]:
                     if (tos, buffer) in ground_truth:
@@ -277,11 +285,10 @@ class SearnModel(object):
                     else:
                         gold_lr_action = REJECT
 
-                    # Add arc to features
-                    feats["ARC:" + action] = self.positive_val
+                    # Add additional features
+                    feats.update(self.crel_features(action, tos, buffer))
                     rand_float = np.random.random_sample()
                     if rand_float >= self.beta and len(self.crel_models) > 0:
-                        # TODO - we need separate models for different decisions
                         lr_action = self.predict_crel_action(feats)
                     else:
                         lr_action = gold_lr_action
@@ -308,6 +315,14 @@ class SearnModel(object):
         pred_relns = [denormalize_cr(cr) for cr in predicted_relations]
         return pred_relns
 
+    def crel_features(self, action, tos, buffer):
+        feats = {}
+        feats["ARC_action:" + action]                   = self.positive_val
+        feats["ARC_tos_buffer:" + tos + "->" + buffer]  = self.positive_val
+        feats["ARC_tos:" + tos]                         = self.positive_val
+        feats["ARC_buffer:" + buffer]                   = self.positive_val
+        return feats
+
     def get_interaction_feats(self, fts1, fts2):
         interactions = {}
         for fta, vala in fts1.items():
@@ -319,6 +334,17 @@ class SearnModel(object):
     def get_conditional_feats(self, action_history, action_tag_pair_history, tos, buffer, previous_tags,
                               subsequent_tags):
         feats = {}
+        if len(action_history) == 0:
+            feats["first_action"] = self.positive_val
+        if len(subsequent_tags) == 0:
+            feats["last_tag"] = 1
+
+        feats["num_actions"] = len(action_history)
+        feats["num_prev_tags"] = len(previous_tags)
+        feats["num_subsequent_tags"] = len(subsequent_tags)
+
+        feats["num_tags"] = 1 + len(previous_tags) + len(subsequent_tags)
+
         feats["tos:" + tos] = self.positive_val
         feats["buffer:" + buffer] = self.positive_val
         feats["tos_buffer:" + tos + "|" + buffer] = self.positive_val

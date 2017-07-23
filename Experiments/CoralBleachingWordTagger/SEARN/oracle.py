@@ -20,12 +20,14 @@ class Oracle(object):
         return action in (REDUCE, LARC)
 
     def remove_relation(self, a, b):
-        self.mapping[a].remove(b)
-        if len(self.mapping[a]) == 0:
-            del self.mapping[a]
-        self.mapping[b].remove(a)
-        if len(self.mapping[b]) == 0:
-            del self.mapping[b]
+        # as we can force it to execute actions that are invalid, we have to see if this is a valid relation to remove
+        if a in self.mapping and b in self.mapping[a]:
+            self.mapping[a].remove(b)
+            if len(self.mapping[a]) == 0:
+                del self.mapping[a]
+            self.mapping[b].remove(a)
+            if len(self.mapping[b]) == 0:
+                del self.mapping[b]
 
     def consult(self, tos, buffer):
         """
@@ -83,5 +85,8 @@ class Oracle(object):
 
     def clone(self):
         cloney = Oracle(set(self.raw_crels), self.parser.clone())
-        cloney.mapping = dict(self.mapping.items())
+        # Need to ensure a deep clone of the mappings dict
+        cloney.mapping = defaultdict(set)
+        for key, set_vals in self.mapping.items():
+            cloney.mapping[key].update(set_vals)
         return cloney
