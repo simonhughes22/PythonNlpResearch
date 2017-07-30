@@ -18,7 +18,7 @@ class Parser(object):
         # assert self.has_head(tos) == False
         arc = (tos, buffer)
         n_arc = norm_arc(arc)
-        assert n_arc not in self.normed_arcs, "Arc already processed %s" % (n_arc)
+        #assert n_arc not in self.normed_arcs, "Arc already processed %s" % str(n_arc)
         self.arcs.append(arc)
         self.normed_arcs.add(arc)
         self.children.add(tos)
@@ -29,7 +29,7 @@ class Parser(object):
         # normalize arc
         arc = (buffer, tos)
         n_arc = norm_arc(arc)
-        assert n_arc not in self.normed_arcs, "Arc already processed %s" % (n_arc)
+        #assert n_arc not in self.normed_arcs, "Arc already processed %s" % str(n_arc)
         self.arcs.append(arc)
         self.normed_arcs.add(n_arc)
         self.actions.append("R ARC   : " + tos + "<-" + buffer)

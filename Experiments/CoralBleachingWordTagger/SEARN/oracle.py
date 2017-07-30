@@ -72,7 +72,7 @@ class Oracle(object):
         elif action == SHIFT:
             parser.shift(buffer)
         elif action == SKIP:
-            pass
+            parser.skip(buffer)
         else:
             raise Exception("Unknown parsing action %s" % action)
         return self.should_continue(action)

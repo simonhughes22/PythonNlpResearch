@@ -73,7 +73,6 @@ for essay in pred_tagged_essays:
 cr_tags = list(
     (t for t in tag_freq.keys() if ("->" in t) and not "Anaphor" in t and not "other" in t and not "rhetorical" in t))
 regular_tags = list((t for t in tag_freq.keys() if t[0].isdigit()))
-
 vtags = set(regular_tags)
 
 # In[14]:
@@ -88,10 +87,39 @@ feat_extractor = FeatureExtractor([
 # In[49]:
 
 from sklearn.linear_model import LogisticRegression
-from searn_parser import SearnModel
+from searn_parser import SearnModel, EMPTY_TAG
+import numpy as np
 
-parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.3)
+# Replace predicted tags with actual to test impact on recall
+for essay_ix, essay in enumerate(pred_tagged_essays):
+    act_tags = []
+    for sent_ix, taggged_sentence in enumerate(essay.sentences):
+        sent_tags = []
+        act_tags.append(sent_tags)
+        for wd, tags in taggged_sentence:
+            rtags = list(vtags.intersection(tags))
+            if len(rtags) == 0:
+                sent_tags.append(EMPTY_TAG)
+            else:
+                np.random.shuffle(rtags)
+                sent_tags.append(rtags[0])
+
+    essay.pred_tagged_sentences = act_tags
+
+#parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.3)
+parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta)
 parse_model.train(pred_tagged_essays, 12)
+
+## TODO
+#- Re-train tagging model, adding tags where reg tag is missing but is included in a causer or result tag.
+#- Also include explicit in the predicted tags.
+#- Need to handle relations where same code -> same code
 
 #TODO * Need to make sure the tagger tags EXCPLICT tags. These can then be skipped by the parser, but will be included in the features used to train the parser and taggger. Do we want to train a separate tagger that determines if a tagged word is a cause, explict or result. That will then resolve the direction of the relation?
 #TODO - recall is v low on training data. Test it with perfect tagging predictions
+
+#TODO Issues
+# 1. Unsupported relations
+# 2. Tagging model needs to tag causer:num and result:num too as tags, as well as explicits
+# 3. Can't handle same tag to same tag
+# 4. Can't handle same relation in both directions (e.g. if code is repeated)
