@@ -131,7 +131,7 @@ def get_sent_feature_for_stacking_from_tagging_model(sent_input_feats, interacti
     for k in ys_by_code.keys():
         ys_by_code[k] = np.asarray(ys_by_code[k])
 
-    assert len(td_sent_feats) == len(ys_by_code[ys_by_code.keys()[0]])
+    assert len(td_sent_feats) == len(ys_by_code[ list(ys_by_code.keys())[0] ])
     if sparse:
         xs = scipy.sparse.csr_matrix(td_sent_feats)
     else:
@@ -310,7 +310,7 @@ def get_sent_feature_for_stacking_from_sentence_model(feat_tags, interaction_tag
 
 if __name__ == "__main__":
     def test(arr):
-        print num_different_tags(arr), "->","".join(map(str,arr))
+        print(num_different_tags(arr), "->","".join(map(str,arr)))
 
     test([0,0,1,0,1,1,0])
     test([0,0,1,0,0,1,1,0,0,0,1,1,1])

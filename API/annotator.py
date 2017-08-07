@@ -74,7 +74,8 @@ class Annotator(object):
         self.wd_sent_freq = defaultdict(int)
         self.spelling_corrector = build_spelling_corrector(tagged_essays, self.config["lower_case"], self.wd_sent_freq, folder=spell_check_dict)
 
-        offset = (self.config["window_size"] - 1) / 2
+        # has to be an int as used in slices. In python 3.x this will automatically be a float
+        offset = int((self.config["window_size"] - 1) / 2)
 
         unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
         biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
@@ -296,7 +297,7 @@ class Annotator(object):
         while len(tagged_wds) < len(o_wds):
             i = len(tagged_wds)
             orig_wd = o_wds[i]
-            print i, orig_wd
+            print(i, orig_wd)
 
             if i >= len(feats):
                 tagged_wds.append((orig_wd, new_tags[-1]))
@@ -342,8 +343,8 @@ class Annotator(object):
             # spelling correct (needs to be after alignment)
 
             fr_aligned_tags = map(lambda tags: set(map(friendly_tag, tags)), aligned_tags)
-            tagged_words = zip(wds, fr_aligned_tags)
-            tagged_sents.append(map(lambda (wd, tags): TaggedWord(wd, self.spelling_corrector.correct(wd), self.__get_regular_tags_(tags), self.__get_causal_tags_(tags)), tagged_words))
+            tagged_words = list(zip(wds, fr_aligned_tags))
+            tagged_sents.append([TaggedWord(wd, self.spelling_corrector.correct(wd), self.__get_regular_tags_(tags), self.__get_causal_tags_(tags)) for wd, tags in tagged_words])
         return tagged_sents
 
 if __name__ == "__main__":
@@ -378,18 +379,18 @@ Coral bleaching is also an example how the envionmental stressors can affect the
     """)
 
     for d in d_annotations["tagged_sentences"]:
-        print "\"" + d["codes"] + "\"", d["causal"], d["sentence"], d["tagged_words"]
-    print ""
+        print("\"" + d["codes"] + "\"", d["causal"], d["sentence"], d["tagged_words"])
+    print()
 
     for sent in d_annotations["tagged_words"]:
         for wd, r_tags, c_tags in sent:
-            print str((wd, r_tags, c_tags))
-        print ""
+            print(str((wd, r_tags, c_tags)))
+        print()
 
-    print ""
-    print "Essay Tags"
-    print d_annotations["essay_tags"]
-    print "\nRaw tags"
-    print d_annotations["raw_essay_tags"]
-    print "\nEssay Category"
-    print d_annotations["essay_category"]
+    print()
+    print("Essay Tags")
+    print(d_annotations["essay_tags"])
+    print("\nRaw tags")
+    print(d_annotations["raw_essay_tags"])
+    print("\nEssay Category")
+    print(d_annotations["essay_category"])

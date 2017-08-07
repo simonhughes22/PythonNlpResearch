@@ -31,7 +31,7 @@ def predictions_to_file(file, ys_by_code, predictions_by_code, essays, codes = N
                         elif pred_y_val > 0:
                             predictions.add(code)
                 except:
-                    print format_exc()
+                    print(format_exc())
                     raise Exception("Error processing code %s" % code)
 
             words = map(lambda ft: ft.word, tagged_sentence)

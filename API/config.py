@@ -1,5 +1,10 @@
+#python 2.7 to 3.x shit
+try:
+    from ConfigParser import ConfigParser
+except:
+    from configparser import ConfigParser
 
-import ConfigParser, os
+import os
 
 class Config(object):
 
@@ -13,7 +18,7 @@ class Config(object):
         self.spell_check_dict = self.__getfilename__("DEFAULT", "spell_check_dict")
 
     def __load_config_file__(self, config_file):
-        config = ConfigParser.ConfigParser()
+        config = ConfigParser()
         config.read([config_file])
         return config
 

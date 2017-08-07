@@ -1,37 +1,25 @@
-from featureextractortransformer import FeatureExtractorTransformer
-from sent_feats_for_stacking import *
-from load_data import load_process_essays, extract_features
+import logging
 
-from featurevectorizer import FeatureVectorizer
-from featureextractionfunctions import *
-from CrossValidation import cross_validation
-from wordtagginghelper import *
-from IterableFP import flatten
-from DictionaryHelper import tally_items
-from predictions_to_file import predictions_to_file
-
-from argument_hasher import argument_hasher
 # Classifiers
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
-from sklearn.svm import SVC
-from sklearn.lda import LDA
-
-from window_based_tagger_config import get_config
-from model_store import ModelStore
-
-# END Classifiers
 
 import Settings
-import logging
+from IterableFP import flatten
+from featureextractionfunctions import *
+from featureextractortransformer import FeatureExtractorTransformer
+from featurevectorizer import FeatureVectorizer
+from load_data import load_process_essays
+from model_store import ModelStore
+from sent_feats_for_stacking import *
+from window_based_tagger_config import get_config
+from wordtagginghelper import *
+
+# END Classifiers
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
 # Create persister (mongo client) - fail fast if mongo service not initialized
-
 
 # not hashed as don't affect persistence of feature processing
 SPARSE_WD_FEATS     = True
@@ -53,13 +41,13 @@ folder =                            settings.data_directory + "CoralBleaching/Br
 config = get_config(folder)
 
 """ FEATURE EXTRACTION """
-offset = (config["window_size"] - 1) / 2
+offset = int((config["window_size"] - 1) / 2)
 
 unigram_window_stemmed = fact_extract_positional_word_features_stemmed(offset)
 biigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 2)
 
 extractors = [unigram_window_stemmed, biigram_window_stemmed]
-feat_config = dict(config.items() + [("extractors", extractors)])
+feat_config = dict(list(config.items()) + [("extractors", extractors)])
 
 """ LOAD DATA """
 tagged_essays = load_process_essays( **config )
@@ -127,7 +115,7 @@ essays_TD = essay_feats
 # TD and VD are lists of Essay objects. The sentences are lists
 # of featureextractortransformer.Word objects
 
-print "Training Tagging Model"
+print("Training Tagging Model")
 """ Data Partitioning and Training """
 td_feats, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
 feature_transformer = FeatureVectorizer(min_feature_freq=MIN_FEAT_FREQ, sparse=SPARSE_WD_FEATS)
@@ -138,7 +126,7 @@ wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
 """ TRAIN Tagger """
 tag2word_classifier = train_classifier_per_code(td_X, wd_td_ys_bytag, fn_create_wd_cls, wd_train_tags)
 
-print "\nTraining Sentence Model"
+print("\nTraining Sentence Model")
 """ SENTENCE LEVEL PREDICTIONS FROM STACKING """
 sent_td_xs, sent_td_ys_bycode = get_sent_feature_for_stacking_from_tagging_model(sent_input_feat_tags, sent_input_interaction_tags, essays_TD, td_X, wd_td_ys_bytag, tag2word_classifier, SPARSE_SENT_FEATS, LOOK_BACK)
 
