@@ -228,6 +228,55 @@ class SearnModel(object):
         xs = self.current_crel_dict_vectorizer.transform(feats)
         return self.current_crel_model.predict(xs)
 
+    def get_tags_relations_for(self, tagged_sentence, tag_freq, reg_tags, cr_tags):
+
+        most_common_tag = [None]  # seed with None
+        most_common_crel = [None]
+        tag_seq = []
+        crel_seq = []
+
+        crel_child_tags = defaultdict(set)
+        for i, (wd, tags) in enumerate(tagged_sentence):
+            rtags = set([normalize(t) for t in tags])
+            rtags = rtags.intersection(reg_tags)
+            # Get tag seq
+            tag = None
+            if rtags:
+                # only use explicit tag if it's the only tag (prefer concept code tags if both present)
+                if len(rtags) > 1 and "explicit" in rtags:
+                    rtags.remove("explicit")
+                tag = max(rtags, key=lambda t: tag_freq[t])
+                # if no prev tag and the current matches -2 (a gap of one), skip over
+                if tag != most_common_tag[-1] and \
+                        not (most_common_tag[-1] is None and (len(most_common_tag) > 2) and tag == most_common_tag[-2]):
+                    tag_seq.append((tag, i))
+            most_common_tag.append(tag)
+
+            crels = tags.intersection(cr_tags)
+            crel = None
+            if crels:
+                crel = max(crels, key=lambda cr: tag_freq[cr])
+                # skip over gaps of one crel
+                if crel != most_common_crel[-1] \
+                    and not (most_common_crel[-1] is None and (len(most_common_crel) > 2) and crel == most_common_crel[-2]):
+                    crel_seq.append((crel, i))
+            most_common_crel.append(crel)
+
+            # to have child tags, need a tag sequence and a current valid regular tag
+            if not tag or len(tag_seq) == 0 or not crel or len(crel_seq) == 0:
+                continue
+
+            if tag != tag_seq[-1][0]:
+                raise Exception("Tags don't match % s" % str((i, tag, tag_seq[-1])))
+            if crel != crel_seq[-1][0]:
+                raise Exception("Crels don't match % s" % str((i, crel, crel_seq[-1])))
+
+            l, r = normalize_cr(crel)
+            if tag in (l, r):
+                crel_child_tags[crel_seq[-1]].add(tag_seq[-1])
+
+        return tag_seq, crel_child_tags
+
     def parse_sentence(self, tagged_sentence, predicted_tags, parse_examples, crel_examples):
 
         action_history = []

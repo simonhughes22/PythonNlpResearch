@@ -72,8 +72,11 @@ for essay in pred_tagged_essays:
 # TODO - don't ignore Anaphor, other and rhetoricals here
 cr_tags = list(
     (t for t in tag_freq.keys() if ("->" in t) and not "Anaphor" in t and not "other" in t and not "rhetorical" in t))
-regular_tags = list((t for t in tag_freq.keys() if t[0].isdigit()))
+#Change to include explicit
+regular_tags = set((t for t in tag_freq.keys() if ( "->" not in t) and (t == "explicit" or t[0].isdigit())))
 vtags = set(regular_tags)
+
+assert "explicit" in vtags, "explicit should be in the regular tags"
 
 # In[14]:
 

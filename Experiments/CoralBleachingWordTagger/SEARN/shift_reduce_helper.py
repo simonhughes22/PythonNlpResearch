@@ -17,10 +17,11 @@ def norm_arcs(arcs):
 def extract_lr(cr):
     return cr.replace("Causer:", "").replace("Result:", "").split("->")
 
+def normalize(code):
+    return code.replace("Causer:","").replace("Result:","")
 
 def normalize_cr(cr):
-    pair = tuple(extract_lr(cr))
-    return pair
+    return tuple(normalize(cr).split("->"))
 
 def denormalize_cr(crel):
     l, r = crel

@@ -12,13 +12,13 @@ class ModelStore():
         if not models_folder:
             models_folder = os.getcwd() + "/PickledModels/"
         print("Loading models from", models_folder)
-        self.models_folder = models_folder
-        self.feat_transform_file = models_folder + "feat_extractor_pickled.p"
-        self.tag_2_wd_classifiers_file = models_folder + "tag_2_wd_classifier_pickled.p"
-        self.tag_2_sent_classifiers_file = models_folder + "tag_2_sent_classifier_pickled.p"
+        self.models_folder                  = models_folder
+        self.feat_transform_file            = models_folder + "feat_extractor_pickled.p"
+        self.tag_2_wd_classifiers_file      = models_folder + "tag_2_wd_classifier_pickled.p"
+        self.tag_2_sent_classifiers_file    = models_folder + "tag_2_sent_classifier_pickled.p"
 
     def __store_model_(self, obj, fname):
-        with open(fname, "w+") as f:
+        with open(fname, "wb+") as f:
             pickle.dump(obj, f)
 
     def store(self, feat_transform, tag_2_wd_classifier, tag_2_sent_classifier):
