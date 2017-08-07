@@ -80,7 +80,7 @@ def get_wordlevel_ys_by_code(lst_tag_sets, expected_tags):
         for y in unique_tags:
             tmp_ys_bycode[y].append(1 if y in tag_set else 0)
 
-    num_rows = len(tmp_ys_bycode.values()[0])
+    num_rows = len(list(tmp_ys_bycode.values())[0])
 
     # Convert to a dict of numpy arrays
     ys_bycode = dict()
