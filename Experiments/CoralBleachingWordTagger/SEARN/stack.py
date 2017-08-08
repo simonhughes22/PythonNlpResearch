@@ -13,14 +13,14 @@ class Stack(object):
         assert self.len() > 0, "Can't pop when stack is empty"
         item = self.stack.pop()
         if self.verbose:
-            print("POPPING: %s" % item)
+            print("POPPING: %s" % str(item))
             print("LEN:     %i" % len(self.stack))
         return item
 
     def push(self, item):
         self.stack.append(item)
         if self.verbose:
-            print("PUSHING: %s" % item)
+            print("PUSHING: %s" % str(item))
             print("LEN:     %i" % len(self.stack))
 
     def len(self):
@@ -30,7 +30,7 @@ class Stack(object):
         return item in self.stack
 
     def __repr__(self):
-        return "|".join(self.stack)
+        return "|".join(map(str, self.stack))
 
     def clone(self):
         cloney = Stack(self.verbose)

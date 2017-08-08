@@ -104,6 +104,8 @@ for essay_ix, essay in enumerate(pred_tagged_essays):
             if len(rtags) == 0:
                 sent_tags.append(EMPTY_TAG)
             else:
+                if len(rtags) > 1:
+                    rtags = [t for t in rtags if t != "explicit"]
                 np.random.shuffle(rtags)
                 sent_tags.append(rtags[0])
 
@@ -118,7 +120,7 @@ parse_model.train(pred_tagged_essays, 12)
 #- Also include explicit in the predicted tags.
 #- Need to handle relations where same code -> same code
 
-#TODO * Need to make sure the tagger tags EXCPLICT tags. These can then be skipped by the parser, but will be included in the features used to train the parser and taggger. Do we want to train a separate tagger that determines if a tagged word is a cause, explict or result. That will then resolve the direction of the relation?
+#TODO * Need to make sure the tagger tags EXCPLICIT tags. These can then be skipped by the parser, but will be included in the features used to train the parser and taggger. Do we want to train a separate tagger that determines if a tagged word is a cause, explict or result. That will then resolve the direction of the relation?
 #TODO - recall is v low on training data. Test it with perfect tagging predictions
 
 #TODO Issues

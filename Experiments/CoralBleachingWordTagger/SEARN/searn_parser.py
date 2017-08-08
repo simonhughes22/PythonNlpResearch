@@ -21,11 +21,13 @@ PARSE_ACTIONS = [
 
 CAUSE_EFFECT = "CAUSE_EFFECT"
 EFFECT_CAUSE = "EFFECT_CAUSE"
+CAUSE_AND_EFFECT = "CAUSE_AND_EFFECT"
 REJECT = "REJECT"  # Not a CREL
 
 CREL_ACTIONS = [
     CAUSE_EFFECT,
     EFFECT_CAUSE,
+    CAUSE_AND_EFFECT,
     REJECT
 ]
 
@@ -64,24 +66,27 @@ class SearnModel(object):
             else:
                 ys_bytag_sent[tag].append(0)
 
-    def get_ys_by_sent(self, tagged_essays):
+    def get_label_data(self, tagged_essays):
 
         # outputs
         ys_bytag_sent = defaultdict(list)
 
         # cut texts after this number of words (among top max_features most common words)
+        tag_freq = defaultdict(int)
         for essay in tagged_essays:
             for sentence in essay.sentences:
                 unique_tags = set()
                 for word, tags in sentence:
                     unique_tags.update(self.cr_tags.intersection(tags))
+                    for tag in tags:
+                        tag_freq[tag] += 1
                 self.add_labels(unique_tags, ys_bytag_sent)
-        return ys_bytag_sent
+        return ys_bytag_sent, tag_freq
 
     def train(self, tagged_essays, max_epochs):
 
         trained_with_beta0 = False
-        ys_by_sent = self.get_ys_by_sent(tagged_essays)
+        ys_by_sent, tag_freq = self.get_label_data(tagged_essays)
 
         for i in range(0, max_epochs):
             if self.beta < 0:
@@ -99,7 +104,7 @@ class SearnModel(object):
             for essay_ix, essay in enumerate(tagged_essays):
                 for sent_ix, taggged_sentence in enumerate(essay.sentences):
                     predicted_tags = essay.pred_tagged_sentences[sent_ix]
-                    pred_relations = self.parse_sentence(taggged_sentence, predicted_tags, parse_examples, crel_examples)
+                    pred_relations = self.parse_sentence(taggged_sentence, predicted_tags, tag_freq, parse_examples, crel_examples)
                     # Store predictions for evaluation
                     self.add_labels(pred_relations, pred_ys_by_sent)
 
@@ -228,34 +233,41 @@ class SearnModel(object):
         xs = self.current_crel_dict_vectorizer.transform(feats)
         return self.current_crel_model.predict(xs)
 
-    def get_tags_relations_for(self, tagged_sentence, tag_freq, reg_tags, cr_tags):
+    def get_tags_relations_for(self, tagged_sentence, predicted_tags, tag_freq, cr_tags):
 
         most_common_tag = [None]  # seed with None
         most_common_crel = [None]
-        tag_seq = []
+        pos_tag_seq = []
         crel_seq = []
 
-        crel_child_tags = defaultdict(set)
-        for i, (wd, tags) in enumerate(tagged_sentence):
-            rtags = set([normalize(t) for t in tags])
-            rtags = rtags.intersection(reg_tags)
-            # Get tag seq
+        pos_crel_child_tags = defaultdict(set)
+        # non positional
+        sent_reg_predicted_tags = set()
+        sent_act_cr_tags = set()
+        tag2words = defaultdict(list)
+        for i, (wd, actual_tags) in enumerate(tagged_sentence):
+            # just a single predicted tag
+            pred_rtag = predicted_tags[i]
             tag = None
-            if rtags:
+            # Get tag seq
+            if pred_rtag != EMPTY_TAG:
                 # only use explicit tag if it's the only tag (prefer concept code tags if both present)
-                if len(rtags) > 1 and "explicit" in rtags:
-                    rtags.remove("explicit")
-                tag = max(rtags, key=lambda t: tag_freq[t])
+                tag = pred_rtag
+                sent_reg_predicted_tags.add(tag)
                 # if no prev tag and the current matches -2 (a gap of one), skip over
                 if tag != most_common_tag[-1] and \
                         not (most_common_tag[-1] is None and (len(most_common_tag) > 2) and tag == most_common_tag[-2]):
-                    tag_seq.append((tag, i))
+                    pos_tag_seq.append((tag, i))
+
+            if len(pos_tag_seq) > 0:
+                tag2words[pos_tag_seq[-1]].append(wd)
             most_common_tag.append(tag)
 
-            crels = tags.intersection(cr_tags)
+            pos_crels = actual_tags.intersection(cr_tags)
+            sent_act_cr_tags.update(pos_crels)
             crel = None
-            if crels:
-                crel = max(crels, key=lambda cr: tag_freq[cr])
+            if pos_crels:
+                crel = max(pos_crels, key=lambda cr: tag_freq[cr])
                 # skip over gaps of one crel
                 if crel != most_common_crel[-1] \
                     and not (most_common_crel[-1] is None and (len(most_common_crel) > 2) and crel == most_common_crel[-2]):
@@ -263,78 +275,73 @@ class SearnModel(object):
             most_common_crel.append(crel)
 
             # to have child tags, need a tag sequence and a current valid regular tag
-            if not tag or len(tag_seq) == 0 or not crel or len(crel_seq) == 0:
+            if not tag or len(pos_tag_seq) == 0 or not crel or len(crel_seq) == 0:
                 continue
 
-            if tag != tag_seq[-1][0]:
-                raise Exception("Tags don't match % s" % str((i, tag, tag_seq[-1])))
+            if tag != pos_tag_seq[-1][0]:
+                raise Exception("Tags don't match % s" % str((i, tag, pos_tag_seq[-1])))
             if crel != crel_seq[-1][0]:
                 raise Exception("Crels don't match % s" % str((i, crel, crel_seq[-1])))
 
             l, r = normalize_cr(crel)
             if tag in (l, r):
-                crel_child_tags[crel_seq[-1]].add(tag_seq[-1])
+                pos_crel_child_tags[crel_seq[-1]].add(pos_tag_seq[-1])
 
-        return tag_seq, crel_child_tags
+        pos_crels = []
+        for _, tag_pairs in pos_crel_child_tags.items():
+            tag2pairs = defaultdict(set)
+            for tag, ix in tag_pairs:
+                tag2pairs[tag].add((tag, ix))
+            for taga, pairsa in tag2pairs.items():
+                for tagb, pairsb in tag2pairs.items():
+                    if pairsa != pairsb:
+                        for pa in pairsa:
+                            for pb in pairsb:
+                                pos_crels.append((pa, pb))
 
-    def parse_sentence(self, tagged_sentence, predicted_tags, parse_examples, crel_examples):
+        return pos_tag_seq, pos_crels, tag2words, sent_reg_predicted_tags, sent_act_cr_tags
+
+    def parse_sentence(self, tagged_sentence, predicted_tags, tag_freq, parse_examples, crel_examples):
 
         action_history = []
         action_tag_pair_history = []
 
-        all_tags = set()
-        all_predicted_tags = set()
-
-        min_ixs, max_ixs = defaultdict(lambda: len(tagged_sentence) + 1), defaultdict(lambda: -1)
-        ptag_seq = []
-        words = []
-        for i, (wd, tags) in enumerate(tagged_sentence):
-            words.append(wd)
-            all_tags.update(tags)
-            ptag = predicted_tags[i]
-            if ptag == EMPTY_TAG:
-                continue
-            if not ptag in all_predicted_tags:
-                ptag_seq.append(ptag)
-            all_predicted_tags.add(ptag)
-            # determine span of each predicted tag
-            min_ixs[ptag] = min(min_ixs[ptag], i)
-            max_ixs[ptag] = max(max_ixs[ptag], i)
+        pos_ptag_seq, pos_ground_truth, tag2words, all_predicted_rtags, all_actual_crels = self.get_tags_relations_for(tagged_sentence, predicted_tags, tag_freq, self.cr_tags)
 
         # Need at least 2 tags for a causal relation to be detected
-        if len(all_predicted_tags) < 2:
-            return []
+        # WRONG - could be an A=>A relation
+        #if len(all_predicted_rtags) < 2:
+        #    return []
 
-        ground_truth = all_tags.intersection(self.cr_tags)
-        ground_truth = set([normalize_cr(crel) for crel in ground_truth])
-        # Filter to only those crels that have support in the predicted tags
-        supported_crels = set()
-        for crel in ground_truth:
-            l, r = crel
-            if l in all_predicted_tags and r in all_predicted_tags:
-                supported_crels.add(crel)
-        ground_truth = supported_crels
+        if len(all_predicted_rtags) == 0:
+            return []
 
         # Initialize stack, basic parser and oracle
         stack = Stack(verbose=False)
-        stack.push(ROOT)
+        # needs to be a tuple
+        stack.push((ROOT,0))
         parser = Parser(stack)
-        oracle = Oracle(ground_truth, parser)
+        oracle = Oracle(pos_ground_truth, parser)
 
-        predicted_relations = []
+        predicted_relations = set()
+
+        # tags without positional info
+        tag_seq = [t for t,i in pos_ptag_seq]
 
         # Oracle parsing logic
-        for tag_ix, buffer in enumerate(ptag_seq):
-            buffer = buffer
-            word_seq = words[min_ixs[buffer]:max_ixs[buffer] + 1]
-            buffer_feats = self.feat_extractor.extract(buffer, word_seq, self.positive_val)
+        for tag_ix, buffer in enumerate(pos_ptag_seq):
+            buffer_tag = buffer[0]
+            word_seq = tag2words[buffer]
+            buffer_feats = self.feat_extractor.extract(buffer_tag, word_seq, self.positive_val)
+
             while True:
                 tos = oracle.tos()
-                tos_word_seq = words[min_ixs[tos]:max_ixs[tos] + 1]
-                tos_feats = self.feat_extractor.extract(tos, tos_word_seq, self.positive_val)
+                tos_tag = tos[0]
+                tos_word_seq = tag2words[tos]
+                tos_feats = self.feat_extractor.extract(tos_tag, tos_word_seq, self.positive_val)
 
-                feats = self.get_conditional_feats(action_history, action_tag_pair_history, tos, buffer,
-                                                   ptag_seq[:tag_ix], ptag_seq[tag_ix + 1:])
+                feats = self.get_conditional_feats(action_history, action_tag_pair_history, tos_tag, buffer_tag,
+                                                   tag_seq[:tag_ix], tag_seq [tag_ix + 1:])
                 interaction_feats = self.get_interaction_feats(tos_feats, buffer_feats)
                 feats.update(buffer_feats)
                 feats.update(tos_feats)
@@ -351,37 +358,50 @@ class SearnModel(object):
                     action = gold_action
 
                 action_history.append(action)
-                action_tag_pair_history.append((action, tos, buffer))
+                action_tag_pair_history.append((action, tos_tag, buffer_tag))
 
-                cost_per_action = self.compute_cost(ground_truth, ptag_seq[tag_ix:], oracle)
+                cost_per_action = self.compute_cost(pos_ground_truth, pos_ptag_seq[tag_ix:], oracle)
                 # make a copy as changing later
                 parse_examples.add(dict(feats), gold_action, cost_per_action)
 
                 # Decide the direction of the causal relation
                 if action in [LARC, RARC]:
-                    if (tos, buffer) in ground_truth:
+
+                    cause_effect = denormalize_cr((tos_tag,    buffer_tag))
+                    effect_cause = denormalize_cr((buffer_tag, tos_tag))
+
+                    if cause_effect in all_actual_crels and effect_cause in all_actual_crels:
+                        gold_lr_action = CAUSE_AND_EFFECT
+                    elif cause_effect in all_actual_crels:
                         gold_lr_action = CAUSE_EFFECT
-                    elif (buffer, tos) in ground_truth:
+                    elif effect_cause in all_actual_crels:
                         gold_lr_action = EFFECT_CAUSE
                     else:
                         gold_lr_action = REJECT
 
                     # Add additional features
-                    feats.update(self.crel_features(action, tos, buffer))
+                    # needs to be before predict below
+                    feats.update(self.crel_features(action, tos_tag, buffer_tag))
                     rand_float = np.random.random_sample()
                     if rand_float >= self.beta and len(self.crel_models) > 0:
                         lr_action = self.predict_crel_action(feats)
                     else:
                         lr_action = gold_lr_action
 
-                    if lr_action == CAUSE_EFFECT:
-                        predicted_relations.append((tos, buffer))
+                    if lr_action == CAUSE_AND_EFFECT:
+                        predicted_relations.add(cause_effect)
+                        predicted_relations.add(effect_cause)
+                    elif lr_action == CAUSE_EFFECT:
+                        predicted_relations.add(cause_effect)
                     elif lr_action == EFFECT_CAUSE:
-                        predicted_relations.append((buffer, tos))
+                        predicted_relations.add(effect_cause)
+                    elif lr_action == REJECT:
+                        pass
+                    else:
+                        raise Exception("Invalid CREL type")
 
                     # cost is always 1 for this action (cost of 1 for getting it wrong)
                     #  because getting the wrong direction won't screw up the parse as it doesn't modify the stack
-
                     crel_examples.add(dict(feats), gold_lr_action)
                     # Not sure we want to condition on the actions of this crel model
                     # action_history.append(lr_action)
@@ -393,8 +413,7 @@ class SearnModel(object):
                 if oracle.is_stack_empty():
                     break
 
-        pred_relns = set((denormalize_cr(cr) for cr in predicted_relations))
-        return pred_relns
+        return predicted_relations
 
     def crel_features(self, action, tos, buffer):
         feats = {}
@@ -402,6 +421,8 @@ class SearnModel(object):
         feats["ARC_tos_buffer:" + tos + "->" + buffer]  = self.positive_val
         feats["ARC_tos:" + tos]                         = self.positive_val
         feats["ARC_buffer:" + buffer]                   = self.positive_val
+        feats["ARC_buffer_equals_tos:" + str(tos == buffer)] = self.positive_val
+        feats["ARC_combo:" + ",".join(sorted([tos,buffer]))] = self.positive_val
         return feats
 
     def get_interaction_feats(self, fts1, fts2):
@@ -429,6 +450,7 @@ class SearnModel(object):
         feats["tos:" + tos] = self.positive_val
         feats["buffer:" + buffer] = self.positive_val
         feats["tos_buffer:" + tos + "|" + buffer] = self.positive_val
+        feats["tos_buffer_combo:" + ",".join(sorted([tos, buffer]))] = self.positive_val
 
         ### PREVIOUS TAGS
         for i, tag in enumerate(previous_tags[::-1]):

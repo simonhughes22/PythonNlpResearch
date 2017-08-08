@@ -34,7 +34,7 @@ def get_config(folder):
         "stem"              : STEM,
 
         "replace_nums"      : REPLACE_NUMS,
-        "min_sentence_length": MIN_SENTENCE_LENGTH,
+        "min_sentence_length":MIN_SENTENCE_LENGTH,
         "remove_stop_words" : REMOVE_STOP_WORDS,
         "remove_punctuation": REMOVE_PUNCTUATION,
         "lower_case"        : LOWER_CASE,

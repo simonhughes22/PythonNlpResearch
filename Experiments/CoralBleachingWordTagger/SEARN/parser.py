@@ -22,7 +22,7 @@ class Parser(object):
         self.arcs.append(arc)
         self.normed_arcs.add(arc)
         self.children.add(tos)
-        self.actions.append("L ARC   : " + tos + "->" + buffer)
+        self.actions.append("L ARC   : " + str(tos) + "->" + str(buffer))
 
     def right_arc(self, buffer):
         tos = self.stack.tos()
@@ -32,21 +32,21 @@ class Parser(object):
         #assert n_arc not in self.normed_arcs, "Arc already processed %s" % str(n_arc)
         self.arcs.append(arc)
         self.normed_arcs.add(n_arc)
-        self.actions.append("R ARC   : " + tos + "<-" + buffer)
+        self.actions.append("R ARC   : " + str(tos) + "<-" + str(buffer))
         self.children.add(buffer)
         self.stack.push(buffer)
 
     def reduce(self):
         tos = self.stack.pop()
         # assert self.has_head(tos) == True
-        self.actions.append("REDUCE  : Pop  %s" % tos)
+        self.actions.append("REDUCE  : Pop  %s" % str(tos))
 
     def shift(self, buffer):
         self.stack.push(buffer)
-        self.actions.append("SHIFT   : Push %s" % buffer)
+        self.actions.append("SHIFT   : Push %s" % str(buffer))
 
     def skip(self, buffer):
-        self.actions.append("SKIP    : item %s" % buffer)
+        self.actions.append("SKIP    : item %s" % str(buffer))
 
     def has_head(self, item):
         return item in self.children

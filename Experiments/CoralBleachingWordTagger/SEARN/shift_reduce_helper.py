@@ -9,7 +9,7 @@ RARC = "Rarc"
 SKIP = "Skip"
 
 def norm_arc(arc):
-    return tuple(sorted(arc))
+    return tuple(sorted(arc, key=lambda tpl: ("", 0) if tpl is None else (tpl[0],tpl[1])))
 
 def norm_arcs(arcs):
     return set(map(norm_arc, arcs))
