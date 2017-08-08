@@ -93,26 +93,30 @@ from sklearn.linear_model import LogisticRegression
 from searn_parser import SearnModel, EMPTY_TAG
 import numpy as np
 
-# Replace predicted tags with actual to test impact on recall
-for essay_ix, essay in enumerate(pred_tagged_essays):
-    act_tags = []
-    for sent_ix, taggged_sentence in enumerate(essay.sentences):
-        sent_tags = []
-        act_tags.append(sent_tags)
-        for wd, tags in taggged_sentence:
-            rtags = list(vtags.intersection(tags))
-            if len(rtags) == 0:
-                sent_tags.append(EMPTY_TAG)
-            else:
-                if len(rtags) > 1:
-                    rtags = [t for t in rtags if t != "explicit"]
-                np.random.shuffle(rtags)
-                sent_tags.append(rtags[0])
+## Replace predicted tags with actual to test impact on recall
+# With perfect tags and gold parse decisions, recall is 0.8417, F1 is 0.9140
+# With best Predicted tags and gold parse decisions, recall is 0.8037, F1 is 0.8912
+# With best Predicted tags and learned parse decisions, recall is 0.7545, F1 is 0.8449 (precision is ~0.96)
 
-    essay.pred_tagged_sentences = act_tags
+# for essay_ix, essay in enumerate(pred_tagged_essays):
+#     act_tags = []
+#     for sent_ix, taggged_sentence in enumerate(essay.sentences):
+#         sent_tags = []
+#         act_tags.append(sent_tags)
+#         for wd, tags in taggged_sentence:
+#             rtags = list(vtags.intersection(tags))
+#             if len(rtags) == 0:
+#                 sent_tags.append(EMPTY_TAG)
+#             else:
+#                 if len(rtags) > 1:
+#                     rtags = [t for t in rtags if t != "explicit"]
+#                 np.random.shuffle(rtags)
+#                 sent_tags.append(rtags[0])
+#
+#     essay.pred_tagged_sentences = act_tags
 
-#parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.3)
-parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta)
+parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.3)
+#parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta)
 parse_model.train(pred_tagged_essays, 12)
 
 ## TODO

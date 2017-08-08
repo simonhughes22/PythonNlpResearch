@@ -60,7 +60,7 @@ class SearnModel(object):
         self.training_datasets_crel = {}
         self.current_model = None
 
-    def add_labels(self, observed_tags, ys_bytag_sent):
+    def add_cr_labels(self, observed_tags, ys_bytag_sent):
         for tag in self.cr_tags:
             if tag in observed_tags:
                 ys_bytag_sent[tag].append(1)
@@ -76,12 +76,12 @@ class SearnModel(object):
         tag_freq = defaultdict(int)
         for essay in tagged_essays:
             for sentence in essay.sentences:
-                unique_tags = set()
+                unique_cr_tags = set()
                 for word, tags in sentence:
-                    unique_tags.update(self.cr_tags.intersection(tags))
+                    unique_cr_tags.update(self.cr_tags.intersection(tags))
                     for tag in tags:
                         tag_freq[tag] += 1
-                self.add_labels(unique_tags, ys_bytag_sent)
+                self.add_cr_labels(unique_cr_tags, ys_bytag_sent)
         return ys_bytag_sent, tag_freq
 
     def train(self, tagged_essays, max_epochs):
@@ -107,7 +107,7 @@ class SearnModel(object):
                     predicted_tags = essay.pred_tagged_sentences[sent_ix]
                     pred_relations = self.parse_sentence(taggged_sentence, predicted_tags, tag_freq, parse_examples, crel_examples)
                     # Store predictions for evaluation
-                    self.add_labels(pred_relations, pred_ys_by_sent)
+                    self.add_cr_labels(pred_relations, pred_ys_by_sent)
 
             class2metrics = ResultsProcessor.compute_metrics(ys_by_sent, pred_ys_by_sent)
             micro_metrics = micro_rpfa(class2metrics.values()) # type: rpfa
@@ -420,6 +420,11 @@ class SearnModel(object):
                     break
                 if oracle.is_stack_empty():
                     break
+        # Validation logic. Break on pass as relations that should be parsed
+        for pcr in all_actual_crels:
+            l,r = normalize_cr(pcr)
+            if l in rtag_seq and r in rtag_seq and pcr not in predicted_relations:
+                pass
 
         return predicted_relations
 
