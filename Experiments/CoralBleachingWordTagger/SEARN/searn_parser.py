@@ -10,6 +10,7 @@ from shift_reduce_helper import *
 from stack import Stack
 from weighted_examples import WeightedExamples
 import numpy as np
+import string
 
 PARSE_ACTIONS = [
     SHIFT,
@@ -235,69 +236,70 @@ class SearnModel(object):
 
     def get_tags_relations_for(self, tagged_sentence, predicted_tags, tag_freq, cr_tags):
 
-        most_common_tag = [None]  # seed with None
-        most_common_crel = [None]
-        pos_tag_seq = []
-        crel_seq = []
-
-        pos_crel_child_tags = defaultdict(set)
-        # non positional
         sent_reg_predicted_tags = set()
         sent_act_cr_tags = set()
         tag2words = defaultdict(list)
-        for i, (wd, actual_tags) in enumerate(tagged_sentence):
-            # just a single predicted tag
-            pred_rtag = predicted_tags[i]
-            tag = None
-            # Get tag seq
-            if pred_rtag != EMPTY_TAG:
-                # only use explicit tag if it's the only tag (prefer concept code tags if both present)
-                tag = pred_rtag
-                sent_reg_predicted_tags.add(tag)
-                # if no prev tag and the current matches -2 (a gap of one), skip over
-                if tag != most_common_tag[-1] and \
-                        not (most_common_tag[-1] is None and (len(most_common_tag) > 2) and tag == most_common_tag[-2]):
-                    pos_tag_seq.append((tag, i))
 
-            if len(pos_tag_seq) > 0:
-                tag2words[pos_tag_seq[-1]].append(wd)
-            most_common_tag.append(tag)
+        tag_seq = [None]  # seed with None
+        crel_set_seq = [set()]
 
-            pos_crels = actual_tags.intersection(cr_tags)
-            sent_act_cr_tags.update(pos_crels)
-            crel = None
-            if pos_crels:
-                crel = max(pos_crels, key=lambda cr: tag_freq[cr])
-                # skip over gaps of one crel
-                if crel != most_common_crel[-1] \
-                    and not (most_common_crel[-1] is None and (len(most_common_crel) > 2) and crel == most_common_crel[-2]):
-                    crel_seq.append((crel, i))
-            most_common_crel.append(crel)
-
-            # to have child tags, need a tag sequence and a current valid regular tag
-            if not tag or len(pos_tag_seq) == 0 or not crel or len(crel_seq) == 0:
+        pos_tag_seq = []
+        latest_tag_posns = {}
+        crel_child_tags = defaultdict(set)
+        for i, (wd, tags) in enumerate(tagged_sentence):
+            if wd in string.punctuation:
                 continue
 
-            if tag != pos_tag_seq[-1][0]:
-                raise Exception("Tags don't match % s" % str((i, tag, pos_tag_seq[-1])))
-            if crel != crel_seq[-1][0]:
-                raise Exception("Crels don't match % s" % str((i, crel, crel_seq[-1])))
+            active_tag = None
+            rtag = predicted_tags[i]
+            if rtag != EMPTY_TAG:
+                active_tag = rtag
+                sent_reg_predicted_tags.add(active_tag)
+                # if no prev tag and the current matches -2 (a gap of one), skip over
+                if active_tag != tag_seq[-1] and \
+                        not (tag_seq[-1] is None and (len(tag_seq) > 2) and active_tag == tag_seq[-2]):
+                    latest_tag_posns[active_tag] = (active_tag, i)
+                    pos_tag_seq.append((active_tag, i))
+                # need to be after we update the latest tag position
+                tag2words[latest_tag_posns[active_tag]].append(wd)
+            tag_seq.append(active_tag)
 
-            l, r = normalize_cr(crel)
-            if tag in (l, r):
-                pos_crel_child_tags[crel_seq[-1]].add(pos_tag_seq[-1])
+            active_crels = tags.intersection(cr_tags)
+            for cr in sorted(active_crels):
+                sent_act_cr_tags.add(cr)
+                if cr not in crel_set_seq[-1] \
+                        and not (cr not in crel_set_seq[-1] and (len(crel_set_seq) > 2) and cr in crel_set_seq[-2]):
+                    latest_tag_posns[cr] = (cr, i)
+            crel_set_seq.append(active_crels)
+
+            # to have child tags, need a tag sequence and a current valid regular tag
+            if not active_tag or len(active_crels) == 0:
+                continue
+
+            for crel in active_crels:
+                l, r = normalize_cr(crel)
+                if active_tag in (l, r):
+                    crel_child_tags[latest_tag_posns[crel]].add(latest_tag_posns[active_tag])
 
         pos_crels = []
-        for _, tag_pairs in pos_crel_child_tags.items():
-            tag2pairs = defaultdict(set)
-            for tag, ix in tag_pairs:
-                tag2pairs[tag].add((tag, ix))
-            for taga, pairsa in tag2pairs.items():
-                for tagb, pairsb in tag2pairs.items():
+        for (crelation, crix), tag_pairs in crel_child_tags.items():
+            l, r = normalize_cr(crelation)
+            # unsupported relation
+            if l not in sent_reg_predicted_tags or r not in sent_reg_predicted_tags:
+                continue
+            tag2pair = defaultdict(list)
+            for taga, ixa in tag_pairs:
+                tag2pair[taga].append((taga, ixa))
+            # un-supported relation
+            if l not in tag2pair or r not in tag2pair:
+                continue
+
+            l_pairs = tag2pair[l]
+            r_pairs = tag2pair[r]
+            for pairsa in l_pairs:
+                for pairsb in r_pairs:
                     if pairsa != pairsb:
-                        for pa in pairsa:
-                            for pb in pairsb:
-                                pos_crels.append((pa, pb))
+                        pos_crels.append((pairsa, pairsb))
 
         return pos_tag_seq, pos_crels, tag2words, sent_reg_predicted_tags, sent_act_cr_tags
 
@@ -327,6 +329,10 @@ class SearnModel(object):
 
         # tags without positional info
         tag_seq = [t for t,i in pos_ptag_seq]
+        rtag_seq = [t for t in tag_seq if t[0].isdigit()]
+        # if not at least 2 concept codes, then can't parse
+        if len(rtag_seq) < 2:
+            return []
 
         # Oracle parsing logic
         for tag_ix, buffer in enumerate(pos_ptag_seq):
@@ -338,6 +344,8 @@ class SearnModel(object):
                 tos = oracle.tos()
                 tos_tag = tos[0]
                 tos_word_seq = tag2words[tos]
+
+                #TODO get features for words between the two tags
                 tos_feats = self.feat_extractor.extract(tos_tag, tos_word_seq, self.positive_val)
 
                 feats = self.get_conditional_feats(action_history, action_tag_pair_history, tos_tag, buffer_tag,
