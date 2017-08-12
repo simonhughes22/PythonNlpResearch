@@ -72,22 +72,18 @@ class SearnModel(object):
         # outputs
         ys_bytag_sent = defaultdict(list)
 
-        # cut texts after this number of words (among top max_features most common words)
-        tag_freq = defaultdict(int)
         for essay in tagged_essays:
             for sentence in essay.sentences:
                 unique_cr_tags = set()
                 for word, tags in sentence:
                     unique_cr_tags.update(self.cr_tags.intersection(tags))
-                    for tag in tags:
-                        tag_freq[tag] += 1
                 self.add_cr_labels(unique_cr_tags, ys_bytag_sent)
-        return ys_bytag_sent, tag_freq
+        return ys_bytag_sent
 
     def train(self, tagged_essays, max_epochs):
 
         trained_with_beta0 = False
-        ys_by_sent, tag_freq = self.get_label_data(tagged_essays)
+        ys_by_sent = self.get_label_data(tagged_essays)
 
         for i in range(0, max_epochs):
             if self.beta < 0:
@@ -105,7 +101,7 @@ class SearnModel(object):
             for essay_ix, essay in enumerate(tagged_essays):
                 for sent_ix, taggged_sentence in enumerate(essay.sentences):
                     predicted_tags = essay.pred_tagged_sentences[sent_ix]
-                    pred_relations = self.parse_sentence(taggged_sentence, predicted_tags, tag_freq, parse_examples, crel_examples)
+                    pred_relations = self.generate_training_data(taggged_sentence, predicted_tags, parse_examples, crel_examples)
                     # Store predictions for evaluation
                     self.add_cr_labels(pred_relations, pred_ys_by_sent)
 
@@ -234,11 +230,11 @@ class SearnModel(object):
         xs = self.current_crel_dict_vectorizer.transform(feats)
         return self.current_crel_model.predict(xs)
 
-    def get_tags_relations_for(self, tagged_sentence, predicted_tags, tag_freq, cr_tags):
+    def get_tags_relations_for(self, tagged_sentence, predicted_tags, cr_tags):
 
         sent_reg_predicted_tags = set()
         sent_act_cr_tags = set()
-        tag2words = defaultdict(list)
+        tag2ixs = defaultdict(list)
 
         tag_seq = [None]  # seed with None
         crel_set_seq = [set()]
@@ -261,7 +257,7 @@ class SearnModel(object):
                     latest_tag_posns[active_tag] = (active_tag, i)
                     pos_tag_seq.append((active_tag, i))
                 # need to be after we update the latest tag position
-                tag2words[latest_tag_posns[active_tag]].append(wd)
+                tag2ixs[latest_tag_posns[active_tag]].append(i)
             tag_seq.append(active_tag)
 
             active_crels = tags.intersection(cr_tags)
@@ -301,22 +297,29 @@ class SearnModel(object):
                     if pairsa != pairsb:
                         pos_crels.append((pairsa, pairsb))
 
-        return pos_tag_seq, pos_crels, tag2words, sent_reg_predicted_tags, sent_act_cr_tags
+        tag2span = dict()
+        for tagpos, ixs in tag2ixs.items():
+            tag2span[tagpos] = (min(ixs), max(ixs))
 
-    def parse_sentence(self, tagged_sentence, predicted_tags, tag_freq, parse_examples, crel_examples):
+        return pos_tag_seq, pos_crels, tag2span, sent_reg_predicted_tags, sent_act_cr_tags
+
+    def __prefix_feats_(self, prefix, feats):
+        fts = dict()
+        for ft,val in feats.items():
+            fts[prefix + ":" + ft] = val
+        return fts
+
+    def generate_training_data(self, tagged_sentence, predicted_tags, parse_examples, crel_examples):
 
         action_history = []
         action_tag_pair_history = []
 
-        pos_ptag_seq, pos_ground_truth, tag2words, all_predicted_rtags, all_actual_crels = self.get_tags_relations_for(tagged_sentence, predicted_tags, tag_freq, self.cr_tags)
-
-        # Need at least 2 tags for a causal relation to be detected
-        # WRONG - could be an A=>A relation
-        #if len(all_predicted_rtags) < 2:
-        #    return []
+        pos_ptag_seq, pos_ground_truth, tag2span, all_predicted_rtags, all_actual_crels = self.get_tags_relations_for(tagged_sentence, predicted_tags, self.cr_tags)
 
         if len(all_predicted_rtags) == 0:
             return []
+
+        words = [wd for wd, tags in tagged_sentence]
 
         # Initialize stack, basic parser and oracle
         stack = Stack(verbose=False)
@@ -337,22 +340,35 @@ class SearnModel(object):
         # Oracle parsing logic
         for tag_ix, buffer in enumerate(pos_ptag_seq):
             buffer_tag = buffer[0]
-            word_seq = tag2words[buffer]
-            buffer_feats = self.feat_extractor.extract(buffer_tag, word_seq, self.positive_val)
+            bstart, bstop = tag2span[buffer]
+            buffer_word_seq = words[bstart:bstop + 1]
+            buffer_feats = self.feat_extractor.extract(buffer_tag, buffer_word_seq, self.positive_val)
+            buffer_feats = self.__prefix_feats_("BUFFER", buffer_feats)
 
             while True:
                 tos = oracle.tos()
                 tos_tag = tos[0]
-                tos_word_seq = tag2words[tos]
+                if tos_tag == ROOT:
+                    tos_feats = {}
+                    tstart, tstop = -1,-1
+                else:
+                    tstart, tstop = tag2span[tos]
+                    tos_word_seq = words[tstart:tstop + 1]
 
-                #TODO get features for words between the two tags
-                tos_feats = self.feat_extractor.extract(tos_tag, tos_word_seq, self.positive_val)
+                    tos_feats = self.feat_extractor.extract(tos_tag, tos_word_seq, self.positive_val)
+                    tos_feats = self.__prefix_feats_("TOS", tos_feats)
+
+                btwn_start, btwn_stop = min(tstop+1, len(words)-1), max(0, bstart-1)
+                btwn_words = words[btwn_start:btwn_stop + 1]
+                btwn_feats = self.feat_extractor.extract("BETWEEN", btwn_words, self.positive_val)
+                btwn_feats = self.__prefix_feats_("__BTWN__", btwn_feats)
 
                 feats = self.get_conditional_feats(action_history, action_tag_pair_history, tos_tag, buffer_tag,
                                                    tag_seq[:tag_ix], tag_seq [tag_ix + 1:])
                 interaction_feats = self.get_interaction_feats(tos_feats, buffer_feats)
                 feats.update(buffer_feats)
                 feats.update(tos_feats)
+                feats.update(btwn_feats)
                 feats.update(interaction_feats)
 
                 gold_action = oracle.consult(tos, buffer)
