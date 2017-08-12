@@ -93,7 +93,7 @@ feat_extractor = FeatureExtractor([
 #
 #     essay.pred_tagged_sentences = act_tags
 
-parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.3)
+parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.1)
 #parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta)
 parse_model.train(pred_tagged_essays, 12)
 

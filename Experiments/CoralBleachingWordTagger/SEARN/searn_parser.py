@@ -444,6 +444,105 @@ class SearnModel(object):
 
         return predicted_relations
 
+    def predict(self, tagged_sentence, predicted_tags):
+
+        action_history = []
+        action_tag_pair_history = []
+
+        pos_ptag_seq, _, tag2span, all_predicted_rtags, _ = self.get_tags_relations_for(tagged_sentence, predicted_tags, self.cr_tags)
+
+        if len(all_predicted_rtags) == 0:
+            return []
+
+        words = [wd for wd, tags in tagged_sentence]
+
+        # Initialize stack, basic parser and oracle
+        stack = Stack(verbose=False)
+        # needs to be a tuple
+        stack.push((ROOT,0))
+        parser = Parser(stack)
+        oracle = Oracle([], parser)
+
+        predicted_relations = set()
+
+        # tags without positional info
+        tag_seq = [t for t,i in pos_ptag_seq]
+        rtag_seq = [t for t in tag_seq if t[0].isdigit()]
+        # if not at least 2 concept codes, then can't parse
+        if len(rtag_seq) < 2:
+            return []
+
+        # Oracle parsing logic
+        for tag_ix, buffer in enumerate(pos_ptag_seq):
+            buffer_tag = buffer[0]
+            bstart, bstop = tag2span[buffer]
+            buffer_word_seq = words[bstart:bstop + 1]
+            buffer_feats = self.feat_extractor.extract(buffer_tag, buffer_word_seq, self.positive_val)
+            buffer_feats = self.__prefix_feats_("BUFFER", buffer_feats)
+
+            while True:
+                tos = oracle.tos()
+                tos_tag = tos[0]
+                if tos_tag == ROOT:
+                    tos_feats = {}
+                    tstart, tstop = -1,-1
+                else:
+                    tstart, tstop = tag2span[tos]
+                    tos_word_seq = words[tstart:tstop + 1]
+
+                    tos_feats = self.feat_extractor.extract(tos_tag, tos_word_seq, self.positive_val)
+                    tos_feats = self.__prefix_feats_("TOS", tos_feats)
+
+                btwn_start, btwn_stop = min(tstop+1, len(words)-1), max(0, bstart-1)
+                btwn_words = words[btwn_start:btwn_stop + 1]
+                btwn_feats = self.feat_extractor.extract("BETWEEN", btwn_words, self.positive_val)
+                btwn_feats = self.__prefix_feats_("__BTWN__", btwn_feats)
+
+                feats = self.get_conditional_feats(action_history, action_tag_pair_history, tos_tag, buffer_tag,
+                                                   tag_seq[:tag_ix], tag_seq [tag_ix + 1:])
+                interaction_feats = self.get_interaction_feats(tos_feats, buffer_feats)
+                feats.update(buffer_feats)
+                feats.update(tos_feats)
+                feats.update(btwn_feats)
+                feats.update(interaction_feats)
+
+                # Consult Oracle or Model based on coin toss
+                action = self.predict_parse_action(feats, tos)
+
+                action_history.append(action)
+                action_tag_pair_history.append((action, tos_tag, buffer_tag))
+
+                # Decide the direction of the causal relation
+                if action in [LARC, RARC]:
+
+                    cause_effect = denormalize_cr((tos_tag,    buffer_tag))
+                    effect_cause = denormalize_cr((buffer_tag, tos_tag))
+
+                    # Add additional features
+                    # needs to be before predict below
+                    feats.update(self.crel_features(action, tos_tag, buffer_tag))
+                    lr_action = self.predict_crel_action(feats)
+
+                    if lr_action == CAUSE_AND_EFFECT:
+                        predicted_relations.add(cause_effect)
+                        predicted_relations.add(effect_cause)
+                    elif lr_action == CAUSE_EFFECT:
+                        predicted_relations.add(cause_effect)
+                    elif lr_action == EFFECT_CAUSE:
+                        predicted_relations.add(effect_cause)
+                    elif lr_action == REJECT:
+                        pass
+                    else:
+                        raise Exception("Invalid CREL type")
+
+                # end if action in [LARC,RARC]
+                if not oracle.execute(action, tos, buffer):
+                    break
+                if oracle.is_stack_empty():
+                    break
+        # Validation logic. Break on pass as relations that should be parsed
+        return predicted_relations
+
     def crel_features(self, action, tos, buffer):
         feats = {}
         feats["ARC_action:" + action]                   = self.positive_val
