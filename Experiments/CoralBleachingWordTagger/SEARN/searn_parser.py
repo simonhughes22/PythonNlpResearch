@@ -80,6 +80,17 @@ class SearnModel(object):
                 self.add_cr_labels(unique_cr_tags, ys_bytag_sent)
         return ys_bytag_sent
 
+    def predict(self, tagged_essays):
+
+        pred_ys_by_sent = defaultdict(list)
+        for essay_ix, essay in enumerate(tagged_essays):
+            for sent_ix, taggged_sentence in enumerate(essay.sentences):
+                predicted_tags = essay.pred_tagged_sentences[sent_ix]
+                pred_relations = self.predict_sentence(taggged_sentence, predicted_tags)
+                # Store predictions for evaluation
+                self.add_cr_labels(pred_relations, pred_ys_by_sent)
+        return pred_ys_by_sent
+
     def train(self, tagged_essays, max_epochs):
 
         trained_with_beta0 = False
@@ -444,7 +455,7 @@ class SearnModel(object):
 
         return predicted_relations
 
-    def predict(self, tagged_sentence, predicted_tags):
+    def predict_sentence(self, tagged_sentence, predicted_tags):
 
         action_history = []
         action_tag_pair_history = []

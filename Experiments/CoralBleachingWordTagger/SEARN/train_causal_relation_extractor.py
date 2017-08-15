@@ -1,15 +1,17 @@
 # coding: utf-8
-
+import numpy as np
 import pymongo
 from sklearn.linear_model import LogisticRegression
 from collections import defaultdict
 import dill
 import datetime, logging
 
+from CrossValidation import cross_validation
 from window_based_tagger_config import get_config
-from searn_parser import SearnModel
+from searn_parser import SearnModel, normalize, EMPTY_TAG
 from results_procesor import ResultsProcessor
 from Settings import Settings
+from wordtagginghelper import merge_dictionaries
 
 client = pymongo.MongoClient()
 db = client.metrics
@@ -75,7 +77,7 @@ feat_extractor = FeatureExtractor([
 # With perfect tags and gold parse decisions, recall is 0.8417, F1 is 0.9140
 # With best Predicted tags and gold parse decisions, recall is 0.8037, F1 is 0.8912
 # With best Predicted tags and learned parse decisions, recall is 0.7545, F1 is 0.8449 (precision is ~0.96)
-
+#
 # for essay_ix, essay in enumerate(pred_tagged_essays):
 #     act_tags = []
 #     for sent_ix, taggged_sentence in enumerate(essay.sentences):
@@ -93,9 +95,36 @@ feat_extractor = FeatureExtractor([
 #
 #     essay.pred_tagged_sentences = act_tags
 
-parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.1)
-#parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta)
-parse_model.train(pred_tagged_essays, 12)
+cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag = defaultdict(list), defaultdict(list)
+cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
+
+folds = cross_validation(pred_tagged_essays, CV_FOLDS)
+#TODO Parallelize
+for i,(essays_TD, essays_VD) in enumerate(folds):
+
+    parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.1)
+    parse_model.train(pred_tagged_essays, 12)
+
+    sent_td_ys_bycode = parse_model.get_label_data(essays_TD)
+    sent_vd_ys_bycode = parse_model.get_label_data(essays_VD)
+
+    sent_td_pred_ys_bycode = parse_model.predict(essays_TD)
+    sent_vd_pred_ys_bycode = parse_model.predict(essays_VD)
+
+    merge_dictionaries(sent_td_ys_bycode, cv_sent_td_ys_by_tag)
+    merge_dictionaries(sent_vd_ys_bycode, cv_sent_vd_ys_by_tag)
+    merge_dictionaries(sent_td_pred_ys_bycode, cv_sent_td_predictions_by_tag)
+    merge_dictionaries(sent_vd_pred_ys_bycode, cv_sent_vd_predictions_by_tag)
+
+CB_SENT_TD, CB_SENT_VD = "CR_CB_SHIFT_REDUCE_PARSER_TD" , "CR_CB_SHIFT_REDUCE_PARSER_VD"
+sent_algo = "Shift_Reduce_Parser"
+parameters = dict(config)
+#parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
+#parameters["min_feat_freq"] = MIN_FEAT_FREQ
+parameters["no_stacking"] = True
+
+sent_td_objectid = processor.persist_results(CB_SENT_TD, cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag, parameters, sent_algo)
+sent_vd_objectid = processor.persist_results(CB_SENT_VD, cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag, parameters, sent_algo)
 
 ## TODO
 #- Re-train tagging model, adding tags where reg tag is missing but is included in a causer or result tag.
