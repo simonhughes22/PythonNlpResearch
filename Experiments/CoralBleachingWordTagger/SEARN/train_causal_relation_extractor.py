@@ -102,8 +102,9 @@ folds = cross_validation(pred_tagged_essays, CV_FOLDS)
 #TODO Parallelize
 for i,(essays_TD, essays_VD) in enumerate(folds):
 
+    print("\nCV % i" % i)
     parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.1)
-    parse_model.train(pred_tagged_essays, 12)
+    parse_model.train(essays_TD, 12)
 
     sent_td_ys_bycode = parse_model.get_label_data(essays_TD)
     sent_vd_ys_bycode = parse_model.get_label_data(essays_VD)
