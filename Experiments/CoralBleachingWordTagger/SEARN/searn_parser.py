@@ -239,7 +239,7 @@ class SearnModel(object):
 
     def predict_crel_action(self, feats):
         xs = self.current_crel_dict_vectorizer.transform(feats)
-        return self.current_crel_model.predict(xs)
+        return self.current_crel_model.predict(xs)[0]
 
     def get_tags_relations_for(self, tagged_sentence, predicted_tags, cr_tags):
 

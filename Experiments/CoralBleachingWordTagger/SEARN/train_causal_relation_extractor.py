@@ -8,7 +8,8 @@ import datetime, logging
 
 from CrossValidation import cross_validation
 from window_based_tagger_config import get_config
-from searn_parser import SearnModel, normalize, EMPTY_TAG
+from searn_parser import SearnModel
+from searn_parser_xgboost import SearnModelXgBoost
 from results_procesor import ResultsProcessor
 from Settings import Settings
 from wordtagginghelper import merge_dictionaries
@@ -103,7 +104,8 @@ folds = cross_validation(pred_tagged_essays, CV_FOLDS)
 for i,(essays_TD, essays_VD) in enumerate(folds):
 
     print("\nCV % i" % i)
-    parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.1)
+    #parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.1)
+    parse_model = SearnModelXgBoost(feat_extractor, cr_tags, beta_decay_fn=lambda beta: beta - 0.1)
     parse_model.train(essays_TD, 12)
 
     sent_td_ys_bycode = parse_model.get_label_data(essays_TD)
@@ -140,3 +142,6 @@ sent_vd_objectid = processor.persist_results(CB_SENT_VD, cv_sent_vd_ys_by_tag, c
 # 2. Tagging model needs to tag causer:num and result:num too as tags, as well as explicits
 # 3. Can't handle same tag to same tag
 # 4. Can't handle same relation in both directions (e.g. if code is repeated)
+
+#TODO - cost sensitive classification
+# Look into this library if XGBoost doesn't work out - http://nbviewer.jupyter.org/github/albahnsen/CostSensitiveClassification/blob/master/doc/tutorials/tutorial_edcs_credit_scoring.ipynb
