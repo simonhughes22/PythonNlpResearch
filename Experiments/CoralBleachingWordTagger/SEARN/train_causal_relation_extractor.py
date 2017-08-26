@@ -7,12 +7,15 @@ import dill
 import datetime, logging
 
 from CrossValidation import cross_validation
+from searn_parser_costcla import SearnModelCla
 from window_based_tagger_config import get_config
 from searn_parser import SearnModel
 from searn_parser_xgboost import SearnModelXgBoost
 from results_procesor import ResultsProcessor
 from Settings import Settings
 from wordtagginghelper import merge_dictionaries
+import costcla
+from costcla.models import CostSensitiveRandomForestClassifier, CostSensitiveLogisticRegression
 
 client = pymongo.MongoClient()
 db = client.metrics
@@ -105,7 +108,8 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
     print("\nCV % i" % i)
     #parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.1)
-    parse_model = SearnModelXgBoost(feat_extractor, cr_tags, beta_decay_fn=lambda beta: beta - 0.3)
+    #parse_model = SearnModelXgBoost(feat_extractor, cr_tags, beta_decay_fn=lambda beta: beta - 0.3)
+    parse_model = SearnModelCla(feat_extractor, cr_tags, base_learner_fact=CostSensitiveLogisticRegression, beta_decay_fn=lambda beta: beta - 0.3)
     parse_model.train(essays_TD, 12)
 
     sent_td_ys_bycode = parse_model.get_label_data(essays_TD)
@@ -120,7 +124,9 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     merge_dictionaries(sent_vd_pred_ys_bycode, cv_sent_vd_predictions_by_tag)
 
 CB_SENT_TD, CB_SENT_VD = "CR_CB_SHIFT_REDUCE_PARSER_TD" , "CR_CB_SHIFT_REDUCE_PARSER_VD"
-sent_algo = "Shift_Reduce_Parser"
+#sent_algo = "Shift_Reduce_Parser"
+#sent_algo = "Shift_Reduce_Parser_XGB"
+sent_algo = "Shift_Reduce_Parser_CLA_LR"
 parameters = dict(config)
 #parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
 #parameters["min_feat_freq"] = MIN_FEAT_FREQ

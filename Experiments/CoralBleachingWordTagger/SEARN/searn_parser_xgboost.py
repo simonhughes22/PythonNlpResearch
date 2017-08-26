@@ -146,9 +146,7 @@ class SearnModelXgBoost(object):
             # xgboost needs values in [0,1]
             ys = [1 if i > 0 else 0 for i in examples.get_labels_for(action)]
             weights = examples.get_weights_for(action)
-            # TODO - train cost sensitive classifier
-            # TODO - try with sparse data - see http://xgboost.readthedocs.io/en/latest/python/python_intro.html#install-xgboost
-            # TODO - maximize F1 score here?
+            # TODO - maximize F1 score here in training the tree?
             dtrain = xgb.DMatrix(xs, label=ys, weight=weights, silent=True)
             # params = {'max_depth': 2, 'eta': 1, 'silent': 1, 'objective': 'binary:logistic'}
             params = {'silent': 1, 'objective': 'binary:logistic'}

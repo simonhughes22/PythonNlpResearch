@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import List, Optional
+from typing import List, Optional, Any
 
 class WeightedExamples(object):
     def __init__(self, labels=None, positive_value=1):
@@ -32,12 +32,12 @@ class WeightedExamples(object):
     def get_labels(self):
         return self.all_labels
 
-    def get_labels_for(self, lbl):
+    def get_labels_for(self, lbl)->List[Any]:
         if not self.classes:
             raise Exception("Labels not supported, multi-class use case")
         return self.labels[lbl]
 
-    def get_weights_for(self, lbl):
+    def get_weights_for(self, lbl: str)->List[float]:
         if not self.classes:
             raise Exception("Weights not supported, multi-class use case")
         return self.weights[lbl]
