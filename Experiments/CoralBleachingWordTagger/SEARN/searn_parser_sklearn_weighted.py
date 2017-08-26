@@ -34,12 +34,13 @@ CREL_ACTIONS = [
 ]
 
 class SearnModeSklearnWeighted(object):
-    def __init__(self, feature_extractor, cr_tags, base_learner_fact, beta_decay_fn=lambda b: b - 0.1, positive_val=1):
+    def __init__(self, feature_extractor, cr_tags, base_learner_fact, beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True):
         # init checks
         # assert CAUSER in tags, "%s must be in tags" % CAUSER
         # assert RESULT in tags, "%s must be in tags" % RESULT
         # assert EXPLICIT in tags, "%s must be in tags" % EXPLICIT
 
+        self.sparse = sparse
         self.feat_extractor = feature_extractor  # feature extractor (for use later)
         self.positive_val = positive_val
         self.base_learner_fact = base_learner_fact  # costcla classifier (based on sklearn)
@@ -139,7 +140,7 @@ class SearnModeSklearnWeighted(object):
 
     def train_parse_models(self, examples):
         models = {}
-        self.current_parser_dict_vectorizer = DictVectorizer(sparse=True)
+        self.current_parser_dict_vectorizer = DictVectorizer(sparse=self.sparse)
         xs = self.current_parser_dict_vectorizer.fit_transform(examples.xs)
 
         for action in PARSE_ACTIONS:
@@ -173,7 +174,7 @@ class SearnModeSklearnWeighted(object):
 
     def train_crel_models(self, examples):
 
-        self.current_crel_dict_vectorizer = DictVectorizer(sparse=True)
+        self.current_crel_dict_vectorizer = DictVectorizer(sparse=self.sparse)
 
         xs = self.current_crel_dict_vectorizer.fit_transform(examples.xs)
         ys = examples.get_labels()
@@ -397,7 +398,7 @@ class SearnModeSklearnWeighted(object):
                 rand_float = np.random.random_sample()  # between [0,1) (half-open interval, includes 0 but not 1)
                 # If no trained models, always use Oracle
                 if rand_float >= self.beta and len(self.parser_models) > 0:
-                    action = self.predict_parse_action(feats, tos)
+                    action = self.predict_parse_action(feats, tos_tag)
                 else:
                     action = gold_action
 

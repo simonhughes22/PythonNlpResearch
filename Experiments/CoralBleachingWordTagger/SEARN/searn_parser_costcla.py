@@ -416,7 +416,7 @@ class SearnModelCla(object):
                 rand_float = np.random.random_sample()  # between [0,1) (half-open interval, includes 0 but not 1)
                 # If no trained models, always use Oracle
                 if rand_float >= self.beta and len(self.parser_models) > 0:
-                    action = self.predict_parse_action(feats, tos)
+                    action = self.predict_parse_action(feats, tos_tag)
                 else:
                     action = gold_action
 
