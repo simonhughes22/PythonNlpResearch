@@ -1,18 +1,6 @@
-from collections import defaultdict
-from sklearn.feature_extraction import DictVectorizer
-
-from NgramGenerator import compute_ngrams
-from Rpfa import micro_rpfa
-from oracle import Oracle
-from parser import Parser
-from results_procesor import ResultsProcessor
-from searn_parser import SearnModel, PARSE_ACTIONS
-from shift_reduce_helper import *
-from stack import Stack
-from weighted_examples import WeightedExamples
-import numpy as np
-import string
 import xgboost as xgb
+from sklearn.feature_extraction import DictVectorizer
+from searn_parser import SearnModel, PARSE_ACTIONS
 
 class SearnModelXgBoost(SearnModel):
     def __init__(self, feature_extractor, cr_tags, beta_decay_fn=lambda b: b - 0.1, positive_val=1):

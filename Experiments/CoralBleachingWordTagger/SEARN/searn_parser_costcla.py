@@ -1,6 +1,5 @@
 import numpy as np
 from sklearn.feature_extraction import DictVectorizer
-
 from searn_parser import SearnModel, PARSE_ACTIONS
 
 class SearnModelCla(SearnModel):
