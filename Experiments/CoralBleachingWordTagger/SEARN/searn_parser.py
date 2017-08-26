@@ -42,8 +42,7 @@ class SearnModel(object):
         self.feat_extractor = feature_extractor  # feature extractor (for use later)
         self.positive_val = positive_val
         self.base_learner_fact = base_learner_fact  # Sklearn classifier
-        self.sparse=sparse
-        self.sparse=sparse
+        self.sparse = sparse
 
         self.cr_tags = set(cr_tags)  # causal relation tags
         self.epoch = -1

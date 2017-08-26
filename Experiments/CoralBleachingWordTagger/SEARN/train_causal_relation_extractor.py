@@ -112,12 +112,12 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     #parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.1)
     #parse_model = SearnModelXgBoost(feat_extractor, cr_tags, beta_decay_fn=lambda beta: beta - 0.3)
     #parse_model = SearnModelCla(feat_extractor, cr_tags, base_learner_fact=CostSensitiveLogisticRegression, beta_decay_fn=lambda beta: beta - 0.3)
-    parse_model = SearnModelSklearnWeighted(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.3)
-    #parse_model = SearnModelSklearnWeighted(feat_extractor, cr_tags, base_learner_fact=RandomForestClassifier, beta_decay_fn=lambda beta: beta - 0.3)
+    #parse_model = SearnModelSklearnWeighted(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.3)
     # parse_model = SearnModelSklearnWeighted(feat_extractor, cr_tags,
-    #                                        base_learner_fact=lambda : GradientBoostingClassifier(max_depth=5),
-    #                                        beta_decay_fn=lambda beta: beta - 0.3, sparse=False)
-
+    #                                         base_learner_fact=lambda : RandomForestClassifier(n_jobs=1), beta_decay_fn=lambda beta: beta - 0.3)
+    parse_model = SearnModelSklearnWeighted(feat_extractor, cr_tags,
+                                           base_learner_fact=lambda : GradientBoostingClassifier(max_depth=3, max_features="log2"),
+                                           beta_decay_fn=lambda beta: beta - 0.3, sparse=False)
 
     parse_model.train(essays_TD, 12)
 
@@ -134,11 +134,11 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
 CB_SENT_TD, CB_SENT_VD = "CR_CB_SHIFT_REDUCE_PARSER_TD" , "CR_CB_SHIFT_REDUCE_PARSER_VD"
 #sent_algo = "Shift_Reduce_Parser"
-sent_algo = "Shift_Reduce_Parser_XGB_10"
+#sent_algo = "Shift_Reduce_Parser_XGB_10"
 #sent_algo = "Shift_Reduce_Parser_CLA_LR"
 #sent_algo = "Shift_Reduce_Parser_WTD_LR"
 #sent_algo = "Shift_Reduce_Parser_WTD_RF"
-#sent_algo = "Shift_Reduce_Parser_WTD_GBT"
+sent_algo = "Shift_Reduce_Parser_WTD_GBT_3"
 parameters = dict(config)
 #parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
 #parameters["min_feat_freq"] = MIN_FEAT_FREQ
