@@ -1,4 +1,7 @@
+import string
 from collections import defaultdict
+
+import numpy as np
 from sklearn.feature_extraction import DictVectorizer
 
 from NgramGenerator import compute_ngrams
@@ -9,11 +12,6 @@ from results_procesor import ResultsProcessor
 from shift_reduce_helper import *
 from stack import Stack
 from weighted_examples import WeightedExamples
-import numpy as np
-import string
-import xgboost as xgb
-import costcla
-from costcla.models import CostSensitiveLogisticRegression, CostSensitiveRandomForestClassifier
 
 PARSE_ACTIONS = [
     SHIFT,
@@ -35,7 +33,7 @@ CREL_ACTIONS = [
     REJECT
 ]
 
-class SearnModelCla(object):
+class SearnModeSklearnWeighted(object):
     def __init__(self, feature_extractor, cr_tags, base_learner_fact, beta_decay_fn=lambda b: b - 0.1, positive_val=1):
         # init checks
         # assert CAUSER in tags, "%s must be in tags" % CAUSER
@@ -150,22 +148,8 @@ class SearnModelCla(object):
             ys = [1 if i > 0 else 0 for i in examples.get_labels_for(action)]
             weights = examples.get_weights_for(action)
 
-            # the cost matrix has 4 cols - [fp,fn,tp,tn]
-            # based on how we compute the costs, the fn cost will be non-zero for positive ground truth
-            # else the fp cost will be non-zero. The other 3 cols will be zero
-
-            lst_cost_mat = []
-            for lbl, cost in zip(ys, weights):
-                fp,fn,tp,tn = 0.05,0.05,0.05,0.05
-                if lbl > 0:
-                    fn = cost
-                else:
-                    fp = cost
-                lst_cost_mat.append([fp,fn,tp,tn])
-            cost_mat = np.asanyarray(lst_cost_mat, dtype=np.float)
-
             mdl = self.base_learner_fact()
-            mdl.fit(xs, ys, cost_mat)
+            mdl.fit(xs, ys, sample_weight=weights)
 
             models[action] = mdl
 
@@ -194,11 +178,8 @@ class SearnModelCla(object):
         xs = self.current_crel_dict_vectorizer.fit_transform(examples.xs)
         ys = examples.get_labels()
 
-        # all costs are equal
-        cost_mat = np.ones((len(ys),4),dtype=np.float)
-        # Keep this simple as not weighted
         model = self.base_learner_fact()
-        model.fit(xs, ys, cost_mat)
+        model.fit(xs, ys)
 
         self.current_crel_model = model
         self.crel_models.append(model)
