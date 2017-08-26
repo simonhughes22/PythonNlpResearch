@@ -33,7 +33,7 @@ CREL_ACTIONS = [
 ]
 
 class SearnModel(object):
-    def __init__(self, feature_extractor, cr_tags, base_learner_fact, beta_decay_fn=lambda b: b - 0.1, positive_val=1):
+    def __init__(self, feature_extractor, cr_tags, base_learner_fact, beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True):
         # init checks
         # assert CAUSER in tags, "%s must be in tags" % CAUSER
         # assert RESULT in tags, "%s must be in tags" % RESULT
@@ -42,6 +42,8 @@ class SearnModel(object):
         self.feat_extractor = feature_extractor  # feature extractor (for use later)
         self.positive_val = positive_val
         self.base_learner_fact = base_learner_fact  # Sklearn classifier
+        self.sparse=sparse
+        self.sparse=sparse
 
         self.cr_tags = set(cr_tags)  # causal relation tags
         self.epoch = -1
@@ -138,7 +140,7 @@ class SearnModel(object):
 
     def train_parse_models(self, examples):
         models = {}
-        self.current_parser_dict_vectorizer = DictVectorizer(sparse=True)
+        self.current_parser_dict_vectorizer = DictVectorizer(sparse=self.sparse)
         xs = self.current_parser_dict_vectorizer.fit_transform(examples.xs)
 
         for action in PARSE_ACTIONS:
@@ -151,9 +153,21 @@ class SearnModel(object):
         self.current_parser_models = models
         self.parser_models.append(models)
 
+    def predict_parse_action(self, feats, tos):
+        xs = self.current_parser_dict_vectorizer.transform(feats)
+        prob_by_label = {}
+        for action in PARSE_ACTIONS:
+            if not self.allowed_action(action, tos):
+                continue
+
+            prob_by_label[action] = self.current_parser_models[action].predict_proba(xs)[0][-1]
+
+        max_act, max_prob = max(prob_by_label.items(), key=lambda tpl: tpl[1])
+        return max_act
+
     def train_crel_models(self, examples):
 
-        self.current_crel_dict_vectorizer = DictVectorizer(sparse=True)
+        self.current_crel_dict_vectorizer = DictVectorizer(sparse=self.sparse)
 
         model = self.base_learner_fact()
         xs = self.current_crel_dict_vectorizer.fit_transform(examples.xs)
@@ -162,6 +176,10 @@ class SearnModel(object):
 
         self.current_crel_model = model
         self.crel_models.append(model)
+
+    def predict_crel_action(self, feats):
+        xs = self.current_crel_dict_vectorizer.transform(feats)
+        return self.current_crel_model.predict(xs)[0]
 
     def add_relation(self, action, tos, buffer, ground_truth, relations):
         if action in [LARC, RARC]:
@@ -224,22 +242,6 @@ class SearnModel(object):
         # Cost of the gold action is the mean of all of the wrong choices
         action_costs[gold_action] = np.mean(list(action_costs.values()))
         return action_costs
-
-    def predict_parse_action(self, feats, tos):
-        xs = self.current_parser_dict_vectorizer.transform(feats)
-        prob_by_label = {}
-        for action in PARSE_ACTIONS:
-            if not self.allowed_action(action, tos):
-                continue
-
-            prob_by_label[action] = self.current_parser_models[action].predict_proba(xs)[0][-1]
-
-        max_act, max_prob = max(prob_by_label.items(), key=lambda tpl: tpl[1])
-        return max_act
-
-    def predict_crel_action(self, feats):
-        xs = self.current_crel_dict_vectorizer.transform(feats)
-        return self.current_crel_model.predict(xs)[0]
 
     def get_tags_relations_for(self, tagged_sentence, predicted_tags, cr_tags):
 
@@ -518,7 +520,7 @@ class SearnModel(object):
                 feats.update(interaction_feats)
 
                 # Consult Oracle or Model based on coin toss
-                action = self.predict_parse_action(feats, tos)
+                action = self.predict_parse_action(feats, tos_tag)
 
                 action_history.append(action)
                 action_tag_pair_history.append((action, tos_tag, buffer_tag))

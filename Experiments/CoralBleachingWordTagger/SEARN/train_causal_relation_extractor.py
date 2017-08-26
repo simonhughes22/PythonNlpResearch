@@ -9,7 +9,7 @@ import datetime, logging
 
 from CrossValidation import cross_validation
 from searn_parser_costcla import SearnModelCla
-from searn_parser_sklearn_weighted import SearnModeSklearnWeighted
+from searn_parser_sklearn_weighted import SearnModelSklearnWeighted
 from window_based_tagger_config import get_config
 from searn_parser import SearnModel
 from searn_parser_xgboost import SearnModelXgBoost
@@ -112,9 +112,13 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     #parse_model = SearnModel(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.1)
     #parse_model = SearnModelXgBoost(feat_extractor, cr_tags, beta_decay_fn=lambda beta: beta - 0.3)
     #parse_model = SearnModelCla(feat_extractor, cr_tags, base_learner_fact=CostSensitiveLogisticRegression, beta_decay_fn=lambda beta: beta - 0.3)
-    #parse_model = SearnModeSklearnWeighted(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.3)
-    parse_model = SearnModeSklearnWeighted(feat_extractor, cr_tags, base_learner_fact=RandomForestClassifier, beta_decay_fn=lambda beta: beta - 0.3)
-    #parse_model = SearnModeSklearnWeighted(feat_extractor, cr_tags, base_learner_fact=GradientBoostingClassifier, beta_decay_fn=lambda beta: beta - 0.3, sparse=False)
+    parse_model = SearnModelSklearnWeighted(feat_extractor, cr_tags, base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.3)
+    #parse_model = SearnModelSklearnWeighted(feat_extractor, cr_tags, base_learner_fact=RandomForestClassifier, beta_decay_fn=lambda beta: beta - 0.3)
+    # parse_model = SearnModelSklearnWeighted(feat_extractor, cr_tags,
+    #                                        base_learner_fact=lambda : GradientBoostingClassifier(max_depth=5),
+    #                                        beta_decay_fn=lambda beta: beta - 0.3, sparse=False)
+
+
     parse_model.train(essays_TD, 12)
 
     sent_td_ys_bycode = parse_model.get_label_data(essays_TD)
@@ -130,10 +134,10 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
 CB_SENT_TD, CB_SENT_VD = "CR_CB_SHIFT_REDUCE_PARSER_TD" , "CR_CB_SHIFT_REDUCE_PARSER_VD"
 #sent_algo = "Shift_Reduce_Parser"
-#sent_algo = "Shift_Reduce_Parser_XGB"
+sent_algo = "Shift_Reduce_Parser_XGB_10"
 #sent_algo = "Shift_Reduce_Parser_CLA_LR"
 #sent_algo = "Shift_Reduce_Parser_WTD_LR"
-sent_algo = "Shift_Reduce_Parser_WTD_RF"
+#sent_algo = "Shift_Reduce_Parser_WTD_RF"
 #sent_algo = "Shift_Reduce_Parser_WTD_GBT"
 parameters = dict(config)
 #parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
