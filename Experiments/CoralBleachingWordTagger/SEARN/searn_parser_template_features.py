@@ -335,39 +335,46 @@ class SearnModel(object):
         oracle = Oracle(pos_ground_truth, parser)
 
         predicted_relations = set()
+        cause_to_effect_relations = defaultdict(set)
+        effect_to_cause_relations = defaultdict(set)
 
         # tags without positional info
-        tag_seq = [t for t,i in pos_ptag_seq]
-        rtag_seq = [t for t in tag_seq if t[0].isdigit()]
+        rtag_seq = [t for t,i in pos_ptag_seq if t[0].isdigit()]
         # if not at least 2 concept codes, then can't parse
         if len(rtag_seq) < 2:
             return []
 
-        tag2words = {}
-        for ix, tag in enumerate(pos_ptag_seq):
-            bstart, bstop = tag2span[tag]
-            tag2words[tag] = words[bstart:bstop + 1]
+        tag2words = defaultdict(list)
+        for ix, tag_pair in enumerate(pos_ptag_seq):
+            bstart, bstop = tag2span[tag_pair]
+            tag2words[tag_pair] = words[bstart:bstop + 1]
 
         # Oracle parsing logic
-        for tag_ix, buffer in enumerate(pos_ptag_seq):
-            buffer_tag = buffer[0]
-            buffer_word_seq = tag2words[buffer]
+        # consume the buffer
+        for tag_ix, buffer_tag_pair in enumerate(pos_ptag_seq):
+            buffer_tag = buffer_tag_pair[0]
+            bstart, bstop = tag2span[buffer_tag_pair]
 
+            remaining_buffer_tags = pos_ptag_seq[tag_ix:]
+            # Consume the stack
             while True:
-                tos = oracle.tos()
-                tos_tag = tos[0]
+                tos_tag_pair = oracle.tos()
+                tos_tag = tos_tag_pair[0]
+
+                # Returns -1,-1 if TOS is ROOT
                 if tos_tag == ROOT:
-                    tos_feats = {}
-                    tstart, tstop = -1,-1
+                    #TODO asa
+                    tstart, tstop = -1, -1
                 else:
-                    tos_word_seq = tag2words[tos]
+                    tstart, tstop = tag2span[tos_tag_pair]
 
-                btwn_start, btwn_stop = min(tstop+1, len(words)-1), max(0, bstart-1)
-                btwn_word_seq = words[btwn_start:btwn_stop + 1]
+                # Note that the end ix in tag2span is always the last index, not the last + 1
+                btwn_start, btwn_stop = min(tstop+1, len(words)),  max(0, bstart)
+                btwn_word_seq = words[btwn_start:btwn_stop]
 
-                feats = self.feat_extractor.extract(stack.contents(), pos_ptag_seq[tag_ix:], tag2words, btwn_word_seq, self.positive_val)
+                feats = self.feat_extractor.extract(stack.contents(), remaining_buffer_tags, tag2words, btwn_word_seq, self.positive_val)
 
-                gold_action = oracle.consult(tos, buffer)
+                gold_action = oracle.consult(tos_tag_pair, buffer_tag_pair)
 
                 # Consult Oracle or Model based on coin toss
                 rand_float = np.random.random_sample()  # between [0,1) (half-open interval, includes 0 but not 1)
@@ -380,15 +387,18 @@ class SearnModel(object):
                 action_history.append(action)
                 action_tag_pair_history.append((action, tos_tag, buffer_tag))
 
-                cost_per_action = self.compute_cost(pos_ground_truth, pos_ptag_seq[tag_ix:], oracle)
+                cost_per_action = self.compute_cost(pos_ground_truth, remaining_buffer_tags, oracle)
                 # make a copy as changing later
                 parse_examples.add(dict(feats), gold_action, cost_per_action)
 
                 # Decide the direction of the causal relation
                 if action in [LARC, RARC]:
 
-                    cause_effect = denormalize_cr((tos_tag,    buffer_tag))
-                    effect_cause = denormalize_cr((buffer_tag, tos_tag))
+                    c_e_pair = (tos_tag, buffer_tag)
+                    cause_effect = denormalize_cr(c_e_pair)
+
+                    e_c_pair = (buffer_tag, tos_tag)
+                    effect_cause = denormalize_cr(e_c_pair)
 
                     if cause_effect in all_actual_crels and effect_cause in all_actual_crels:
                         gold_lr_action = CAUSE_AND_EFFECT
@@ -408,17 +418,29 @@ class SearnModel(object):
                     else:
                         lr_action = gold_lr_action
 
+                    cause, effect = None, None
                     if lr_action == CAUSE_AND_EFFECT:
+                        cause, effect = c_e_pair
                         predicted_relations.add(cause_effect)
                         predicted_relations.add(effect_cause)
                     elif lr_action == CAUSE_EFFECT:
+                        cause, effect = c_e_pair
                         predicted_relations.add(cause_effect)
                     elif lr_action == EFFECT_CAUSE:
+                        effect, cause = e_c_pair
                         predicted_relations.add(effect_cause)
                     elif lr_action == REJECT:
                         pass
                     else:
                         raise Exception("Invalid CREL type")
+
+                    # maintain parse mappings for valency features
+                    if lr_action != REJECT:
+                        cause_to_effect_relations[cause].add(effect)
+                        effect_to_cause_relations[effect].add(cause)
+                        if lr_action == CAUSE_AND_EFFECT:
+                            cause_to_effect_relations[effect].add(cause)
+                            effect_to_cause_relations[cause].add(effect)
 
                     # cost is always 1 for this action (cost of 1 for getting it wrong)
                     #  because getting the wrong direction won't screw up the parse as it doesn't modify the stack
@@ -428,15 +450,16 @@ class SearnModel(object):
                     # action_tag_pair_history.append((lr_action, tos, buffer))
 
                 # end if action in [LARC,RARC]
-                if not oracle.execute(action, tos, buffer):
+                if not oracle.execute(action, tos_tag_pair, buffer_tag_pair):
                     break
                 if oracle.is_stack_empty():
                     break
+
         # Validation logic. Break on pass as relations that should be parsed
-        for pcr in all_actual_crels:
-            l,r = normalize_cr(pcr)
-            if l in rtag_seq and r in rtag_seq and pcr not in predicted_relations:
-                pass
+        # for pcr in all_actual_crels:
+        #     l,r = normalize_cr(pcr)
+        #     if l in rtag_seq and r in rtag_seq and pcr not in predicted_relations:
+        #         pass
 
         return predicted_relations
 
