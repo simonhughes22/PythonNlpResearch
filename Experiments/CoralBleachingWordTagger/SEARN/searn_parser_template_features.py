@@ -35,13 +35,13 @@ CREL_ACTIONS = [
 ]
 
 class SearnModelTemplateFeaturesCostSensitive(object):
-    def __init__(self, word_extractor, feature_extractor, cr_tags, base_learner_fact, beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True):
+    def __init__(self, ngram_extractor, feature_extractor, cr_tags, base_learner_fact, beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True):
         # init checks
         # assert CAUSER in tags, "%s must be in tags" % CAUSER
         # assert RESULT in tags, "%s must be in tags" % RESULT
         # assert EXPLICIT in tags, "%s must be in tags" % EXPLICIT
 
-        self.ngram_extractor = word_extractor
+        self.ngram_extractor = ngram_extractor
         self.feat_extractor = feature_extractor  # feature extractor (for use later)
         self.positive_val = positive_val
         self.base_learner_fact = base_learner_fact  # Sklearn classifier
