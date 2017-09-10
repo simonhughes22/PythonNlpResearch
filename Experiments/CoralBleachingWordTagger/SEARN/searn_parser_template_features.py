@@ -1,4 +1,6 @@
 from collections import defaultdict
+from typing import Set, List
+
 from sklearn.feature_extraction import DictVectorizer
 
 from NgramGenerator import compute_ngrams
@@ -32,13 +34,14 @@ CREL_ACTIONS = [
     REJECT
 ]
 
-class SearnModel(object):
-    def __init__(self, feature_extractor, cr_tags, base_learner_fact, beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True):
+class SearnModelTemplateFeaturesCostSensitive(object):
+    def __init__(self, word_extractor, feature_extractor, cr_tags, base_learner_fact, beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True):
         # init checks
         # assert CAUSER in tags, "%s must be in tags" % CAUSER
         # assert RESULT in tags, "%s must be in tags" % RESULT
         # assert EXPLICIT in tags, "%s must be in tags" % EXPLICIT
 
+        self.ngram_extractor = word_extractor
         self.feat_extractor = feature_extractor  # feature extractor (for use later)
         self.positive_val = positive_val
         self.base_learner_fact = base_learner_fact  # Sklearn classifier
@@ -143,12 +146,15 @@ class SearnModel(object):
         xs = self.current_parser_dict_vectorizer.fit_transform(examples.xs)
 
         for action in PARSE_ACTIONS:
-            mdl = self.base_learner_fact()
-            ys = examples.get_labels_for(action)
+
+            ys = [1 if i > 0 else 0 for i in examples.get_labels_for(action)]
             weights = examples.get_weights_for(action)
-            # TODO - train cost sensitive classifier
-            mdl.fit(xs, ys)
+
+            mdl = self.base_learner_fact()
+            mdl.fit(xs, ys, sample_weight=weights)
+
             models[action] = mdl
+
         self.current_parser_models = models
         self.parser_models.append(models)
 
@@ -315,12 +321,13 @@ class SearnModel(object):
 
         return pos_tag_seq, pos_crels, tag2span, sent_reg_predicted_tags, sent_act_cr_tags
 
-    def generate_training_data(self, tagged_sentence, predicted_tags, parse_examples, crel_examples):
-
-        action_history = []
-        action_tag_pair_history = []
+    def generate_training_data(self, tagged_sentence, predicted_tags, parse_examples, crel_examples, predict_only=False):
 
         pos_ptag_seq, pos_ground_truth, tag2span, all_predicted_rtags, all_actual_crels = self.get_tags_relations_for(tagged_sentence, predicted_tags, self.cr_tags)
+        if predict_only:
+            # clear labels
+            pos_ground_truth = []
+            all_actual_crels = set()
 
         if len(all_predicted_rtags) == 0:
             return []
@@ -334,7 +341,7 @@ class SearnModel(object):
         parser = Parser(stack)
         oracle = Oracle(pos_ground_truth, parser)
 
-        predicted_relations = set()
+        predicted_relations = set() # type: Set[str]
         left_relations  = defaultdict(set)
         right_relations = defaultdict(set)
 
@@ -347,7 +354,8 @@ class SearnModel(object):
         tag2words = defaultdict(list)
         for ix, tag_pair in enumerate(pos_ptag_seq):
             bstart, bstop = tag2span[tag_pair]
-            tag2words[tag_pair] = words[bstart:bstop + 1]
+            word_seq = words[bstart:bstop + 1]
+            tag2words[tag_pair] = self.ngram_extractor(word_seq)  # type: List[str]
 
         # Oracle parsing logic
         # consume the buffer
@@ -363,7 +371,6 @@ class SearnModel(object):
 
                 # Returns -1,-1 if TOS is ROOT
                 if tos_tag == ROOT:
-                    #TODO asa
                     tstart, tstop = -1, -1
                 else:
                     tstart, tstop = tag2span[tos_tag_pair]
@@ -374,22 +381,20 @@ class SearnModel(object):
 
                 feats = self.feat_extractor.extract(stack.contents(), remaining_buffer_tags, tag2words, btwn_word_seq, left_relations, right_relations, self.positive_val)
 
-                gold_action = oracle.consult(tos_tag_pair, buffer_tag_pair)
-
                 # Consult Oracle or Model based on coin toss
-                rand_float = np.random.random_sample()  # between [0,1) (half-open interval, includes 0 but not 1)
-                # If no trained models, always use Oracle
-                if rand_float >= self.beta and len(self.parser_models) > 0:
+                if predict_only:
                     action = self.predict_parse_action(feats, tos_tag)
-                else:
-                    action = gold_action
-
-                action_history.append(action)
-                action_tag_pair_history.append((action, tos_tag, buffer_tag))
-
-                cost_per_action = self.compute_cost(pos_ground_truth, remaining_buffer_tags, oracle)
-                # make a copy as changing later
-                parse_examples.add(dict(feats), gold_action, cost_per_action)
+                else: # if training
+                    gold_action = oracle.consult(tos_tag_pair, buffer_tag_pair)
+                    rand_float = np.random.random_sample()  # between [0,1) (half-open interval, includes 0 but not 1)
+                    # If no trained models, always use Oracle
+                    if rand_float >= self.beta and len(self.parser_models) > 0:
+                        action = self.predict_parse_action(feats, tos_tag)
+                    else:
+                        action = gold_action
+                    cost_per_action = self.compute_cost(pos_ground_truth, remaining_buffer_tags, oracle)
+                    # make a copy as changing later
+                    parse_examples.add(dict(feats), gold_action, cost_per_action)
 
                 # Decide the direction of the causal relation
                 if action in [LARC, RARC]:
@@ -400,20 +405,23 @@ class SearnModel(object):
                     e_c_pair = (buffer_tag, tos_tag)
                     effect_cause = denormalize_cr(e_c_pair)
 
-                    if cause_effect in all_actual_crels and effect_cause in all_actual_crels:
-                        gold_lr_action = CAUSE_AND_EFFECT
-                    elif cause_effect in all_actual_crels:
-                        gold_lr_action = CAUSE_EFFECT
-                    elif effect_cause in all_actual_crels:
-                        gold_lr_action = EFFECT_CAUSE
+                    if predict_only:
+                        gold_lr_action = None
                     else:
-                        gold_lr_action = REJECT
+                        if cause_effect in all_actual_crels and effect_cause in all_actual_crels:
+                            gold_lr_action = CAUSE_AND_EFFECT
+                        elif cause_effect in all_actual_crels:
+                            gold_lr_action = CAUSE_EFFECT
+                        elif effect_cause in all_actual_crels:
+                            gold_lr_action = EFFECT_CAUSE
+                        else:
+                            gold_lr_action = REJECT
 
                     # Add additional features
                     # needs to be before predict below
                     feats.update(self.crel_features(action, tos_tag, buffer_tag))
                     rand_float = np.random.random_sample()
-                    if rand_float >= self.beta and len(self.crel_models) > 0:
+                    if predict_only or (rand_float >= self.beta and len(self.crel_models) > 0):
                         lr_action = self.predict_crel_action(feats)
                     else:
                         lr_action = gold_lr_action
@@ -439,7 +447,8 @@ class SearnModel(object):
 
                     # cost is always 1 for this action (cost of 1 for getting it wrong)
                     #  because getting the wrong direction won't screw up the parse as it doesn't modify the stack
-                    crel_examples.add(dict(feats), gold_lr_action)
+                    if not predict_only:
+                        crel_examples.add(dict(feats), gold_lr_action)
                     # Not sure we want to condition on the actions of this crel model
                     # action_history.append(lr_action)
                     # action_tag_pair_history.append((lr_action, tos, buffer))
@@ -459,111 +468,16 @@ class SearnModel(object):
         return predicted_relations
 
     def predict_sentence(self, tagged_sentence, predicted_tags):
+        return self.generate_training_data(tagged_sentence=tagged_sentence, predicted_tags=predicted_tags,
+                                           parse_examples=set(), crel_examples=set(), predict_only=True)
 
-        action_history = []
-        action_tag_pair_history = []
-
-        pos_ptag_seq, _, tag2span, all_predicted_rtags, _ = self.get_tags_relations_for(tagged_sentence, predicted_tags, self.cr_tags)
-
-        if len(all_predicted_rtags) == 0:
-            return []
-
-        words = [wd for wd, tags in tagged_sentence]
-
-        # Initialize stack, basic parser and oracle
-        stack = Stack(verbose=False)
-        # needs to be a tuple
-        stack.push((ROOT,0))
-        parser = Parser(stack)
-        oracle = Oracle([], parser)
-
-        predicted_relations = set()
-
-        # tags without positional info
-        tag_seq = [t for t,i in pos_ptag_seq]
-        rtag_seq = [t for t in tag_seq if t[0].isdigit()]
-        # if not at least 2 concept codes, then can't parse
-        if len(rtag_seq) < 2:
-            return []
-
-        # Oracle parsing logic
-        for tag_ix, buffer in enumerate(pos_ptag_seq):
-            buffer_tag = buffer[0]
-            bstart, bstop = tag2span[buffer]
-            buffer_word_seq = words[bstart:bstop + 1]
-            buffer_feats = self.feat_extractor.extract(buffer_tag, buffer_word_seq, self.positive_val)
-            buffer_feats = self.__prefix_feats_("BUFFER", buffer_feats)
-
-            while True:
-                tos = oracle.tos()
-                tos_tag = tos[0]
-                if tos_tag == ROOT:
-                    tos_feats = {}
-                    tstart, tstop = -1,-1
-                else:
-                    tstart, tstop = tag2span[tos]
-                    tos_word_seq = words[tstart:tstop + 1]
-
-                    tos_feats = self.feat_extractor.extract(tos_tag, tos_word_seq, self.positive_val)
-                    tos_feats = self.__prefix_feats_("TOS", tos_feats)
-
-                btwn_start, btwn_stop = min(tstop+1, len(words)-1), max(0, bstart-1)
-                btwn_words = words[btwn_start:btwn_stop + 1]
-                btwn_feats = self.feat_extractor.extract("BETWEEN", btwn_words, self.positive_val)
-                btwn_feats = self.__prefix_feats_("__BTWN__", btwn_feats)
-
-                feats = self.get_conditional_feats(action_history, action_tag_pair_history, tos_tag, buffer_tag,
-                                                   tag_seq[:tag_ix], tag_seq [tag_ix + 1:])
-                interaction_feats = self.get_interaction_feats(tos_feats, buffer_feats)
-                feats.update(buffer_feats)
-                feats.update(tos_feats)
-                feats.update(btwn_feats)
-                feats.update(interaction_feats)
-
-                # Consult Oracle or Model based on coin toss
-                action = self.predict_parse_action(feats, tos_tag)
-
-                action_history.append(action)
-                action_tag_pair_history.append((action, tos_tag, buffer_tag))
-
-                # Decide the direction of the causal relation
-                if action in [LARC, RARC]:
-
-                    cause_effect = denormalize_cr((tos_tag,    buffer_tag))
-                    effect_cause = denormalize_cr((buffer_tag, tos_tag))
-
-                    # Add additional features
-                    # needs to be before predict below
-                    feats.update(self.crel_features(action, tos_tag, buffer_tag))
-                    lr_action = self.predict_crel_action(feats)
-
-                    if lr_action == CAUSE_AND_EFFECT:
-                        predicted_relations.add(cause_effect)
-                        predicted_relations.add(effect_cause)
-                    elif lr_action == CAUSE_EFFECT:
-                        predicted_relations.add(cause_effect)
-                    elif lr_action == EFFECT_CAUSE:
-                        predicted_relations.add(effect_cause)
-                    elif lr_action == REJECT:
-                        pass
-                    else:
-                        raise Exception("Invalid CREL type")
-
-                # end if action in [LARC,RARC]
-                if not oracle.execute(action, tos, buffer):
-                    break
-                if oracle.is_stack_empty():
-                    break
-        # Validation logic. Break on pass as relations that should be parsed
-        return predicted_relations
-
-    def crel_features(self, action, tos, buffer):
+    def crel_features(self, action, tos_tag, buffer_tag):
         feats = {}
-        feats["ARC_action:" + action]                   = self.positive_val
-        feats["ARC_tos_buffer:" + tos + "->" + buffer]  = self.positive_val
-        feats["ARC_tos:" + tos]                         = self.positive_val
-        feats["ARC_buffer:" + buffer]                   = self.positive_val
-        feats["ARC_buffer_equals_tos:" + str(tos == buffer)] = self.positive_val
-        feats["ARC_combo:" + ",".join(sorted([tos,buffer]))] = self.positive_val
+        feats["ARC_action:" + action]                                               = self.positive_val
+        feats["ARC_tos_buffer:" + action + "_:" + tos_tag + "->" + buffer_tag]      = self.positive_val
+        feats["ARC_tos:"    + action + "_" + tos_tag]                               = self.positive_val
+        feats["ARC_buffer:" + action + "_" + buffer_tag]                            = self.positive_val
+        feats["ARC_buffer_equals_tos:" + action + "_" + str(tos_tag == buffer_tag)] = self.positive_val
+        feats["ARC_combo:" + action + "_" ",".join(sorted([tos_tag, buffer_tag]))]  = self.positive_val
         return feats
 
