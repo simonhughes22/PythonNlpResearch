@@ -38,18 +38,18 @@ def single_words(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,i
     feats = {}
     if len(stack_tags) > 0:
         s0p = stack_tags[-1]
-        __add_wp_combos_(prefix="S0", feats=feats, tag=s0p, tag2word_seq=tag2word_seq, positive_val=positive_val)
+        __add_wp_combos_(prefix="S0", feats=feats, tag_pair=s0p, tag2word_seq=tag2word_seq, positive_val=positive_val)
 
     buffer_len = len(buffer_tags)
     if buffer_len > 0:
         n0 = buffer_tags[0]
-        __add_wp_combos_(prefix="N0", feats=feats, tag=n0, tag2word_seq=tag2word_seq, positive_val=positive_val)
+        __add_wp_combos_(prefix="N0", feats=feats, tag_pair=n0, tag2word_seq=tag2word_seq, positive_val=positive_val)
         if buffer_len > 1:
             n1 = buffer_tags[1]
-            __add_wp_combos_(prefix="N1", feats=feats, tag=n1, tag2word_seq=tag2word_seq, positive_val=positive_val)
+            __add_wp_combos_(prefix="N1", feats=feats, tag_pair=n1, tag2word_seq=tag2word_seq, positive_val=positive_val)
             if buffer_len > 2:
                 n2 = buffer_tags[2]
-                __add_wp_combos_(prefix="N2", feats=feats, tag=n2, tag2word_seq=tag2word_seq, positive_val=positive_val)
+                __add_wp_combos_(prefix="N2", feats=feats, tag_pair=n2, tag2word_seq=tag2word_seq, positive_val=positive_val)
     return feats
 
 def word_pairs(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int]],
@@ -66,10 +66,10 @@ def word_pairs(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int
         return feats
 
     s0p = stack_tags[-1]
-    str_s0p = str(s0p)
+    str_s0p = str(s0p[0])
 
     n0p = buffer_tags[0]
-    str_n0p = str(n0p)
+    str_n0p = str(n0p[0])
 
     s0w =  __get_sequence_(prefix="S0w", words=tag2word_seq[s0p], positive_val=positive_val)
     s0wp = __get_sequence_(prefix="S0wp_" + str_s0p, words=tag2word_seq[s0p], positive_val=positive_val)
@@ -88,7 +88,7 @@ def word_pairs(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int
 
     if buffer_len > 1:
         n1p = buffer_tags[1]
-        str_n1p = str(n1p)
+        str_n1p = str(n1p[0])
         feats["N0p;N1p_" + str_n0p + str_n1p] = positive_val
 
     return feats
@@ -107,19 +107,19 @@ def three_words(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,in
         return feats
 
     s0p = stack_tags[-1]
-    str_s0p = str(s0p)
+    str_s0p = str(s0p[0])
 
     n0p = buffer_tags[0]
-    str_n0p = str(n0p)
+    str_n0p = str(n0p[0])
 
     n1p = buffer_tags[1]
-    str_n1p = str(n1p)
+    str_n1p = str(n1p[0])
 
     feats["S0p;N0p;N1p_" + str_s0p + str_n0p + str_n1p] = positive_val
 
     if buffer_len > 1:
         n2p = buffer_tags[2]
-        str_n2p = str(n2p)
+        str_n2p = str(n2p[0])
 
         feats["N0p;N1p;N2p_" + str_n0p + str_n1p + str_n2p] = positive_val
 
@@ -142,7 +142,7 @@ def distance(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int]]
     if stack_len > 0:
 
         s0p = stack_tags[-1]
-        str_s0p = str(s0p)
+        str_s0p = str(s0p[0])
 
         s0w = __get_sequence_(prefix="S0w", words=tag2word_seq[s0p], positive_val=positive_val)
         feats['S0pd_' + str_s0p + str_dist] = positive_val
@@ -151,7 +151,7 @@ def distance(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int]]
     if buffer_len > 0:
 
         n0p = buffer_tags[0]
-        str_n0p = str(n0p)
+        str_n0p = str(n0p[0])
 
         n0w = __get_sequence_(prefix="N0w", words=tag2word_seq[n0p], positive_val=positive_val)
         feats['N0pd_' + str_n0p + str_dist] = positive_val
@@ -177,7 +177,7 @@ def valency(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int]],
 
     if stack_len > 0:
         s0p = stack_tags[-1]
-        str_s0p = str(s0p)
+        str_s0p = str(s0p[0])
 
         str_s0vl = str(len(left_relations[s0p]))
         str_s0vr = str(len(right_relations[s0p]))
@@ -191,7 +191,7 @@ def valency(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int]],
 
     if buffer_len > 0:
         n0p = buffer_tags[0]
-        str_n0p = str(n0p)
+        str_n0p = str(n0p[0])
 
         str_n0vl = str(len(left_relations[n0p]))
         n0w = __get_sequence_(prefix="N0w", words=tag2word_seq[n0p], positive_val=positive_val)
@@ -216,12 +216,12 @@ def between_word_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[T
     str_s0p, str_n0p = "",""
     if stack_len > 0:
         s0p = stack_tags[-1]
-        str_s0p = str(s0p)
+        str_s0p = str(s0p[0])
         feats.update(__prefix_feats_(prefix="S0p_" + str_s0p, feats=btwn_wd_fts))
 
     if buffer_len > 0:
         n0p = buffer_tags[0]
-        str_n0p = str(n0p)
+        str_n0p = str(n0p[0])
         feats.update(__prefix_feats_(prefix="N0p_" + str_n0p, feats=btwn_wd_fts))
 
     if buffer_len > 0 and stack_len > 0:
@@ -248,10 +248,10 @@ def __get_sequence_(prefix: str, words: List[str], positive_val: int = 1)->Dict[
         feats["{prefix}_{item}".format(prefix=prefix, item=str(item))] = positive_val
     return feats
 
-def __add_wp_combos_(prefix:str, feats:Dict[str, int], tag: Tuple[str, int], tag2word_seq: Dict[Tuple[str, int], List[str]], positive_val:int)->None:
-    str_tag = str(tag)
+def __add_wp_combos_(prefix:str, feats:Dict[str, int], tag_pair: Tuple[str, int], tag2word_seq: Dict[Tuple[str, int], List[str]], positive_val:int)->None:
+    str_tag = str(tag_pair[0])
     feats[prefix + "p" + str_tag] = positive_val
-    tag_word_seq = tag2word_seq[tag]
+    tag_word_seq = tag2word_seq[tag_pair]
 
     feats.update(__get_sequence_(prefix=prefix + "w", words=tag_word_seq, positive_val=positive_val))
     feats.update(__get_sequence_(prefix=prefix + "wp_" + str_tag, words=tag_word_seq, positive_val=positive_val))

@@ -355,7 +355,7 @@ class SearnModelTemplateFeaturesCostSensitive(object):
         for ix, tag_pair in enumerate(pos_ptag_seq):
             bstart, bstop = tag2span[tag_pair]
             word_seq = words[bstart:bstop + 1]
-            tag2words[tag_pair] = self.ngram_extractor(word_seq)  # type: List[str]
+            tag2words[tag_pair] = self.ngram_extractor.extract(word_seq)  # type: List[str]
 
         # Oracle parsing logic
         # consume the buffer
@@ -377,6 +377,9 @@ class SearnModelTemplateFeaturesCostSensitive(object):
 
                 # Note that the end ix in tag2span is always the last index, not the last + 1
                 btwn_start, btwn_stop = min(tstop+1, len(words)),  max(0, bstart)
+
+                #TODO - should use ngrams for between words, so pass in separate feature for distance
+                # btwn_word_seq = self.ngram_extractor.extract(words[btwn_start:btwn_stop]) # type: List[str]
                 btwn_word_seq = words[btwn_start:btwn_stop]
 
                 feats = self.feat_extractor.extract(stack.contents(), remaining_buffer_tags, tag2words, btwn_word_seq, left_relations, right_relations, self.positive_val)

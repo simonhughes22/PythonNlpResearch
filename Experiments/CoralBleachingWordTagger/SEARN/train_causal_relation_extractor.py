@@ -146,7 +146,7 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     merge_dictionaries(sent_td_pred_ys_bycode, cv_sent_td_predictions_by_tag)
     merge_dictionaries(sent_vd_pred_ys_bycode, cv_sent_vd_predictions_by_tag)
 
-    raise Exception("Issue with the feature extraction - POS feats need to use tag and not tag pair")
+    raise Exception("Issue with the feature extraction - add distance len as separate input, do ngrams over between words and (verify - POS feats need to use tag and not tag pair)")
 
 #CB_SENT_TD, CB_SENT_VD = "CR_CB_SHIFT_REDUCE_PARSER_TD" , "CR_CB_SHIFT_REDUCE_PARSER_VD"
 CB_SENT_TD, CB_SENT_VD = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_TD" , "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_VD"
