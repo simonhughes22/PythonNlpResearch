@@ -110,26 +110,107 @@ def word_pairs(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int
                  cause_effect_relations: Dict[Tuple[str,int], Set[str]],
                  effect_cause_relations: Dict[Tuple[str,int], Set[str]],
                  positive_val: int)->Dict[str,int]:
+
     feats = {}
     stack_len  = len(stack_tags)
     buffer_len = len(buffer_tags)
 
-    if buffer_len > 0 and stack_len > 0:
-        s0p = stack_tags[-1]
-        str_s0p = str(s0p)
+    if buffer_len == 0 or stack_len == 0:
+        return feats
 
-        n0p = buffer_tags[0]
-        str_n0p = str(n0p)
+    s0p = stack_tags[-1]
+    str_s0p = str(s0p)
 
-        feats["S0p;N0p;_" + str_s0p + str_n0p] = positive_val
+    n0p = buffer_tags[0]
+    str_n0p = str(n0p)
 
-        s0w = get_sequence(prefix="S0", words=tag2word_seq[s0p], positive_val=positive_val)
-        n0w = get_sequence(prefix="N0", words=tag2word_seq[n0p], positive_val=positive_val)
-        feats.update(get_interactions("s0w;n0w;", s0w, n0w))
+    s0w =  get_sequence(prefix="S0w", words=tag2word_seq[s0p], positive_val=positive_val)
+    s0wp = get_sequence(prefix="S0wp_" + str_s0p, words=tag2word_seq[s0p], positive_val=positive_val)
 
-        if buffer_len > 1:
-            n1p = buffer_tags[1]
-            str_n1p = str(n1p)
-            feats["N0p;N1p_" + str_n0p + str_n1p] = positive_val
+    n0w =  get_sequence(prefix="N0w", words=tag2word_seq[n0p], positive_val=positive_val)
+    n0wp = get_sequence(prefix="N0wp_" + str_n0p, words=tag2word_seq[n0p], positive_val=positive_val)
+
+    # List (see paper)
+    feats.update(get_interactions("S0wp;N0wp;", s0wp, n0wp, positive_val=positive_val))
+    feats.update(get_interactions("S0wp;N0w;", s0wp, n0w,   positive_val=positive_val))
+    feats.update(get_interactions("S0w;N0wp;", s0w,  n0wp,  positive_val=positive_val))
+    feats.update(prefix_feats(prefix="S0wp;N0p_" + str_n0p, feats=s0wp))
+    feats.update(prefix_feats(prefix="S0p;N0wp_" + str_s0p, feats=n0wp))
+    feats.update(get_interactions("S0w;N0w;", s0w, n0w, positive_val=positive_val))
+    feats["S0p;N0p;_" + str_s0p + str_n0p] = positive_val
+
+    if buffer_len > 1:
+        n1p = buffer_tags[1]
+        str_n1p = str(n1p)
+        feats["N0p;N1p_" + str_n0p + str_n1p] = positive_val
+
     return feats
 
+def three_words(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int]],
+                 tag2word_seq: Dict[Tuple[str,int], List[str]], between_word_seq: List[str],
+                 cause_effect_relations: Dict[Tuple[str,int], Set[str]],
+                 effect_cause_relations: Dict[Tuple[str,int], Set[str]],
+                 positive_val: int)->Dict[str,int]:
+
+    feats = {}
+    stack_len = len(stack_tags)
+    buffer_len = len(buffer_tags)
+
+    if stack_len == 0 or buffer_len < 1:
+        return feats
+
+    s0p = stack_tags[-1]
+    str_s0p = str(s0p)
+
+    n0p = buffer_tags[0]
+    str_n0p = str(n0p)
+
+    n1p = buffer_tags[1]
+    str_n1p = str(n1p)
+
+    feats["S0p;N0p;N1p_" + str_s0p + str_n0p + str_n1p] = positive_val
+
+    if buffer_len > 1:
+        n2p = buffer_tags[2]
+        str_n2p = str(n2p)
+
+        feats["N0p;N1p;N2p_" + str_n0p + str_n1p + str_n2p] = positive_val
+
+    return feats
+
+
+def distance(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int]],
+                 tag2word_seq: Dict[Tuple[str,int], List[str]], between_word_seq: List[str],
+                 cause_effect_relations: Dict[Tuple[str,int], Set[str]],
+                 effect_cause_relations: Dict[Tuple[str,int], Set[str]],
+                 positive_val: int)->Dict[str,int]:
+
+    feats = {}
+    stack_len = len(stack_tags)
+    buffer_len = len(buffer_tags)
+
+    if buffer_len == 0 or stack_len == 0:
+        return feats
+
+    str_dist = str(len(between_word_seq))
+
+    s0p = stack_tags[-1]
+    str_s0p = str(s0p)
+
+    n0p = buffer_tags[0]
+    str_n0p = str(n0p)
+
+    s0w = get_sequence(prefix="S0w", words=tag2word_seq[s0p], positive_val=positive_val)
+    n0w = get_sequence(prefix="N0w", words=tag2word_seq[n0p], positive_val=positive_val)
+
+    feats['S0pd_' + str_s0p + str_dist] = positive_val
+    feats['N0pd_' + str_n0p + str_dist] = positive_val
+
+    feats.update(prefix_feats(prefix="S0wd_" + str_dist, feats=s0w))
+
+    n0wd = prefix_feats(prefix="N0wd_" + str_dist, feats=n0w)
+    feats.update(n0wd)
+    feats.update(get_interactions("S0w;N0wd;", s0w, n0wd, positive_val=positive_val))
+
+    feats['S0pN0pd_' + str_s0p + str_n0p + str_dist] = positive_val
+    return feats
