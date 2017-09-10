@@ -335,8 +335,8 @@ class SearnModel(object):
         oracle = Oracle(pos_ground_truth, parser)
 
         predicted_relations = set()
-        cause_to_effect_relations = defaultdict(set)
-        effect_to_cause_relations = defaultdict(set)
+        left_relations  = defaultdict(set)
+        right_relations = defaultdict(set)
 
         # tags without positional info
         rtag_seq = [t for t,i in pos_ptag_seq if t[0].isdigit()]
@@ -372,7 +372,7 @@ class SearnModel(object):
                 btwn_start, btwn_stop = min(tstop+1, len(words)),  max(0, bstart)
                 btwn_word_seq = words[btwn_start:btwn_stop]
 
-                feats = self.feat_extractor.extract(stack.contents(), remaining_buffer_tags, tag2words, btwn_word_seq, self.positive_val)
+                feats = self.feat_extractor.extract(stack.contents(), remaining_buffer_tags, tag2words, btwn_word_seq, left_relations, right_relations, self.positive_val)
 
                 gold_action = oracle.consult(tos_tag_pair, buffer_tag_pair)
 
@@ -418,16 +418,12 @@ class SearnModel(object):
                     else:
                         lr_action = gold_lr_action
 
-                    cause, effect = None, None
                     if lr_action == CAUSE_AND_EFFECT:
-                        cause, effect = c_e_pair
                         predicted_relations.add(cause_effect)
                         predicted_relations.add(effect_cause)
                     elif lr_action == CAUSE_EFFECT:
-                        cause, effect = c_e_pair
                         predicted_relations.add(cause_effect)
                     elif lr_action == EFFECT_CAUSE:
-                        effect, cause = e_c_pair
                         predicted_relations.add(effect_cause)
                     elif lr_action == REJECT:
                         pass
@@ -436,11 +432,10 @@ class SearnModel(object):
 
                     # maintain parse mappings for valency features
                     if lr_action != REJECT:
-                        cause_to_effect_relations[cause].add(effect)
-                        effect_to_cause_relations[effect].add(cause)
-                        if lr_action == CAUSE_AND_EFFECT:
-                            cause_to_effect_relations[effect].add(cause)
-                            effect_to_cause_relations[cause].add(effect)
+                        if action == LARC:
+                            left_relations[buffer_tag].add(tos_tag)
+                        else:
+                            right_relations[tos_tag].add(buffer_tag)
 
                     # cost is always 1 for this action (cost of 1 for getting it wrong)
                     #  because getting the wrong direction won't screw up the parse as it doesn't modify the stack
