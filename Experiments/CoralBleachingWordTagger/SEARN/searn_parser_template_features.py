@@ -378,11 +378,11 @@ class SearnModelTemplateFeaturesCostSensitive(object):
                 # Note that the end ix in tag2span is always the last index, not the last + 1
                 btwn_start, btwn_stop = min(tstop+1, len(words)),  max(0, bstart)
 
-                #TODO - should use ngrams for between words, so pass in separate feature for distance
-                # btwn_word_seq = self.ngram_extractor.extract(words[btwn_start:btwn_stop]) # type: List[str]
                 btwn_word_seq = words[btwn_start:btwn_stop]
+                distance = len(btwn_word_seq)
+                btwn_word_ngrams = self.ngram_extractor.extract(btwn_word_seq)  # type: List[str]
 
-                feats = self.feat_extractor.extract(stack.contents(), remaining_buffer_tags, tag2words, btwn_word_seq, left_relations, right_relations, self.positive_val)
+                feats = self.feat_extractor.extract(stack.contents(), remaining_buffer_tags, tag2words, btwn_word_ngrams, distance, left_relations, right_relations, self.positive_val)
 
                 # Consult Oracle or Model based on coin toss
                 if predict_only:
@@ -444,9 +444,9 @@ class SearnModelTemplateFeaturesCostSensitive(object):
                     # maintain parse mappings for valency features
                     if lr_action != REJECT:
                         if action == LARC:
-                            left_relations[buffer_tag].add(tos_tag)
+                            left_relations[buffer_tag_pair].add(tos_tag_pair)
                         else:
-                            right_relations[tos_tag].add(buffer_tag)
+                            right_relations[tos_tag_pair].add(buffer_tag_pair)
 
                     # cost is always 1 for this action (cost of 1 for getting it wrong)
                     #  because getting the wrong direction won't screw up the parse as it doesn't modify the stack

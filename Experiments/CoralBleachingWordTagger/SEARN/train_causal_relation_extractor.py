@@ -20,7 +20,7 @@ from Settings import Settings
 from wordtagginghelper import merge_dictionaries
 import costcla
 from costcla.models import CostSensitiveRandomForestClassifier, CostSensitiveLogisticRegression
-from template_feature_extractor import single_words, word_pairs, three_words, distance, valency, between_word_features
+from template_feature_extractor import single_words, word_pairs, three_words, word_distance, valency, between_word_features
 
 client = pymongo.MongoClient()
 db = client.metrics
@@ -111,7 +111,7 @@ cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag = defaultdict(list), default
 folds = cross_validation(pred_tagged_essays, CV_FOLDS)
 #TODO Parallelize
 
-extractors = [single_words, word_pairs, three_words, distance, valency, between_word_features]
+extractors = [single_words, word_pairs, three_words, word_distance, valency, between_word_features]
 template_feature_extractor = NonLocalTemplateFeatureExtractor(extractors=extractors)
 
 ngram_extractor = NgramExtractor(max_ngram_len=NGRAMS)
@@ -145,8 +145,7 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
     merge_dictionaries(sent_vd_ys_bycode, cv_sent_vd_ys_by_tag)
     merge_dictionaries(sent_td_pred_ys_bycode, cv_sent_td_predictions_by_tag)
     merge_dictionaries(sent_vd_pred_ys_bycode, cv_sent_vd_predictions_by_tag)
-
-    raise Exception("Issue with the feature extraction - add distance len as separate input, do ngrams over between words and (verify - POS feats need to use tag and not tag pair)")
+    #break
 
 #CB_SENT_TD, CB_SENT_VD = "CR_CB_SHIFT_REDUCE_PARSER_TD" , "CR_CB_SHIFT_REDUCE_PARSER_VD"
 CB_SENT_TD, CB_SENT_VD = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_TD" , "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_VD"
@@ -159,12 +158,14 @@ sent_algo = "Shift_Reduce_Parser_LR"
 #sent_algo = "Shift_Reduce_Parser_WTD_RF_25"
 #sent_algo = "Shift_Reduce_Parser_WTD_GBT_3"
 parameters = dict(config)
-parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
+parameters["extractors"] = list(map(lambda fn: fn.__name__, extractors))
 parameters["ngrams"] = NGRAMS
 parameters["no_stacking"] = True
 
 sent_td_objectid = processor.persist_results(CB_SENT_TD, cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag, parameters, sent_algo)
 sent_vd_objectid = processor.persist_results(CB_SENT_VD, cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag, parameters, sent_algo)
+
+print(processor.results_to_string(sent_td_objectid, CB_SENT_TD,     sent_vd_objectid,   CB_SENT_VD,     "SENTENCE"))
 
 ## TODO
 #- Re-train tagging model, adding tags where reg tag is missing but is included in a causer or result tag.
