@@ -123,7 +123,7 @@ logger.info("Training completed")
 
 """ Persist Results to Mongo DB """
 wd_algo = "HMM_MOST_COMMON_TAG_MULTICLASS"
-SUFFIX = "_HMM_MOST_COMMON_TAG_MULTICLASS_FIXED"
+SUFFIX = "_HMM_MOST_COMMON_TAG_MULTICLASS"
 CB_TAGGING_TD, CB_TAGGING_VD= "TEST_CB_TAGGING_TD" + SUFFIX, "TEST_CB_TAGGING_VD" + SUFFIX
 
 parameters = dict(train_config)
