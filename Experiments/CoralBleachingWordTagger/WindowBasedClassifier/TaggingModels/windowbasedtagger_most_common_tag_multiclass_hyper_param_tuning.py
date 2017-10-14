@@ -44,7 +44,9 @@ config = get_config(folder)
 
 """ FEATURE EXTRACTION """
 config["window_size"] = 9
-offset = (config["window_size"] - 1) / 2
+offset = (config["window_size"] - 1) // 2
+#python 3.x
+#offset = (config["window_size"] - 1) // 2
 
 unigram_bow_window = fact_extract_bow_ngram_features(offset, 1)
 
@@ -60,7 +62,7 @@ extractors = [unigram_bow_window,
               extract_dependency_relation
 ]
 
-feat_config = dict(config.items() + [("extractors", extractors)])
+feat_config = dict(list(config.items()) + [("extractors", extractors)])
 
 """ LOAD DATA """
 mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_prefix)(load_process_essays)
@@ -86,7 +88,7 @@ wd_test_tags  = regular_tags
 """ Log Reg + Log Reg is best!!! """
 fn_create_wd_cls   = lambda: LogisticRegression() # C=1, dual = False seems optimal
 wd_algo   = str(fn_create_wd_cls())
-print "Classifier:", wd_algo
+print("Classifier:", wd_algo)
 
 folds = cross_validation(essay_feats, CV_FOLDS)
 

@@ -48,7 +48,7 @@ len(tagged_essays)
 # --------------------------------------------------------------
 
 tag_freq = get_tag_freq(tagged_essays)
-freq_tags = list(set((tag for tag, freq in tag_freq.items() if freq >= MIN_TAG_FREQ and regular_tag(tag))))
+freq_tags = list(set((tag for tag, freq in tag_freq.items() if freq >= 0 and regular_tag(tag))))
 non_causal  = [t for t in freq_tags if "->" not in t]
 only_causal = [t for t in freq_tags if "->" in t]
 regular_tags = [t for t in freq_tags if t[0].isdigit()]

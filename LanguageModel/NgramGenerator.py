@@ -1,7 +1,10 @@
-from typing import List
 
-def compute_ngrams(tokens: List[str], max_len: int = None, min_len: int = 1)-> List[List[str]]:
-    
+#python 3.x
+#from typing import List
+#def compute_ngrams(tokens: List[str], max_len: int = None, min_len: int = 1)-> List[List[str]]:
+
+def compute_ngrams(tokens, max_len = None, min_len = 1):
+
     if max_len == None:
         max_len = len(tokens)
     

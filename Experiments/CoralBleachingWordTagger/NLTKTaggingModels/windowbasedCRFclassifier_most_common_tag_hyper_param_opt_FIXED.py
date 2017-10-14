@@ -73,7 +73,7 @@ LOOK_BACK = 0  # how many sentences to look back when predicting tags
 
 # construct unique key using settings for pickling
 settings = Settings.Settings()
-root_folder =           settings.data_directory + "SkinCancer/Thesis_Dataset/"
+root_folder =           settings.data_directory + "CoralBleaching/Thesis_Dataset/"
 folder =                            root_folder + "Training/"
 processed_essay_filename_prefix =   root_folder + "Pickled/essays_proc_pickled_"
 features_filename_prefix =          root_folder + "Pickled/feats_pickled_"
@@ -99,20 +99,18 @@ regular_tags = [t for t in freq_tags if t[0].isdigit()]
 config["window_size"] = 9
 offset = (config["window_size"] - 1) / 2
 
-unigram_window_stemmed = fact_extract_positional_word_features(offset, True)
-biigram_window_stemmed   = fact_extract_ngram_features(offset=offset, ngram_size=2, stem_words=True)
-trigram_window_stemmed   = fact_extract_ngram_features(offset=offset, ngram_size=3, stem_words=True)
-unigram_bow_window = fact_extract_ngram_features(offset=offset, ngram_size=1, positional=False, stem_words=False)
+unigram_stem_features = fact_extract_positional_word_features(offset, True)
+trigram_stem_featues   = fact_extract_ngram_features(offset=offset, ngram_size=3, stem_words=True)
+bigram_stem_featues   = fact_extract_ngram_features(offset=offset, ngram_size=2, stem_words=True)
+unigram_bow_window_unstemmed = fact_extract_ngram_features(offset=offset, ngram_size=1, positional=False, stem_words=False)
 
 extractors = [
-    unigram_bow_window,
-
-    unigram_window_stemmed,
-    biigram_window_stemmed,
-    #trigram_window_stemmed,
-
+    unigram_stem_features,
+    bigram_stem_featues,
+    trigram_stem_featues,
+    unigram_bow_window_unstemmed,
     extract_brown_cluster,
-    #extract_dependency_relation
+    extract_dependency_relation
 ]
 
 comp_feat_extactor = fact_composite_feature_extractor(extractors)
@@ -121,8 +119,10 @@ code_freq = tally_code_frequencies(tagged_essays)
 folds = cross_validation(tagged_essays, CV_FOLDS)
 
 for feat_poss_state in [False]:
-    for feat_poss_transitions in [False, True]:
-        for c2 in [0.1, 1.0, 10.0, 100.0]:
+    for feat_poss_transitions in [True]:
+    #for feat_poss_transitions in [False, True]:
+        for c2 in [0.1]:
+        #for c2 in [0.1, 1.0, 10.0, 100.0]:
         #for c2 in [0.1, 0.5, 2.0, 3.0, 4.0, 5.0]:
             cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
             cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
@@ -153,18 +153,20 @@ for feat_poss_state in [False]:
 
             """ Persist Results to Mongo DB """
             wd_algo = "CRF_MOST_COMMON_TAG"
-            SUFFIX = "_CRF_MOST_COMMON_TAG_HYPERPARAM_OPT"
-            SC_TAGGING_TD, SC_TAGGING_VD= "SC_TAGGING_TD" + SUFFIX, "SC_TAGGING_VD" + SUFFIX
+            #SUFFIX = "_CRF_MOST_COMMON_TAG_HYPERPARAM_OPT"
+            # Was missing 5b codes
+            SUFFIX = "_CRF_MOST_COMMON_TAG_HYPERPARAM_OPT_FIXED"
+            CB_TAGGING_TD, CB_TAGGING_VD= "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
 
             parameters = dict(config)
             parameters["extractors"] = map(lambda fn: fn.func_name, extractors)
             parameters["min_feat_freq"] = MIN_FEAT_FREQ
             parameters.update(training_opt_copy)
 
-            wd_td_objectid = processor.persist_results(SC_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
-            wd_vd_objectid = processor.persist_results(SC_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
+            wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
+            wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
 
             # This outputs 0's for MEAN CONCEPT CODES as we aren't including those in the outputs
-            print processor.results_to_string(wd_td_objectid, SC_TAGGING_TD, wd_vd_objectid, SC_TAGGING_VD, "TAGGING")
+            print processor.results_to_string(wd_td_objectid, CB_TAGGING_TD, wd_vd_objectid, CB_TAGGING_VD, "TAGGING")
             logger.info("Results Processed")
 

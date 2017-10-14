@@ -131,9 +131,9 @@ class memoize_to_disk(object):
             pickle_key = str(hash(s_pickle_key))
             pickle_file = self.filename_prefix + pickle_key
             if os.path.exists(pickle_file):
-                return pickle.load(open(pickle_file, "r+"))
+                return pickle.load(open(pickle_file, "rb+"))
             result = f(*args, **kwargs)
-            pickle.dump(result, open(pickle_file, "w+"))
+            pickle.dump(result, open(pickle_file, "wb+"))
             return result
         return wrapped_f
 
