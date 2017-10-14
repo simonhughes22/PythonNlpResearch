@@ -19,7 +19,7 @@ from nltk_datahelper import to_label_powerset_tagged_sentences
 import Settings
 import logging
 
-STEM = False
+STEM = True
 
 def train_classifer_on_fold(essays_TD, essays_VD, regular_tags, fold):
 
@@ -122,7 +122,7 @@ logger.info("Training completed")
 
 """ Persist Results to Mongo DB """
 wd_algo = "HMM_MOST_COMMON_TAG_MULTICLASS"
-SUFFIX = "_HMM_MOST_COMMON_TAG_MULTICLASS"
+SUFFIX = "_HMM_MOST_COMMON_TAG_MULTICLASS_FIXED"
 CB_TAGGING_TD, CB_TAGGING_VD= "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
 
 parameters = dict(config)
