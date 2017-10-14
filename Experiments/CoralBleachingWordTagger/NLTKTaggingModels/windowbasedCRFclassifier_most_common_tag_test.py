@@ -99,8 +99,7 @@ logger.info("Essays loaded - Train: %i Test %i" % (len(train_tagged_essays), len
 
 """ Define Tags """
 tag_freq = get_tag_freq(train_tagged_essays)
-freq_tags = list(set((tag for tag, freq in tag_freq.items() if freq >= 0 and regular_tag(tag))))
-regular_tags = [t for t in freq_tags if t[0].isdigit()]
+regular_tags = list(set((tag for tag, freq in tag_freq.items() if freq >= 0 and tag[0].isdigit())))
 
 """ FEATURE EXTRACTION """
 

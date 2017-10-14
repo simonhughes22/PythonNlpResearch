@@ -89,8 +89,7 @@ len(tagged_essays)
 # --------------------------------------------------------------
 
 tag_freq = get_tag_freq(tagged_essays)
-freq_tags = list(set((tag for tag, freq in tag_freq.items() if freq >= 0 and regular_tag(tag))))
-regular_tags = [t for t in freq_tags if t[0].isdigit()]
+regular_tags = list(set((tag for tag, freq in tag_freq.items() if freq >= 0 and tag[0].isdigit())))
 
 """ FEATURE EXTRACTION """
 config["window_size"] = 9
