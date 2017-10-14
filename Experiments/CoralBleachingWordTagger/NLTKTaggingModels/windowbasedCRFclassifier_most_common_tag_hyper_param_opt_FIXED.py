@@ -118,11 +118,9 @@ code_freq = tally_code_frequencies(tagged_essays)
 folds = cross_validation(tagged_essays, CV_FOLDS)
 
 for feat_poss_state in [False]:
-    for feat_poss_transitions in [True]:
-    #for feat_poss_transitions in [False, True]:
-        for c2 in [0.1]:
-        #for c2 in [0.1, 1.0, 10.0, 100.0]:
-        #for c2 in [0.1, 0.5, 2.0, 3.0, 4.0, 5.0]:
+    for feat_poss_transitions in [False, True]:
+        for c2 in [0.1, 1.0, 10.0, 100.0]:
+
             cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag = defaultdict(list), defaultdict(list)
             cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
 
