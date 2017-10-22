@@ -172,6 +172,10 @@ print(processor.results_to_string(sent_td_objectid, CB_SENT_TD,     sent_vd_obje
 #- Also include explicit in the predicted tags.
 #- Need to handle relations where same code -> same code
 
+#-TODO - Neat Ideas
+# Inject a random action (unform distribution) with a specified probability during training also
+    # Ensures better exploration of the policy space. Initial algo predictions will be random but converges very quickly so this may be lost
+
 #TODO * Need to make sure the tagger tags EXCPLICIT tags. These can then be skipped by the parser, but will be included in the features used to train the parser and taggger. Do we want to train a separate tagger that determines if a tagged word is a cause, explict or result. That will then resolve the direction of the relation?
 #TODO - recall is v low on training data. Test it with perfect tagging predictions
 
@@ -183,3 +187,4 @@ print(processor.results_to_string(sent_td_objectid, CB_SENT_TD,     sent_vd_obje
 
 #TODO - cost sensitive classification
 # Look into this library if XGBoost doesn't work out - http://nbviewer.jupyter.org/github/albahnsen/CostSensitiveClassification/blob/master/doc/tutorials/tutorial_edcs_credit_scoring.ipynb
+
