@@ -229,5 +229,5 @@ pip-log.txt
 
 MongoDb/journal/
 MongoDb/mongod.lock
-#MongoDb/diagnostic.data/*
+MongoDb/diagnostic.data/*
 
