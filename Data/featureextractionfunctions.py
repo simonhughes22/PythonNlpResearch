@@ -99,6 +99,14 @@ def extract_dependency_relation(input, val=1):
         feats["DEP_RELN[" + bin_rel.relation + "]:" + bin_rel.head + "->" + bin_rel.child] = val
     return feats
 
+def fact_extract_dependency_relation():
+    lcls = locals()
+    # curry offset
+    def extract_dependency_relation_internal(input):
+        return extract_dependency_relation(input=input, val=1)
+
+    return attach_function_identifier(extract_dependency_relation_internal, lcls)
+
 """ POSITIONAL SINGLE WORDS
 """
 
@@ -447,7 +455,7 @@ def extract_bow_POS_features(offset, input, val = 1):
 
     end = len(input.sentence) - 1
     tag_pairs = __tag__(input.sentence)
-    tags = zip(*tag_pairs)[1]
+    tags = list(zip(*tag_pairs))[1]
 
     for i in range(start, stop+1):
         if i < 0:
@@ -486,7 +494,7 @@ def extract_positional_POS_features(offset, input, val = 1):
 
     end = len(input.sentence) - 1
     tag_pairs = __tag__(input.sentence)
-    tags = zip(*tag_pairs)[1]
+    tags = list(zip(*tag_pairs))[1]
 
     for i in range(start, stop+1):
         relative_offset = str(i - input.wordix)
@@ -507,7 +515,7 @@ def extract_POS_TAG(input, val = 1):
     """
 
     tag_pairs = __tag__(input.sentence)
-    tags = zip(*tag_pairs)[1]
+    tags = list(zip(*tag_pairs))[1]
     feats = {"POS_TAG_ONLY:" + tags[input.wordix] : val }
     return feats
 
@@ -519,7 +527,7 @@ def extract_POS_TAG_PLUS_WORD(input, val = 1):
     """
 
     tag_pairs = __tag__(input.sentence)
-    tags = zip(*tag_pairs)[1]
+    tags = list(zip(*tag_pairs))[1]
     feats = {"POS_TAG_WD:" + tags[input.wordix] + "-" + input.sentence[input.wordix] : val }
     return feats
 
@@ -550,7 +558,7 @@ def extract_positional_POS_features_plus_word(offset, input, val = 1):
 
     end = len(input.sentence) - 1
     tag_pairs = __tag__(input.sentence)
-    tags = zip(*tag_pairs)[1]
+    tags = list(zip(*tag_pairs))[1]
 
     for i in range(start, stop+1):
         relative_offset = str(i - input.wordix)
@@ -563,7 +571,7 @@ def extract_positional_POS_features_plus_word(offset, input, val = 1):
             feats["POS_TAG_Posn_Word:" + relative_offset + "->" + offset_tag + ":" + input.sentence[i]] = val
     return feats
 
-def extract_brown_cluster(input, val = 1):
+def extract_brown_cluster(input, val=1):
     """ input      :    FeatureExtactorInput
                             input to feature extractor
         returns     :   dict
@@ -573,6 +581,13 @@ def extract_brown_cluster(input, val = 1):
     clusters = parser.brown_cluster(input.sentence)
     feats = {"BRN_CL:" + clusters[input.wordix] : val }
     return feats
+
+def fact_extract_brown_cluster():
+    lcls = locals()
+    def extract_brown_cluster_internal(input):
+        return extract_brown_cluster(input=input, val=1)
+
+    return attach_function_identifier(extract_brown_cluster_internal, lcls)
 
 def extract_brown_cluster_plus_word(input, val = 1):
     """ input      :    FeatureExtactorInput
@@ -593,7 +608,7 @@ def extract_POS_TAG_PLUS_WORD(input, val = 1):
     """
 
     tag_pairs = __tag__(input.sentence)
-    tags = zip(*tag_pairs)[1]
+    tags = list(zip(*tag_pairs))[1]
     feats = {"POS_TAG_WD:" + tags[input.wordix] + "-" + input.sentence[input.wordix] : val }
     return feats
 

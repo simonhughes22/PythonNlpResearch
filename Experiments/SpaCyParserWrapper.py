@@ -37,6 +37,11 @@ class Relation(object):
         self.__binary_relns_ = rels
         return rels
 
+# Python 3.x fix - emulate removed unicode function
+# https://stackoverflow.com/questions/6812031/how-to-make-unicode-string-with-python3
+def unicode(s):
+    return str(s)
+
 class Parser(object):
 
     def __init__(self):
@@ -61,23 +66,23 @@ class Parser(object):
     def pos_tag(self, tokens):
         stokens = unicode(" ".join(tokens))
         tokens = self.__tokenize_(stokens)
-        return map(lambda t: t.pos_, tokens)
+        return list(map(lambda t: t.pos_, tokens))
 
     def pos_tag2(self, tokens):
         stokens = unicode(" ".join(tokens))
         tokens = self.__tokenize_(stokens)
-        return map(lambda t: t.tag_, tokens)
+        return list(map(lambda t: t.tag_, tokens))
 
     def brown_cluster(self, tokens):
         stokens = unicode(" ".join(tokens))
         tokens = self.__tokenize_(stokens)
-        return map(lambda t: str(t.cluster), tokens)
+        return list(map(lambda t: str(t.cluster), tokens))
 
     def dep_vector(self, tokens):
         stokens = unicode(" ".join(tokens))
         tokens = self.__tokenize_(stokens)
         # yields a list of (300,) dimensional numpy arrays
-        return map(lambda t: t.repvec, tokens)
+        return list(map(lambda t: t.repvec, tokens))
 
     @memoize
     def __tokenize_(self, sentence):
