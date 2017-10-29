@@ -3,6 +3,7 @@ __author__ = 'simon.hughes'
 from spacy.en import English
 from Decorators import memoize
 from collections import defaultdict
+import sys
 
 class BinaryRelation(object):
     def __init__(self, head, relation, child):
@@ -37,14 +38,19 @@ class Relation(object):
         self.__binary_relns_ = rels
         return rels
 
-# Python 3.x fix - emulate removed unicode function
+# Python 2->3.x fix - emulate removed unicode function
 # https://stackoverflow.com/questions/6812031/how-to-make-unicode-string-with-python3
-def unicode(s):
-    return str(s)
+try:
+    UNICODE_EXISTS = bool(type(unicode))
+except NameError:
+    unicode = lambda s: str(s)
 
 class Parser(object):
 
     def __init__(self):
+        if sys.version_info[0] >= 3:
+            raise Exception("Does not work in Python 3.x - issues with SpaCy code")
+
         self.nlp = English()
 
     def parse(self, tokens):

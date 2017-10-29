@@ -2,6 +2,10 @@ from NgramGenerator import compute_ngrams
 from Decorators import memoize
 from SpaCyParserWrapper import Parser
 import PosTagger
+import sys
+
+PYTHON_VERSION = sys.version_info[0]
+IS_PYTHON_3 = (PYTHON_VERSION >= 3)
 
 from nltk import PorterStemmer
 stemmer = PorterStemmer()
@@ -91,6 +95,9 @@ def extract_dependency_head_plus_target(input, val=1):
     return feats
 
 def extract_dependency_relation(input, val=1):
+    if IS_PYTHON_3:
+        raise Exception("Does not work in python 3.x")
+
     relations = __parse__(input.sentence)
     relation = relations[input.wordix]
     bin_relations = relation.binary_relations()
@@ -572,6 +579,9 @@ def extract_positional_POS_features_plus_word(offset, input, val = 1):
     return feats
 
 def extract_brown_cluster(input, val=1):
+    if IS_PYTHON_3:
+        raise Exception("Does not work in python 3.x")
+
     """ input      :    FeatureExtactorInput
                             input to feature extractor
         returns     :   dict

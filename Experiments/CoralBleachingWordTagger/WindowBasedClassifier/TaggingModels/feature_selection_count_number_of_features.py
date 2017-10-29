@@ -1,22 +1,22 @@
 # coding=utf-8
-from Decorators import memoize_to_disk
-from load_data import load_process_essays, extract_features
+import logging
 
-from featurevectorizer import FeatureVectorizer
-from featureextractionfunctions import *
-from CrossValidation import cross_validation
-from wordtagginghelper import *
-from IterableFP import flatten
-from window_based_tagger_config import get_config
-
-from joblib import Parallel, delayed
 # Classifiers
 from sklearn.linear_model import LogisticRegression
-# END Classifiers
 
+# END Classifiers
 import Settings
-import logging
-from collections import defaultdict
+from CrossValidation import cross_validation
+from Decorators import memoize_to_disk
+from featureextractionfunctions import *
+from featurevectorizer import FeatureVectorizer
+from load_data import load_process_essays, extract_features
+from window_based_tagger_config import get_config
+from wordtagginghelper import *
+
+import sys
+if sys.version_info[0] >= 3:
+    raise Exception("Does not work in Python 3.x - issues with SpaCy code")
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
@@ -171,8 +171,8 @@ for win_size in [9]:
 
 """
 
-Win Size: 9	Feats: extract_dependency_relation_internal[]             TD_Feats:981.4	VD_Feats:981.4
-Win Size: 9	Feats: extract_brown_cluster_internal[]                   TD_Feats:1.0	    VD_Feats:1.0
+Win Size: 9	Feats: extract_dependency_relation_internal[]             TD_Feats:4848.0	VD_Feats:4848.0
+Win Size: 9	Feats: extract_brown_cluster_internal[]                   TD_Feats:512.8	VD_Feats:512.8
 Win Size: 9	Feats: fn_pos_wd_feats[offset:4]                          TD_Feats:8305.0	VD_Feats:8305.0
 Win Size: 9	Feats: fn_bow_ngram_feat[ngram_size:1 offset:4]           TD_Feats:1617.8	VD_Feats:1617.8
 Win Size: 9	Feats: fn_pos_wd_feats_stemmed[offset:4]                  TD_Feats:6486.6	VD_Feats:6486.6
@@ -184,5 +184,6 @@ Win Size: 9	Feats: fn_pos_ngram_feat_stemmed[ngram_size:2 offset:4]   TD_Feats:2
 Win Size: 9	Feats: fn_pos_ngram_feat[ngram_size:3 offset:4]           TD_Feats:18619.8	VD_Feats:18619.8
 Win Size: 9	Feats: fn_bow_ngram_feat[ngram_size:3 offset:4]           TD_Feats:46318.2	VD_Feats:46318.2
 Win Size: 9	Feats: fn_pos_ngram_feat_stemmed[ngram_size:3 offset:4]   TD_Feats:18941.6	VD_Feats:18941.6
+
 
 """
