@@ -169,9 +169,8 @@ best_micro_f1 = 0
 for win_size in [9]:
     evaluate_window_size(config=config, window_size=win_size, features_filename_prefix=features_filename_prefix)
 
-
-
 """
+
 Win Size: 9	Feats: extract_dependency_relation_internal[]             TD_Feats:981.4	VD_Feats:981.4
 Win Size: 9	Feats: extract_brown_cluster_internal[]                   TD_Feats:1.0	    VD_Feats:1.0
 Win Size: 9	Feats: fn_pos_wd_feats[offset:4]                          TD_Feats:8305.0	VD_Feats:8305.0
@@ -185,6 +184,5 @@ Win Size: 9	Feats: fn_pos_ngram_feat_stemmed[ngram_size:2 offset:4]   TD_Feats:2
 Win Size: 9	Feats: fn_pos_ngram_feat[ngram_size:3 offset:4]           TD_Feats:18619.8	VD_Feats:18619.8
 Win Size: 9	Feats: fn_bow_ngram_feat[ngram_size:3 offset:4]           TD_Feats:46318.2	VD_Feats:46318.2
 Win Size: 9	Feats: fn_pos_ngram_feat_stemmed[ngram_size:3 offset:4]   TD_Feats:18941.6	VD_Feats:18941.6
-
 
 """
