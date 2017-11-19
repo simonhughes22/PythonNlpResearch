@@ -171,19 +171,23 @@ for win_size in [9]:
 
 """
 
+Win Size: 9	Feats: fn_bow_ngram_feat[ngram_size:1 offset:4]           TD_Feats:1617.8	VD_Feats:1617.8
+Win Size: 9	Feats: fn_bow_ngram_feat[ngram_size:2 offset:4]           TD_Feats:20957.4	VD_Feats:20957.4
+Win Size: 9	Feats: fn_bow_ngram_feat[ngram_size:3 offset:4]           TD_Feats:46318.2	VD_Feats:46318.2
+
+Win Size: 9	Feats: fn_pos_wd_feats[offset:4]                          TD_Feats:8305.0	VD_Feats:8305.0
+Win Size: 9	Feats: fn_pos_ngram_feat[ngram_size:2 offset:4]           TD_Feats:23740.4	VD_Feats:23740.4
+Win Size: 9	Feats: fn_pos_ngram_feat[ngram_size:3 offset:4]           TD_Feats:18619.8	VD_Feats:18619.8
+
+Win Size: 9	Feats: fn_pos_wd_feats_stemmed[offset:4]                  TD_Feats:6486.6	VD_Feats:6486.6
+Win Size: 9	Feats: fn_pos_ngram_feat_stemmed[ngram_size:2 offset:4]   TD_Feats:23263.6	VD_Feats:23263.6
+Win Size: 9	Feats: fn_pos_ngram_feat_stemmed[ngram_size:3 offset:4]   TD_Feats:18941.6	VD_Feats:18941.6
+
+Win Size: 9	Feats: fn_bow_POS_feats[offset:4]                         TD_Feats:40.6	    VD_Feats:40.6
+Win Size: 9	Feats: fn_pos_POS_feats[offset:4]                         TD_Feats:321.8	VD_Feats:321.8
+
 Win Size: 9	Feats: extract_dependency_relation_internal[]             TD_Feats:4848.0	VD_Feats:4848.0
 Win Size: 9	Feats: extract_brown_cluster_internal[]                   TD_Feats:512.8	VD_Feats:512.8
-Win Size: 9	Feats: fn_pos_wd_feats[offset:4]                          TD_Feats:8305.0	VD_Feats:8305.0
-Win Size: 9	Feats: fn_bow_ngram_feat[ngram_size:1 offset:4]           TD_Feats:1617.8	VD_Feats:1617.8
-Win Size: 9	Feats: fn_pos_wd_feats_stemmed[offset:4]                  TD_Feats:6486.6	VD_Feats:6486.6
-Win Size: 9	Feats: fn_pos_POS_feats[offset:4]                         TD_Feats:321.8	VD_Feats:321.8
-Win Size: 9	Feats: fn_bow_POS_feats[offset:4]                         TD_Feats:40.6	    VD_Feats:40.6
-Win Size: 9	Feats: fn_pos_ngram_feat[ngram_size:2 offset:4]           TD_Feats:23740.4	VD_Feats:23740.4
-Win Size: 9	Feats: fn_bow_ngram_feat[ngram_size:2 offset:4]           TD_Feats:20957.4	VD_Feats:20957.4
-Win Size: 9	Feats: fn_pos_ngram_feat_stemmed[ngram_size:2 offset:4]   TD_Feats:23263.6	VD_Feats:23263.6
-Win Size: 9	Feats: fn_pos_ngram_feat[ngram_size:3 offset:4]           TD_Feats:18619.8	VD_Feats:18619.8
-Win Size: 9	Feats: fn_bow_ngram_feat[ngram_size:3 offset:4]           TD_Feats:46318.2	VD_Feats:46318.2
-Win Size: 9	Feats: fn_pos_ngram_feat_stemmed[ngram_size:3 offset:4]   TD_Feats:18941.6	VD_Feats:18941.6
 
 
 """
