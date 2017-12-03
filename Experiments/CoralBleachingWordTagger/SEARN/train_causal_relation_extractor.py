@@ -35,6 +35,7 @@ root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
 training_folder = root_folder + "Training" + "/"
 test_folder = root_folder + "Test" + "/"
 training_pickled = settings.data_directory + "CoralBleaching/Thesis_Dataset/training.pl"
+# NOTE: These predictions are generated from the "./notebooks/SEARN/Keras - Train Tagger and Save CV Predictions For Word Tags.ipynb" notebook
 predictions_folder = root_folder + "Predictions/Bi-LSTM-4-SEARN/"
 
 config = get_config(training_folder)
