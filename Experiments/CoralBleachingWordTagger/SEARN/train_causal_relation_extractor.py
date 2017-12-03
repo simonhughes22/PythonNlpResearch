@@ -8,13 +8,14 @@ import dill
 import datetime, logging
 
 from CrossValidation import cross_validation
+from load_data import load_process_essays
 from searn_parser_costcla import SearnModelCla
 from searn_parser_sklearn_weighted import SearnModelSklearnWeighted
 from searn_parser_template_features import SearnModelTemplateFeaturesCostSensitive
 from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor
 from window_based_tagger_config import get_config
 from searn_parser import SearnModel
-from searn_parser_xgboost import SearnModelXgBoost
+#from searn_parser_xgboost import SearnModelXgBoost
 from results_procesor import ResultsProcessor
 from Settings import Settings
 from wordtagginghelper import merge_dictionaries
@@ -32,12 +33,18 @@ NGRAMS = 2
 settings = Settings()
 root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
 training_folder = root_folder + "Training" + "/"
+test_folder = root_folder + "Test" + "/"
 training_pickled = settings.data_directory + "CoralBleaching/Thesis_Dataset/training.pl"
 predictions_folder = root_folder + "Predictions/Bi-LSTM-4-SEARN/"
 
 config = get_config(training_folder)
 processor = ResultsProcessor()
 
+# Get Test Data In Order to Get Test CRELS
+# load the test essays to make sure we compute metrics over the test CR labels
+test_config = get_config(test_folder)
+tagged_essays_test = load_process_essays(**test_config)
+########################################################
 
 fname = predictions_folder + "essays_train_bi_directional-True_hidden_size-256_merge_mode-sum_num_rnns-2_use_pretrained_embedding-True.dill"
 with open(fname, "rb") as f:
@@ -67,9 +74,22 @@ for essay in pred_tagged_essays:
             for tag in tags:
                 stag_freq[tag] += 1
 
+for essay in tagged_essays_test:
+    for sentence in essay.sentences:
+        for word, tags in sentence:
+            unique_words.add(word)
+            for tag in tags:
+                stag_freq[tag] += 1
+
 # TODO - don't ignore Anaphor, other and rhetoricals here
-cr_tags = list(
-    (t for t in stag_freq.keys() if ("->" in t) and not "Anaphor" in t and not "other" in t and not "rhetorical" in t))
+cr_tags = list((t for t in stag_freq.keys() if ( "->" in t) and
+                not "Anaphor" in t and
+                not "other" in t and
+                not "rhetorical" in t and
+                not "factor" in t and
+                1==1
+               ))
+
 #Change to include explicit
 regular_tags = set((t for t in stag_freq.keys() if ( "->" not in t) and (t == "explicit" or t[0].isdigit())))
 vtags = set(regular_tags)
