@@ -1,5 +1,4 @@
 from typing import List, Dict, Tuple, Set
-
 from NgramGenerator import compute_ngrams
 
 # NOTE: These template features are based on the list on p2 on http://www.aclweb.org/anthology/P11-2033
@@ -17,15 +16,17 @@ class NonLocalTemplateFeatureExtractor(object):
         self.extractors = extractors
 
     def extract(self, stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int]],
-                 tag2word_seq: Dict[Tuple[str,int], List[str]], between_word_seq: List[str],
+                 tag2word_seq: Dict[Tuple[str,int], List[str]],
+                 between_word_seq: List[str],
                  distance: int,
-                 left_relations: Dict[Tuple[str,int], Set[str]],
-                 right_relations: Dict[Tuple[str,int], Set[str]],
+                 cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                 effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
                  positive_val: int)->Dict[str,int]:
 
         fts = dict()
         for ext in self.extractors:
-            new_feats = ext(stack_tags, buffer_tags, tag2word_seq, between_word_seq, distance, left_relations, right_relations, positive_val)
+            new_feats = ext(stack_tags, buffer_tags, tag2word_seq, between_word_seq, distance,
+                            cause2effects, effect2causers, positive_val)
             fts.update(new_feats.items())
         return fts
 
@@ -34,8 +35,8 @@ class NonLocalTemplateFeatureExtractor(object):
 def single_words(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int]],
                  tag2word_seq: Dict[Tuple[str,int], List[str]], between_word_seq: List[str],
                  distance: int,
-                 left_relations: Dict[Tuple[str,int], Set[str]],
-                 right_relations: Dict[Tuple[str,int], Set[str]],
+                 cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                 effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
                  positive_val: int)->Dict[str,int]:
     feats = {}
     if len(stack_tags) > 0:
@@ -57,8 +58,8 @@ def single_words(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,i
 def word_pairs(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int]],
                  tag2word_seq: Dict[Tuple[str,int], List[str]], between_word_seq: List[str],
                  distance: int,
-                 left_relations: Dict[Tuple[str,int], Set[str]],
-                 right_relations: Dict[Tuple[str,int], Set[str]],
+                 cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                 effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
                  positive_val: int)->Dict[str,int]:
 
     feats = {}
@@ -99,8 +100,8 @@ def word_pairs(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int
 def three_words(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int]],
                  tag2word_seq: Dict[Tuple[str,int], List[str]], between_word_seq: List[str],
                  distance: int,
-                 left_relations: Dict[Tuple[str,int], Set[str]],
-                 right_relations: Dict[Tuple[str,int], Set[str]],
+                 cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                 effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
                  positive_val: int)->Dict[str,int]:
 
     feats = {}
@@ -133,8 +134,8 @@ def three_words(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,in
 def word_distance(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
                   tag2word_seq: Dict[Tuple[str,int], List[str]], between_word_seq: List[str],
                   distance: int,
-                  left_relations: Dict[Tuple[str,int], Set[str]],
-                  right_relations: Dict[Tuple[str,int], Set[str]],
+                  cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                  effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
                   positive_val: int)->Dict[str,int]:
 
     feats = {}
@@ -174,46 +175,87 @@ def word_distance(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str
 def valency(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int]],
             tag2word_seq: Dict[Tuple[str,int], List[str]], between_word_seq: List[str],
             distance: int,
-            left_relations: Dict[Tuple[str, int], Set[str]],
-            right_relations: Dict[Tuple[str,int], Set[str]],
+            cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+            effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
             positive_val: int)->Dict[str,int]:
 
     feats = {}
-    if len(left_relations) == 0 and len(right_relations) == 0:
+    if len(effect2causers) == 0 and len(cause2effects) == 0:
         return feats
 
     stack_len = len(stack_tags)
     buffer_len = len(buffer_tags)
 
+    # Compute sO features
     if stack_len > 0:
         s0p = stack_tags[-1]
+        # get tag without position
         str_s0p = str(s0p[0])
-
-        str_s0vl = str(len(left_relations[s0p]))
-        str_s0vr = str(len(right_relations[s0p]))
-
         s0w = __get_sequence_(prefix="S0w", words=tag2word_seq[s0p], positive_val=positive_val)
-        feats.update(__prefix_feats_(prefix="S0wVl_" + str_s0vl, feats=s0w))
-        feats.update(__prefix_feats_(prefix="S0wVr_" + str_s0vr, feats=s0w))
 
-        feats['S0pVr_' + str_s0p + "_" + str_s0vr] = positive_val
-        feats['S0pVl_' + str_s0p + "_" + str_s0vl] = positive_val
+        if s0p in cause2effects:
+            # get left and right modifiers of s0
+            s0_left_mods, s0_right_mods =  __get_left_right_modifiers__(tag_pair=s0p, causal_mapping=cause2effects)
+
+            str_s0vl = str(len(s0_left_mods))
+            str_s0vr = str(len(s0_right_mods))
+
+            feats.update(__prefix_feats_(prefix="S0wVlEffects_" + str_s0vl, feats=s0w))
+            feats.update(__prefix_feats_(prefix="S0wVrEffects_" + str_s0vr, feats=s0w))
+
+            feats['S0pVrEffects_' + str_s0p + "_" + str_s0vr] = positive_val
+            feats['S0pVlEffects_' + str_s0p + "_" + str_s0vl] = positive_val
+
+        if s0p in effect2causers:
+            # get left and right modifiers of s0
+            s0_left_mods, s0_right_mods = __get_left_right_modifiers__(tag_pair=s0p, causal_mapping=effect2causers)
+
+            str_s0vl = str(len(s0_left_mods))
+            str_s0vr = str(len(s0_right_mods))
+
+            feats.update(__prefix_feats_(prefix="S0wVlCauses_" + str_s0vl, feats=s0w))
+            feats.update(__prefix_feats_(prefix="S0wVrCauses_" + str_s0vr, feats=s0w))
+
+            feats['S0pVrCauses_' + str_s0p + "_" + str_s0vr] = positive_val
+            feats['S0pVlCauses_' + str_s0p + "_" + str_s0vl] = positive_val
+
 
     if buffer_len > 0:
         n0p = buffer_tags[0]
         str_n0p = str(n0p[0])
-
-        str_n0vl = str(len(left_relations[n0p]))
         n0w = __get_sequence_(prefix="N0w", words=tag2word_seq[n0p], positive_val=positive_val)
-        feats.update(__prefix_feats_(prefix="N0wVl_" + str_n0vl, feats=n0w))
-        feats['N0pVl_' + str_n0p + "_" + str_n0vl] = positive_val
+
+        if n0p in cause2effects:
+
+            n0_left_mods, n0_right_mods = __get_left_right_modifiers__(tag_pair=n0p, causal_mapping=cause2effects)
+
+            str_n0vl = str(len(n0_left_mods))
+            str_n0vr = str(len(n0_right_mods))
+
+            feats.update(__prefix_feats_(prefix="N0wVlEffects_" + str_n0vl, feats=n0w))
+            feats.update(__prefix_feats_(prefix="N0wVrEffects_" + str_n0vr, feats=n0w))
+
+            feats['N0pVrEffects_' + str_n0p + "_" + str_n0vr] = positive_val
+            feats['N0pVlEffects_' + str_n0p + "_" + str_n0vl] = positive_val
+
+        if n0p in effect2causers:
+            n0_left_mods, n0_right_mods = __get_left_right_modifiers__(tag_pair=n0p, causal_mapping=effect2causers)
+
+            str_n0vl = str(len(n0_left_mods))
+            str_n0vr = str(len(n0_right_mods))
+
+            feats.update(__prefix_feats_(prefix="N0wVlCauses_" + str_n0vl, feats=n0w))
+            feats.update(__prefix_feats_(prefix="N0wVrCauses_" + str_n0vr, feats=n0w))
+
+            feats['N0pVrCauses_' + str_n0p + "_" + str_n0vr] = positive_val
+            feats['N0pVlCauses_' + str_n0p + "_" + str_n0vl] = positive_val
 
     return feats
 
 def between_word_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
             tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
             distance: int,
-            left_relations: Dict[Tuple[str, int], Set[str]],
+            cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
             right_relations: Dict[Tuple[str, int], Set[str]],
             positive_val: int) -> Dict[str, int]:
 
@@ -275,3 +317,21 @@ def __get_interactions_(prefix:str, fts1:Dict[str, int], fts2:Dict[str, int], po
                 interactions[prefix + "_" + fta + "_" + ftb] = positive_val
     return interactions
 
+def __get_left_right_modifiers__(tag_pair, causal_mapping):
+
+    modifiers = causal_mapping[tag_pair]
+    if not modifiers:
+        return set(), set()
+
+    tag, tag_posn = tag_pair
+
+    left_mods, right_mods = set(), set()
+    for modifier_tag_pair in modifiers:
+        mod_tag, mod_posn = modifier_tag_pair
+        # use the tags and not the tag positions
+        if mod_posn < tag_posn:
+            left_mods.add(mod_tag)
+        elif mod_posn > tag_posn:
+            right_mods.add(mod_tag)
+
+    return left_mods, right_mods

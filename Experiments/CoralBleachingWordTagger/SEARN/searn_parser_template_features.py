@@ -342,8 +342,12 @@ class SearnModelTemplateFeaturesCostSensitive(object):
         oracle = Oracle(pos_ground_truth, parser)
 
         predicted_relations = set() # type: Set[str]
-        left_relations  = defaultdict(set)
-        right_relations = defaultdict(set)
+
+        # instead of head and modifiers, we will map causers to effects, and vice versa
+        effect2causers = defaultdict(set)
+        # heads can have multiple modifiers
+        cause2effects = defaultdict(set)
+        # TODO - get labels
 
         # tags without positional info
         rtag_seq = [t for t,i in pos_ptag_seq if t[0].isdigit()]
@@ -382,7 +386,11 @@ class SearnModelTemplateFeaturesCostSensitive(object):
                 distance = len(btwn_word_seq)
                 btwn_word_ngrams = self.ngram_extractor.extract(btwn_word_seq)  # type: List[str]
 
-                feats = self.feat_extractor.extract(stack.contents(), remaining_buffer_tags, tag2words, btwn_word_ngrams, distance, left_relations, right_relations, self.positive_val)
+                feats = self.feat_extractor.extract(stack_tags=stack.contents(), buffer_tags=remaining_buffer_tags,
+                                                    tag2word_seq=tag2words,
+                                                    between_word_seq=btwn_word_ngrams, distance=distance,
+                                                    cause2effects=cause2effects, effect2causers=effect2causers,
+                                                    positive_val=self.positive_val)
 
                 # Consult Oracle or Model based on coin toss
                 if predict_only:
@@ -403,9 +411,11 @@ class SearnModelTemplateFeaturesCostSensitive(object):
                 if action in [LARC, RARC]:
 
                     c_e_pair = (tos_tag, buffer_tag)
+                    # Convert to a string Causer:{l}->Result:{r}
                     cause_effect = denormalize_cr(c_e_pair)
 
                     e_c_pair = (buffer_tag, tos_tag)
+                    # Convert to a string Causer:{l}->Result:{r}
                     effect_cause = denormalize_cr(e_c_pair)
 
                     if predict_only:
@@ -432,21 +442,29 @@ class SearnModelTemplateFeaturesCostSensitive(object):
                     if lr_action == CAUSE_AND_EFFECT:
                         predicted_relations.add(cause_effect)
                         predicted_relations.add(effect_cause)
+
+                        cause2effects[tos_tag_pair].add(buffer_tag_pair)
+                        effect2causers[buffer_tag_pair].add(tos_tag_pair)
+
+                        cause2effects[buffer_tag_pair].add(tos_tag_pair)
+                        effect2causers[tos_tag_pair].add(buffer_tag_pair)
+
                     elif lr_action == CAUSE_EFFECT:
                         predicted_relations.add(cause_effect)
+
+                        cause2effects[tos_tag_pair].add(buffer_tag_pair)
+                        effect2causers[buffer_tag_pair].add(tos_tag_pair)
+
                     elif lr_action == EFFECT_CAUSE:
                         predicted_relations.add(effect_cause)
+
+                        cause2effects[buffer_tag_pair].add(tos_tag_pair)
+                        effect2causers[tos_tag_pair].add(buffer_tag_pair)
+
                     elif lr_action == REJECT:
                         pass
                     else:
                         raise Exception("Invalid CREL type")
-
-                    # maintain parse mappings for valency features
-                    if lr_action != REJECT:
-                        if action == LARC:
-                            left_relations[buffer_tag_pair].add(tos_tag_pair)
-                        else:
-                            right_relations[tos_tag_pair].add(buffer_tag_pair)
 
                     # cost is always 1 for this action (cost of 1 for getting it wrong)
                     #  because getting the wrong direction won't screw up the parse as it doesn't modify the stack
