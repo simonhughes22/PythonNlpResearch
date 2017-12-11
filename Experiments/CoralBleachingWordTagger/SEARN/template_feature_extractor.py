@@ -193,71 +193,119 @@ def valency(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int]],
         str_s0p = str(s0p[0])
         s0w = __get_sequence_(prefix="S0w", words=tag2word_seq[s0p], positive_val=positive_val)
 
-        if s0p in cause2effects:
-            # get left and right modifiers of s0
-            s0_left_mods, s0_right_mods =  __get_left_right_modifiers__(tag_pair=s0p, causal_mapping=cause2effects)
+        # comment out - include 0 length feats
+        #if s0p in cause2effects:
 
-            str_s0vl = str(len(s0_left_mods))
-            str_s0vr = str(len(s0_right_mods))
+        # get left and right modifiers of s0
+        s0_left_mods, s0_right_mods =  __get_left_right_modifiers__(tag_pair=s0p, causal_mapping=cause2effects)
 
-            feats.update(__prefix_feats_(prefix="S0wVlEffects_" + str_s0vl, feats=s0w))
-            feats.update(__prefix_feats_(prefix="S0wVrEffects_" + str_s0vr, feats=s0w))
+        str_s0vl = str(len(s0_left_mods))
+        str_s0vr = str(len(s0_right_mods))
 
-            feats['S0pVrEffects_' + str_s0p + "_" + str_s0vr] = positive_val
-            feats['S0pVlEffects_' + str_s0p + "_" + str_s0vl] = positive_val
+        feats.update(__prefix_feats_(prefix="S0wVlEffects_" + str_s0vl, feats=s0w))
+        feats.update(__prefix_feats_(prefix="S0wVrEffects_" + str_s0vr, feats=s0w))
 
-        if s0p in effect2causers:
-            # get left and right modifiers of s0
-            s0_left_mods, s0_right_mods = __get_left_right_modifiers__(tag_pair=s0p, causal_mapping=effect2causers)
+        feats['S0pVrEffects_' + str_s0p + "_" + str_s0vr] = positive_val
+        feats['S0pVlEffects_' + str_s0p + "_" + str_s0vl] = positive_val
 
-            str_s0vl = str(len(s0_left_mods))
-            str_s0vr = str(len(s0_right_mods))
+        # comment out - include 0 length feats
+        #if s0p in effect2causers:
+        # get left and right modifiers of s0
+        s0_left_mods, s0_right_mods = __get_left_right_modifiers__(tag_pair=s0p, causal_mapping=effect2causers)
 
-            feats.update(__prefix_feats_(prefix="S0wVlCauses_" + str_s0vl, feats=s0w))
-            feats.update(__prefix_feats_(prefix="S0wVrCauses_" + str_s0vr, feats=s0w))
+        str_s0vl = str(len(s0_left_mods))
+        str_s0vr = str(len(s0_right_mods))
 
-            feats['S0pVrCauses_' + str_s0p + "_" + str_s0vr] = positive_val
-            feats['S0pVlCauses_' + str_s0p + "_" + str_s0vl] = positive_val
+        feats.update(__prefix_feats_(prefix="S0wVlCauses_" + str_s0vl, feats=s0w))
+        feats.update(__prefix_feats_(prefix="S0wVrCauses_" + str_s0vr, feats=s0w))
 
+        feats['S0pVrCauses_' + str_s0p + "_" + str_s0vr] = positive_val
+        feats['S0pVlCauses_' + str_s0p + "_" + str_s0vl] = positive_val
 
     if buffer_len > 0:
+
         n0p = buffer_tags[0]
         str_n0p = str(n0p[0])
         n0w = __get_sequence_(prefix="N0w", words=tag2word_seq[n0p], positive_val=positive_val)
 
-        if n0p in cause2effects:
+        # comment out - include 0 length feats
+        #if n0p in cause2effects:
+        n0_left_mods, n0_right_mods = __get_left_right_modifiers__(tag_pair=n0p, causal_mapping=cause2effects)
 
-            n0_left_mods, n0_right_mods = __get_left_right_modifiers__(tag_pair=n0p, causal_mapping=cause2effects)
+        str_n0vl = str(len(n0_left_mods))
+        str_n0vr = str(len(n0_right_mods))
 
-            str_n0vl = str(len(n0_left_mods))
-            str_n0vr = str(len(n0_right_mods))
+        feats.update(__prefix_feats_(prefix="N0wVlEffects_" + str_n0vl, feats=n0w))
+        feats.update(__prefix_feats_(prefix="N0wVrEffects_" + str_n0vr, feats=n0w))
 
-            feats.update(__prefix_feats_(prefix="N0wVlEffects_" + str_n0vl, feats=n0w))
-            feats.update(__prefix_feats_(prefix="N0wVrEffects_" + str_n0vr, feats=n0w))
+        feats['N0pVrEffects_' + str_n0p + "_" + str_n0vr] = positive_val
+        feats['N0pVlEffects_' + str_n0p + "_" + str_n0vl] = positive_val
 
-            feats['N0pVrEffects_' + str_n0p + "_" + str_n0vr] = positive_val
-            feats['N0pVlEffects_' + str_n0p + "_" + str_n0vl] = positive_val
+        # comment out - include 0 length feats
+        #if n0p in effect2causers:
+        n0_left_mods, n0_right_mods = __get_left_right_modifiers__(tag_pair=n0p, causal_mapping=effect2causers)
 
-        if n0p in effect2causers:
-            n0_left_mods, n0_right_mods = __get_left_right_modifiers__(tag_pair=n0p, causal_mapping=effect2causers)
+        str_n0vl = str(len(n0_left_mods))
+        str_n0vr = str(len(n0_right_mods))
 
-            str_n0vl = str(len(n0_left_mods))
-            str_n0vr = str(len(n0_right_mods))
+        feats.update(__prefix_feats_(prefix="N0wVlCauses_" + str_n0vl, feats=n0w))
+        feats.update(__prefix_feats_(prefix="N0wVrCauses_" + str_n0vr, feats=n0w))
 
-            feats.update(__prefix_feats_(prefix="N0wVlCauses_" + str_n0vl, feats=n0w))
-            feats.update(__prefix_feats_(prefix="N0wVrCauses_" + str_n0vr, feats=n0w))
-
-            feats['N0pVrCauses_' + str_n0p + "_" + str_n0vr] = positive_val
-            feats['N0pVlCauses_' + str_n0p + "_" + str_n0vl] = positive_val
+        feats['N0pVrCauses_' + str_n0p + "_" + str_n0vr] = positive_val
+        feats['N0pVlCauses_' + str_n0p + "_" + str_n0vl] = positive_val
 
     return feats
 
-def between_word_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
+def unigrams(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
             tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
             distance: int,
             cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
-            right_relations: Dict[Tuple[str, int], Set[str]],
+            effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
             positive_val: int) -> Dict[str, int]:
+
+    feats = {}
+    if len(effect2causers) == 0 and len(cause2effects) == 0:
+        return feats
+
+    stack_len = len(stack_tags)
+    buffer_len = len(buffer_tags)
+
+    # Compute sO features
+    if stack_len > 0:
+        s0p = stack_tags[-1]
+        # get tag without position
+        str_s0p = str(s0p[0])
+        s0w = __get_sequence_(prefix="S0w", words=tag2word_seq[s0p], positive_val=positive_val)
+
+        # get left and right modifiers of s0
+        s0_left_mods_causer, s0_right_mods_causer   = __get_left_right_modifiers__(tag_pair=s0p, causal_mapping=cause2effects)
+        s0_left_mods_effects, s0_right_mods_effects = __get_left_right_modifiers__(tag_pair=s0p, causal_mapping=effect2causers)
+
+    if buffer_len > 0:
+
+        n0p = buffer_tags[0]
+        str_n0p = str(n0p[0])
+        n0w = __get_sequence_(prefix="N0w", words=tag2word_seq[n0p], positive_val=positive_val)
+
+        n0_left_mods_causer, n0_right_mods_causer   = __get_left_right_modifiers__(tag_pair=n0p, causal_mapping=cause2effects)
+        n0_left_mods_effects, n0_right_mods_effects = __get_left_right_modifiers__(tag_pair=n0p, causal_mapping=effect2causers)
+
+    # S0hw; S0hp; S0l; S0lw; S0lp; S0ll;
+    # S0rw; S0rp; S0rl;N0lw; N0lp; N0ll;
+
+    # use cause and effect relations to fill out the above template instead of head and modifier
+    if 1 == 1:
+        raise Exception("TODO")
+
+    return feats
+
+
+def between_word_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
+                          tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
+                          distance: int,
+                          cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                          effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                          positive_val: int) -> Dict[str, int]:
 
     feats = {}
     stack_len = len(stack_tags)
@@ -318,6 +366,10 @@ def __get_interactions_(prefix:str, fts1:Dict[str, int], fts2:Dict[str, int], po
     return interactions
 
 def __get_left_right_modifiers__(tag_pair, causal_mapping):
+
+    # prevent insertion of key by default dict
+    if tag_pair not in causal_mapping:
+        return set(), set()
 
     modifiers = causal_mapping[tag_pair]
     if not modifiers:
