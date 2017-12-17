@@ -259,13 +259,29 @@ def valency(stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int]],
 def unigrams(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
             tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
             distance: int,
-            cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+            cause2effects:  Dict[Tuple[str, int], Set[Tuple[str, int]]],
             effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
             positive_val: int) -> Dict[str, int]:
 
     feats = {}
     if len(effect2causers) == 0 and len(cause2effects) == 0:
         return feats
+
+    def add_word_tag_labels_for_tag_pairs(prefix: str, head_tag_pair: Tuple[str,int], tag_pairs: Set[Tuple[str, int]]):
+        prefix = "unigram_dep_" + prefix
+        words = __get_words_from_tags__(tag_pairs=tag_pairs, tag2word_seq=tag2word_seq)
+        feats.update(__prefix_feats_(prefix=prefix + "_w", feats=words))
+
+        tags = __tag_pair_to_tags__(tag_pairs=tag_pairs)
+        feats.update(__prefix_feats_(prefix=prefix + "_p", feats=tags))
+
+        labels = set()
+        for tag_pair in tag_pairs:
+            if tag_pair in cause2effects:
+                labels.add(format("{causer}->{effect}".format(causer=tag_pair[0], effect=head_tag_pair[0])))
+            else:
+                labels.add(format("{causer}->{effect}".format(causer=head_tag_pair[0], effect=tag_pair[0])))
+        feats.update(__prefix_feats_(prefix=prefix+"_l",feats=labels))
 
     stack_len = len(stack_tags)
     buffer_len = len(buffer_tags)
@@ -274,28 +290,45 @@ def unigrams(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int
     if stack_len > 0:
         s0p = stack_tags[-1]
         # get tag without position
-        str_s0p = str(s0p[0])
-        s0w = __get_sequence_(prefix="S0w", words=tag2word_seq[s0p], positive_val=positive_val)
-
         # get left and right modifiers of s0
+        # returns 2 sets of tags (str's)
+
         s0_left_mods_causer, s0_right_mods_causer   = __get_left_right_modifiers__(tag_pair=s0p, causal_mapping=cause2effects)
         s0_left_mods_effects, s0_right_mods_effects = __get_left_right_modifiers__(tag_pair=s0p, causal_mapping=effect2causers)
+
+        # Combine left modifiers
+        s0_left_mods = s0_left_mods_causer.union(s0_left_mods_effects)
+        s0_right_mods = s0_right_mods_causer.union(s0_right_mods_effects)
+        s0_all_mods = s0_left_mods.union(s0_right_mods)
+
+        # Combine causers and effects
+        s0_causer_tag_pairs = s0_left_mods_causer.union(s0_right_mods_causer)
+        s0_effect_tag_pairs = s0_left_mods_effects.union(s0_right_mods_effects)
+
+        # Unigram s0 feats
+        """
+        S0hw; S0hp; S0l; S0lw; S0lp; S0ll; S0rw; S0rp; S0rl;
+        """
+        # in place of s0_hw as we don't have a head and modifier here
+        add_word_tag_labels_for_tag_pairs(prefix="s0_causer", head_tag_pair=s0p, tag_pairs=s0_causer_tag_pairs)
+        add_word_tag_labels_for_tag_pairs(prefix="s0_effect", head_tag_pair=s0p, tag_pairs=s0_effect_tag_pairs)
+
+        #lp and rp
+        add_word_tag_labels_for_tag_pairs(prefix="s0l", head_tag_pair=s0p, tag_pairs=s0_left_mods)
+        add_word_tag_labels_for_tag_pairs(prefix="s0r", head_tag_pair=s0p, tag_pairs=s0_right_mods)
 
     if buffer_len > 0:
 
         n0p = buffer_tags[0]
-        str_n0p = str(n0p[0])
-        n0w = __get_sequence_(prefix="N0w", words=tag2word_seq[n0p], positive_val=positive_val)
 
-        n0_left_mods_causer, n0_right_mods_causer   = __get_left_right_modifiers__(tag_pair=n0p, causal_mapping=cause2effects)
-        n0_left_mods_effects, n0_right_mods_effects = __get_left_right_modifiers__(tag_pair=n0p, causal_mapping=effect2causers)
+        # get left and right modifiers of n0
+        # returns 2 sets of tags (str's)
 
-    # S0hw; S0hp; S0l; S0lw; S0lp; S0ll;
-    # S0rw; S0rp; S0rl;N0lw; N0lp; N0ll;
+        n0_left_mods_causer, _  = __get_left_right_modifiers__(tag_pair=n0p, causal_mapping=cause2effects)
+        n0_left_mods_effects, _ = __get_left_right_modifiers__(tag_pair=n0p, causal_mapping=effect2causers)
 
-    # use cause and effect relations to fill out the above template instead of head and modifier
-    if 1 == 1:
-        raise Exception("TODO")
+        add_word_tag_labels_for_tag_pairs(prefix="n0_causer", head_tag_pair=n0p, tag_pairs=n0_left_mods_causer)
+        add_word_tag_labels_for_tag_pairs(prefix="n0_effect", head_tag_pair=n0p, tag_pairs=n0_left_mods_effects)
 
     return feats
 
@@ -336,7 +369,7 @@ def __prefix_feats_(prefix, feats):
     if type(feats) == dict:
         for ft,val in feats.items():
             fts[prefix + "_" + ft] = val
-    elif type(feats) == list:
+    elif type(feats) == list or type(feats) == set:
         for ft in feats:
             fts[prefix + "_" + ft] = 1
     else:
@@ -349,7 +382,12 @@ def __get_sequence_(prefix: str, words: List[str], positive_val: int = 1)->Dict[
         feats["{prefix}_{item}".format(prefix=prefix, item=str(item))] = positive_val
     return feats
 
-def __add_wp_combos_(prefix:str, feats:Dict[str, int], tag_pair: Tuple[str, int], tag2word_seq: Dict[Tuple[str, int], List[str]], positive_val:int)->None:
+def __add_wp_combos_(prefix:str,
+                     feats:Dict[str, int],
+                     tag_pair: Tuple[str, int],
+                     tag2word_seq: Dict[Tuple[str, int], List[str]],
+                     positive_val:int)->None:
+
     str_tag = str(tag_pair[0])
     feats[prefix + "p" + str_tag] = positive_val
     tag_word_seq = tag2word_seq[tag_pair]
@@ -365,7 +403,15 @@ def __get_interactions_(prefix:str, fts1:Dict[str, int], fts2:Dict[str, int], po
                 interactions[prefix + "_" + fta + "_" + ftb] = positive_val
     return interactions
 
-def __get_left_right_modifiers__(tag_pair, causal_mapping):
+def __tag_pair_to_tags__(tag_pairs: Set[Tuple[str, int]])->Set[str]:
+    tags = set()
+    for tag, posn in tag_pairs:
+        tags.add(tag)
+    return tags
+
+def __get_left_right_modifiers__(tag_pair: Tuple[str, int],
+                                 causal_mapping: Dict[Tuple[str, int], Set[Tuple[str, int]]]
+                                 )->Tuple[Set[Tuple[str,int]], Set[Tuple[str,int]]]:
 
     # prevent insertion of key by default dict
     if tag_pair not in causal_mapping:
@@ -382,8 +428,15 @@ def __get_left_right_modifiers__(tag_pair, causal_mapping):
         mod_tag, mod_posn = modifier_tag_pair
         # use the tags and not the tag positions
         if mod_posn < tag_posn:
-            left_mods.add(mod_tag)
+            left_mods.add(modifier_tag_pair)
         elif mod_posn > tag_posn:
-            right_mods.add(mod_tag)
+            right_mods.add(modifier_tag_pair)
 
     return left_mods, right_mods
+
+def __get_words_from_tags__(tag_pairs: Set[Tuple[str, int]], tag2word_seq: Dict[Tuple[str, int], List[str]])->Set[str]:
+    sequence = []   # type:List[str]
+    for tag_pair in tag_pairs:
+        tp_seq = tag2word_seq[tag_pair] # type:List[str]
+        sequence.extend(tp_seq)
+    return set(sequence)

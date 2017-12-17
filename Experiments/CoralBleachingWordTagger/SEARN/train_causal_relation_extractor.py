@@ -21,7 +21,7 @@ from Settings import Settings
 from wordtagginghelper import merge_dictionaries
 import costcla
 from costcla.models import CostSensitiveRandomForestClassifier, CostSensitiveLogisticRegression
-from template_feature_extractor import single_words, word_pairs, three_words, word_distance, valency, between_word_features
+from template_feature_extractor import single_words, word_pairs, three_words, word_distance, valency, unigrams, between_word_features
 
 client = pymongo.MongoClient()
 db = client.metrics
@@ -132,7 +132,10 @@ cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag = defaultdict(list), default
 folds = cross_validation(pred_tagged_essays, CV_FOLDS)
 #TODO Parallelize
 
-extractors = [single_words, word_pairs, three_words, word_distance, valency, between_word_features]
+extractors = [single_words, word_pairs, three_words, word_distance, valency,
+              unigrams,
+              between_word_features]
+
 template_feature_extractor = NonLocalTemplateFeatureExtractor(extractors=extractors)
 
 ngram_extractor = NgramExtractor(max_ngram_len=NGRAMS)
