@@ -5,7 +5,7 @@ import dill
 import pymongo
 
 from collections import defaultdict
-from typing import Any, List
+from typing import Any, List, Set
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.base import BaseEstimator
@@ -108,8 +108,10 @@ all_extractors = [
     valency, unigrams,
     between_word_features]
 
-def evaluate_features(  extractor_names: List[str], beta_decay: float = 0.3,
-                        base_learner: Any=LogisticRegression, ngrams:int=2):
+def evaluate_features(  extractor_names: Set[str],
+                        beta_decay: float = 0.3,
+                        base_learner: Any=LogisticRegression,
+                        ngrams:int=2, down_sample_rate = 1.0)->float:
 
     extractors = [fn for fn in all_extractors if fn.__name__ in extractor_names]
     # Ensure all extractors located
@@ -131,6 +133,12 @@ def evaluate_features(  extractor_names: List[str], beta_decay: float = 0.3,
 
     #TODO - try to parallelize - pass in an array of func names (strings) - and look up real functions due to joblib limitations
     for i, (essays_TD, essays_VD) in enumerate(folds):
+
+        if down_sample_rate < 1.0:
+            print("Down sampling at rate: {rate:.5f}".format(rate=down_sample_rate))
+            essays_TD = essays_TD[:int(down_sample_rate * len(essays_TD))]
+            essays_VD = essays_VD[:int(down_sample_rate * len(essays_VD))]
+
         print("\nCV % i" % i)
         parse_model = SearnModelTemplateFeaturesCostSensitive(feature_extractor=template_feature_extractor,
                                                               ngram_extractor=ngram_extractor, cr_tags=cr_tags,
@@ -161,33 +169,60 @@ def evaluate_features(  extractor_names: List[str], beta_decay: float = 0.3,
     micro_f1 = float(processor.get_metric(CB_SENT_VD, sent_vd_objectid, __MICRO_F1__)["f1_score"])
     return micro_f1
 
-BETA_DECAY = 0.3
+def get_extractor_names(feature_extractors):
+    return list(map(lambda fn: fn.__name__, feature_extractors))
+
+all_extractor_names = get_extractor_names(all_extractors)
+
+DOWN_SAMPLE_RATE = 0.1
+BETA_DECAY = 0.5
 #for ngrams in [1,2,3]:
 for ngrams in [2]:
 
-    feature_extractors = all_extractors[::]
+    current_extractor_names = set()
+    f1_improved = True
+    best_f1 = -1.0
 
-    extractor_names = list(map(lambda fn: fn.__name__, feature_extractors))
-    print("\tExtractors: {extractors}".format(extractors=",".join(extractor_names)))
+    while len(current_extractor_names) <= 5 and f1_improved:
 
-    # RUN feature evaluation
-    micro_f1 = evaluate_features(extractor_names=extractor_names, ngrams=ngrams, base_learner=LogisticRegression)
+        print("\nEvaluating {num_features} features, with ngram size: {ngrams} and beta decay: {beta_decay}".format(
+            num_features=len(current_extractor_names) + 1,
+            ngrams=ngrams, beta_decay=BETA_DECAY)
+        )
+        f1_improved = False
+        # Evaluate new feature sets
+        best_new_feature_name = None
 
-    print("\tMicro F1: {micro_f1}".format(micro_f1=micro_f1))
+        for new_extractor_name in all_extractor_names:
+            # Don't add extractors in current set
+            if new_extractor_name in current_extractor_names:
+                continue
+
+            new_extractor_set = current_extractor_names.union(new_extractor_name)
+
+            print("\tExtractors: {extractors}".format(extractors=",".join(sorted(new_extractor_set))))
+            # RUN feature evaluation
+            micro_f1 = evaluate_features(extractor_names=new_extractor_set,
+                                         ngrams=ngrams,
+                                         base_learner=LogisticRegression,
+                                         beta_decay=BETA_DECAY)
+            if micro_f1 > best_f1:
+                f1_improved = True
+                best_f1 = micro_f1
+                best_new_feature_name = new_extractor_name
+                print("\tMicro F1: {micro_f1} NEW BEST {stars}".format(micro_f1=micro_f1, stars="*" * 30))
+            else:
+                print("\tMicro F1: {micro_f1}".format(micro_f1=micro_f1))
+
+        if not f1_improved:
+            print("F1 not improved, stopping with {num_extractors} extractors".format(num_extractors=len(current_extractor_names)))
+            break
+        else:
+            current_extractor_names.add(best_new_feature_name)
 
 ## TODO
 #- Need to handle relations where same code -> same code
 
 #-TODO - Neat Ideas
 # Inject a random action (unform distribution) with a specified probability during training also
-    # Ensures better exploration of the policy space. Initial algo predictions will be random but converges very quickly so this may be lost
-
-#TODO Issues
-# 1. Unsupported relations
-# 2. Tagging model needs to tag causer:num and result:num too as tags, as well as explicits
-# 3. Can't handle same tag to same tag
-# 4. Can't handle same relation in both directions (e.g. if code is repeated)
-
-#TODO - cost sensitive classification
-# Look into this library if XGBoost doesn't work out - http://nbviewer.jupyter.org/github/albahnsen/CostSensitiveClassification/blob/master/doc/tutorials/tutorial_edcs_credit_scoring.ipynb
-
+# Ensures better exploration of the policy space. Initial algo predictions will be random but converges very quickly so this may be lost
