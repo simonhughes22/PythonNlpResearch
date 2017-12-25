@@ -189,18 +189,18 @@ def evaluate_features(  extractor_names: Set[str],
 def get_extractor_names(feature_extractors):
     return list(map(lambda fn: fn.__name__, feature_extractors))
 
-logger.info("")
+LINE_WIDTH = 80
 
 all_extractor_names = get_extractor_names(all_extractors)
 #all_extractor_names = get_extractor_names([valency])
 base_extractor_names = get_extractor_names(base_extractors)
 
 # other settings
-DOWN_SAMPLE_RATE = 0.1 # For faster smoke testing the algorithm
-BETA_DECAY = 0.5
+DOWN_SAMPLE_RATE    = 1.0  # For faster smoke testing the algorithm
+BETA_DECAY          = 0.25
 
-#for ngrams in [1,2,3]:
-for ngrams in [2]:
+#TODO - stem words or not?
+for ngrams in [2,3,1]:
 
     current_extractor_names = set()
     f1_improved = True
@@ -208,9 +208,11 @@ for ngrams in [2]:
 
     while len(current_extractor_names) <= 5 and f1_improved:
 
-        logger.info("Evaluating {num_features} features, with ngram size: {ngrams} and beta decay: {beta_decay}".format(
-            num_features=len(current_extractor_names) + 1,
-            ngrams=ngrams, beta_decay=BETA_DECAY)
+        logger.info("-" * LINE_WIDTH)
+        logger.info("Evaluating {num_features} features, with ngram size: {ngrams} and beta decay: {beta_decay}, current feature extractors: {extractors}".format(
+                        num_features=len(current_extractor_names) + 1,
+                        ngrams=ngrams, beta_decay=BETA_DECAY,
+                        extractors=",".join(sorted(current_extractor_names)))
         )
         f1_improved = False
         # Evaluate new feature sets
@@ -242,7 +244,10 @@ for ngrams in [2]:
                 logger.info("\t\tMicro F1: {micro_f1}".format(micro_f1=micro_f1))
 
         if not f1_improved:
-            logger.info("F1 not improved, stopping with {num_extractors} extractors".format(num_extractors=len(current_extractor_names)))
+            logger.info("F1 not improved, stopping with {num_extractors} extractors: {extractors}".format(
+                num_extractors=len(current_extractor_names),
+                extractors=",".join(sorted(current_extractor_names))
+            ))
             break
         else:
             current_extractor_names.add(best_new_feature_name)
