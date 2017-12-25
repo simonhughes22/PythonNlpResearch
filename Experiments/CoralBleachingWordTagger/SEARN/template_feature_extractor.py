@@ -14,6 +14,7 @@ class NgramExtractor(object):
 class NonLocalTemplateFeatureExtractor(object):
     def __init__(self, extractors):
         self.extractors = extractors
+        self.distinct_feats = set()
 
     def extract(self, stack_tags: List[Tuple[str,int]], buffer_tags: List[Tuple[str,int]],
                  tag2word_seq: Dict[Tuple[str,int], List[str]],
@@ -24,11 +25,18 @@ class NonLocalTemplateFeatureExtractor(object):
                  positive_val: int)->Dict[str,int]:
 
         fts = dict()
+        # Ensure always at least one feature as some partitions error out
+        fts["BIAS"] = 1
         for ext in self.extractors:
             new_feats = ext(stack_tags, buffer_tags, tag2word_seq, between_word_seq, distance,
                             cause2effects, effect2causers, positive_val)
             fts.update(new_feats.items())
+        # keep track of the number of unique features
+        self.distinct_feats.update(fts.keys())
         return fts
+
+    def num_features(self):
+        return len(self.distinct_feats)
 
 """ Template Features """
 
@@ -336,20 +344,20 @@ def unigrams(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int
         # in place of s0_hw as we don't have a head and modifier here
         __add_word_tag_labels_for_tag_pairs__(feats=feats,
                                               prefix="s0_causer", head_tag_pair=s0p, tag_pairs=s0_causer_tag_pairs,
-                                              cause2effects=cause2effects, effect2causers=effect2causers)
+                                              cause2effects=cause2effects, effect2causers=effect2causers, tag2word_seq=tag2word_seq)
 
         __add_word_tag_labels_for_tag_pairs__(feats=feats,
                                               prefix="s0_effect", head_tag_pair=s0p, tag_pairs=s0_effect_tag_pairs,
-                                              cause2effects=cause2effects, effect2causers=effect2causers)
+                                              cause2effects=cause2effects, effect2causers=effect2causers, tag2word_seq=tag2word_seq)
 
         # lp and rp
         __add_word_tag_labels_for_tag_pairs__(feats=feats,
                                               prefix="s0l", head_tag_pair=s0p, tag_pairs=s0_left_mods,
-                                              cause2effects=cause2effects, effect2causers=effect2causers)
+                                              cause2effects=cause2effects, effect2causers=effect2causers, tag2word_seq=tag2word_seq)
 
         __add_word_tag_labels_for_tag_pairs__(feats=feats,
                                               prefix="s0r", head_tag_pair=s0p, tag_pairs=s0_right_mods,
-                                              cause2effects=cause2effects, effect2causers=effect2causers)
+                                              cause2effects=cause2effects, effect2causers=effect2causers, tag2word_seq=tag2word_seq)
 
     if buffer_len > 0:
 
@@ -363,11 +371,11 @@ def unigrams(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int
 
         __add_word_tag_labels_for_tag_pairs__(feats=feats, prefix="n0_causer", head_tag_pair=n0p,
                                               tag_pairs=n0_left_mods_causer,
-                                              cause2effects=cause2effects, effect2causers=effect2causers)
+                                              cause2effects=cause2effects, effect2causers=effect2causers, tag2word_seq=tag2word_seq)
 
         __add_word_tag_labels_for_tag_pairs__(feats=feats, prefix="n0_effect", head_tag_pair=n0p,
                                               tag_pairs=n0_left_mods_effects,
-                                              cause2effects=cause2effects, effect2causers=effect2causers)
+                                              cause2effects=cause2effects, effect2causers=effect2causers, tag2word_seq=tag2word_seq)
     return feats
 
 
@@ -377,6 +385,9 @@ def third_order(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, 
                           cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
                           effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
                           positive_val: int) -> Dict[str, int]:
+
+    raise Exception("Incomplete, please finish")
+
     feats = {}
     if len(effect2causers) == 0 and len(cause2effects) == 0:
         return feats
@@ -402,8 +413,8 @@ def third_order(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, 
         if s0_causer_tag_pairs:
             s0_left_mods_causer2, s0_right_mods_causer2 = __get_left_right_modifiers_of_modifiers__(s0_causer_tag_pairs)
             s0_causer2 = s0_left_mods_causer2.union(s0_right_mods_causer2)
-            __add_word_tag_labels_for_tag_pairs__(feats=feats,
-                                                  prefix="s0_h2_causer2", )
+            #__add_word_tag_labels_for_tag_pairs__(feats=feats,
+            #                                      prefix="s0_h2_causer2", )
 
 
 def between_word_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],

@@ -35,11 +35,15 @@ CREL_ACTIONS = [
 ]
 
 class SearnModelTemplateFeaturesCostSensitive(object):
-    def __init__(self, ngram_extractor, feature_extractor, cr_tags, base_learner_fact, beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True):
+    def __init__(self, ngram_extractor, feature_extractor, cr_tags, base_learner_fact,
+                 beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True, log_fn=lambda s: print(s)):
+
         # init checks
         # assert CAUSER in tags, "%s must be in tags" % CAUSER
         # assert RESULT in tags, "%s must be in tags" % RESULT
         # assert EXPLICIT in tags, "%s must be in tags" % EXPLICIT
+
+        self.log = log_fn
 
         self.ngram_extractor = ngram_extractor
         self.feat_extractor = feature_extractor  # feature extractor (for use later)
@@ -105,8 +109,8 @@ class SearnModelTemplateFeaturesCostSensitive(object):
                 trained_with_beta0 = True
 
             self.epoch += 1
-            print("Epoch: {epoch}".format(epoch=self.epoch))
-            print("Beta:  {beta}".format(beta=self.beta))
+            self.log("Epoch: {epoch}".format(epoch=self.epoch))
+            self.log("Beta:  {beta}".format(beta=self.beta))
 
             # TODO - provide option for different model types here?
             parse_examples = WeightedExamples(labels=PARSE_ACTIONS, positive_value=self.positive_val)
@@ -122,7 +126,7 @@ class SearnModelTemplateFeaturesCostSensitive(object):
 
             class2metrics = ResultsProcessor.compute_metrics(ys_by_sent, pred_ys_by_sent)
             micro_metrics = micro_rpfa(class2metrics.values()) # type: rpfa
-            print("Training Metrics: {metrics}".format(metrics=micro_metrics))
+            self.log("Training Metrics: {metrics}".format(metrics=micro_metrics))
 
             # TODO, dictionary vectorize examples, train a weighted binary classifier for each separate parsing action
             self.train_parse_models(parse_examples)
@@ -134,11 +138,11 @@ class SearnModelTemplateFeaturesCostSensitive(object):
             # Decay beta
             self.beta = self.beta_decay_fn(self.beta)
             if self.beta < 0 and trained_with_beta0:
-                print("beta decayed below 0 - beta:'{beta}', stopping".format(beta=self.beta))
+                self.log("beta decayed below 0 - beta:'{beta}', stopping".format(beta=self.beta))
                 break
         # end [for each epoch]
         if not trained_with_beta0:
-            print("Algorithm hit max epochs without training with beta <= 0 - final_beta:{beta}".format(beta=self.beta))
+            self.log("Algorithm hit max epochs without training with beta <= 0 - final_beta:{beta}".format(beta=self.beta))
 
     def train_parse_models(self, examples):
         models = {}

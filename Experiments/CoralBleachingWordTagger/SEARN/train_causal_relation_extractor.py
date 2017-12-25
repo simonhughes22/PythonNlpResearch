@@ -97,13 +97,6 @@ vtags = set(regular_tags)
 
 assert "explicit" in vtags, "explicit should be in the regular tags"
 
-from parser_feature_extractor import FeatureExtractor, bag_of_word_extractor, bag_of_word_plus_tag_extractor
-
-feat_extractor = FeatureExtractor([
-    bag_of_word_extractor,
-    bag_of_word_plus_tag_extractor,
-])
-
 ## Replace predicted tags with actual to test impact on recall
 # With perfect tags and gold parse decisions, recall is 0.8417, F1 is 0.9140
 # With best Predicted tags and gold parse decisions, recall is 0.8037, F1 is 0.8912

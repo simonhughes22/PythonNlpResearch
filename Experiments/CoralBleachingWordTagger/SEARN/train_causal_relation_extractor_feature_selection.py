@@ -3,6 +3,7 @@ import datetime
 import logging
 import dill
 import pymongo
+import numpy as np
 
 from collections import defaultdict
 from typing import Any, List, Set
@@ -21,9 +22,15 @@ from template_feature_extractor import single_words, word_pairs, three_words, wo
 from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
 
+# Logging
+logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+logger = logging.getLogger()
+
+# Mongo connection
 client = pymongo.MongoClient()
 db = client.metrics
 
+# Data Set Partition
 CV_FOLDS = 5
 DEV_SPLIT = 0.1
 
@@ -49,10 +56,8 @@ fname = rnn_predictions_folder + "essays_train_bi_directional-True_hidden_size-2
 with open(fname, "rb") as f:
     pred_tagged_essays = dill.load(f)
 
-print("Number of pred tagged essasy %i" % len(pred_tagged_essays) ) # should be 902
-print("Started at: " + str(datetime.datetime.now()))
-logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-logger = logging.getLogger()
+logger.info("Started at: " + str(datetime.datetime.now()))
+logger.info("Number of pred tagged essasy %i" % len(pred_tagged_essays) ) # should be 902
 
 # In[7]:
 
@@ -95,18 +100,16 @@ vtags = set(regular_tags)
 
 assert "explicit" in vtags, "explicit should be in the regular tags"
 
-from parser_feature_extractor import FeatureExtractor, bag_of_word_extractor, bag_of_word_plus_tag_extractor
-
-feat_extractor = FeatureExtractor([
-    bag_of_word_extractor,
-    bag_of_word_plus_tag_extractor,
-])
-
 folds = cross_validation(pred_tagged_essays, CV_FOLDS)
-all_extractors = [
-    single_words, word_pairs, three_words, word_distance,
-    valency, unigrams,
-    between_word_features]
+
+base_extractors = [
+    single_words, word_pairs, three_words, between_word_features
+]
+
+all_extractors = base_extractors + [
+    word_distance,
+    valency, unigrams
+]
 
 def evaluate_features(  extractor_names: Set[str],
                         beta_decay: float = 0.3,
@@ -115,36 +118,39 @@ def evaluate_features(  extractor_names: Set[str],
 
     extractors = [fn for fn in all_extractors if fn.__name__ in extractor_names]
     # Ensure all extractors located
-    assert len(extractors) == len(extractor_names)
-
-    template_feature_extractor = NonLocalTemplateFeatureExtractor(extractors=extractors)
-    ngram_extractor = NgramExtractor(max_ngram_len=ngrams)
+    assert len(extractors) == len(extractor_names), "number of extractor functions does not match the number of names"
 
     sent_algo = "Shift_Reduce_Parser_LR"
     parameters = dict(config)
-    parameters["extractors"] = extractor_names
+    parameters["extractors"] = ",".join(sorted(extractor_names))
     parameters["beta_decay"] = beta_decay
     parameters["no_stacking"] = True
-    parameters["algorithm"] = str(base_learner)
+    parameters["algorithm"] = str(base_learner())
     parameters["ngrams"]    = str(ngrams)
 
     cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag = defaultdict(list), defaultdict(list)
     cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
 
+    number_of_feats = []
+
     #TODO - try to parallelize - pass in an array of func names (strings) - and look up real functions due to joblib limitations
     for i, (essays_TD, essays_VD) in enumerate(folds):
 
         if down_sample_rate < 1.0:
-            print("Down sampling at rate: {rate:.5f}".format(rate=down_sample_rate))
             essays_TD = essays_TD[:int(down_sample_rate * len(essays_TD))]
             essays_VD = essays_VD[:int(down_sample_rate * len(essays_VD))]
 
-        print("\nCV % i" % i)
+        template_feature_extractor = NonLocalTemplateFeatureExtractor(extractors=extractors)
+        ngram_extractor = NgramExtractor(max_ngram_len=ngrams)
+
         parse_model = SearnModelTemplateFeaturesCostSensitive(feature_extractor=template_feature_extractor,
                                                               ngram_extractor=ngram_extractor, cr_tags=cr_tags,
                                                               base_learner_fact=base_learner,
-                                                              beta_decay_fn=lambda beta: beta - beta_decay)
+                                                              beta_decay_fn=lambda beta: beta - beta_decay,
+                                                              # silent
+                                                              log_fn=lambda s: None)
         parse_model.train(essays_TD, 12)
+        number_of_feats.append(template_feature_extractor.num_features())
 
         sent_td_ys_bycode = parse_model.get_label_data(essays_TD)
         sent_vd_ys_bycode = parse_model.get_label_data(essays_VD)
@@ -158,7 +164,18 @@ def evaluate_features(  extractor_names: Set[str],
         merge_dictionaries(sent_vd_pred_ys_bycode, cv_sent_vd_predictions_by_tag)
         # break
 
-    CB_SENT_TD, CB_SENT_VD = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL_TD", "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL_VD"
+    avg_feats = np.mean(number_of_feats)
+    parameters["num_feats_MEAN"] = avg_feats
+    parameters["num_feats_per_fold"] = number_of_feats
+
+    logger.info("\t\tMean num feats: {avg_feats:.2f}".format(avg_feats=avg_feats))
+
+    if down_sample_rate < 1.0:
+        logger.info("\t\tDown sampling at rate: {rate:.5f}, storing temp results".format(rate=down_sample_rate))
+        parameters["down_sample"] = down_sample_rate
+        CB_SENT_TD, CB_SENT_VD = "__tmp_CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL_TD", "__tmp_CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL_VD"
+    else:
+        CB_SENT_TD, CB_SENT_VD = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL_TD", "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL_VD"
 
     sent_td_objectid = processor.persist_results(CB_SENT_TD, cv_sent_td_ys_by_tag,
                                                  cv_sent_td_predictions_by_tag, parameters, sent_algo)
@@ -172,10 +189,16 @@ def evaluate_features(  extractor_names: Set[str],
 def get_extractor_names(feature_extractors):
     return list(map(lambda fn: fn.__name__, feature_extractors))
 
-all_extractor_names = get_extractor_names(all_extractors)
+logger.info("")
 
-DOWN_SAMPLE_RATE = 0.1
+all_extractor_names = get_extractor_names(all_extractors)
+#all_extractor_names = get_extractor_names([valency])
+base_extractor_names = get_extractor_names(base_extractors)
+
+# other settings
+DOWN_SAMPLE_RATE = 0.1 # For faster smoke testing the algorithm
 BETA_DECAY = 0.5
+
 #for ngrams in [1,2,3]:
 for ngrams in [2]:
 
@@ -185,7 +208,7 @@ for ngrams in [2]:
 
     while len(current_extractor_names) <= 5 and f1_improved:
 
-        print("\nEvaluating {num_features} features, with ngram size: {ngrams} and beta decay: {beta_decay}".format(
+        logger.info("Evaluating {num_features} features, with ngram size: {ngrams} and beta decay: {beta_decay}".format(
             num_features=len(current_extractor_names) + 1,
             ngrams=ngrams, beta_decay=BETA_DECAY)
         )
@@ -193,29 +216,33 @@ for ngrams in [2]:
         # Evaluate new feature sets
         best_new_feature_name = None
 
-        for new_extractor_name in all_extractor_names:
+        # only use base extractors when no other extractors present as otherwise the more complex features don't kick in
+        # as no good parsing decisions can be made
+        extractor_names = all_extractor_names if len(current_extractor_names) >= 1 else base_extractor_names
+        for new_extractor_name in extractor_names:
             # Don't add extractors in current set
             if new_extractor_name in current_extractor_names:
                 continue
 
-            new_extractor_set = current_extractor_names.union(new_extractor_name)
+            new_extractor_set = current_extractor_names.union([new_extractor_name])
 
-            print("\tExtractors: {extractors}".format(extractors=",".join(sorted(new_extractor_set))))
+            logger.info("\tExtractors: {extractors}".format(extractors=",".join(sorted(new_extractor_set))))
             # RUN feature evaluation
             micro_f1 = evaluate_features(extractor_names=new_extractor_set,
                                          ngrams=ngrams,
                                          base_learner=LogisticRegression,
-                                         beta_decay=BETA_DECAY)
+                                         beta_decay=BETA_DECAY,
+                                         down_sample_rate=DOWN_SAMPLE_RATE)
             if micro_f1 > best_f1:
                 f1_improved = True
                 best_f1 = micro_f1
                 best_new_feature_name = new_extractor_name
-                print("\tMicro F1: {micro_f1} NEW BEST {stars}".format(micro_f1=micro_f1, stars="*" * 30))
+                logger.info("\t\tMicro F1: {micro_f1} NEW BEST {stars}".format(micro_f1=micro_f1, stars="*" * 30))
             else:
-                print("\tMicro F1: {micro_f1}".format(micro_f1=micro_f1))
+                logger.info("\t\tMicro F1: {micro_f1}".format(micro_f1=micro_f1))
 
         if not f1_improved:
-            print("F1 not improved, stopping with {num_extractors} extractors".format(num_extractors=len(current_extractor_names)))
+            logger.info("F1 not improved, stopping with {num_extractors} extractors".format(num_extractors=len(current_extractor_names)))
             break
         else:
             current_extractor_names.add(best_new_feature_name)
