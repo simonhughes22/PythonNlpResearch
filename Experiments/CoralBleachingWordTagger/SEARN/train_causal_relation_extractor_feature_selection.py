@@ -4,9 +4,10 @@ import logging
 import dill
 import pymongo
 import numpy as np
+from joblib import Parallel, delayed
 
 from collections import defaultdict
-from typing import Any, List, Set
+from typing import Any, List, Set, Tuple
 
 from sklearn.linear_model import LogisticRegression
 from sklearn.base import BaseEstimator
@@ -34,6 +35,9 @@ db = client.metrics
 CV_FOLDS = 5
 DEV_SPLIT = 0.1
 
+# Global settings
+MAX_EPOCHS = 12
+
 settings = Settings()
 root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
 training_folder = root_folder + "Training" + "/"
@@ -57,7 +61,7 @@ with open(fname, "rb") as f:
     pred_tagged_essays = dill.load(f)
 
 logger.info("Started at: " + str(datetime.datetime.now()))
-logger.info("Number of pred tagged essasy %i" % len(pred_tagged_essays) ) # should be 902
+logger.info("Number of pred tagged essays %i" % len(pred_tagged_essays) ) # should be 902
 
 # In[7]:
 
@@ -100,8 +104,11 @@ vtags = set(regular_tags)
 
 assert "explicit" in vtags, "explicit should be in the regular tags"
 
-folds = cross_validation(pred_tagged_essays, CV_FOLDS)
+cv_folds = cross_validation(pred_tagged_essays, CV_FOLDS) # type: List[Tuple[Any,Any]]
 
+# some of the other extractors aren't functional if the system isn't able to do a basic parse
+# so the base extractors are the MVP for getting to a basic parser, then additional 'meta' parse
+# features from all_extractors can be included
 base_extractors = [
     single_words, word_pairs, three_words, between_word_features
 ]
@@ -111,52 +118,42 @@ all_extractors = base_extractors + [
     valency, unigrams
 ]
 
-def evaluate_features(  extractor_names: Set[str],
+def evaluate_features(  folds : List[Tuple[Any, Any]],
+                        extractor_names: Set[str],
                         beta_decay: float = 0.3,
                         base_learner: Any=LogisticRegression,
                         ngrams:int=2, down_sample_rate = 1.0)->float:
 
-    extractors = [fn for fn in all_extractors if fn.__name__ in extractor_names]
+    #extractors = [fn for fn in all_extractors if fn.__name__ in extractor_names]
     # Ensure all extractors located
-    assert len(extractors) == len(extractor_names), "number of extractor functions does not match the number of names"
+    #assert len(extractors) == len(extractor_names), "number of extractor functions does not match the number of names"
 
-    sent_algo = "Shift_Reduce_Parser_LR"
-    parameters = dict(config)
-    parameters["extractors"] = ",".join(sorted(extractor_names))
-    parameters["beta_decay"] = beta_decay
-    parameters["no_stacking"] = True
-    parameters["algorithm"] = str(base_learner())
-    parameters["ngrams"]    = str(ngrams)
+    #TODO - try to parallelize - pass in an array of func names (strings) - and look up real functions due to joblib limitations
+    # - worth the effort? This completes in 5 hours with 0.25 Beta decay rate
+
+    if down_sample_rate < 1.0:
+        new_folds = [] # type: List[Tuple[Any, Any]]
+        for i, (essays_TD, essays_VD) in enumerate(folds):
+            essays_TD = essays_TD[:int(down_sample_rate * len(essays_TD))]
+            essays_VD = essays_VD[:int(down_sample_rate * len(essays_VD))]
+            new_folds.append((essays_TD, essays_VD))
+        folds = new_folds # type: List[Tuple[Any, Any]]
+
+    parallel_results = Parallel(n_jobs=len(folds))(
+        delayed(model_train_predict)(essays_TD, essays_VD, extractor_names, ngrams, beta_decay)
+        for essays_TD, essays_VD in folds)
 
     cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag = defaultdict(list), defaultdict(list)
     cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
 
+    # record the number of features in each fold
     number_of_feats = []
 
-    #TODO - try to parallelize - pass in an array of func names (strings) - and look up real functions due to joblib limitations
-    for i, (essays_TD, essays_VD) in enumerate(folds):
+    for (num_feats,
+         sent_td_ys_bycode, sent_vd_ys_bycode,
+         sent_td_pred_ys_bycode, sent_vd_pred_ys_bycode) in parallel_results:
 
-        if down_sample_rate < 1.0:
-            essays_TD = essays_TD[:int(down_sample_rate * len(essays_TD))]
-            essays_VD = essays_VD[:int(down_sample_rate * len(essays_VD))]
-
-        template_feature_extractor = NonLocalTemplateFeatureExtractor(extractors=extractors)
-        ngram_extractor = NgramExtractor(max_ngram_len=ngrams)
-
-        parse_model = SearnModelTemplateFeaturesCostSensitive(feature_extractor=template_feature_extractor,
-                                                              ngram_extractor=ngram_extractor, cr_tags=cr_tags,
-                                                              base_learner_fact=base_learner,
-                                                              beta_decay_fn=lambda beta: beta - beta_decay,
-                                                              # silent
-                                                              log_fn=lambda s: None)
-        parse_model.train(essays_TD, 12)
-        number_of_feats.append(template_feature_extractor.num_features())
-
-        sent_td_ys_bycode = parse_model.get_label_data(essays_TD)
-        sent_vd_ys_bycode = parse_model.get_label_data(essays_VD)
-
-        sent_td_pred_ys_bycode = parse_model.predict(essays_TD)
-        sent_vd_pred_ys_bycode = parse_model.predict(essays_VD)
+        number_of_feats.append(num_feats)
 
         merge_dictionaries(sent_td_ys_bycode, cv_sent_td_ys_by_tag)
         merge_dictionaries(sent_vd_ys_bycode, cv_sent_vd_ys_by_tag)
@@ -164,7 +161,16 @@ def evaluate_features(  extractor_names: Set[str],
         merge_dictionaries(sent_vd_pred_ys_bycode, cv_sent_vd_predictions_by_tag)
         # break
 
+    # Mongo settings recording
     avg_feats = np.mean(number_of_feats)
+    sent_algo = "Shift_Reduce_Parser_LR"
+
+    parameters = dict(config)
+    parameters["extractors"] = list(sorted(extractor_names))
+    parameters["beta_decay"] = beta_decay
+    parameters["no_stacking"] = True
+    parameters["algorithm"] = str(base_learner())
+    parameters["ngrams"] = str(ngrams)
     parameters["num_feats_MEAN"] = avg_feats
     parameters["num_feats_per_fold"] = number_of_feats
 
@@ -186,6 +192,34 @@ def evaluate_features(  extractor_names: Set[str],
     micro_f1 = float(processor.get_metric(CB_SENT_VD, sent_vd_objectid, __MICRO_F1__)["f1_score"])
     return micro_f1
 
+
+def model_train_predict(essays_TD, essays_VD, extractor_names, ngrams, beta_decay):
+
+    extractors = [fn for fn in all_extractors if fn.__name__ in extractor_names]
+    # Ensure all extractors located
+    assert len(extractors) == len(extractor_names), "number of extractor functions does not match the number of names"
+
+    template_feature_extractor = NonLocalTemplateFeatureExtractor(extractors=extractors)
+    ngram_extractor = NgramExtractor(max_ngram_len=ngrams)
+    parse_model = SearnModelTemplateFeaturesCostSensitive(feature_extractor=template_feature_extractor,
+                                                          ngram_extractor=ngram_extractor, cr_tags=cr_tags,
+                                                          base_learner_fact=BASE_LEARNER_FACT,
+                                                          beta_decay_fn=lambda beta: beta - beta_decay,
+                                                          # silent
+                                                          log_fn=lambda s: None)
+    parse_model.train(essays_TD, MAX_EPOCHS)
+
+    num_feats  =template_feature_extractor.num_features()
+
+    sent_td_ys_bycode = parse_model.get_label_data(essays_TD)
+    sent_vd_ys_bycode = parse_model.get_label_data(essays_VD)
+
+    sent_td_pred_ys_bycode = parse_model.predict(essays_TD)
+    sent_vd_pred_ys_bycode = parse_model.predict(essays_VD)
+
+    return num_feats, sent_td_ys_bycode, sent_vd_ys_bycode, sent_td_pred_ys_bycode, sent_vd_pred_ys_bycode
+
+
 def get_extractor_names(feature_extractors):
     return list(map(lambda fn: fn.__name__, feature_extractors))
 
@@ -197,7 +231,8 @@ base_extractor_names = get_extractor_names(base_extractors)
 
 # other settings
 DOWN_SAMPLE_RATE    = 1.0  # For faster smoke testing the algorithm
-BETA_DECAY          = 0.25
+BETA_DECAY          = 0.250001 # ensure hit's zero after 4 tries
+BASE_LEARNER_FACT   = LogisticRegression
 
 #TODO - stem words or not?
 for ngrams in [2,3,1]:
@@ -230,7 +265,8 @@ for ngrams in [2,3,1]:
 
             logger.info("\tExtractors: {extractors}".format(extractors=",".join(sorted(new_extractor_set))))
             # RUN feature evaluation
-            micro_f1 = evaluate_features(extractor_names=new_extractor_set,
+            micro_f1 = evaluate_features(folds=cv_folds,
+                                         extractor_names=new_extractor_set,
                                          ngrams=ngrams,
                                          base_learner=LogisticRegression,
                                          beta_decay=BETA_DECAY,
