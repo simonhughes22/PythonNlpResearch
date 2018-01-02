@@ -15,12 +15,16 @@ def is_a_regular_code(code):
 
 class ResultsProcessor(object):
 
-    def __init__(self, fltr = None):
+    def __init__(self, dbname = None, fltr = None):
+        if dbname is None:
+            raise Exception("Need to specify mongo db name - 'metrics_causal' or 'metrics_codes'")
+
         if not fltr:
             fltr = lambda k: k[0].isdigit()
         self.fltr = fltr
         self.client = pymongo.MongoClient()
-        self.db = self.client.metrics
+        self.db = self.client[dbname]
+        self.dbname = dbname
 
     def __add_meta_data_(self, db_row, experiment_args):
         db_row["parameters"] = experiment_args

@@ -1,18 +1,17 @@
+import string
 from collections import defaultdict
 from typing import Set, List
 
-from sklearn.feature_extraction import DictVectorizer
+import numpy as np
 
-from NgramGenerator import compute_ngrams
 from Rpfa import micro_rpfa
+from featurevectorizer import FeatureVectorizer
 from oracle import Oracle
 from parser import Parser
 from results_procesor import ResultsProcessor
 from shift_reduce_helper import *
 from stack import Stack
 from weighted_examples import WeightedExamples
-import numpy as np
-import string
 
 PARSE_ACTIONS = [
     SHIFT,
@@ -35,7 +34,7 @@ CREL_ACTIONS = [
 ]
 
 class SearnModelTemplateFeaturesCostSensitive(object):
-    def __init__(self, ngram_extractor, feature_extractor, cr_tags, base_learner_fact,
+    def __init__(self, ngram_extractor, feature_extractor, min_feature_freq, cr_tags, base_learner_fact,
                  beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True, log_fn=lambda s: print(s)):
 
         # init checks
@@ -46,7 +45,8 @@ class SearnModelTemplateFeaturesCostSensitive(object):
         self.log = log_fn
 
         self.ngram_extractor = ngram_extractor
-        self.feat_extractor = feature_extractor  # feature extractor (for use later)
+        self.feat_extractor = feature_extractor    # feature extractor (for use later)
+        self.min_feature_freq = min_feature_freq   # mininum feature frequency
         self.positive_val = positive_val
         self.base_learner_fact = base_learner_fact  # Sklearn classifier
         self.sparse = sparse
@@ -59,10 +59,10 @@ class SearnModelTemplateFeaturesCostSensitive(object):
 
         self.parser_models = []
         self.current_parser_models = None
-        self.current_parser_dict_vectorizer = None
+        self.current_parser_feat_vectorizer = None
         self.crel_models = []
         self.current_crel_model = None
-        self.current_crel_dict_vectorizer = None
+        self.current_crel_feat_vectorizer = None
 
         self.training_datasets_parsing = {}
         self.training_datasets_crel = {}
@@ -146,8 +146,9 @@ class SearnModelTemplateFeaturesCostSensitive(object):
 
     def train_parse_models(self, examples):
         models = {}
-        self.current_parser_dict_vectorizer = DictVectorizer(sparse=self.sparse)
-        xs = self.current_parser_dict_vectorizer.fit_transform(examples.xs)
+        self.current_parser_feat_vectorizer = FeatureVectorizer(min_feature_freq=self.min_feature_freq, sparse=self.sparse)
+        #self.current_parser_dict_vectorizer = DictVectorizer(sparse=self.sparse)
+        xs = self.current_parser_feat_vectorizer.fit_transform(examples.xs)
 
         for action in PARSE_ACTIONS:
 
@@ -163,7 +164,7 @@ class SearnModelTemplateFeaturesCostSensitive(object):
         self.parser_models.append(models)
 
     def predict_parse_action(self, feats, tos):
-        xs = self.current_parser_dict_vectorizer.transform(feats)
+        xs = self.current_parser_feat_vectorizer.transform(feats)
         prob_by_label = {}
         for action in PARSE_ACTIONS:
             if not self.allowed_action(action, tos):
@@ -176,10 +177,11 @@ class SearnModelTemplateFeaturesCostSensitive(object):
 
     def train_crel_models(self, examples):
 
-        self.current_crel_dict_vectorizer = DictVectorizer(sparse=self.sparse)
+        self.current_crel_feat_vectorizer = FeatureVectorizer(min_feature_freq=self.min_feature_freq, sparse=self.sparse)
+        #self.current_crel_feat_vectorizer = DictVectorizer(sparse=self.sparse)
 
         model = self.base_learner_fact()
-        xs = self.current_crel_dict_vectorizer.fit_transform(examples.xs)
+        xs = self.current_crel_feat_vectorizer.fit_transform(examples.xs)
         ys = examples.get_labels()
         model.fit(xs, ys)
 
@@ -187,7 +189,7 @@ class SearnModelTemplateFeaturesCostSensitive(object):
         self.crel_models.append(model)
 
     def predict_crel_action(self, feats):
-        xs = self.current_crel_dict_vectorizer.transform(feats)
+        xs = self.current_crel_feat_vectorizer.transform(feats)
         return self.current_crel_model.predict(xs)[0]
 
     def add_relation(self, action, tos, buffer, ground_truth, relations):

@@ -45,6 +45,7 @@ class FeatureVectorizer(BaseEstimator, TransformerMixin):
                     new_dct[k] = v
             #if len(new_dct) > 0: # need to keep to the same length as the ys array
             filtered.append(new_dct)
+        assert len(filtered) == len(X), "Filtered features should have the same number of rows as the original feature set"
         # vectorize
         return self.vectorizer.fit(filtered)
 
@@ -58,4 +59,5 @@ class FeatureVectorizer(BaseEstimator, TransformerMixin):
             ----------
             X : array-like list or tuple of dictionaries
         """
+        # Keys / features not present when the DictVectorizer was originally fit are automatically ignored here
         return self.vectorizer.transform(X)

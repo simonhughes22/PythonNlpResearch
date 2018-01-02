@@ -12,7 +12,7 @@ from load_data import load_process_essays
 from searn_parser_costcla import SearnModelCla
 from searn_parser_sklearn_weighted import SearnModelSklearnWeighted
 from searn_parser_template_features import SearnModelTemplateFeaturesCostSensitive
-from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor
+from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor, third_order, label_set
 from window_based_tagger_config import get_config
 from searn_parser import SearnModel
 #from searn_parser_xgboost import SearnModelXgBoost
@@ -29,6 +29,7 @@ db = client.metrics
 CV_FOLDS = 5
 DEV_SPLIT = 0.1
 NGRAMS = 2
+MIN_FEAT_FREQ = 5
 
 settings = Settings()
 root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
@@ -39,7 +40,7 @@ training_pickled = settings.data_directory + "CoralBleaching/Thesis_Dataset/trai
 predictions_folder = root_folder + "Predictions/Bi-LSTM-4-SEARN/"
 
 config = get_config(training_folder)
-processor = ResultsProcessor()
+processor = ResultsProcessor(dbname="metrics_causal")
 
 # Get Test Data In Order to Get Test CRELS
 # load the test essays to make sure we compute metrics over the test CR labels
@@ -126,7 +127,7 @@ folds = cross_validation(pred_tagged_essays, CV_FOLDS)
 #TODO Parallelize
 
 extractors = [single_words, word_pairs, three_words, word_distance, valency,
-              unigrams,
+              unigrams, third_order, label_set,
               between_word_features]
 
 template_feature_extractor = NonLocalTemplateFeatureExtractor(extractors=extractors)
@@ -148,7 +149,8 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
 
 
-    parse_model = SearnModelTemplateFeaturesCostSensitive(feature_extractor=template_feature_extractor, ngram_extractor=ngram_extractor, cr_tags=cr_tags,
+    parse_model = SearnModelTemplateFeaturesCostSensitive(feature_extractor=template_feature_extractor, min_feature_freq=MIN_FEAT_FREQ,
+                                                          ngram_extractor=ngram_extractor, cr_tags=cr_tags,
                                                           base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.3)
     parse_model.train(essays_TD, 12)
 
@@ -178,6 +180,7 @@ parameters = dict(config)
 parameters["extractors"] = list(map(lambda fn: fn.__name__, extractors))
 parameters["ngrams"] = NGRAMS
 parameters["no_stacking"] = True
+parameters["min_feat_freq"] = MIN_FEAT_FREQ
 
 sent_td_objectid = processor.persist_results(CB_SENT_TD, cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag, parameters, sent_algo)
 sent_vd_objectid = processor.persist_results(CB_SENT_VD, cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag, parameters, sent_algo)

@@ -17,7 +17,7 @@ from Settings import Settings
 from load_data import load_process_essays
 from results_procesor import ResultsProcessor, __MICRO_F1__
 from searn_parser_template_features import SearnModelTemplateFeaturesCostSensitive
-from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor
+from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor, third_order, label_set
 from template_feature_extractor import single_words, word_pairs, three_words, word_distance, valency, unigrams, \
     between_word_features
 from window_based_tagger_config import get_config
@@ -34,6 +34,7 @@ db = client.metrics
 # Data Set Partition
 CV_FOLDS = 5
 DEV_SPLIT = 0.1
+MIN_FEAT_FREQ = 5
 
 # Global settings
 MAX_EPOCHS = 12
@@ -48,7 +49,7 @@ training_pickled = settings.data_directory + "CoralBleaching/Thesis_Dataset/trai
 rnn_predictions_folder = root_folder + "Predictions/Bi-LSTM-4-SEARN/"
 
 config = get_config(training_folder)
-processor = ResultsProcessor()
+processor = ResultsProcessor(dbname="metrics_causal")
 
 # Get Test Data In Order to Get Test CRELS
 # load the test essays to make sure we compute metrics over the test CR labels
@@ -115,7 +116,10 @@ base_extractors = [
 
 all_extractors = base_extractors + [
     word_distance,
-    valency, unigrams
+    valency,
+    unigrams,
+    third_order,
+    label_set
 ]
 
 def evaluate_features(  folds : List[Tuple[Any, Any]],
@@ -123,13 +127,6 @@ def evaluate_features(  folds : List[Tuple[Any, Any]],
                         beta_decay: float = 0.3,
                         base_learner: Any=LogisticRegression,
                         ngrams:int=2, down_sample_rate = 1.0)->float:
-
-    #extractors = [fn for fn in all_extractors if fn.__name__ in extractor_names]
-    # Ensure all extractors located
-    #assert len(extractors) == len(extractor_names), "number of extractor functions does not match the number of names"
-
-    #TODO - try to parallelize - pass in an array of func names (strings) - and look up real functions due to joblib limitations
-    # - worth the effort? This completes in 5 hours with 0.25 Beta decay rate
 
     if down_sample_rate < 1.0:
         new_folds = [] # type: List[Tuple[Any, Any]]
@@ -149,6 +146,7 @@ def evaluate_features(  folds : List[Tuple[Any, Any]],
     # record the number of features in each fold
     number_of_feats = []
 
+    # Parallel is almost 5X faster!!!
     for (num_feats,
          sent_td_ys_bycode, sent_vd_ys_bycode,
          sent_td_pred_ys_bycode, sent_vd_pred_ys_bycode) in parallel_results:
@@ -167,12 +165,14 @@ def evaluate_features(  folds : List[Tuple[Any, Any]],
 
     parameters = dict(config)
     parameters["extractors"] = list(sorted(extractor_names))
+    parameters["num_extractors"] = len(extractor_names)
     parameters["beta_decay"] = beta_decay
     parameters["no_stacking"] = True
     parameters["algorithm"] = str(base_learner())
     parameters["ngrams"] = str(ngrams)
     parameters["num_feats_MEAN"] = avg_feats
     parameters["num_feats_per_fold"] = number_of_feats
+    parameters["min_feat_freq"] = MIN_FEAT_FREQ
 
     logger.info("\t\tMean num feats: {avg_feats:.2f}".format(avg_feats=avg_feats))
 
@@ -202,6 +202,7 @@ def model_train_predict(essays_TD, essays_VD, extractor_names, ngrams, beta_deca
     template_feature_extractor = NonLocalTemplateFeatureExtractor(extractors=extractors)
     ngram_extractor = NgramExtractor(max_ngram_len=ngrams)
     parse_model = SearnModelTemplateFeaturesCostSensitive(feature_extractor=template_feature_extractor,
+                                                          min_feature_freq=MIN_FEAT_FREQ,
                                                           ngram_extractor=ngram_extractor, cr_tags=cr_tags,
                                                           base_learner_fact=BASE_LEARNER_FACT,
                                                           beta_decay_fn=lambda beta: beta - beta_decay,
@@ -289,7 +290,8 @@ for ngrams in [2,3,1]:
             current_extractor_names.add(best_new_feature_name)
 
 ## TODO
-#- Need to handle relations where same code -> same code
+#- Look into beta decay methods before finalizing - need to determine if this is a good default to use for feat sel
+#- Add between tag tags (e.g. explicit tags)
 
 #-TODO - Neat Ideas
 # Inject a random action (unform distribution) with a specified probability during training also
