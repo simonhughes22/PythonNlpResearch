@@ -3,8 +3,8 @@ __author__ = 'simon.hughes'
 import pymongo
 from Rpfa import mean_rpfa, weighted_mean_rpfa, rpfa, micro_rpfa
 from Metrics import compute_tp_fp_fn, rpf1a_from_tp_fp_tn_fn
-from collections import defaultdict
 from datetime import datetime
+from collections import defaultdict
 
 __MACRO_F1__ = "MACRO_F1"
 __MICRO_F1__ = "MICRO_F1"
@@ -17,10 +17,12 @@ class ResultsProcessor(object):
 
     def __init__(self, dbname = None, fltr = None):
         if dbname is None:
-            raise Exception("Need to specify mongo db name - 'metrics_causal' or 'metrics_codes'")
+            dbname = "metrics"
+            print("No db name specified - should be either 'metrics_causal' or 'metrics'. Defaulting to 'metrics' ")
 
         if not fltr:
             fltr = lambda k: k[0].isdigit()
+
         self.fltr = fltr
         self.client = pymongo.MongoClient()
         self.db = self.client[dbname]

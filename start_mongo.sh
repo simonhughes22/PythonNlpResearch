@@ -4,4 +4,4 @@
 # to shrink the db, launch with these options then use mongodump and mongorestore to export / import the db
 #   mongodump -d metrics_causal -o MongoExport
 #   mongorestore -d metrics_causal_bak  MongoExport/metrics_causal/
-mongod -dbpath=/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/MongoDb/ --smallfiles --quotaFiles 1
+mongod -dbpath=/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/MongoDb/ --smallfiles --quotaFiles 8
