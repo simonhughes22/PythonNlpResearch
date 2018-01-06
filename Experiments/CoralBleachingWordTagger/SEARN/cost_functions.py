@@ -1,5 +1,4 @@
-from other_implementations.searn_parser import PARSE_ACTIONS
-from shift_reduce_helper import allowed_action, LARC, RARC
+from shift_reduce_helper import PARSE_ACTIONS, allowed_action, LARC, RARC
 
 def __get_relations_for_action__(forced_action, ground_truth, remaining_buffer, oracle):
     relns = set()

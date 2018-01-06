@@ -7,26 +7,13 @@ import numpy as np
 from Rpfa import micro_rpfa
 from featurevectorizer import FeatureVectorizer
 from oracle import Oracle
-from other_implementations.searn_parser import PARSE_ACTIONS
 from parser import Parser
 from results_procesor import ResultsProcessor
 from shift_reduce_helper import *
 from stack import Stack
 from weighted_examples import WeightedExamples
 
-CAUSE_EFFECT = "CAUSE_EFFECT"
-EFFECT_CAUSE = "EFFECT_CAUSE"
-CAUSE_AND_EFFECT = "CAUSE_AND_EFFECT"
-REJECT = "REJECT"  # Not a CREL
-
-CREL_ACTIONS = [
-    CAUSE_EFFECT,
-    EFFECT_CAUSE,
-    CAUSE_AND_EFFECT,
-    REJECT
-]
-
-class SearnModelTemplateFeaturesCostSensitive(object):
+class SearnModelTemplateFeatures(object):
     def __init__(self, ngram_extractor, feature_extractor, cost_function, min_feature_freq, cr_tags, base_learner_fact,
                  beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True, log_fn=lambda s: print(s)):
 
@@ -43,6 +30,7 @@ class SearnModelTemplateFeaturesCostSensitive(object):
         self.min_feature_freq = min_feature_freq   # mininum feature frequency
         self.positive_val = positive_val
         self.base_learner_fact = base_learner_fact  # Sklearn classifier
+        self.crel_learner_fact = base_learner_fact
         self.sparse = sparse
 
         self.cr_tags = set(cr_tags)  # causal relation tags
@@ -178,9 +166,10 @@ class SearnModelTemplateFeaturesCostSensitive(object):
 
     def train_crel_models(self, examples):
 
-        self.current_crel_feat_vectorizer = FeatureVectorizer(min_feature_freq=self.min_feature_freq, sparse=self.sparse)
+        self.current_crel_feat_vectorizer = FeatureVectorizer(min_feature_freq=self.min_feature_freq,
+                                                              sparse=self.sparse)
 
-        model = self.base_learner_fact()
+        model = self.crel_learner_fact()
         xs = self.current_crel_feat_vectorizer.fit_transform(examples.xs)
         ys = examples.get_labels()
         # There are no weights here as this is a simple binary classification problem
@@ -266,7 +255,7 @@ class SearnModelTemplateFeaturesCostSensitive(object):
 
         return pos_tag_seq, pos_crels, tag2span, sent_reg_predicted_tags, sent_act_cr_tags
 
-    def generate_training_data(self, tagged_sentence, predicted_tags, parse_examples, crel_examples, predict_only=False):
+    def generate_training_data(self, tagged_sentence, predicted_tags, out_parse_examples, out_crel_examples, predict_only=False):
 
         pos_ptag_seq, pos_ground_truth_crels, tag2span, all_predicted_rtags, all_actual_crels = self.get_tags_relations_for(tagged_sentence, predicted_tags, self.cr_tags)
         if predict_only:
@@ -292,7 +281,6 @@ class SearnModelTemplateFeaturesCostSensitive(object):
         effect2causers = defaultdict(set)
         # heads can have multiple modifiers
         cause2effects = defaultdict(set)
-        # TODO - get labels
 
         # tags without positional info
         rtag_seq = [t for t,i in pos_ptag_seq if t[0].isdigit()]
@@ -352,7 +340,7 @@ class SearnModelTemplateFeaturesCostSensitive(object):
                     # in terms of the optimal decision(s) that can be made?
                     cost_per_action = self.cost_function(pos_ground_truth_crels, remaining_buffer_tags, oracle)
                     # make a copy as changing later
-                    parse_examples.add(dict(feats), gold_action, cost_per_action)
+                    out_parse_examples.add(dict(feats), gold_action, cost_per_action)
 
                 # Decide the direction of the causal relation
                 if action in [LARC, RARC]:
@@ -379,7 +367,8 @@ class SearnModelTemplateFeaturesCostSensitive(object):
 
                     # Add additional features
                     # needs to be before predict below
-                    feats.update(self.crel_features(action, tos_tag, buffer_tag))
+                    crel_feats = self.crel_features(action, tos_tag, buffer_tag)
+                    feats.update(crel_feats)
                     rand_float = np.random.random_sample()
                     if predict_only or (rand_float >= self.beta and len(self.crel_models) > 0):
                         lr_action = self.predict_crel_action(feats)
@@ -416,7 +405,8 @@ class SearnModelTemplateFeaturesCostSensitive(object):
                     # cost is always 1 for this action (cost of 1 for getting it wrong)
                     #  because getting the wrong direction won't screw up the parse as it doesn't modify the stack
                     if not predict_only:
-                        crel_examples.add(dict(feats), gold_lr_action)
+                        out_crel_examples.add(dict(feats), gold_lr_action)
+
                     # Not sure we want to condition on the actions of this crel model
                     # action_history.append(lr_action)
                     # action_tag_pair_history.append((lr_action, tos, buffer))
@@ -437,7 +427,7 @@ class SearnModelTemplateFeaturesCostSensitive(object):
 
     def predict_sentence(self, tagged_sentence, predicted_tags):
         return self.generate_training_data(tagged_sentence=tagged_sentence, predicted_tags=predicted_tags,
-                                           parse_examples=set(), crel_examples=set(), predict_only=True)
+                                           out_parse_examples=set(), out_crel_examples=set(), predict_only=True)
 
     def crel_features(self, action, tos_tag, buffer_tag):
         feats = {}
@@ -445,7 +435,8 @@ class SearnModelTemplateFeaturesCostSensitive(object):
         feats["ARC_tos_buffer:" + action + "_:" + tos_tag + "->" + buffer_tag]      = self.positive_val
         feats["ARC_tos:"    + action + "_" + tos_tag]                               = self.positive_val
         feats["ARC_buffer:" + action + "_" + buffer_tag]                            = self.positive_val
-        feats["ARC_buffer_equals_tos:" + action + "_" + str(tos_tag == buffer_tag)] = self.positive_val
+        # Removing as hard to justify it's inclusion
+        #feats["ARC_buffer_equals_tos:" + action + "_" + str(tos_tag == buffer_tag)] = self.positive_val
         feats["ARC_combo:" + action + "_" ",".join(sorted([tos_tag, buffer_tag]))]  = self.positive_val
         return feats
 

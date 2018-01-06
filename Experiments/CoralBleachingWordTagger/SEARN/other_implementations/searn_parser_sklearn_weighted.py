@@ -1,7 +1,7 @@
 from sklearn.feature_extraction import DictVectorizer
 
-from other_implementations.searn_parser import SearnModel_Legacy, PARSE_ACTIONS
-
+from other_implementations.searn_parser import SearnModel_Legacy
+from shift_reduce_helper import PARSE_ACTIONS
 
 class SearnModelSklearnWeighted(SearnModel_Legacy):
 

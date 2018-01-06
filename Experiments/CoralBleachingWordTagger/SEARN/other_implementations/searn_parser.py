@@ -12,26 +12,6 @@ from weighted_examples import WeightedExamples
 import numpy as np
 import string
 
-PARSE_ACTIONS = [
-    SHIFT,
-    REDUCE,
-    LARC,
-    RARC,
-    SKIP
-]
-
-CAUSE_EFFECT = "CAUSE_EFFECT"
-EFFECT_CAUSE = "EFFECT_CAUSE"
-CAUSE_AND_EFFECT = "CAUSE_AND_EFFECT"
-REJECT = "REJECT"  # Not a CREL
-
-CREL_ACTIONS = [
-    CAUSE_EFFECT,
-    EFFECT_CAUSE,
-    CAUSE_AND_EFFECT,
-    REJECT
-]
-
 class SearnModel_Legacy(object):
     def __init__(self, feature_extractor, cr_tags, base_learner_fact, beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True):
         # init checks

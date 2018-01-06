@@ -1,8 +1,8 @@
 import numpy as np
 from sklearn.feature_extraction import DictVectorizer
 
-from other_implementations.searn_parser import SearnModel_Legacy, PARSE_ACTIONS
-
+from other_implementations.searn_parser import SearnModel_Legacy
+from shift_reduce_helper import PARSE_ACTIONS
 
 class SearnModelCla(SearnModel_Legacy):
     def __init__(self, feature_extractor, cr_tags, base_learner_fact, beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True):
