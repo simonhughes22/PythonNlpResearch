@@ -152,10 +152,17 @@ class SearnModelTemplateFeatures(object):
         self.current_parser_models = models
         self.parser_models.append(models)
 
+    def randomize_actions(self):
+        # need to randomize the action order to provide variety when picking best action
+        # as often there are ties
+        copy_actions = list(PARSE_ACTIONS)
+        np.random.shuffle(copy_actions)
+        return copy_actions
+
     def predict_parse_action(self, feats, tos):
         xs = self.current_parser_feat_vectorizer.transform(feats)
         prob_by_label = {}
-        for action in PARSE_ACTIONS:
+        for action in self.randomize_actions():
             if not allowed_action(action, tos):
                 continue
 

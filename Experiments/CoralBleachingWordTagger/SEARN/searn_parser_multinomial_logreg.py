@@ -2,6 +2,7 @@ from featurevectorizer import FeatureVectorizer
 from searn_parser_logreg import SearnModelTemplateFeatures
 from shift_reduce_helper import PARSE_ACTIONS, allowed_action
 
+import numpy as np
 
 class SearnModelTemplateFeaturesMultinomialLogisticRegression(SearnModelTemplateFeatures):
     def __init__(self, ngram_extractor, feature_extractor, cost_function, min_feature_freq, cr_tags,
@@ -67,5 +68,8 @@ class SearnModelTemplateFeaturesMultinomialLogisticRegression(SearnModelTemplate
                 continue
             prob_by_label[action] = prob
 
-        max_act, max_prob = max(prob_by_label.items(), key=lambda tpl: tpl[1])
+        items = list(prob_by_label.items())
+        # randomize order so that max returns different items in the case of a tie
+        np.random.shuffle(items)
+        max_act, max_prob = max(items, key=lambda tpl: tpl[1])
         return max_act

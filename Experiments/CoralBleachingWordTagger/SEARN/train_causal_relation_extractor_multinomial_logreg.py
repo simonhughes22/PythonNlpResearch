@@ -122,6 +122,7 @@ for i, (essays_TD, essays_VD) in enumerate(folds):
         ngram_extractor=ngram_extractor,
         cr_tags=cr_tags,
         base_learner_fact=LogisticRegression,
+        crel_learner_fact=LogisticRegression,
         beta_decay_fn=lambda beta: beta - BETA_DECAY,
         # silent
         log_fn=lambda s: None)

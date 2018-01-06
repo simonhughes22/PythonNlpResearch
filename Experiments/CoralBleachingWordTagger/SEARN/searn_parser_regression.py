@@ -45,7 +45,7 @@ class SearnModelTemplateFeaturesRegression(SearnModelTemplateFeatures):
     def predict_parse_action(self, feats, tos):
         xs = self.current_parser_feat_vectorizer.transform(feats)
         pred_by_label = {}
-        for action in PARSE_ACTIONS:
+        for action in self.randomize_actions():
             if not allowed_action(action, tos):
                 continue
 
