@@ -1,28 +1,24 @@
 # coding: utf-8
-import numpy as np
-import pymongo
-from sklearn.linear_model import LogisticRegression
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
+import datetime
+import logging
 from collections import defaultdict
+
 import dill
-import datetime, logging
+import pymongo
+from searn_parser_template_features import SearnModelTemplateFeaturesCostSensitive
+from sklearn.linear_model import LogisticRegression
 
 from CrossValidation import cross_validation
+from Settings import Settings
 from cost_functions import micro_f1_cost
 from load_data import load_process_essays
-from searn_parser_costcla import SearnModelCla
-from searn_parser_sklearn_weighted import SearnModelSklearnWeighted
-from searn_parser_template_features import SearnModelTemplateFeaturesCostSensitive
-from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor, third_order, label_set
-from window_based_tagger_config import get_config
-from searn_parser import SearnModel
-#from searn_parser_xgboost import SearnModelXgBoost
+# from searn_parser_xgboost import SearnModelXgBoost
 from results_procesor import ResultsProcessor
-from Settings import Settings
+from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor, third_order, label_set
+from template_feature_extractor import single_words, word_pairs, three_words, word_distance, valency, unigrams, \
+    between_word_features
+from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
-import costcla
-from costcla.models import CostSensitiveRandomForestClassifier, CostSensitiveLogisticRegression
-from template_feature_extractor import single_words, word_pairs, three_words, word_distance, valency, unigrams, between_word_features
 
 client = pymongo.MongoClient()
 db = client.metrics

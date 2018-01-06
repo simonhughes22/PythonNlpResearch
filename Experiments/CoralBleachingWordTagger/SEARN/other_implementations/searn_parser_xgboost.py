@@ -1,8 +1,10 @@
 import xgboost as xgb
 from sklearn.feature_extraction import DictVectorizer
-from searn_parser import SearnModel, PARSE_ACTIONS
 
-class SearnModelXgBoost(SearnModel):
+from other_implementations.searn_parser import SearnModel_Legacy, PARSE_ACTIONS
+
+
+class SearnModelXgBoost(SearnModel_Legacy):
     def __init__(self, feature_extractor, cr_tags, beta_decay_fn=lambda b: b - 0.1, positive_val=1):
         super(SearnModelXgBoost, self).__init__(feature_extractor=feature_extractor, cr_tags=cr_tags,
                                                 base_learner_fact=xgb.XGBClassifier,

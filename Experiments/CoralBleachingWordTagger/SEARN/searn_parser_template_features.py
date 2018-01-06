@@ -3,18 +3,16 @@ from collections import defaultdict
 from typing import Set, List
 
 import numpy as np
-import scipy
 
 from Rpfa import micro_rpfa
 from featurevectorizer import FeatureVectorizer
 from oracle import Oracle
+from other_implementations.searn_parser import PARSE_ACTIONS
 from parser import Parser
 from results_procesor import ResultsProcessor
-from searn_parser import PARSE_ACTIONS
 from shift_reduce_helper import *
 from stack import Stack
 from weighted_examples import WeightedExamples
-
 
 CAUSE_EFFECT = "CAUSE_EFFECT"
 EFFECT_CAUSE = "EFFECT_CAUSE"

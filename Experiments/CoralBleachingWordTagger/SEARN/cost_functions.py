@@ -1,4 +1,4 @@
-from searn_parser import PARSE_ACTIONS
+from other_implementations.searn_parser import PARSE_ACTIONS
 from shift_reduce_helper import allowed_action, LARC, RARC
 
 def __get_relations_for_action__(forced_action, ground_truth, remaining_buffer, oracle):
@@ -77,6 +77,29 @@ def micro_f1_cost_squared(ground_truth, remaining_buffer, oracle):
         action_costs[action] = cost*cost
     return action_costs
 
+def micro_f1_cost_plusone(ground_truth, remaining_buffer, oracle):
+
+    # Weight of the gold action is size of the gold_parse
+    # NOTE - these aren't really costs, more example weights
+    tmp_action_costs = micro_f1_cost(ground_truth=ground_truth, remaining_buffer=remaining_buffer, oracle=oracle)
+    action_costs = {}
+    for action, cost in tmp_action_costs.items():
+        action_costs[action] = cost + 1
+    return action_costs
+
+def micro_f1_cost_plusepsilon(ground_truth, remaining_buffer, oracle):
+
+    #epsilon = 0.01
+    #epsilon = 0.1
+    epsilon = 0.001 # best
+    # Weight of the gold action is size of the gold_parse
+    # NOTE - these aren't really costs, more example weights
+    tmp_action_costs = micro_f1_cost(ground_truth=ground_truth, remaining_buffer=remaining_buffer, oracle=oracle)
+    action_costs = {}
+    for action, cost in tmp_action_costs.items():
+        action_costs[action] = cost + epsilon
+    return action_costs
+
 def binary_cost(ground_truth, remaining_buffer, oracle):
 
     # Weight of the gold action is size of the gold_parse
@@ -148,5 +171,43 @@ def uniform_cost(ground_truth, remaining_buffer, oracle):
 2018-01-06 11:27:11,511 : INFO : 	Extractors: between_word_features,single_words,three_words
 2018-01-06 11:28:46,093 : INFO : 		Mean num feats: 286991.80
 2018-01-06 11:28:46,747 : INFO : 		Micro F1: 0.7083112758073054 NEW BEST ******************************
+2018-01-06 12:09:36,425 : INFO : ********************************************************************************
+2018-01-06 12:09:36,425 : INFO : COST FN: micro_f1_cost_plusone
+2018-01-06 12:09:36,425 : INFO : --------------------------------------------------------------------------------
+2018-01-06 12:09:36,425 : INFO : Evaluating 3 features, with ngram size: 3 and beta decay: 0.250001, current feature extractors: between_word_features,three_words
+2018-01-06 12:09:36,425 : INFO : 	Extractors: between_word_features,single_words,three_words
+2018-01-06 12:11:10,333 : INFO : 		Mean num feats: 245057.80
+2018-01-06 12:11:11,021 : INFO : 		Micro F1: 0.6698389458272328 NEW BEST ******************************
+
+EPSILON + COST (so that non damaging decisions get non-zero probability)
+>>> Lower but non-zero values for episilon seem to do much better. Suspect the algorithm does something special for 0 values
+>>> but doesn't remove them as when we remove them from training it does much worse
+epsilon = 0.01
+2018-01-06 12:14:51,703 : INFO : ********************************************************************************
+2018-01-06 12:14:51,703 : INFO : COST FN: micro_f1_cost_plusepsilon
+2018-01-06 12:14:51,703 : INFO : --------------------------------------------------------------------------------
+2018-01-06 12:14:51,703 : INFO : Evaluating 3 features, with ngram size: 3 and beta decay: 0.250001, current feature extractors: between_word_features,three_words
+2018-01-06 12:14:51,703 : INFO : 	Extractors: between_word_features,single_words,three_words
+2018-01-06 12:16:23,101 : INFO : 		Mean num feats: 273516.40
+2018-01-06 12:16:23,767 : INFO : 		Micro F1: 0.7094833687190374 NEW BEST ******************************
+
+epsilon = 0.1
+2018-01-06 12:18:12,643 : INFO : ********************************************************************************
+2018-01-06 12:18:12,643 : INFO : COST FN: micro_f1_cost_plusepsilon
+2018-01-06 12:18:12,643 : INFO : --------------------------------------------------------------------------------
+2018-01-06 12:18:12,643 : INFO : Evaluating 3 features, with ngram size: 3 and beta decay: 0.250001, current feature extractors: between_word_features,three_words
+2018-01-06 12:18:12,643 : INFO : 	Extractors: between_word_features,single_words,three_words
+2018-01-06 12:19:46,397 : INFO : 		Mean num feats: 257178.60
+2018-01-06 12:19:47,056 : INFO : 		Micro F1: 0.7033735360950883 NEW BEST ******************************
+
+epsilon = 0.001
+
+2018-01-06 12:26:13,342 : INFO : ********************************************************************************
+2018-01-06 12:26:13,342 : INFO : COST FN: micro_f1_cost_plusepsilon
+2018-01-06 12:26:13,342 : INFO : --------------------------------------------------------------------------------
+2018-01-06 12:26:13,342 : INFO : Evaluating 3 features, with ngram size: 3 and beta decay: 0.250001, current feature extractors: between_word_features,three_words
+2018-01-06 12:26:13,342 : INFO : 	Extractors: between_word_features,single_words,three_words
+2018-01-06 12:27:44,257 : INFO : 		Mean num feats: 280526.20
+2018-01-06 12:27:44,961 : INFO : 		Micro F1: 0.7095750308587551 NEW BEST ******************************
 
 """

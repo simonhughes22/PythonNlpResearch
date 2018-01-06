@@ -32,7 +32,7 @@ CREL_ACTIONS = [
     REJECT
 ]
 
-class SearnModel(object):
+class SearnModel_Legacy(object):
     def __init__(self, feature_extractor, cr_tags, base_learner_fact, beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True):
         # init checks
         # assert CAUSER in tags, "%s must be in tags" % CAUSER

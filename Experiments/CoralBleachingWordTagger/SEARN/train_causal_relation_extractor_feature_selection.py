@@ -1,27 +1,24 @@
 # coding: utf-8
 import datetime
 import logging
-import dill
-import pymongo
-import numpy as np
-from joblib import Parallel, delayed
-
 from collections import defaultdict
 from typing import Any, List, Set, Tuple
 
+import dill
+import numpy as np
+import pymongo
+from joblib import Parallel, delayed
 from sklearn.linear_model import LogisticRegression
-from sklearn.base import BaseEstimator
 
 from CrossValidation import cross_validation
 from Settings import Settings
+from cost_functions import micro_f1_cost, inverse_micro_f1_cost, uniform_cost, micro_f1_cost_squared, binary_cost, \
+    micro_f1_cost_plusone, micro_f1_cost_plusepsilon
 from load_data import load_process_essays
 from results_procesor import ResultsProcessor, __MICRO_F1__
 from searn_parser_template_features import SearnModelTemplateFeaturesCostSensitive
-from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor, third_order, label_set, \
-    size_features
-from template_feature_extractor import single_words, word_pairs, three_words, word_distance, valency, unigrams, \
-    between_word_features
-from cost_functions import micro_f1_cost, inverse_micro_f1_cost, uniform_cost, micro_f1_cost_squared, binary_cost
+from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor
+from template_feature_extractor import single_words, three_words, between_word_features
 from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
 
@@ -250,6 +247,8 @@ all_extractor_fns = base_extractors + [
 all_cost_functions = [
     micro_f1_cost,
     micro_f1_cost_squared,
+    micro_f1_cost_plusone,
+    micro_f1_cost_plusepsilon,
     binary_cost,
     inverse_micro_f1_cost,
     uniform_cost
@@ -266,7 +265,7 @@ for ngrams in [3]:
     logger.info("*" * LINE_WIDTH)
     logger.info("NGRAM SIZE: {ngram}".format(ngram=ngrams))
 
-    for cost_function_name in [micro_f1_cost.__name__]:
+    for cost_function_name in [micro_f1_cost_plusepsilon.__name__]:
 
         logger.info("*" * LINE_WIDTH)
         logger.info("COST FN: {cost_fn}".format(cost_fn=cost_function_name))

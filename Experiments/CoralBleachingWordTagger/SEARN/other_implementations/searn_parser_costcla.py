@@ -1,8 +1,10 @@
 import numpy as np
 from sklearn.feature_extraction import DictVectorizer
-from searn_parser import SearnModel, PARSE_ACTIONS
 
-class SearnModelCla(SearnModel):
+from other_implementations.searn_parser import SearnModel_Legacy, PARSE_ACTIONS
+
+
+class SearnModelCla(SearnModel_Legacy):
     def __init__(self, feature_extractor, cr_tags, base_learner_fact, beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True):
         super(SearnModelCla, self).__init__(feature_extractor=feature_extractor, cr_tags=cr_tags,
                                                         base_learner_fact=base_learner_fact,
