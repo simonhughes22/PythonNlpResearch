@@ -15,6 +15,7 @@ class WeightedExamples(object):
         self.labels  = defaultdict(list)  # list of ints
         self.weights = defaultdict(list)  # list of floats
         self.all_labels = []
+        self.all_label_weights = []
 
     def add(self, x, actual_lbl, weights=None):
         self.xs.append(x)
@@ -22,11 +23,14 @@ class WeightedExamples(object):
 
         if self.classes:
             for lbl in self.classes:
-                val = self.positive_value if lbl == actual_lbl else -1
+                is_gold_label = (lbl == actual_lbl)
+                val = self.positive_value if is_gold_label else -1
                 self.labels[lbl].append(val)
                 weight = 1
                 if weights:
                     weight = weights[lbl]
+                    if is_gold_label:
+                        self.all_label_weights.append(weight)
                 self.weights[lbl].append(weight)
 
     def get_labels(self):

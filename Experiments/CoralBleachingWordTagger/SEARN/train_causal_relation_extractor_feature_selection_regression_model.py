@@ -267,7 +267,7 @@ for ngrams in [3]:
     logger.info("*" * LINE_WIDTH)
     logger.info("NGRAM SIZE: {ngram}".format(ngram=ngrams))
 
-    for cost_function_name in [micro_f1_cost_plusepsilon.__name__]:
+    for cost_function_name in [micro_f1_cost.__name__]:
 
         logger.info("*" * LINE_WIDTH)
         logger.info("COST FN: {cost_fn}".format(cost_fn=cost_function_name))

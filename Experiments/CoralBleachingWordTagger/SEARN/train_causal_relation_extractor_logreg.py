@@ -7,7 +7,7 @@ import dill
 import pymongo
 
 from searn_parser_regression import SearnModelTemplateFeaturesRegression
-from searn_parser_template_features import SearnModelTemplateFeatures
+from searn_parser_logreg import SearnModelTemplateFeatures, normalize, EMPTY_TAG
 from sklearn.linear_model import LogisticRegression
 
 from CrossValidation import cross_validation
@@ -98,27 +98,29 @@ vtags = set(regular_tags)
 
 assert "explicit" in vtags, "explicit should be in the regular tags"
 
-## Replace predicted tags with actual to test impact on recall
-# With perfect tags and gold parse decisions, recall is 0.8417, F1 is 0.9140
-# With best Predicted tags and gold parse decisions, recall is 0.8037, F1 is 0.8912
-# With best Predicted tags and learned parse decisions, recall is 0.7545, F1 is 0.8449 (precision is ~0.96)
-#
-# for essay_ix, essay in enumerate(pred_tagged_essays):
-#     act_tags = []
-#     for sent_ix, taggged_sentence in enumerate(essay.sentences):
-#         sent_tags = []
-#         act_tags.append(sent_tags)
-#         for wd, tags in taggged_sentence:
-#             rtags = list(vtags.intersection([normalize(t) for t in tags]))
-#             if len(rtags) == 0:
-#                 sent_tags.append(EMPTY_TAG)
-#             else:
-#                 if len(rtags) > 1:
-#                     rtags = [t for t in rtags if t != "explicit"]
-#                 np.random.shuffle(rtags)
-#                 sent_tags.append(rtags[0])
-#
-#     essay.pred_tagged_sentences = act_tags
+if 1 == 2:
+    ## Replace predicted tags with actual to test impact on recall
+    # With perfect tags and gold parse decisions, recall is 0.8417, F1 is 0.9140
+    # With best Predicted tags and gold parse decisions, recall is 0.8037, F1 is 0.8912
+    # With best Predicted tags and learned parse decisions, recall is 0.7545, F1 is 0.8449 (precision is ~0.96)
+    #
+    import numpy as np
+    for essay_ix, essay in enumerate(pred_tagged_essays):
+        act_tags = []
+        for sent_ix, taggged_sentence in enumerate(essay.sentences):
+            sent_tags = []
+            act_tags.append(sent_tags)
+            for wd, tags in taggged_sentence:
+                rtags = list(vtags.intersection([normalize(t) for t in tags]))
+                if len(rtags) == 0:
+                    sent_tags.append(EMPTY_TAG)
+                else:
+                    if len(rtags) > 1:
+                        rtags = [t for t in rtags if t != "explicit"]
+                    np.random.shuffle(rtags)
+                    sent_tags.append(rtags[0])
+
+    essay.pred_tagged_sentences = act_tags
 
 cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag = defaultdict(list), defaultdict(list)
 cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag = defaultdict(list), defaultdict(list)

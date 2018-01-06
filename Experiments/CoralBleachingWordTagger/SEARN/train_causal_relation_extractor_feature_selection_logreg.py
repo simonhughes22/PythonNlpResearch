@@ -16,7 +16,7 @@ from cost_functions import micro_f1_cost, inverse_micro_f1_cost, uniform_cost, m
     micro_f1_cost_plusone, micro_f1_cost_plusepsilon
 from load_data import load_process_essays
 from results_procesor import ResultsProcessor, __MICRO_F1__
-from searn_parser_template_features import SearnModelTemplateFeatures
+from searn_parser_logreg import SearnModelTemplateFeatures
 from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor
 from template_feature_extractor import single_words, three_words, between_word_features
 from window_based_tagger_config import get_config
