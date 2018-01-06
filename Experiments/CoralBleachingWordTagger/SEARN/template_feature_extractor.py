@@ -651,6 +651,29 @@ def between_word_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[T
 
     return feats
 
+def size_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
+                  tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
+                  distance: int,
+                  cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                  effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                  positive_val: int) -> Dict[str, int]:
+    feats = {}
+    feats["stack_len_" + str(len(stack_tags))] = positive_val
+    feats["buffer_len_" + str(len(buffer_tags))] = positive_val
+
+    num_arcs = 0
+    for causer_tp, effects in cause2effects.items():
+        causer = causer_tp[0]
+        feats["num_effects_for_causer_{causer}={num_effects}".format(causer=causer, num_effects=len(effects))] = positive_val
+        num_arcs += 1
+
+    for effect_tp, causers in effect2causers.items():
+        effect = effect_tp[0]
+        feats["num_effects_for_causer_{effect}={num_causers}".format(effect=effect, num_causers=len(causers))] = positive_val
+
+    feats["num_relations_" + str(num_arcs)] = positive_val
+    return feats
+
 """ Template Feature Helpers"""
 def __prefix_feats_(prefix, feats_in, positive_val = 1):
     fts_out = dict()

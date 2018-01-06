@@ -8,6 +8,7 @@ import dill
 import datetime, logging
 
 from CrossValidation import cross_validation
+from cost_functions import micro_f1_cost
 from load_data import load_process_essays
 from searn_parser_costcla import SearnModelCla
 from searn_parser_sklearn_weighted import SearnModelSklearnWeighted
@@ -27,7 +28,6 @@ client = pymongo.MongoClient()
 db = client.metrics
 
 CV_FOLDS = 5
-DEV_SPLIT = 0.1
 NGRAMS = 2
 MIN_FEAT_FREQ = 5
 
@@ -149,7 +149,8 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
 
 
-    parse_model = SearnModelTemplateFeaturesCostSensitive(feature_extractor=template_feature_extractor, min_feature_freq=MIN_FEAT_FREQ,
+    parse_model = SearnModelTemplateFeaturesCostSensitive(feature_extractor=template_feature_extractor, cost_function=micro_f1_cost,
+                                                          min_feature_freq=MIN_FEAT_FREQ,
                                                           ngram_extractor=ngram_extractor, cr_tags=cr_tags,
                                                           base_learner_fact=LogisticRegression, beta_decay_fn=lambda beta: beta - 0.3)
     parse_model.train(essays_TD, 12)

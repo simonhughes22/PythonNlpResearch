@@ -26,3 +26,7 @@ def normalize_cr(cr):
 def denormalize_cr(crel):
     l, r = crel
     return "Causer:{l}->Result:{r}".format(l=l, r=r)
+
+def allowed_action(action, tos):
+    return not(tos == ROOT and action in (REDUCE, LARC, RARC))
+

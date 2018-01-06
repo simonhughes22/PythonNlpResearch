@@ -17,9 +17,11 @@ from Settings import Settings
 from load_data import load_process_essays
 from results_procesor import ResultsProcessor, __MICRO_F1__
 from searn_parser_template_features import SearnModelTemplateFeaturesCostSensitive
-from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor, third_order, label_set
+from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor, third_order, label_set, \
+    size_features
 from template_feature_extractor import single_words, word_pairs, three_words, word_distance, valency, unigrams, \
     between_word_features
+from cost_functions import micro_f1_cost, inverse_micro_f1_cost, uniform_cost, micro_f1_cost_squared, binary_cost
 from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
 
@@ -33,7 +35,6 @@ db = client.metrics
 
 # Data Set Partition
 CV_FOLDS = 5
-DEV_SPLIT = 0.1
 MIN_FEAT_FREQ = 5
 
 # Global settings
@@ -107,23 +108,16 @@ assert "explicit" in vtags, "explicit should be in the regular tags"
 
 cv_folds = cross_validation(pred_tagged_essays, CV_FOLDS) # type: List[Tuple[Any,Any]]
 
-# some of the other extractors aren't functional if the system isn't able to do a basic parse
-# so the base extractors are the MVP for getting to a basic parser, then additional 'meta' parse
-# features from all_extractors can be included
-base_extractors = [
-    single_words, word_pairs, three_words, between_word_features
-]
+def get_functions_by_name(function_names, functions):
+    return [fn for fn in functions if fn.__name__ in function_names]
 
-all_extractors = base_extractors + [
-    word_distance,
-    valency,
-    unigrams,
-    third_order,
-    label_set
-]
+
+def get_function_names(functions):
+    return list(map(lambda fn: fn.__name__, functions))
 
 def evaluate_features(  folds : List[Tuple[Any, Any]],
                         extractor_names: Set[str],
+                        cost_function_name: str,
                         beta_decay: float = 0.3,
                         base_learner: Any=LogisticRegression,
                         ngrams:int=2, down_sample_rate = 1.0)->float:
@@ -137,7 +131,7 @@ def evaluate_features(  folds : List[Tuple[Any, Any]],
         folds = new_folds # type: List[Tuple[Any, Any]]
 
     parallel_results = Parallel(n_jobs=len(folds))(
-        delayed(model_train_predict)(essays_TD, essays_VD, extractor_names, ngrams, beta_decay)
+        delayed(model_train_predict)(essays_TD, essays_VD, extractor_names, cost_function_name, ngrams, beta_decay)
         for essays_TD, essays_VD in folds)
 
     cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag = defaultdict(list), defaultdict(list)
@@ -166,6 +160,7 @@ def evaluate_features(  folds : List[Tuple[Any, Any]],
     parameters = dict(config)
     parameters["extractors"] = list(sorted(extractor_names))
     parameters["num_extractors"] = len(extractor_names)
+    parameters["cost_function"] = cost_function_name
     parameters["beta_decay"] = beta_decay
     parameters["no_stacking"] = True
     parameters["algorithm"] = str(base_learner())
@@ -176,12 +171,14 @@ def evaluate_features(  folds : List[Tuple[Any, Any]],
 
     logger.info("\t\tMean num feats: {avg_feats:.2f}".format(avg_feats=avg_feats))
 
+    TD = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL_TD_avg_gparse"
+    VD = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL_VD_avg_gparse"
     if down_sample_rate < 1.0:
         logger.info("\t\tDown sampling at rate: {rate:.5f}, storing temp results".format(rate=down_sample_rate))
         parameters["down_sample"] = down_sample_rate
-        CB_SENT_TD, CB_SENT_VD = "__tmp_CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL_TD", "__tmp_CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL_VD"
+        CB_SENT_TD, CB_SENT_VD = "__tmp_" + TD, "__tmp_" + TD
     else:
-        CB_SENT_TD, CB_SENT_VD = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL_TD", "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL_VD"
+        CB_SENT_TD, CB_SENT_VD = TD, VD
 
     sent_td_objectid = processor.persist_results(CB_SENT_TD, cv_sent_td_ys_by_tag,
                                                  cv_sent_td_predictions_by_tag, parameters, sent_algo)
@@ -193,15 +190,19 @@ def evaluate_features(  folds : List[Tuple[Any, Any]],
     return micro_f1
 
 
-def model_train_predict(essays_TD, essays_VD, extractor_names, ngrams, beta_decay):
+def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_name, ngrams, beta_decay):
 
-    extractors = [fn for fn in all_extractors if fn.__name__ in extractor_names]
+    extractors = get_functions_by_name(extractor_names, all_extractor_fns)
+    # get single cost function
+    cost_fn = get_functions_by_name([cost_function_name], all_cost_functions)[0]
+    assert cost_fn is not None, "Cost function look up failed"
     # Ensure all extractors located
     assert len(extractors) == len(extractor_names), "number of extractor functions does not match the number of names"
 
     template_feature_extractor = NonLocalTemplateFeatureExtractor(extractors=extractors)
     ngram_extractor = NgramExtractor(max_ngram_len=ngrams)
     parse_model = SearnModelTemplateFeaturesCostSensitive(feature_extractor=template_feature_extractor,
+                                                          cost_function=cost_fn,
                                                           min_feature_freq=MIN_FEAT_FREQ,
                                                           ngram_extractor=ngram_extractor, cr_tags=cr_tags,
                                                           base_learner_fact=BASE_LEARNER_FACT,
@@ -210,7 +211,7 @@ def model_train_predict(essays_TD, essays_VD, extractor_names, ngrams, beta_deca
                                                           log_fn=lambda s: None)
     parse_model.train(essays_TD, MAX_EPOCHS)
 
-    num_feats  =template_feature_extractor.num_features()
+    num_feats = template_feature_extractor.num_features()
 
     sent_td_ys_bycode = parse_model.get_label_data(essays_TD)
     sent_vd_ys_bycode = parse_model.get_label_data(essays_VD)
@@ -220,74 +221,108 @@ def model_train_predict(essays_TD, essays_VD, extractor_names, ngrams, beta_deca
 
     return num_feats, sent_td_ys_bycode, sent_vd_ys_bycode, sent_td_pred_ys_bycode, sent_vd_pred_ys_bycode
 
-
-def get_extractor_names(feature_extractors):
-    return list(map(lambda fn: fn.__name__, feature_extractors))
-
 LINE_WIDTH = 80
-
-all_extractor_names = get_extractor_names(all_extractors)
-#all_extractor_names = get_extractor_names([valency])
-base_extractor_names = get_extractor_names(base_extractors)
 
 # other settings
 DOWN_SAMPLE_RATE    = 1.0  # For faster smoke testing the algorithm
 BETA_DECAY          = 0.250001 # ensure hit's zero after 4 tries
 BASE_LEARNER_FACT   = LogisticRegression
 
+# some of the other extractors aren't functional if the system isn't able to do a basic parse
+# so the base extractors are the MVP for getting to a basic parser, then additional 'meta' parse
+# features from all_extractors can be included
+base_extractors = [
+    single_words,
+    # word_pairs,
+    three_words,
+    between_word_features
+]
+
+all_extractor_fns = base_extractors + [
+    # word_distance,
+    # valency,
+    # unigrams,
+    # third_order,
+    # label_set,
+    # size_features
+]
+
+all_cost_functions = [
+    micro_f1_cost,
+    micro_f1_cost_squared,
+    binary_cost,
+    inverse_micro_f1_cost,
+    uniform_cost
+]
+
+all_extractor_fn_names = get_function_names(all_extractor_fns)
+base_extractor_fn_names = get_function_names(base_extractors)
+all_cost_fn_names = get_function_names(all_cost_functions)
+
 #TODO - stem words or not?
-for ngrams in [2,3,1]:
+#for ngrams in [2,3,1]:
+for ngrams in [3]:
 
-    current_extractor_names = set()
-    f1_improved = True
-    best_f1 = -1.0
+    logger.info("*" * LINE_WIDTH)
+    logger.info("NGRAM SIZE: {ngram}".format(ngram=ngrams))
 
-    while len(current_extractor_names) <= 5 and f1_improved:
+    for cost_function_name in [micro_f1_cost.__name__]:
 
-        logger.info("-" * LINE_WIDTH)
-        logger.info("Evaluating {num_features} features, with ngram size: {ngrams} and beta decay: {beta_decay}, current feature extractors: {extractors}".format(
-                        num_features=len(current_extractor_names) + 1,
-                        ngrams=ngrams, beta_decay=BETA_DECAY,
-                        extractors=",".join(sorted(current_extractor_names)))
-        )
-        f1_improved = False
-        # Evaluate new feature sets
-        best_new_feature_name = None
+        logger.info("*" * LINE_WIDTH)
+        logger.info("COST FN: {cost_fn}".format(cost_fn=cost_function_name))
 
-        # only use base extractors when no other extractors present as otherwise the more complex features don't kick in
-        # as no good parsing decisions can be made
-        extractor_names = all_extractor_names if len(current_extractor_names) >= 1 else base_extractor_names
-        for new_extractor_name in extractor_names:
-            # Don't add extractors in current set
-            if new_extractor_name in current_extractor_names:
-                continue
+        current_extractor_names = set()
+        current_extractor_names = set(all_extractor_fn_names[1:])
+        f1_improved = True
+        best_f1 = -1.0
 
-            new_extractor_set = current_extractor_names.union([new_extractor_name])
+        while len(current_extractor_names) <= 5 and len(current_extractor_names) < len(all_extractor_fn_names) and f1_improved:
 
-            logger.info("\tExtractors: {extractors}".format(extractors=",".join(sorted(new_extractor_set))))
-            # RUN feature evaluation
-            micro_f1 = evaluate_features(folds=cv_folds,
-                                         extractor_names=new_extractor_set,
-                                         ngrams=ngrams,
-                                         base_learner=LogisticRegression,
-                                         beta_decay=BETA_DECAY,
-                                         down_sample_rate=DOWN_SAMPLE_RATE)
-            if micro_f1 > best_f1:
-                f1_improved = True
-                best_f1 = micro_f1
-                best_new_feature_name = new_extractor_name
-                logger.info("\t\tMicro F1: {micro_f1} NEW BEST {stars}".format(micro_f1=micro_f1, stars="*" * 30))
+            logger.info("-" * LINE_WIDTH)
+            logger.info("Evaluating {num_features} features, with ngram size: {ngrams} and beta decay: {beta_decay}, current feature extractors: {extractors}".format(
+                            num_features=len(current_extractor_names) + 1,
+                            ngrams=ngrams, beta_decay=BETA_DECAY,
+                            extractors=",".join(sorted(current_extractor_names)))
+            )
+            f1_improved = False
+            # Evaluate new feature sets
+            best_new_feature_name = None
+
+            # only use base extractors when no other extractors present as otherwise the more complex features don't kick in
+            # as no good parsing decisions can be made
+            extractor_names = all_extractor_fn_names if len(current_extractor_names) >= 1 else base_extractor_fn_names
+            for new_extractor_name in extractor_names:
+                # Don't add extractors in current set
+                if new_extractor_name in current_extractor_names:
+                    continue
+
+                new_extractor_set = current_extractor_names.union([new_extractor_name])
+
+                logger.info("\tExtractors: {extractors}".format(extractors=",".join(sorted(new_extractor_set))))
+                # RUN feature evaluation
+                micro_f1 = evaluate_features(folds=cv_folds,
+                                             extractor_names=new_extractor_set,
+                                             cost_function_name=cost_function_name,
+                                             ngrams=ngrams,
+                                             base_learner=LogisticRegression,
+                                             beta_decay=BETA_DECAY,
+                                             down_sample_rate=DOWN_SAMPLE_RATE)
+                if micro_f1 > best_f1:
+                    f1_improved = True
+                    best_f1 = micro_f1
+                    best_new_feature_name = new_extractor_name
+                    logger.info("\t\tMicro F1: {micro_f1} NEW BEST {stars}".format(micro_f1=micro_f1, stars="*" * 30))
+                else:
+                    logger.info("\t\tMicro F1: {micro_f1}".format(micro_f1=micro_f1))
+
+            if not f1_improved:
+                logger.info("F1 not improved, stopping with {num_extractors} extractors: {extractors}".format(
+                    num_extractors=len(current_extractor_names),
+                    extractors=",".join(sorted(current_extractor_names))
+                ))
+                break
             else:
-                logger.info("\t\tMicro F1: {micro_f1}".format(micro_f1=micro_f1))
-
-        if not f1_improved:
-            logger.info("F1 not improved, stopping with {num_extractors} extractors: {extractors}".format(
-                num_extractors=len(current_extractor_names),
-                extractors=",".join(sorted(current_extractor_names))
-            ))
-            break
-        else:
-            current_extractor_names.add(best_new_feature_name)
+                current_extractor_names.add(best_new_feature_name)
 
 ## TODO
 #- Look into beta decay methods before finalizing - need to determine if this is a good default to use for feat sel

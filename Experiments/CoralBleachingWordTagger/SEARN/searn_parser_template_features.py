@@ -3,23 +3,18 @@ from collections import defaultdict
 from typing import Set, List
 
 import numpy as np
+import scipy
 
 from Rpfa import micro_rpfa
 from featurevectorizer import FeatureVectorizer
 from oracle import Oracle
 from parser import Parser
 from results_procesor import ResultsProcessor
+from searn_parser import PARSE_ACTIONS
 from shift_reduce_helper import *
 from stack import Stack
 from weighted_examples import WeightedExamples
 
-PARSE_ACTIONS = [
-    SHIFT,
-    REDUCE,
-    LARC,
-    RARC,
-    SKIP
-]
 
 CAUSE_EFFECT = "CAUSE_EFFECT"
 EFFECT_CAUSE = "EFFECT_CAUSE"
@@ -34,7 +29,7 @@ CREL_ACTIONS = [
 ]
 
 class SearnModelTemplateFeaturesCostSensitive(object):
-    def __init__(self, ngram_extractor, feature_extractor, min_feature_freq, cr_tags, base_learner_fact,
+    def __init__(self, ngram_extractor, feature_extractor, cost_function, min_feature_freq, cr_tags, base_learner_fact,
                  beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True, log_fn=lambda s: print(s)):
 
         # init checks
@@ -42,6 +37,7 @@ class SearnModelTemplateFeaturesCostSensitive(object):
         # assert RESULT in tags, "%s must be in tags" % RESULT
         # assert EXPLICIT in tags, "%s must be in tags" % EXPLICIT
 
+        self.cost_function = cost_function
         self.log = log_fn
 
         self.ngram_extractor = ngram_extractor
@@ -155,6 +151,13 @@ class SearnModelTemplateFeaturesCostSensitive(object):
             ys = [1 if i > 0 else 0 for i in examples.get_labels_for(action)]
             weights = examples.get_weights_for(action)
 
+            # filter out zero cost actions
+            # triples = zip(xs, ys, weights)
+            # triple_no_zeros = [(x,y,c) for (x,y,c) in triples if c > 0.0]
+            # tmp_xs, ys, weights = zip(*triple_no_zeros)
+            # # need to re-constitute the matrix
+            # xs = scipy.sparse.vstack(tmp_xs)
+
             mdl = self.base_learner_fact()
             mdl.fit(xs, ys, sample_weight=weights)
 
@@ -167,7 +170,7 @@ class SearnModelTemplateFeaturesCostSensitive(object):
         xs = self.current_parser_feat_vectorizer.transform(feats)
         prob_by_label = {}
         for action in PARSE_ACTIONS:
-            if not self.allowed_action(action, tos):
+            if not allowed_action(action, tos):
                 continue
 
             prob_by_label[action] = self.current_parser_models[action].predict_proba(xs)[0][-1]
@@ -178,11 +181,11 @@ class SearnModelTemplateFeaturesCostSensitive(object):
     def train_crel_models(self, examples):
 
         self.current_crel_feat_vectorizer = FeatureVectorizer(min_feature_freq=self.min_feature_freq, sparse=self.sparse)
-        #self.current_crel_feat_vectorizer = DictVectorizer(sparse=self.sparse)
 
         model = self.base_learner_fact()
         xs = self.current_crel_feat_vectorizer.fit_transform(examples.xs)
         ys = examples.get_labels()
+        # There are no weights here as this is a simple binary classification problem
         model.fit(xs, ys)
 
         self.current_crel_model = model
@@ -191,68 +194,6 @@ class SearnModelTemplateFeaturesCostSensitive(object):
     def predict_crel_action(self, feats):
         xs = self.current_crel_feat_vectorizer.transform(feats)
         return self.current_crel_model.predict(xs)[0]
-
-    def add_relation(self, action, tos, buffer, ground_truth, relations):
-        if action in [LARC, RARC]:
-            if (tos, buffer) in ground_truth:
-                relations.add((tos, buffer))
-            elif (buffer, tos) in ground_truth:
-                relations.add((buffer, tos))
-
-    def relations_for_action(self, forced_action, ground_truth, remaining_buffer, oracle):
-        relns = set()
-        oracle = oracle.clone()
-        first_action = True
-
-        for buffer in remaining_buffer:
-            while True:
-                tos = oracle.tos()
-                if not first_action:  # need to force first action
-                    action = oracle.consult(tos, buffer)
-                else:
-                    action = forced_action
-                    first_action = False
-                self.add_relation(action, tos, buffer, ground_truth, relns)
-                if not oracle.execute(action, tos, buffer):
-                    break
-                if oracle.is_stack_empty():
-                    break
-        return relns
-
-    def allowed_action(self, action, tos):
-        return not(tos == ROOT and action in (REDUCE, LARC, RARC))
-
-    def compute_cost(self, ground_truth, remaining_buffer, oracle):
-
-        tos = oracle.tos()
-        gold_action = oracle.consult(tos, remaining_buffer[0])
-        gold_parse = self.relations_for_action(gold_action, ground_truth, remaining_buffer, oracle)
-
-        action_costs = {}
-        for action in PARSE_ACTIONS:
-            if action == gold_action:
-                continue
-
-            # Prevent invalid parse actions
-            #TODO is the best option?
-            if not self.allowed_action(action, tos):
-                # cost is number of relations that will be missed or at least 1
-                action_costs[action] = max(1, len(gold_parse))
-                continue
-
-            parse = self.relations_for_action(action, ground_truth, remaining_buffer, oracle)
-            num_matches = len(gold_parse.intersection(parse))
-            # recall
-            false_negatives = len(gold_parse) - num_matches
-            # precision
-            false_positives = len(parse) - num_matches
-            # Cost is the total of the false positives + false negatives
-            cost = false_positives + false_negatives
-            action_costs[action] = cost
-
-        # Cost of the gold action is the mean of all of the wrong choices
-        action_costs[gold_action] = np.mean(list(action_costs.values()))
-        return action_costs
 
     def get_tags_relations_for(self, tagged_sentence, predicted_tags, cr_tags):
 
@@ -329,10 +270,10 @@ class SearnModelTemplateFeaturesCostSensitive(object):
 
     def generate_training_data(self, tagged_sentence, predicted_tags, parse_examples, crel_examples, predict_only=False):
 
-        pos_ptag_seq, pos_ground_truth, tag2span, all_predicted_rtags, all_actual_crels = self.get_tags_relations_for(tagged_sentence, predicted_tags, self.cr_tags)
+        pos_ptag_seq, pos_ground_truth_crels, tag2span, all_predicted_rtags, all_actual_crels = self.get_tags_relations_for(tagged_sentence, predicted_tags, self.cr_tags)
         if predict_only:
             # clear labels
-            pos_ground_truth = []
+            pos_ground_truth_crels = []
             all_actual_crels = set()
 
         if len(all_predicted_rtags) == 0:
@@ -345,7 +286,7 @@ class SearnModelTemplateFeaturesCostSensitive(object):
         # needs to be a tuple
         stack.push((ROOT,0))
         parser = Parser(stack)
-        oracle = Oracle(pos_ground_truth, parser)
+        oracle = Oracle(pos_ground_truth_crels, parser)
 
         predicted_relations = set() # type: Set[str]
 
@@ -409,7 +350,9 @@ class SearnModelTemplateFeaturesCostSensitive(object):
                         action = self.predict_parse_action(feats, tos_tag)
                     else:
                         action = gold_action
-                    cost_per_action = self.compute_cost(pos_ground_truth, remaining_buffer_tags, oracle)
+                    # Given the remaining tags, what is the cost of this decision
+                    # in terms of the optimal decision(s) that can be made?
+                    cost_per_action = self.cost_function(pos_ground_truth_crels, remaining_buffer_tags, oracle)
                     # make a copy as changing later
                     parse_examples.add(dict(feats), gold_action, cost_per_action)
 
