@@ -26,10 +26,11 @@ client = pymongo.MongoClient()
 db = client.metrics
 
 CV_FOLDS = 5
-NGRAMS = 2
+NGRAMS = 3
 MIN_FEAT_FREQ = 5
 
-BETA_DECAY = 0.25000001
+BETA = 0.2
+MAX_EPOCHS = 5
 
 settings = Settings()
 root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
@@ -128,9 +129,15 @@ cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag = defaultdict(list), default
 folds = cross_validation(pred_tagged_essays, CV_FOLDS)
 # TODO Parallelize
 
-extractors = [single_words, word_pairs, three_words, word_distance, valency,
-              unigrams, third_order, label_set,
-              between_word_features]
+# extractors = [single_words, word_pairs, three_words, word_distance, valency,
+#               unigrams, third_order, label_set,
+#               between_word_features]
+
+extractors = [
+    single_words,
+    three_words,
+    between_word_features
+]
 
 template_feature_extractor = NonLocalTemplateFeatureExtractor(extractors=extractors)
 
@@ -154,10 +161,10 @@ for i, (essays_TD, essays_VD) in enumerate(folds):
                                              ngram_extractor=ngram_extractor,
                                              cr_tags=cr_tags,
                                              base_learner_fact=LogisticRegression,
-                                             beta_decay_fn=lambda beta: beta - BETA_DECAY,
+                                             beta=BETA,
                                              # silent
                                              log_fn=lambda s: None)
-    parse_model.train(essays_TD, 12)
+    parse_model.train(essays_TD, MAX_EPOCHS)
 
     sent_td_ys_bycode = parse_model.get_label_data(essays_TD)
     sent_vd_ys_bycode = parse_model.get_label_data(essays_VD)

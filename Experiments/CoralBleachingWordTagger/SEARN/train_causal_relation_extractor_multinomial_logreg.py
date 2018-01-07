@@ -30,7 +30,8 @@ CV_FOLDS = 5
 NGRAMS = 2
 MIN_FEAT_FREQ = 5
 
-BETA_DECAY = 0.25000001
+BETA = 0.2
+MAX_EPOCHS = 5
 
 settings = Settings()
 root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
@@ -121,13 +122,13 @@ for i, (essays_TD, essays_VD) in enumerate(folds):
         min_feature_freq=MIN_FEAT_FREQ,
         ngram_extractor=ngram_extractor,
         cr_tags=cr_tags,
-        base_learner_fact=LogisticRegression,
+        base_learner_fact=lambda : LogisticRegression(multi_class="multinomial"),
         crel_learner_fact=LogisticRegression,
-        beta_decay_fn=lambda beta: beta - BETA_DECAY,
+        beta=BETA,
         # silent
         log_fn=lambda s: None)
 
-    parse_model.train(essays_TD, 12)
+    parse_model.train(essays_TD, MAX_EPOCHS)
 
     sent_td_ys_bycode = parse_model.get_label_data(essays_TD)
     sent_vd_ys_bycode = parse_model.get_label_data(essays_VD)
@@ -142,7 +143,7 @@ for i, (essays_TD, essays_VD) in enumerate(folds):
     # break
 
 # CB_SENT_TD, CB_SENT_VD = "CR_CB_SHIFT_REDUCE_PARSER_TD" , "CR_CB_SHIFT_REDUCE_PARSER_VD"
-CB_SENT_TD, CB_SENT_VD = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_TD", "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_VD"
+CB_SENT_TD, CB_SENT_VD = "CR_CB_SHIFT_REDUCE_PARSER_MULTINOMIAL_LOGREG_TD", "CR_CB_SHIFT_REDUCE_PARSER_MULTINOMIAL_LOGREG_VD"
 # sent_algo = "Shift_Reduce_Parser"
 sent_algo = "Shift_Reduce_Parser_LR"
 # sent_algo = "Shift_Reduce_Parser_XGB_10"

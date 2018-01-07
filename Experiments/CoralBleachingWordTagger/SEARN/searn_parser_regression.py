@@ -5,7 +5,7 @@ from shift_reduce_helper import PARSE_ACTIONS, allowed_action
 class SearnModelTemplateFeaturesRegression(SearnModelTemplateFeatures):
     def __init__(self, ngram_extractor, feature_extractor, cost_function, min_feature_freq, cr_tags,
                      base_learner_fact, crel_learner_fact,
-                     beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True, log_fn=lambda s: print(s)):
+                     beta=0.2, positive_val=1, sparse=True, log_fn=lambda s: print(s)):
 
         super(SearnModelTemplateFeaturesRegression, self).__init__(ngram_extractor=ngram_extractor,
                                                                    feature_extractor=feature_extractor,
@@ -13,7 +13,7 @@ class SearnModelTemplateFeaturesRegression(SearnModelTemplateFeatures):
                                                                    min_feature_freq=min_feature_freq,
                                                                    cr_tags=cr_tags,
                                                                    base_learner_fact=base_learner_fact,
-                                                                   beta_decay_fn=beta_decay_fn,
+                                                                   beta=beta,
                                                                    positive_val=positive_val,
                                                                    sparse=sparse,
                                                                    log_fn=log_fn)

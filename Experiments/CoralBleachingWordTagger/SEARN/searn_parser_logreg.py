@@ -13,9 +13,10 @@ from shift_reduce_helper import *
 from stack import Stack
 from weighted_examples import WeightedExamples
 
+
 class SearnModelTemplateFeatures(object):
     def __init__(self, ngram_extractor, feature_extractor, cost_function, min_feature_freq, cr_tags, base_learner_fact,
-                 beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True, log_fn=lambda s: print(s)):
+                 beta=0.2, positive_val=1, sparse=True, log_fn=lambda s: print(s)):
 
         # init checks
         # assert CAUSER in tags, "%s must be in tags" % CAUSER
@@ -26,8 +27,8 @@ class SearnModelTemplateFeatures(object):
         self.log = log_fn
 
         self.ngram_extractor = ngram_extractor
-        self.feat_extractor = feature_extractor    # feature extractor (for use later)
-        self.min_feature_freq = min_feature_freq   # mininum feature frequency
+        self.feat_extractor = feature_extractor  # feature extractor (for use later)
+        self.min_feature_freq = min_feature_freq  # mininum feature frequency
         self.positive_val = positive_val
         self.base_learner_fact = base_learner_fact  # Sklearn classifier
         self.crel_learner_fact = base_learner_fact
@@ -35,16 +36,14 @@ class SearnModelTemplateFeatures(object):
 
         self.cr_tags = set(cr_tags)  # causal relation tags
         self.epoch = -1
-        self.beta = 1.0  # probability of using oracle for each parsing decision, initialize to 1 as we don't use until second epoch
-        self.beta_decay_fn = beta_decay_fn
+        self.beta = beta  # probability of using the current model for each parsing decision,
         self.stack = []
 
         self.parser_models = []
-        self.current_parser_models = None
-        self.current_parser_feat_vectorizer = None
+        self.parser_feature_vectorizers = []
+
         self.crel_models = []
-        self.current_crel_model = None
-        self.current_crel_feat_vectorizer = None
+        self.crel_feat_vectorizers = []
 
         self.training_datasets_parsing = {}
         self.training_datasets_crel = {}
@@ -83,31 +82,27 @@ class SearnModelTemplateFeatures(object):
 
     def train(self, tagged_essays, max_epochs):
 
-        trained_with_beta0 = False
         ys_by_sent = self.get_label_data(tagged_essays)
 
         for i in range(0, max_epochs):
-            if self.beta < 0:
-                trained_with_beta0 = True
-
             self.epoch += 1
             self.log("Epoch: {epoch}".format(epoch=self.epoch))
-            self.log("Beta:  {beta}".format(beta=self.beta))
 
             # TODO - provide option for different model types here?
             parse_examples = WeightedExamples(labels=PARSE_ACTIONS, positive_value=self.positive_val)
-            crel_examples  = WeightedExamples(labels=None,          positive_value=self.positive_val)
+            crel_examples = WeightedExamples(labels=None, positive_value=self.positive_val)
 
             pred_ys_by_sent = defaultdict(list)
             for essay_ix, essay in enumerate(tagged_essays):
                 for sent_ix, taggged_sentence in enumerate(essay.sentences):
                     predicted_tags = essay.pred_tagged_sentences[sent_ix]
-                    pred_relations = self.generate_training_data(taggged_sentence, predicted_tags, parse_examples, crel_examples)
+                    pred_relations = self.generate_training_data(taggged_sentence, predicted_tags, parse_examples,
+                                                                 crel_examples)
                     # Store predictions for evaluation
                     self.add_cr_labels(pred_relations, pred_ys_by_sent)
 
             class2metrics = ResultsProcessor.compute_metrics(ys_by_sent, pred_ys_by_sent)
-            micro_metrics = micro_rpfa(class2metrics.values()) # type: rpfa
+            micro_metrics = micro_rpfa(class2metrics.values())  # type: rpfa
             self.log("Training Metrics: {metrics}".format(metrics=micro_metrics))
 
             # TODO, dictionary vectorize examples, train a weighted binary classifier for each separate parsing action
@@ -117,23 +112,12 @@ class SearnModelTemplateFeatures(object):
             self.training_datasets_parsing[self.epoch] = parse_examples
             self.training_datasets_crel[self.epoch] = crel_examples
 
-            # Decay beta
-            self.beta = self.beta_decay_fn(self.beta)
-            if self.beta < 0 and trained_with_beta0:
-                self.log("beta decayed below 0 - beta:'{beta}', stopping".format(beta=self.beta))
-                break
-        # end [for each epoch]
-        if not trained_with_beta0:
-            self.log("Algorithm hit max epochs without training with beta <= 0 - final_beta:{beta}".format(beta=self.beta))
-
     def train_parse_models(self, examples):
         models = {}
-        self.current_parser_feat_vectorizer = FeatureVectorizer(min_feature_freq=self.min_feature_freq, sparse=self.sparse)
-        #self.current_parser_dict_vectorizer = DictVectorizer(sparse=self.sparse)
-        xs = self.current_parser_feat_vectorizer.fit_transform(examples.xs)
+        feat_vectorizer = FeatureVectorizer(min_feature_freq=self.min_feature_freq, sparse=self.sparse)
 
+        xs = feat_vectorizer.fit_transform(examples.xs)
         for action in PARSE_ACTIONS:
-
             ys = [1 if i > 0 else 0 for i in examples.get_labels_for(action)]
             weights = examples.get_weights_for(action)
 
@@ -149,8 +133,8 @@ class SearnModelTemplateFeatures(object):
 
             models[action] = mdl
 
-        self.current_parser_models = models
         self.parser_models.append(models)
+        self.parser_feature_vectorizers.append(feat_vectorizer)
 
     def randomize_actions(self):
         # need to randomize the action order to provide variety when picking best action
@@ -159,35 +143,36 @@ class SearnModelTemplateFeatures(object):
         np.random.shuffle(copy_actions)
         return copy_actions
 
-    def predict_parse_action(self, feats, tos):
-        xs = self.current_parser_feat_vectorizer.transform(feats)
+    def predict_parse_action(self, feats, tos, models, vectorizer):
+
+        xs = vectorizer.transform(feats)
         prob_by_label = {}
         for action in self.randomize_actions():
             if not allowed_action(action, tos):
                 continue
 
-            prob_by_label[action] = self.current_parser_models[action].predict_proba(xs)[0][-1]
+            prob_by_label[action] = models[action].predict_proba(xs)[0][-1]
 
         max_act, max_prob = max(prob_by_label.items(), key=lambda tpl: tpl[1])
         return max_act
 
     def train_crel_models(self, examples):
 
-        self.current_crel_feat_vectorizer = FeatureVectorizer(min_feature_freq=self.min_feature_freq,
-                                                              sparse=self.sparse)
+        feat_vectorizer = FeatureVectorizer(min_feature_freq=self.min_feature_freq,
+                                            sparse=self.sparse)
 
         model = self.crel_learner_fact()
-        xs = self.current_crel_feat_vectorizer.fit_transform(examples.xs)
+        xs = feat_vectorizer.fit_transform(examples.xs)
         ys = examples.get_labels()
         # There are no weights here as this is a simple binary classification problem
         model.fit(xs, ys)
 
-        self.current_crel_model = model
         self.crel_models.append(model)
+        self.crel_feat_vectorizers.append(feat_vectorizer)
 
-    def predict_crel_action(self, feats):
-        xs = self.current_crel_feat_vectorizer.transform(feats)
-        return self.current_crel_model.predict(xs)[0]
+    def predict_crel_action(self, feats, model, vectorizer):
+        xs = vectorizer.transform(feats)
+        return model.predict(xs)[0]
 
     def get_tags_relations_for(self, tagged_sentence, predicted_tags, cr_tags):
 
@@ -262,9 +247,11 @@ class SearnModelTemplateFeatures(object):
 
         return pos_tag_seq, pos_crels, tag2span, sent_reg_predicted_tags, sent_act_cr_tags
 
-    def generate_training_data(self, tagged_sentence, predicted_tags, out_parse_examples, out_crel_examples, predict_only=False):
+    def generate_training_data(self, tagged_sentence, predicted_tags, out_parse_examples, out_crel_examples,
+                               predict_only=False):
 
-        pos_ptag_seq, pos_ground_truth_crels, tag2span, all_predicted_rtags, all_actual_crels = self.get_tags_relations_for(tagged_sentence, predicted_tags, self.cr_tags)
+        pos_ptag_seq, pos_ground_truth_crels, tag2span, all_predicted_rtags, all_actual_crels = self.get_tags_relations_for(
+            tagged_sentence, predicted_tags, self.cr_tags)
         if predict_only:
             # clear labels
             pos_ground_truth_crels = []
@@ -278,11 +265,11 @@ class SearnModelTemplateFeatures(object):
         # Initialize stack, basic parser and oracle
         stack = Stack(verbose=False)
         # needs to be a tuple
-        stack.push((ROOT,0))
+        stack.push((ROOT, 0))
         parser = Parser(stack)
         oracle = Oracle(pos_ground_truth_crels, parser)
 
-        predicted_relations = set() # type: Set[str]
+        predicted_relations = set()  # type: Set[str]
 
         # instead of head and modifiers, we will map causers to effects, and vice versa
         effect2causers = defaultdict(set)
@@ -290,7 +277,7 @@ class SearnModelTemplateFeatures(object):
         cause2effects = defaultdict(set)
 
         # tags without positional info
-        rtag_seq = [t for t,i in pos_ptag_seq if t[0].isdigit()]
+        rtag_seq = [t for t, i in pos_ptag_seq if t[0].isdigit()]
         # if not at least 2 concept codes, then can't parse
         if len(rtag_seq) < 2:
             return []
@@ -320,7 +307,7 @@ class SearnModelTemplateFeatures(object):
                     tstart, tstop = tag2span[tos_tag_pair]
 
                 # Note that the end ix in tag2span is always the last index, not the last + 1
-                btwn_start, btwn_stop = min(tstop+1, len(words)),  max(0, bstart)
+                btwn_start, btwn_stop = min(tstop + 1, len(words)), max(0, bstart)
 
                 btwn_word_seq = words[btwn_start:btwn_stop]
                 distance = len(btwn_word_seq)
@@ -334,15 +321,31 @@ class SearnModelTemplateFeatures(object):
 
                 # Consult Oracle or Model based on coin toss
                 if predict_only:
-                    action = self.predict_parse_action(feats, tos_tag)
-                else: # if training
+                    action = self.predict_parse_action(feats=feats,
+                                                       tos=tos_tag,
+                                                       models=self.parser_models[-1],
+                                                       vectorizer=self.parser_feature_vectorizers[-1])
+                else:  # if training
                     gold_action = oracle.consult(tos_tag_pair, buffer_tag_pair)
                     rand_float = np.random.random_sample()  # between [0,1) (half-open interval, includes 0 but not 1)
                     # If no trained models, always use Oracle
-                    if rand_float >= self.beta and len(self.parser_models) > 0:
-                        action = self.predict_parse_action(feats, tos_tag)
-                    else:
+                    if len(self.parser_models) == 0:
                         action = gold_action
+                    elif rand_float <= self.beta:
+                        action = self.predict_parse_action(feats=feats,
+                                                           tos=tos_tag,
+                                                           models=self.parser_models[-1],
+                                                           vectorizer=self.parser_feature_vectorizers[-1])
+                    else:
+                        if len(self.parser_models) < 2:
+                            action = gold_action
+                        # use previous model if available
+                        else:
+                            action = self.predict_parse_action(feats=feats,
+                                                               tos=tos_tag,
+                                                               models=self.parser_models[-2],
+                                                               vectorizer=self.parser_feature_vectorizers[-2])
+
                     # Given the remaining tags, what is the cost of this decision
                     # in terms of the optimal decision(s) that can be made?
                     cost_per_action = self.cost_function(pos_ground_truth_crels, remaining_buffer_tags, oracle)
@@ -377,10 +380,25 @@ class SearnModelTemplateFeatures(object):
                     crel_feats = self.crel_features(action, tos_tag, buffer_tag)
                     feats.update(crel_feats)
                     rand_float = np.random.random_sample()
-                    if predict_only or (rand_float >= self.beta and len(self.crel_models) > 0):
-                        lr_action = self.predict_crel_action(feats)
+
+                    if predict_only:
+                        lr_action = self.predict_crel_action(feats=feats,
+                                                             model=self.crel_models[-1],
+                                                             vectorizer=self.crel_feat_vectorizers[-1])
                     else:
-                        lr_action = gold_lr_action
+                        if len(self.crel_models) == 0:
+                            lr_action = gold_lr_action
+                        elif rand_float <= self.beta:
+                            lr_action = self.predict_crel_action(feats=feats,
+                                                                 model=self.crel_models[-1],
+                                                                 vectorizer=self.crel_feat_vectorizers[-1])
+                        else:
+                            if len(self.crel_models) < 2:
+                                lr_action = gold_lr_action
+                            else:
+                                lr_action = self.predict_crel_action(feats=feats,
+                                                                     model=self.crel_models[-2],
+                                                                     vectorizer=self.crel_feat_vectorizers[-2])
 
                     if lr_action == CAUSE_AND_EFFECT:
                         predicted_relations.add(cause_effect)
@@ -414,9 +432,9 @@ class SearnModelTemplateFeatures(object):
                     if not predict_only:
                         out_crel_examples.add(dict(feats), gold_lr_action)
 
-                    # Not sure we want to condition on the actions of this crel model
-                    # action_history.append(lr_action)
-                    # action_tag_pair_history.append((lr_action, tos, buffer))
+                        # Not sure we want to condition on the actions of this crel model
+                        # action_history.append(lr_action)
+                        # action_tag_pair_history.append((lr_action, tos, buffer))
 
                 # end if action in [LARC,RARC]
                 if not oracle.execute(action, tos_tag_pair, buffer_tag_pair):
@@ -438,12 +456,11 @@ class SearnModelTemplateFeatures(object):
 
     def crel_features(self, action, tos_tag, buffer_tag):
         feats = {}
-        feats["ARC_action:" + action]                                               = self.positive_val
-        feats["ARC_tos_buffer:" + action + "_:" + tos_tag + "->" + buffer_tag]      = self.positive_val
-        feats["ARC_tos:"    + action + "_" + tos_tag]                               = self.positive_val
-        feats["ARC_buffer:" + action + "_" + buffer_tag]                            = self.positive_val
+        feats["ARC_action:" + action] = self.positive_val
+        feats["ARC_tos_buffer:" + action + "_:" + tos_tag + "->" + buffer_tag] = self.positive_val
+        feats["ARC_tos:" + action + "_" + tos_tag] = self.positive_val
+        feats["ARC_buffer:" + action + "_" + buffer_tag] = self.positive_val
         # Removing as hard to justify it's inclusion
-        #feats["ARC_buffer_equals_tos:" + action + "_" + str(tos_tag == buffer_tag)] = self.positive_val
-        feats["ARC_combo:" + action + "_" ",".join(sorted([tos_tag, buffer_tag]))]  = self.positive_val
+        # feats["ARC_buffer_equals_tos:" + action + "_" + str(tos_tag == buffer_tag)] = self.positive_val
+        feats["ARC_combo:" + action + "_" ",".join(sorted([tos_tag, buffer_tag]))] = self.positive_val
         return feats
-

@@ -26,7 +26,9 @@ CV_FOLDS = 5
 NGRAMS = 2
 MIN_FEAT_FREQ = 5
 
-BETA_DECAY = 0.25000001
+BETA = 0.2
+MAX_EPOCHS = 5
+
 BASE_LEARNER_FACT = LinearRegression
 
 settings = Settings()
@@ -119,10 +121,10 @@ for i, (essays_TD, essays_VD) in enumerate(folds):
                                                        cr_tags=cr_tags,
                                                        base_learner_fact=BASE_LEARNER_FACT,
                                                        crel_learner_fact=LogisticRegression,
-                                                       beta_decay_fn=lambda beta: beta - BETA_DECAY,
+                                                       beta=BETA,
                                                        # silent
                                                        log_fn=lambda s: None)
-    parse_model.train(essays_TD, 12)
+    parse_model.train(essays_TD, MAX_EPOCHS)
 
     sent_td_ys_bycode = parse_model.get_label_data(essays_TD)
     sent_vd_ys_bycode = parse_model.get_label_data(essays_VD)

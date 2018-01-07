@@ -35,7 +35,7 @@ CV_FOLDS = 5
 MIN_FEAT_FREQ = 5
 
 # Global settings
-MAX_EPOCHS = 12
+MAX_EPOCHS = 5
 
 settings = Settings()
 root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
@@ -112,12 +112,12 @@ def get_functions_by_name(function_names, functions):
 def get_function_names(functions):
     return list(map(lambda fn: fn.__name__, functions))
 
-def evaluate_features(  folds : List[Tuple[Any, Any]],
-                        extractor_names: Set[str],
-                        cost_function_name: str,
-                        beta_decay: float = 0.3,
-                        base_learner: Any=LogisticRegression,
-                        ngrams:int=2, down_sample_rate = 1.0)->float:
+def evaluate_features(folds : List[Tuple[Any, Any]],
+                      extractor_names: Set[str],
+                      cost_function_name: str,
+                      beta: float = 0.2,
+                      base_learner: Any=LogisticRegression,
+                      ngrams:int=2, down_sample_rate = 1.0)->float:
 
     if down_sample_rate < 1.0:
         new_folds = [] # type: List[Tuple[Any, Any]]
@@ -128,7 +128,7 @@ def evaluate_features(  folds : List[Tuple[Any, Any]],
         folds = new_folds # type: List[Tuple[Any, Any]]
 
     parallel_results = Parallel(n_jobs=len(folds))(
-        delayed(model_train_predict)(essays_TD, essays_VD, extractor_names, cost_function_name, ngrams, beta_decay)
+        delayed(model_train_predict)(essays_TD, essays_VD, extractor_names, cost_function_name, ngrams, beta)
         for essays_TD, essays_VD in folds)
 
     cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag = defaultdict(list), defaultdict(list)
@@ -158,7 +158,7 @@ def evaluate_features(  folds : List[Tuple[Any, Any]],
     parameters["extractors"] = list(sorted(extractor_names))
     parameters["num_extractors"] = len(extractor_names)
     parameters["cost_function"] = cost_function_name
-    parameters["beta_decay"] = beta_decay
+    parameters["beta_decay"] = beta
     parameters["no_stacking"] = True
     parameters["algorithm"] = str(base_learner())
     parameters["ngrams"] = str(ngrams)
@@ -187,7 +187,7 @@ def evaluate_features(  folds : List[Tuple[Any, Any]],
     return micro_f1
 
 
-def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_name, ngrams, beta_decay):
+def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_name, ngrams, beta):
 
     extractors = get_functions_by_name(extractor_names, all_extractor_fns)
     # get single cost function
@@ -203,9 +203,8 @@ def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_nam
                                              min_feature_freq=MIN_FEAT_FREQ,
                                              ngram_extractor=ngram_extractor, cr_tags=cr_tags,
                                              base_learner_fact=BASE_LEARNER_FACT,
-                                             beta_decay_fn=lambda beta: beta - beta_decay,
-                                             # silent
-                                                          log_fn=lambda s: None)
+                                             beta=beta,
+                                             log_fn=lambda s: None)
     parse_model.train(essays_TD, MAX_EPOCHS)
 
     num_feats = template_feature_extractor.num_features()
@@ -222,7 +221,7 @@ LINE_WIDTH = 80
 
 # other settings
 DOWN_SAMPLE_RATE    = 1.0  # For faster smoke testing the algorithm
-BETA_DECAY          = 0.250001 # ensure hit's zero after 4 tries
+BETA                = 0.2  # ensure hit's zero after 4 tries
 BASE_LEARNER_FACT   = LogisticRegression
 
 # some of the other extractors aren't functional if the system isn't able to do a basic parse
@@ -280,7 +279,7 @@ for ngrams in [3]:
             logger.info("-" * LINE_WIDTH)
             logger.info("Evaluating {num_features} features, with ngram size: {ngrams} and beta decay: {beta_decay}, current feature extractors: {extractors}".format(
                             num_features=len(current_extractor_names) + 1,
-                            ngrams=ngrams, beta_decay=BETA_DECAY,
+                            ngrams=ngrams, beta_decay=BETA,
                             extractors=",".join(sorted(current_extractor_names)))
             )
             f1_improved = False
@@ -304,7 +303,7 @@ for ngrams in [3]:
                                              cost_function_name=cost_function_name,
                                              ngrams=ngrams,
                                              base_learner=LogisticRegression,
-                                             beta_decay=BETA_DECAY,
+                                             beta=BETA,
                                              down_sample_rate=DOWN_SAMPLE_RATE)
                 if micro_f1 > best_f1:
                     f1_improved = True
