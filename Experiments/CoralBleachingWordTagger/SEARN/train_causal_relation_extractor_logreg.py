@@ -161,9 +161,8 @@ for i, (essays_TD, essays_VD) in enumerate(folds):
                                              ngram_extractor=ngram_extractor,
                                              cr_tags=cr_tags,
                                              base_learner_fact=LogisticRegression,
-                                             beta=BETA,
-                                             # silent
-                                             log_fn=lambda s: None)
+                                             beta=BETA
+                                             )
     parse_model.train(essays_TD, MAX_EPOCHS)
 
     sent_td_ys_bycode = parse_model.get_label_data(essays_TD)
