@@ -17,7 +17,8 @@ from cost_functions import micro_f1_cost, inverse_micro_f1_cost, uniform_cost, m
 from load_data import load_process_essays
 from results_procesor import ResultsProcessor, __MICRO_F1__
 from searn_parser_logreg import SearnModelTemplateFeatures
-from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor
+from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor, word_distance, valency, \
+    unigrams, third_order, label_set, size_features
 from template_feature_extractor import single_words, three_words, between_word_features
 from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
@@ -204,8 +205,8 @@ def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_nam
                                              ngram_extractor=ngram_extractor, cr_tags=cr_tags,
                                              base_learner_fact=BASE_LEARNER_FACT,
                                              beta=beta,
-                                             log_fn=lambda s: print(s))
-                                             # log_fn=lambda s: None)
+                                             #log_fn=lambda s: print(s))
+                                             log_fn=lambda s: None)
 
     parse_model.train(essays_TD, MAX_EPOCHS)
 
@@ -224,7 +225,7 @@ LINE_WIDTH = 80
 # other settings
 DOWN_SAMPLE_RATE    = 1.0  # For faster smoke testing the algorithm
 BETA                = 0.2  # ensure hit's zero after 4 tries
-MAX_EPOCHS          = 10
+MAX_EPOCHS          = 5
 BASE_LEARNER_FACT   = LogisticRegression
 
 # some of the other extractors aren't functional if the system isn't able to do a basic parse
@@ -238,12 +239,12 @@ base_extractors = [
 ]
 
 all_extractor_fns = base_extractors + [
-    # word_distance,
-    # valency,
-    # unigrams,
-    # third_order,
-    # label_set,
-    # size_features
+    word_distance,
+    valency,
+    unigrams,
+    third_order,
+    label_set,
+    size_features
 ]
 
 all_cost_functions = [
@@ -273,7 +274,7 @@ for ngrams in [3]:
         logger.info("COST FN: {cost_fn}".format(cost_fn=cost_function_name))
 
         current_extractor_names = set()
-        current_extractor_names = set(all_extractor_fn_names[1:])
+        #current_extractor_names = set(all_extractor_fn_names[1:])
         f1_improved = True
         best_f1 = -1.0
 
