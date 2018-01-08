@@ -35,7 +35,6 @@ CV_FOLDS = 5
 MIN_FEAT_FREQ = 5
 
 # Global settings
-MAX_EPOCHS = 5
 
 settings = Settings()
 root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
@@ -158,7 +157,7 @@ def evaluate_features(folds : List[Tuple[Any, Any]],
     parameters["extractors"] = list(sorted(extractor_names))
     parameters["num_extractors"] = len(extractor_names)
     parameters["cost_function"] = cost_function_name
-    parameters["beta_decay"] = beta
+    parameters["beta"] = beta
     parameters["no_stacking"] = True
     parameters["algorithm"] = str(base_learner())
     parameters["ngrams"] = str(ngrams)
@@ -204,7 +203,9 @@ def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_nam
                                              ngram_extractor=ngram_extractor, cr_tags=cr_tags,
                                              base_learner_fact=BASE_LEARNER_FACT,
                                              beta=beta,
-                                             log_fn=lambda s: None)
+                                             log_fn=lambda s: print(s))
+                                             # log_fn=lambda s: None)
+
     parse_model.train(essays_TD, MAX_EPOCHS)
 
     num_feats = template_feature_extractor.num_features()
@@ -222,6 +223,7 @@ LINE_WIDTH = 80
 # other settings
 DOWN_SAMPLE_RATE    = 1.0  # For faster smoke testing the algorithm
 BETA                = 0.2  # ensure hit's zero after 4 tries
+MAX_EPOCHS          = 10
 BASE_LEARNER_FACT   = LogisticRegression
 
 # some of the other extractors aren't functional if the system isn't able to do a basic parse

@@ -158,7 +158,7 @@ def evaluate_features(folds: List[Tuple[Any, Any]],
     parameters["extractors"] = list(sorted(extractor_names))
     parameters["num_extractors"] = len(extractor_names)
     parameters["cost_function"] = cost_function_name
-    parameters["beta_decay"] = beta
+    parameters["beta"] = beta
     parameters["no_stacking"] = True
     parameters["algorithm"] = str(base_learner())
     parameters["ngrams"] = str(ngrams)

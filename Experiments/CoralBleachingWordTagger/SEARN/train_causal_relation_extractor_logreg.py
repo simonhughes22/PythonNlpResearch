@@ -30,7 +30,7 @@ NGRAMS = 3
 MIN_FEAT_FREQ = 5
 
 BETA = 0.2
-MAX_EPOCHS = 5
+MAX_EPOCHS = 10
 
 settings = Settings()
 root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
@@ -142,6 +142,7 @@ extractors = [
 template_feature_extractor = NonLocalTemplateFeatureExtractor(extractors=extractors)
 
 ngram_extractor = NgramExtractor(max_ngram_len=NGRAMS)
+cost_fn = micro_f1_cost
 
 for i, (essays_TD, essays_VD) in enumerate(folds):
     print("\nCV % i" % i)
@@ -156,7 +157,7 @@ for i, (essays_TD, essays_VD) in enumerate(folds):
     #                                        beta_decay_fn=lambda beta: beta - 0.3, sparse=False)
 
     parse_model = SearnModelTemplateFeatures(feature_extractor=template_feature_extractor,
-                                             cost_function=micro_f1_cost,
+                                             cost_function=cost_fn,
                                              min_feature_freq=MIN_FEAT_FREQ,
                                              ngram_extractor=ngram_extractor,
                                              cr_tags=cr_tags,
@@ -189,9 +190,14 @@ sent_algo = "Shift_Reduce_Parser_LR"
 # sent_algo = "Shift_Reduce_Parser_WTD_GBT_3"
 parameters = dict(config)
 parameters["extractors"] = list(map(lambda fn: fn.__name__, extractors))
-parameters["ngrams"] = NGRAMS
 parameters["no_stacking"] = True
 parameters["min_feat_freq"] = MIN_FEAT_FREQ
+
+parameters["num_extractors"] = len(extractors)
+parameters["cost_function"] = cost_fn.__name__
+parameters["beta"] = BETA
+parameters["algorithm"] = str(LogisticRegression())
+parameters["ngrams"] = str(NGRAMS)
 
 sent_td_objectid = processor.persist_results(CB_SENT_TD, cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag,
                                              parameters, sent_algo)
