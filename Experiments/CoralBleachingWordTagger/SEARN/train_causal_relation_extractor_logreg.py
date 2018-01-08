@@ -196,6 +196,7 @@ parameters["min_feat_freq"] = MIN_FEAT_FREQ
 parameters["num_extractors"] = len(extractors)
 parameters["cost_function"] = cost_fn.__name__
 parameters["beta"] = BETA
+parameters["max_epochs"] = MAX_EPOCHS
 parameters["algorithm"] = str(LogisticRegression())
 parameters["ngrams"] = str(NGRAMS)
 

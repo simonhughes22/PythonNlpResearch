@@ -111,16 +111,17 @@ extractors = [single_words, word_pairs, three_words, word_distance, valency,
 template_feature_extractor = NonLocalTemplateFeatureExtractor(extractors=extractors)
 
 ngram_extractor = NgramExtractor(max_ngram_len=NGRAMS)
-
+cost_fn = micro_f1_cost
+crel_learner_fact = LogisticRegression
 for i, (essays_TD, essays_VD) in enumerate(folds):
     print("\nCV % i" % i)
     parse_model = SearnModelTemplateFeaturesRegression(feature_extractor=template_feature_extractor,
-                                                       cost_function=micro_f1_cost,
+                                                       cost_function=cost_fn,
                                                        min_feature_freq=MIN_FEAT_FREQ,
                                                        ngram_extractor=ngram_extractor,
                                                        cr_tags=cr_tags,
                                                        base_learner_fact=BASE_LEARNER_FACT,
-                                                       crel_learner_fact=LogisticRegression,
+                                                       crel_learner_fact=crel_learner_fact,
                                                        beta=BETA,
                                                        # silent
                                                        log_fn=lambda s: None)
@@ -153,6 +154,14 @@ parameters["extractors"] = list(map(lambda fn: fn.__name__, extractors))
 parameters["ngrams"] = NGRAMS
 parameters["no_stacking"] = True
 parameters["min_feat_freq"] = MIN_FEAT_FREQ
+
+parameters["num_extractors"] = len(extractors)
+parameters["cost_function"] = cost_fn.__name__
+parameters["beta"] = BETA
+parameters["max_epochs"] = MAX_EPOCHS
+parameters["algorithm"] = str(BASE_LEARNER_FACT())
+parameters["crel_algorithm"] = str(crel_learner_fact())
+parameters["ngrams"] = str(NGRAMS)
 
 sent_td_objectid = processor.persist_results(CB_SENT_TD, cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag,
                                              parameters, sent_algo)
