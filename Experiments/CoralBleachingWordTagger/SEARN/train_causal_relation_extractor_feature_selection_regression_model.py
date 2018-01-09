@@ -17,7 +17,8 @@ from cost_functions import micro_f1_cost, inverse_micro_f1_cost, uniform_cost, m
 from load_data import load_process_essays
 from results_procesor import ResultsProcessor, __MICRO_F1__
 from searn_parser_regression import SearnModelTemplateFeaturesRegression
-from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor
+from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor, word_pairs, word_distance, \
+    valency, unigrams, third_order, label_set, size_features
 from template_feature_extractor import single_words, three_words, between_word_features
 from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
@@ -34,8 +35,6 @@ db = client.metrics
 CV_FOLDS = 5
 MIN_FEAT_FREQ = 5
 
-# Global settings
-MAX_EPOCHS = 5
 
 settings = Settings()
 root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
@@ -165,6 +164,7 @@ def evaluate_features(folds: List[Tuple[Any, Any]],
     parameters["num_feats_MEAN"] = avg_feats
     parameters["num_feats_per_fold"] = number_of_feats
     parameters["min_feat_freq"] = MIN_FEAT_FREQ
+    parameters["stemmed"] = False
 
     logger.info("\t\tMean num feats: {avg_feats:.2f}".format(avg_feats=avg_feats))
 
@@ -225,6 +225,7 @@ LINE_WIDTH = 80
 # other settings
 DOWN_SAMPLE_RATE = 1.0  # For faster smoke testing the algorithm
 BETA = 0.2 # ensure hit's zero after 4 tries
+MAX_EPOCHS = 5
 BASE_LEARNER_FACT = LinearRegression
 
 # some of the other extractors aren't functional if the system isn't able to do a basic parse
@@ -232,18 +233,18 @@ BASE_LEARNER_FACT = LinearRegression
 # features from all_extractors can be included
 base_extractors = [
     single_words,
-    # word_pairs,
+    word_pairs,
     three_words,
     between_word_features
 ]
 
 all_extractor_fns = base_extractors + [
-    # word_distance,
-    # valency,
-    # unigrams,
-    # third_order,
-    # label_set,
-    # size_features
+    word_distance,
+    valency,
+    unigrams,
+    third_order,
+    label_set,
+    size_features
 ]
 
 all_cost_functions = [
@@ -261,8 +262,8 @@ base_extractor_fn_names = get_function_names(base_extractors)
 all_cost_fn_names = get_function_names(all_cost_functions)
 
 # TODO - stem words or not?
-# for ngrams in [2,3,1]:
-for ngrams in [3]:
+for ngrams in [4,3,2,1]:
+#for ngrams in [3]:
 
     logger.info("*" * LINE_WIDTH)
     logger.info("NGRAM SIZE: {ngram}".format(ngram=ngrams))

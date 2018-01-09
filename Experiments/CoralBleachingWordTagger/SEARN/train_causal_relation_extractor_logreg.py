@@ -199,6 +199,7 @@ parameters["beta"] = BETA
 parameters["max_epochs"] = MAX_EPOCHS
 parameters["algorithm"] = str(LogisticRegression())
 parameters["ngrams"] = str(NGRAMS)
+parameters["stemmed"] = False
 
 sent_td_objectid = processor.persist_results(CB_SENT_TD, cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag,
                                              parameters, sent_algo)

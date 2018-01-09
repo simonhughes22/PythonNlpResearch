@@ -18,7 +18,7 @@ from load_data import load_process_essays
 from results_procesor import ResultsProcessor, __MICRO_F1__
 from searn_parser_logreg import SearnModelTemplateFeatures
 from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor, word_distance, valency, \
-    unigrams, third_order, label_set, size_features
+    unigrams, third_order, label_set, size_features, word_pairs
 from template_feature_extractor import single_words, three_words, between_word_features
 from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
@@ -166,6 +166,7 @@ def evaluate_features(folds : List[Tuple[Any, Any]],
     parameters["num_feats_MEAN"] = avg_feats
     parameters["num_feats_per_fold"] = number_of_feats
     parameters["min_feat_freq"] = MIN_FEAT_FREQ
+    parameters["stemmed"] = False
 
     logger.info("\t\tMean num feats: {avg_feats:.2f}".format(avg_feats=avg_feats))
 
@@ -225,7 +226,7 @@ LINE_WIDTH = 80
 # other settings
 DOWN_SAMPLE_RATE    = 1.0  # For faster smoke testing the algorithm
 BETA                = 0.2  # ensure hit's zero after 4 tries
-MAX_EPOCHS          = 5
+MAX_EPOCHS          = 10
 BASE_LEARNER_FACT   = LogisticRegression
 
 # some of the other extractors aren't functional if the system isn't able to do a basic parse
@@ -233,7 +234,7 @@ BASE_LEARNER_FACT   = LogisticRegression
 # features from all_extractors can be included
 base_extractors = [
     single_words,
-    # word_pairs,
+    word_pairs,
     three_words,
     between_word_features
 ]
@@ -262,8 +263,7 @@ base_extractor_fn_names = get_function_names(base_extractors)
 all_cost_fn_names = get_function_names(all_cost_functions)
 
 #TODO - stem words or not?
-#for ngrams in [2,3,1]:
-for ngrams in [3]:
+for ngrams in [4, 3, 2, 1]:
 
     logger.info("*" * LINE_WIDTH)
     logger.info("NGRAM SIZE: {ngram}".format(ngram=ngrams))
