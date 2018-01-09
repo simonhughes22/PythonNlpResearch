@@ -93,11 +93,11 @@ cr_tags = list((t for t in stag_freq.keys() if ("->" in t) and
                 1 == 1
                 ))
 
-# Change to include explicit
-regular_tags = set((t for t in stag_freq.keys() if ("->" not in t) and (t == "explicit" or t[0].isdigit())))
+regular_tags = set((t for t in stag_freq.keys() if ( "->" not in t) and (t[0].isdigit())))
+#regular_tags = set((t for t in stag_freq.keys() if ( "->" not in t) and (t == "explicit" or t[0].isdigit())))
 vtags = set(regular_tags)
 
-assert "explicit" in vtags, "explicit should be in the regular tags"
+assert "explicit" not in vtags, "explicit should NOT be in the regular tags"
 
 if 1 == 2:
     ## Replace predicted tags with actual to test impact on recall
