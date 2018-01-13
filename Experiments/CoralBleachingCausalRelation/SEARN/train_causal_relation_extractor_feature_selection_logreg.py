@@ -61,7 +61,7 @@ with open(fname, "rb") as f:
 logger.info("Started at: " + str(datetime.datetime.now()))
 logger.info("Number of pred tagged essays %i" % len(pred_tagged_essays))  # should be 902
 
-cr_tags = get_cr_tags(pr_tagged_essays=pred_tagged_essays, tag_essays_test=tagged_essays_test)
+cr_tags = get_cr_tags(train_tagged_essays=pred_tagged_essays, tag_essays_test=tagged_essays_test)
 cv_folds = cross_validation(pred_tagged_essays, CV_FOLDS)  # type: List[Tuple[Any,Any]]
 
 def evaluate_features(

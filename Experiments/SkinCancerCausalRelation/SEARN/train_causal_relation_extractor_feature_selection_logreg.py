@@ -12,10 +12,11 @@ from sklearn.linear_model import LogisticRegression
 
 from CrossValidation import cross_validation
 from Settings import Settings
+from crel_helper import get_cr_tags
+from function_helpers import get_function_names, get_functions_by_name
 from load_data import load_process_essays
 from results_procesor import ResultsProcessor, __MICRO_F1__
 from searn_parser import SearnModelTemplateFeatures
-from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor
 from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
 from cost_functions import *
@@ -36,16 +37,16 @@ MIN_FEAT_FREQ = 5
 # Global settings
 
 settings = Settings()
-root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
+root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
 training_folder = root_folder + "Training" + "/"
 test_folder = root_folder + "Test" + "/"
-training_pickled = settings.data_directory + "CoralBleaching/Thesis_Dataset/training.pl"
+training_pickled = settings.data_directory + "SkinCancer/Thesis_Dataset/training.pl"
 # NOTE: These predictions are generated from the "./notebooks/SEARN/Keras - Train Tagger and Save CV Predictions For Word Tags.ipynb" notebook
 # used as inputs to parsing model
 rnn_predictions_folder = root_folder + "Predictions/Bi-LSTM-4-SEARN/"
 
 config = get_config(training_folder)
-processor = ResultsProcessor(dbname="metrics_causal")
+results_processor = ResultsProcessor(dbname="metrics_causal")
 
 # Get Test Data In Order to Get Test CRELS
 # load the test essays to make sure we compute metrics over the test CR labels
@@ -60,52 +61,13 @@ with open(fname, "rb") as f:
 logger.info("Started at: " + str(datetime.datetime.now()))
 logger.info("Number of pred tagged essays %i" % len(pred_tagged_essays))  # should be 902
 
-stag_freq = defaultdict(int)
-unique_words = set()
-for essay in pred_tagged_essays:
-    for sentence in essay.sentences:
-        for word, tags in sentence:
-            unique_words.add(word)
-            for tag in tags:
-                stag_freq[tag] += 1
-
-# Ensure we include the test essay tags
-for essay in tagged_essays_test:
-    for sentence in essay.sentences:
-        for word, tags in sentence:
-            unique_words.add(word)
-            for tag in tags:
-                stag_freq[tag] += 1
-
-# TODO - don't ignore Anaphor, other and rhetoricals here
-cr_tags = list((t for t in stag_freq.keys() if ("->" in t) and
-                not "Anaphor" in t and
-                not "other" in t and
-                not "rhetorical" in t and
-                not "factor" in t and
-                1 == 1
-                ))
-
-regular_tags = set((t for t in stag_freq.keys() if ("->" not in t) and (t[0].isdigit())))
-# regular_tags = set((t for t in stag_freq.keys() if ( "->" not in t) and (t == "explicit" or t[0].isdigit())))
-vtags = set(regular_tags)
-
-assert "explicit" not in vtags, "explicit should NOT be in the regular tags"
-
+cr_tags = get_cr_tags(train_tagged_essays=pred_tagged_essays, tag_essays_test=tagged_essays_test)
 cv_folds = cross_validation(pred_tagged_essays, CV_FOLDS)  # type: List[Tuple[Any,Any]]
-
-def get_functions_by_name(function_names, functions):
-    return [fn for fn in functions if fn.__name__ in function_names]
-
-
-def get_function_names(functions):
-    return list(map(lambda fn: fn.__name__, functions))
-
 
 def evaluate_features(
         collection_prefix: str,
         folds: List[Tuple[Any, Any]],
-        extractor_names_lst: List[str],
+        extractor_fn_names_lst: List[str],
         cost_function_name: str,
         beta: float,
         base_learner: Any,
@@ -121,7 +83,7 @@ def evaluate_features(
         folds = new_folds  # type: List[Tuple[Any, Any]]
 
     parallel_results = Parallel(n_jobs=len(folds))(
-        delayed(model_train_predict)(essays_TD, essays_VD, extractor_names_lst, cost_function_name, ngrams, stemmed,
+        delayed(model_train_predict)(essays_TD, essays_VD, extractor_fn_names_lst, cost_function_name, ngrams, stemmed,
                                      beta)
         for essays_TD, essays_VD in folds)
 
@@ -148,8 +110,8 @@ def evaluate_features(
     sent_algo = "Shift_Reduce_Parser_LR"
 
     parameters = dict(config)
-    parameters["extractors"] = list(extractor_names_lst)
-    parameters["num_extractors"] = len(extractor_names_lst)
+    parameters["extractors"] = list(extractor_fn_names_lst)
+    parameters["num_extractors"] = len(extractor_fn_names_lst)
     parameters["cost_function"] = cost_function_name
     parameters["beta"] = beta
     parameters["max_epochs"] = MAX_EPOCHS
@@ -172,13 +134,13 @@ def evaluate_features(
     else:
         CB_SENT_TD, CB_SENT_VD = TD, VD
 
-    sent_td_objectid = processor.persist_results(CB_SENT_TD, cv_sent_td_ys_by_tag,
-                                                 cv_sent_td_predictions_by_tag, parameters, sent_algo)
-    sent_vd_objectid = processor.persist_results(CB_SENT_VD, cv_sent_vd_ys_by_tag,
-                                                 cv_sent_vd_predictions_by_tag, parameters, sent_algo)
+    sent_td_objectid = results_processor.persist_results(CB_SENT_TD, cv_sent_td_ys_by_tag,
+                                                         cv_sent_td_predictions_by_tag, parameters, sent_algo)
+    sent_vd_objectid = results_processor.persist_results(CB_SENT_VD, cv_sent_vd_ys_by_tag,
+                                                         cv_sent_vd_predictions_by_tag, parameters, sent_algo)
 
     # print(processor.results_to_string(sent_td_objectid, CB_SENT_TD, sent_vd_objectid, CB_SENT_VD, "SENTENCE"))
-    micro_f1 = float(processor.get_metric(CB_SENT_VD, sent_vd_objectid, __MICRO_F1__)["f1_score"])
+    micro_f1 = float(results_processor.get_metric(CB_SENT_VD, sent_vd_objectid, __MICRO_F1__)["f1_score"])
     return micro_f1
 
 
@@ -216,13 +178,14 @@ def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_nam
 
     return num_feats, sent_td_ys_bycode, sent_vd_ys_bycode, sent_td_pred_ys_bycode, sent_vd_pred_ys_bycode
 
+
+LINE_WIDTH = 80
+
 # other settings
 DOWN_SAMPLE_RATE = 1.0  # For faster smoke testing the algorithm
 BETA = 0.2  # ensure hit's zero after 4 tries
 MAX_EPOCHS = 10
 BASE_LEARNER_FACT = LogisticRegression
-
-# Name of mongo collection
 COLLECTION_PREFIX = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL"
 
 # some of the other extractors aren't functional if the system isn't able to do a basic parse
@@ -258,7 +221,6 @@ all_extractor_fn_names = get_function_names(all_extractor_fns)
 base_extractor_fn_names = get_function_names(base_extractors)
 all_cost_fn_names = get_function_names(all_cost_functions)
 
-LINE_WIDTH = 80
 for ngrams in [1]:
 
     logger.info("*" * LINE_WIDTH)
@@ -280,8 +242,8 @@ for ngrams in [1]:
             best_f1 = -1.0
 
             while len(current_extractor_names) <= 5 and \
-                  len(current_extractor_names) < len(all_extractor_fn_names) and\
-                  f1_has_improved:
+                            len(current_extractor_names) < len(all_extractor_fn_names) and \
+                    f1_has_improved:
 
                 logger.info("-" * LINE_WIDTH)
                 logger.info(
@@ -310,7 +272,7 @@ for ngrams in [1]:
                     micro_f1 = evaluate_features(
                         collection_prefix=COLLECTION_PREFIX,
                         folds=cv_folds,
-                        extractor_names_lst=new_extractor_list,
+                        extractor_fn_names_lst=new_extractor_list,
                         cost_function_name=cost_function_name,
                         ngrams=ngrams,
                         base_learner=LogisticRegression,
@@ -335,11 +297,3 @@ for ngrams in [1]:
                     break
                 else:
                     current_extractor_names.append(best_new_feature_name)
-
-## TODO
-# - Look into beta decay methods before finalizing - need to determine if this is a good default to use for feat sel
-# - Add between tag tags (e.g. explicit tags)
-
-# -TODO - Neat Ideas
-# Inject a random action (unform distribution) with a specified probability during training also
-# Ensures better exploration of the policy space. Initial algo predictions will be random but converges very quickly so this may be lost

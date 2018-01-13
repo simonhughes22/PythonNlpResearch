@@ -18,7 +18,7 @@ class ResultsProcessor(object):
     def __init__(self, dbname = None, fltr = None):
         if dbname is None:
             dbname = "metrics"
-            print("No db name specified - should be either 'metrics_causal' or 'metrics'. Defaulting to 'metrics' ")
+            print("WARNING - No db name specified - should be either 'metrics_causal' or 'metrics'. Defaulting to 'metrics' ")
 
         if not fltr:
             fltr = lambda k: k[0].isdigit()

@@ -106,7 +106,6 @@ from passage.layers import LstmRecurrent
 from passage.layers import Dense
 
 from passage.models import RNN
-from passage.utils import save, load
 
 print("Loading data...")
 num_training = int((1.0 - 0.2) * len(xs))
