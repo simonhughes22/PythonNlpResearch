@@ -12,14 +12,10 @@ from sklearn.linear_model import LogisticRegression
 
 from CrossValidation import cross_validation
 from Settings import Settings
-from cost_functions import micro_f1_cost, inverse_micro_f1_cost, uniform_cost, micro_f1_cost_squared, binary_cost, \
-    micro_f1_cost_plusone, micro_f1_cost_plusepsilon
 from load_data import load_process_essays
 from results_procesor import ResultsProcessor, __MICRO_F1__
-from searn_parser_logreg import SearnModelTemplateFeatures
-from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor, word_distance, valency, \
-    unigrams, third_order, label_set, size_features, word_pairs
-from template_feature_extractor import single_words, three_words, between_word_features
+from searn_parser import SearnModelTemplateFeatures
+from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor
 from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
 

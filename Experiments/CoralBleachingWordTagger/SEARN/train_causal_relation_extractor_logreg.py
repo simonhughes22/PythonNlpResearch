@@ -5,20 +5,17 @@ from collections import defaultdict
 
 import dill
 import pymongo
-
-from searn_parser_regression import SearnModelTemplateFeaturesRegression
-from searn_parser_logreg import SearnModelTemplateFeatures, normalize, EMPTY_TAG
 from sklearn.linear_model import LogisticRegression
 
 from CrossValidation import cross_validation
 from Settings import Settings
-from cost_functions import micro_f1_cost
+from StructuredLearning.SEARN.cost_functions import micro_f1_cost
 from load_data import load_process_essays
 # from searn_parser_xgboost import SearnModelXgBoost
 from results_procesor import ResultsProcessor
-from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor, third_order, label_set
-from template_feature_extractor import single_words, word_pairs, three_words, word_distance, valency, unigrams, \
-    between_word_features
+from searn_parser import SearnModelTemplateFeatures, normalize, EMPTY_TAG
+from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor
+from template_feature_extractor import single_words, three_words, between_word_features
 from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
 

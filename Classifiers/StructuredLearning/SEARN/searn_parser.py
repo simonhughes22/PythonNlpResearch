@@ -1,17 +1,17 @@
 import string
 from collections import defaultdict
-from typing import Set, List
 
 import numpy as np
+from oracle import Oracle
+from shift_reduce_helper import *
+from typing import Set, List
+from weighted_examples import WeightedExamples
 
 from Rpfa import micro_rpfa
+from StructuredLearning.SEARN.stack import Stack
 from featurevectorizer import FeatureVectorizer
-from oracle import Oracle
 from parser import Parser
 from results_procesor import ResultsProcessor
-from shift_reduce_helper import *
-from stack import Stack
-from weighted_examples import WeightedExamples
 
 
 class SearnModelTemplateFeatures(object):

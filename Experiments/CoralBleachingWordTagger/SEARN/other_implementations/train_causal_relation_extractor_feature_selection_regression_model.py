@@ -8,18 +8,17 @@ import dill
 import numpy as np
 import pymongo
 from joblib import Parallel, delayed
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, LinearRegression
 
 from CrossValidation import cross_validation
 from Settings import Settings
-from cost_functions import micro_f1_cost, inverse_micro_f1_cost, uniform_cost, micro_f1_cost_squared, binary_cost, \
+from StructuredLearning.SEARN.cost_functions import micro_f1_cost, inverse_micro_f1_cost, uniform_cost, micro_f1_cost_squared, binary_cost, \
     micro_f1_cost_plusone, micro_f1_cost_plusepsilon
 from load_data import load_process_essays
 from results_procesor import ResultsProcessor, __MICRO_F1__
-from searn_parser_logreg import SearnModelTemplateFeatures
-from searn_parser_multinomial_logreg import SearnModelTemplateFeaturesMultinomialLogisticRegression
-from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor, word_distance, valency, \
-    third_order, label_set, size_features, unigrams, word_pairs
+from searn_parser_regression import SearnModelTemplateFeaturesRegression
+from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractor, word_pairs, word_distance, \
+    valency, unigrams, third_order, label_set, size_features
 from template_feature_extractor import single_words, three_words, between_word_features
 from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
@@ -36,7 +35,6 @@ db = client.metrics
 CV_FOLDS = 5
 MIN_FEAT_FREQ = 5
 
-# Global settings
 
 settings = Settings()
 root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
@@ -170,8 +168,8 @@ def evaluate_features(folds: List[Tuple[Any, Any]],
 
     logger.info("\t\tMean num feats: {avg_feats:.2f}".format(avg_feats=avg_feats))
 
-    TD = "CR_CB_SHIFT_REDUCE_PARSER_MULITNOMIAL_FEATURE_SEL_TD"
-    VD = "CR_CB_SHIFT_REDUCE_PARSER_MULITNOMIAL_FEATURE_SEL_VD"
+    TD = "CR_CB_SHIFT_REDUCE_PARSER_REGRESSION_SEL_TD"
+    VD = "CR_CB_SHIFT_REDUCE_PARSER_REGRESSION_SEL_VD"
     if down_sample_rate < 1.0:
         logger.info("\t\tDown sampling at rate: {rate:.5f}, storing temp results".format(rate=down_sample_rate))
         parameters["down_sample"] = down_sample_rate
@@ -199,16 +197,16 @@ def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_nam
 
     template_feature_extractor = NonLocalTemplateFeatureExtractor(extractors=extractors)
     ngram_extractor = NgramExtractor(max_ngram_len=ngrams)
-    parse_model = SearnModelTemplateFeaturesMultinomialLogisticRegression(
-        feature_extractor=template_feature_extractor,
-        cost_function=cost_fn,
-        min_feature_freq=MIN_FEAT_FREQ,
-        ngram_extractor=ngram_extractor, cr_tags=cr_tags,
-        base_learner_fact=BASE_LEARNER_FACT,
-        crel_learner_fact=LogisticRegression,
-        beta=beta,
-        # silent
-        log_fn=lambda s: None)
+    parse_model = SearnModelTemplateFeaturesRegression(feature_extractor=template_feature_extractor,
+                                                       cost_function=cost_fn,
+                                                       min_feature_freq=MIN_FEAT_FREQ,
+                                                       ngram_extractor=ngram_extractor,
+                                                       cr_tags=cr_tags,
+                                                       base_learner_fact=BASE_LEARNER_FACT,
+                                                       crel_learner_fact=LogisticRegression,
+                                                       beta=beta,
+                                                       # silent
+                                                       log_fn=lambda s: None)
     parse_model.train(essays_TD, MAX_EPOCHS)
 
     num_feats = template_feature_extractor.num_features()
@@ -226,9 +224,9 @@ LINE_WIDTH = 80
 
 # other settings
 DOWN_SAMPLE_RATE = 1.0  # For faster smoke testing the algorithm
-BETA = 0.2  # ensure hit's zero after 4 tries
-BASE_LEARNER_FACT = lambda : LogisticRegression(multi_class="multinomial", solver="lbfgs")
-MAX_EPOCHS = 10
+BETA = 0.2 # ensure hit's zero after 4 tries
+MAX_EPOCHS = 5
+BASE_LEARNER_FACT = LinearRegression
 
 # some of the other extractors aren't functional if the system isn't able to do a basic parse
 # so the base extractors are the MVP for getting to a basic parser, then additional 'meta' parse
@@ -264,13 +262,13 @@ base_extractor_fn_names = get_function_names(base_extractors)
 all_cost_fn_names = get_function_names(all_cost_functions)
 
 # TODO - stem words or not?
-for ngrams in [4, 3, 2, 1]:
+for ngrams in [4,3,2,1]:
 #for ngrams in [3]:
 
     logger.info("*" * LINE_WIDTH)
     logger.info("NGRAM SIZE: {ngram}".format(ngram=ngrams))
 
-    for cost_function_name in [micro_f1_cost_plusepsilon.__name__]:
+    for cost_function_name in [micro_f1_cost.__name__]:
 
         logger.info("*" * LINE_WIDTH)
         logger.info("COST FN: {cost_fn}".format(cost_fn=cost_function_name))

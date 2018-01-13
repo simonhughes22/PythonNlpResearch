@@ -8,12 +8,12 @@ import pymongo
 
 from searn_parser_multinomial_logreg import SearnModelTemplateFeaturesMultinomialLogisticRegression
 from searn_parser_regression import SearnModelTemplateFeaturesRegression
-from searn_parser_logreg import SearnModelTemplateFeatures, normalize, EMPTY_TAG
+from searn_parser import SearnModelTemplateFeatures, normalize, EMPTY_TAG
 from sklearn.linear_model import LogisticRegression
 
 from CrossValidation import cross_validation
 from Settings import Settings
-from cost_functions import micro_f1_cost
+from StructuredLearning.SEARN.cost_functions import micro_f1_cost
 from load_data import load_process_essays
 # from searn_parser_xgboost import SearnModelXgBoost
 from results_procesor import ResultsProcessor

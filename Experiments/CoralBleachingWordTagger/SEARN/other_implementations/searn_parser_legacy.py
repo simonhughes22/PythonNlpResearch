@@ -1,16 +1,18 @@
+import string
 from collections import defaultdict
+
+import numpy as np
+from oracle import Oracle
+from shift_reduce_helper import *
 from sklearn.feature_extraction import DictVectorizer
+from weighted_examples import WeightedExamples
 
 from NgramGenerator import compute_ngrams
 from Rpfa import micro_rpfa
-from oracle import Oracle
+from StructuredLearning.SEARN.stack import Stack
 from parser import Parser
 from results_procesor import ResultsProcessor
-from shift_reduce_helper import *
-from stack import Stack
-from weighted_examples import WeightedExamples
-import numpy as np
-import string
+
 
 class SearnModel_Legacy(object):
     def __init__(self, feature_extractor, cr_tags, base_learner_fact, beta_decay_fn=lambda b: b - 0.1, positive_val=1, sparse=True):

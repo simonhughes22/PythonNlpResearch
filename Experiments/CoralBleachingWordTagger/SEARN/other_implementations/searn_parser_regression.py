@@ -1,5 +1,5 @@
 from featurevectorizer import FeatureVectorizer
-from searn_parser_logreg import SearnModelTemplateFeatures
+from searn_parser import SearnModelTemplateFeatures
 from shift_reduce_helper import PARSE_ACTIONS, allowed_action
 
 class SearnModelTemplateFeaturesRegression(SearnModelTemplateFeatures):
