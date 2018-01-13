@@ -231,6 +231,9 @@ for ngrams in [1]:
         logger.info("*" * LINE_WIDTH)
         logger.info("Stemmed: {stemmed}".format(stemmed=stemmed))
 
+        # update top level stem setting too
+        config["stem"] = stemmed
+
         for cost_function_name in [micro_f1_cost_plusepsilon.__name__]:
 
             logger.info("*" * LINE_WIDTH)
