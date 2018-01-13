@@ -99,7 +99,7 @@ class LatentWordVectors(object):
             return tfidf.distance_matrix
         return LatentWordVectors(tokens, tf_fact, aggregation_method = aggregation_method, normalize = normalize, unit_vectors = unit_vectors, term_frequency_only = True)
 
-    """ Legacy for backwards compatibility """
+    """ _Legacy for backwards compatibility """
     @classmethod
     def LsaSpace(cls, tokens, num_topics, aggregation_method="doc", normalize=False, unit_vectors=False):
         def lsa_fact(tfidf, tokenized_docs):
@@ -108,7 +108,7 @@ class LatentWordVectors(object):
 
         return LatentWordVectors(tokens, lsa_fact, aggregation_method=aggregation_method, normalize=normalize,
                                  unit_vectors=unit_vectors,term_frequency_only=False)
-    """ END Legacy for backwards compatibility """
+    """ END _Legacy for backwards compatibility """
 
     @classmethod
     def LsaTfIdfSpace(cls, tokens, num_topics, aggregation_method = "doc", normalize = False, unit_vectors = False, chunk_size = 20000):

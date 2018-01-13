@@ -1,18 +1,17 @@
-from featureextractortransformer import FeatureExtractorTransformer
-from sent_feats_for_stacking import *
-from load_data import load_process_essays_without_annotations
-
-from featureextractionfunctions import *
-from wordtagginghelper import *
-from predictions_to_file import predictions_to_file
-# Classifiers
-
-from model_store import ModelStore
-from window_based_tagger_config import get_config
-# END Classifiers
+import logging
 
 import Settings
-import logging
+from featureextractionfunctions import *
+from featureextractortransformer import FeatureExtractorTransformer
+from load_data import load_process_essays_without_annotations
+from model_store import ModelStore
+from predictions_to_file import predictions_to_file
+from sent_feats_for_stacking import *
+from window_based_tagger_config import get_config
+from wordtagginghelper import *
+
+# Classifiers
+# END Classifiers
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 

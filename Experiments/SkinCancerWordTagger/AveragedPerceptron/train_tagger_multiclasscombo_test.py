@@ -6,12 +6,9 @@ from joblib import Parallel
 from joblib import delayed
 
 import Settings
-from CrossValidation import cross_validation
-from Decorators import memoize_to_disk
 from Rpfa import micro_rpfa
 from featureextractionfunctions import *
 from load_data import load_process_essays, extract_features
-from perceptron_tagger_multiclass_combo import PerceptronTaggerMultiClassCombo
 from perceptron_tagger_multiclass_combo_new import PerceptronTaggerLabelPowerset
 from results_procesor import ResultsProcessor, __MICRO_F1__
 from window_based_tagger_config import get_config

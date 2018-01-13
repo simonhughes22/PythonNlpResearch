@@ -1,22 +1,22 @@
 # coding=utf-8
+import logging
 from collections import Counter
 
-from Decorators import memoize_to_disk
-from load_data import load_process_essays, extract_features
-
-from featurevectorizer import FeatureVectorizer
-from featureextractionfunctions import *
-from CrossValidation import cross_validation
-from wordtagginghelper import *
-from IterableFP import flatten
-from results_procesor import ResultsProcessor
 # Classifiers
 from sklearn.linear_model import LogisticRegression
-from window_based_tagger_config import get_config
-# END Classifiers
 
 import Settings
-import logging
+from CrossValidation import cross_validation
+from Decorators import memoize_to_disk
+from IterableFP import flatten
+from featureextractionfunctions import *
+from featurevectorizer import FeatureVectorizer
+from load_data import load_process_essays, extract_features
+from results_procesor import ResultsProcessor
+from window_based_tagger_config import get_config
+from wordtagginghelper import *
+
+# END Classifiers
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 

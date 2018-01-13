@@ -1,4 +1,6 @@
 from typing import List, Dict, Tuple, Set
+
+from Decorators import memoize
 from NgramGenerator import compute_ngrams
 
 # NOTE: These template features are based on the list on p2 on http://www.aclweb.org/anthology/P11-2033
@@ -9,6 +11,25 @@ class NgramExtractor(object):
     def extract(self, words: List[str])->List[str]:
         ngrams = compute_ngrams(tokens=words, max_len=self.max_ngram_len, min_len=1) # type: List[List[str]]
         return [("--".join(ngram)).lower() for ngram in ngrams]
+
+class NgramExtractorStemmed(object):
+    def __init__(self, max_ngram_len):
+        self.max_ngram_len = max_ngram_len
+
+        from nltk import PorterStemmer
+        stemmer = PorterStemmer()
+
+        @memoize
+        def stem(word):
+            return stemmer.stem(word)
+
+        self.stem = stem
+
+    def extract(self, words: List[str])->List[str]:
+        stemmed_words = [self.stem(word) for word in words]
+        stemmed_ngrams = compute_ngrams(tokens=stemmed_words, max_len=self.max_ngram_len, min_len=1) # type: List[List[str]]
+        return [("--".join(ngram)).lower() for ngram in stemmed_ngrams]
+
 
 """ Template Feature Extractor """
 class NonLocalTemplateFeatureExtractor(object):
@@ -870,3 +891,17 @@ def __get_labels_for_tag_pairs__(tag_pairs: Set[Tuple[str,int]],
             for causer_tag_pair in causers:
                 labels.add(format("{causer}->{effect}".format(causer=causer_tag_pair[0], effect=tag_pair[0])))
     return labels
+
+
+if __name__ == "__main__":
+
+    for sentence in ["mary had a little lamba", "coral bleaching was caused by rising global temperatures"]:
+
+        print(sentence)
+        for ngrams in [1,2,3]:
+            print("{ngrams} ngrams".format(ngrams=ngrams))
+            ngram_stemmer = NgramExtractorStemmed(max_ngram_len=ngrams)
+            ngrams = ngram_stemmer.extract(sentence.split(" "))
+            print(ngrams)
+            print()
+        print()

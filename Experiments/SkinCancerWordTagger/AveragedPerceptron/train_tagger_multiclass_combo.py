@@ -1,19 +1,19 @@
-from Decorators import memoize_to_disk
-from sent_feats_for_stacking import *
-from load_data import load_process_essays, extract_features
-
-from featureextractionfunctions import *
-from CrossValidation import cross_validation
-from wordtagginghelper import *
-from IterableFP import flatten
+import logging
 from collections import defaultdict
-from window_based_tagger_config import get_config
-from perceptron_tagger_multiclass_combo import PerceptronTaggerMultiClassCombo
-from results_procesor import ResultsProcessor
-# END Classifiers
 
 import Settings
-import logging
+from CrossValidation import cross_validation
+from Decorators import memoize_to_disk
+from IterableFP import flatten
+from featureextractionfunctions import *
+from load_data import load_process_essays, extract_features
+from perceptron_tagger_multiclass_combo import PerceptronTaggerMultiClassCombo
+from results_procesor import ResultsProcessor
+from sent_feats_for_stacking import *
+from window_based_tagger_config import get_config
+from wordtagginghelper import *
+
+# END Classifiers
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
@@ -121,8 +121,8 @@ for i,(essays_TD, essays_VD) in enumerate(folds):
 
     # TD and VD are lists of Essay objects. The sentences are lists
     # of featureextractortransformer.Word objects
-    print "\nFold %s" % i
-    print "Training Tagging Model"
+    print("\nFold %s" % i)
+    print("Training Tagging Model")
     """ Training """
 
     # Just get the tags (ys)
@@ -162,6 +162,6 @@ wd_algo = "AveragedPerceptronMulticlassCombo"
 wd_td_objectid = processor.persist_results(SC_TAGGING_TD, cv_wd_td_ys_by_tag, cv_wd_td_predictions_by_tag, parameters, wd_algo)
 wd_vd_objectid = processor.persist_results(SC_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
 
-print processor.results_to_string(wd_td_objectid, SC_TAGGING_TD, wd_vd_objectid, SC_TAGGING_VD, "TAGGING")
+print(processor.results_to_string(wd_td_objectid, SC_TAGGING_TD, wd_vd_objectid, SC_TAGGING_VD, "TAGGING"))
 
 """ NOTE THIS DOES QUITE A BIT BETTER ON DETECTING THE RESULT CODES, AND A LITTLE BETTER ON THE CAUSE - EFFECT NODES """

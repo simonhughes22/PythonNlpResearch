@@ -5,12 +5,13 @@ import numpy as np
 from oracle import Oracle
 from shift_reduce_helper import *
 from typing import Set, List
+
+from shift_reduce_parser import ShiftReduceParser
 from weighted_examples import WeightedExamples
 
 from Rpfa import micro_rpfa
 from StructuredLearning.SEARN.stack import Stack
 from featurevectorizer import FeatureVectorizer
-from parser import Parser
 from results_procesor import ResultsProcessor
 
 
@@ -266,7 +267,7 @@ class SearnModelTemplateFeatures(object):
         stack = Stack(verbose=False)
         # needs to be a tuple
         stack.push((ROOT, 0))
-        parser = Parser(stack)
+        parser = ShiftReduceParser(stack)
         oracle = Oracle(pos_ground_truth_crels, parser)
 
         predicted_relations = set()  # type: Set[str]

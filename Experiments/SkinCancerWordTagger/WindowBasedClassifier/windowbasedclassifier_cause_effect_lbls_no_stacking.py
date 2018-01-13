@@ -1,32 +1,24 @@
-from Decorators import memoize_to_disk
-from sent_feats_for_stacking import *
-from load_data import load_process_essays, extract_features
+import logging
 
-from featurevectorizer import FeatureVectorizer
-from featureextractionfunctions import *
-from CrossValidation import cross_validation
-from wordtagginghelper import *
-from IterableFP import flatten
-from DictionaryHelper import tally_items
-from predictions_to_file import predictions_to_file
-from predictions_to_console import predictions_to_console
-from results_procesor import ResultsProcessor
-from argument_hasher import argument_hasher
 # Classifiers
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.svm import LinearSVC
-from sklearn.svm import SVC
-from sklearn.lda import LDA
-
-from window_based_tagger_config import get_config
-from sent_feats_for_stacking import get_sent_tags_from_word_tags
-# END Classifiers
 
 import Settings
-import logging
+from CrossValidation import cross_validation
+from Decorators import memoize_to_disk
+from IterableFP import flatten
+from featureextractionfunctions import *
+from featurevectorizer import FeatureVectorizer
+from load_data import load_process_essays, extract_features
+from predictions_to_file import predictions_to_file
+from results_procesor import ResultsProcessor
+from sent_feats_for_stacking import *
+from sent_feats_for_stacking import get_sent_tags_from_word_tags
+from window_based_tagger_config import get_config
+from wordtagginghelper import *
+
+# END Classifiers
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 

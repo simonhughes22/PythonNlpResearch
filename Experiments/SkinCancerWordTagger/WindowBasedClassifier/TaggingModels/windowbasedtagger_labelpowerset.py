@@ -7,7 +7,6 @@ from sklearn.linear_model import LogisticRegression
 import Settings
 from CrossValidation import cross_validation
 from Decorators import memoize_to_disk
-from IterableFP import flatten
 from featureextractionfunctions import *
 from featurevectorizer import FeatureVectorizer
 from load_data import load_process_essays, extract_features

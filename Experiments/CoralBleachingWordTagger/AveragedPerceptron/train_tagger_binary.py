@@ -1,19 +1,19 @@
-from Decorators import memoize_to_disk
-from sent_feats_for_stacking import *
-from load_data import load_process_essays, extract_features
-
-from featureextractionfunctions import *
-from CrossValidation import cross_validation
-from wordtagginghelper import *
-from IterableFP import flatten
+import logging
 from collections import defaultdict
-from window_based_tagger_config import get_config
-from perceptron_tagger_binary import PerceptronTaggerBinary
-from results_procesor import ResultsProcessor
-# END Classifiers
 
 import Settings
-import logging
+from CrossValidation import cross_validation
+from Decorators import memoize_to_disk
+from IterableFP import flatten
+from featureextractionfunctions import *
+from load_data import load_process_essays, extract_features
+from perceptron_tagger_binary import PerceptronTaggerBinary
+from results_procesor import ResultsProcessor
+from sent_feats_for_stacking import *
+from window_based_tagger_config import get_config
+from wordtagginghelper import *
+
+# END Classifiers
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
