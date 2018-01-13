@@ -182,8 +182,10 @@ def three_words(stack_tags:  List[Tuple[str,int]],
     return feats
 
 
-def word_distance(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
-                  tag2word_seq: Dict[Tuple[str,int], List[str]], between_word_seq: List[str],
+def word_distance(stack_tags: List[Tuple[str, int]],
+                  buffer_tags: List[Tuple[str, int]],
+                  tag2word_seq: Dict[Tuple[str,int], List[str]],
+                  between_word_seq: List[str],
                   distance: int,
                   cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
                   effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
