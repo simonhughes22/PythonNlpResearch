@@ -186,7 +186,7 @@ DOWN_SAMPLE_RATE = 1.0  # For faster smoke testing the algorithm
 BETA = 0.2  # ensure hit's zero after 4 tries
 MAX_EPOCHS = 10
 BASE_LEARNER_FACT = LogisticRegression
-COLLECTION_PREFIX = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL"
+COLLECTION_PREFIX = "CR_SC_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL"
 
 # some of the other extractors aren't functional if the system isn't able to do a basic parse
 # so the base extractors are the MVP for getting to a basic parser, then additional 'meta' parse
@@ -226,7 +226,8 @@ for ngrams in [1]:
     logger.info("*" * LINE_WIDTH)
     logger.info("NGRAM SIZE: {ngram}".format(ngram=ngrams))
 
-    for stemmed in [True, False]:
+    #for stemmed in [True, False]:
+    for stemmed in [True]:
 
         logger.info("*" * LINE_WIDTH)
         logger.info("Stemmed: {stemmed}".format(stemmed=stemmed))
@@ -240,6 +241,8 @@ for ngrams in [1]:
             logger.info("COST FN: {cost_fn}".format(cost_fn=cost_function_name))
 
             current_extractor_names = []  # type: List[str]
+            # best
+            #current_extractor_names = ["single_words","between_word_features","label_set","three_words","third_order","size_features"]  # type: List[str]
             # current_extractor_names = set(all_extractor_fn_names[1:])
             f1_has_improved = True
             best_f1 = -1.0
