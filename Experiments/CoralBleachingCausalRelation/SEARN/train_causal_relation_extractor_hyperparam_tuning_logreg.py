@@ -262,10 +262,10 @@ for ngrams in [1]:
                         if dual and penalty != "l2":
                             continue
 
-                        for C in [0.1, 0.5, 1.0, 10.0, 100.0]:
+                        for beta in [0.1, 0.2, 0.3, 0.4, 0.5]:
+                            for max_epochs in [5, 10, 15, 20]:
 
-                            for beta in [0.1, 0.2, 0.3, 0.4, 0.5]:
-                                for max_epochs in [5, 10, 15, 20]:
+                                for C in [0.1, 0.5, 1.0, 10.0, 100.0]:
 
                                     BASE_LEARNER_FACT = lambda : LogisticRegression(dual=dual,
                                                                                C=C,
