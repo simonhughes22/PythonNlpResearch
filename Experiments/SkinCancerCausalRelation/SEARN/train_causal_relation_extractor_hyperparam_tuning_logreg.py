@@ -83,6 +83,8 @@ def evaluate_model(
             new_folds.append((essays_TD, essays_VD))
         folds = new_folds  # type: List[Tuple[Any, Any]]
 
+    #logger.info("\tModei={model}".format(model=str(BASE_LEARNER_FACT())))
+
     parallel_results = Parallel(n_jobs=len(folds))(
         delayed(model_train_predict)(essays_TD, essays_VD, extractor_fn_names_lst, cost_function_name, ngrams, stemmed,
                                      beta, max_epochs)
@@ -146,6 +148,9 @@ def evaluate_model(
 
 
 def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_name, ngrams, stemmed, beta, max_epochs):
+
+    logger.info("\tModei={model}".format(model=str(BASE_LEARNER_FACT())))
+
     extractors = get_functions_by_name(extractor_names, all_extractor_fns)
     # get single cost function
     cost_fn = get_functions_by_name([cost_function_name], all_cost_functions)[0]
@@ -185,7 +190,7 @@ LINE_WIDTH = 80
 # other settings
 DOWN_SAMPLE_RATE = 1.0  # For faster smoke testing the algorithm
 BASE_LEARNER_FACT = None
-COLLECTION_PREFIX = "CR_SC_SHIFT_REDUCE_PARSER_TEMPLATED_HYPER_PARAM"
+COLLECTION_PREFIX = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_HYPER_PARAM"
 
 # some of the other extractors aren't functional if the system isn't able to do a basic parse
 # so the base extractors are the MVP for getting to a basic parser, then additional 'meta' parse
@@ -240,7 +245,8 @@ for ngrams in [1]:
 
             #current_extractor_names = []  # type: List[str]
             # best
-            best_extractor_names = ["single_words", "between_word_features", "label_set", "three_words", "third_order", "size_features"]  # type: List[str]
+            best_extractor_names = ['single_words', 'between_word_features', 'label_set',
+                                    'three_words', 'third_order', 'unigrams'] # type: List[str]
             # current_extractor_names = set(all_extractor_fn_names[1:])
 
             best_f1 = -1.0
@@ -256,10 +262,10 @@ for ngrams in [1]:
                         if dual and penalty != "l2":
                             continue
 
-                        for C in [0.1, 0.5, 1.0, 10.0, 100.0]:
+                        for beta in [0.1, 0.2, 0.3, 0.4, 0.5]:
+                            for max_epochs in [5, 10, 15, 20]:
 
-                            for beta in [0.1, 0.2, 0.3, 0.4, 0.5]:
-                                for max_epochs in [5, 10, 15, 20]:
+                                for C in [0.1, 0.5, 1.0, 10.0, 100.0]:
 
                                     BASE_LEARNER_FACT = lambda : LogisticRegression(dual=dual,
                                                                                C=C,
@@ -272,7 +278,6 @@ for ngrams in [1]:
                                         penalty=penalty,
                                         fit_intercept=fit_intercept
                                     ))
-
                                     logger.info(
                                         "\tExtractors: {extractors}".format(extractors=",".join(best_extractor_names)))
 
