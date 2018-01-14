@@ -149,7 +149,7 @@ def evaluate_model(
 
 def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_name, ngrams, stemmed, beta, max_epochs):
 
-    logger.info("\tModei={model}".format(model=str(BASE_LEARNER_FACT())))
+    #logger.info("\tModei={model}".format(model=str(BASE_LEARNER_FACT())))
 
     extractors = get_functions_by_name(extractor_names, all_extractor_fns)
     # get single cost function
@@ -272,11 +272,13 @@ for ngrams in [1]:
                                                                                penalty=penalty,
                                                                                fit_intercept=fit_intercept)
 
-                                    logger.info("\tEvaluating parameters: dual={dual}, C={C}, penalty={penalty}, fit_intercept={fit_intercept}".format(
+                                    logger.info("\tEvaluating parameters: beta={beta} max_epochs={max_epochs} dual={dual}, C={C}, penalty={penalty}, fit_intercept={fit_intercept}".format(
                                         dual=dual,
                                         C=C,
                                         penalty=penalty,
-                                        fit_intercept=fit_intercept
+                                        fit_intercept=fit_intercept,
+                                        beta=beta,
+                                        max_epochs=max_epochs
                                     ))
                                     logger.info(
                                         "\tExtractors: {extractors}".format(extractors=",".join(best_extractor_names)))

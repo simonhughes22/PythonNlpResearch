@@ -272,11 +272,14 @@ for ngrams in [1]:
                                                                                penalty=penalty,
                                                                                fit_intercept=fit_intercept)
 
-                                    logger.info("\tEvaluating parameters: dual={dual}, C={C}, penalty={penalty}, fit_intercept={fit_intercept}".format(
-                                        dual=dual,
-                                        C=C,
-                                        penalty=penalty,
-                                        fit_intercept=fit_intercept
+                                    logger.info(
+                                        "\tEvaluating parameters: beta={beta} max_epochs={max_epochs} dual={dual}, C={C}, penalty={penalty}, fit_intercept={fit_intercept}".format(
+                                            dual=dual,
+                                            C=C,
+                                            penalty=penalty,
+                                            fit_intercept=fit_intercept,
+                                            beta=beta,
+                                            max_epochs=max_epochs
                                     ))
                                     logger.info(
                                         "\tExtractors: {extractors}".format(extractors=",".join(best_extractor_names)))
