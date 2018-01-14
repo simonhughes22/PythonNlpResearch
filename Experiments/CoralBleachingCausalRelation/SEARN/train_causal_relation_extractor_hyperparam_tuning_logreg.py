@@ -83,6 +83,8 @@ def evaluate_model(
             new_folds.append((essays_TD, essays_VD))
         folds = new_folds  # type: List[Tuple[Any, Any]]
 
+    #logger.info("\tModei={model}".format(model=str(BASE_LEARNER_FACT())))
+
     parallel_results = Parallel(n_jobs=len(folds))(
         delayed(model_train_predict)(essays_TD, essays_VD, extractor_fn_names_lst, cost_function_name, ngrams, stemmed,
                                      beta, max_epochs)
@@ -146,6 +148,9 @@ def evaluate_model(
 
 
 def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_name, ngrams, stemmed, beta, max_epochs):
+
+    logger.info("\tModei={model}".format(model=str(BASE_LEARNER_FACT())))
+
     extractors = get_functions_by_name(extractor_names, all_extractor_fns)
     # get single cost function
     cost_fn = get_functions_by_name([cost_function_name], all_cost_functions)[0]
@@ -240,7 +245,8 @@ for ngrams in [1]:
 
             #current_extractor_names = []  # type: List[str]
             # best
-            best_extractor_names = ["single_words", "between_word_features", "label_set", "three_words", "third_order", "size_features"]  # type: List[str]
+            best_extractor_names = ['single_words', 'between_word_features', 'label_set',
+                                    'three_words', 'third_order', 'unigrams'] # type: List[str]
             # current_extractor_names = set(all_extractor_fn_names[1:])
 
             best_f1 = -1.0
