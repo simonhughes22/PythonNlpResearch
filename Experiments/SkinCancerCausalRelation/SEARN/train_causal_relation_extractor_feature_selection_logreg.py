@@ -227,7 +227,7 @@ for ngrams in [1]:
     logger.info("NGRAM SIZE: {ngram}".format(ngram=ngrams))
 
     for stemmed in [True, False]:
-    
+
         logger.info("*" * LINE_WIDTH)
         logger.info("Stemmed: {stemmed}".format(stemmed=stemmed))
 

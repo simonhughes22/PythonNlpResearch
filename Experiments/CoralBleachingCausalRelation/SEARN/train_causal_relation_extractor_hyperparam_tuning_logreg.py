@@ -245,11 +245,8 @@ for ngrams in [1]:
 
             #current_extractor_names = []  # type: List[str]
             # best
-            #best_extractor_names = ['single_words', 'between_word_features', 'label_set',
-            #                        'three_words', 'third_order', 'unigrams'] # type: List[str]
-            #TODO populate following feat sel search
-            best_extractor_names = None
-            # current_extractor_names = set(all_extractor_fn_names[1:])
+            best_extractor_names = ['single_words', 'between_word_features', 'label_set',
+                                    'three_words', 'third_order', 'unigrams'] # type: List[str]
 
             best_f1 = -1.0
 

@@ -149,8 +149,6 @@ def evaluate_model(
 
 def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_name, ngrams, stemmed, beta, max_epochs):
 
-    logger.info("\tModei={model}".format(model=str(BASE_LEARNER_FACT())))
-
     extractors = get_functions_by_name(extractor_names, all_extractor_fns)
     # get single cost function
     cost_fn = get_functions_by_name([cost_function_name], all_cost_functions)[0]
@@ -190,7 +188,7 @@ LINE_WIDTH = 80
 # other settings
 DOWN_SAMPLE_RATE = 1.0  # For faster smoke testing the algorithm
 BASE_LEARNER_FACT = None
-COLLECTION_PREFIX = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_HYPER_PARAM"
+COLLECTION_PREFIX = "CR_SC_SHIFT_REDUCE_PARSER_TEMPLATED_HYPER_PARAM"
 
 # some of the other extractors aren't functional if the system isn't able to do a basic parse
 # so the base extractors are the MVP for getting to a basic parser, then additional 'meta' parse
@@ -245,14 +243,11 @@ for ngrams in [1]:
 
             #current_extractor_names = []  # type: List[str]
             # best
-            best_extractor_names = ['single_words', 'between_word_features', 'label_set',
-                                    'three_words', 'third_order', 'unigrams'] # type: List[str]
+            best_extractor_names = ['three_words', 'between_word_features', 'size_features', 'single_words'] # type: List[str] # type: List[str]
             # current_extractor_names = set(all_extractor_fn_names[1:])
-
             best_f1 = -1.0
 
             logger.info("-" * LINE_WIDTH)
-
 
             for dual in [True, False]:
                 # for fit_intercept in [True, False]: # remove as non-optimal and to speed up
