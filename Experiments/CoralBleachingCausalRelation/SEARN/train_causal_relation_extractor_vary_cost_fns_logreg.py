@@ -240,6 +240,8 @@ beta = 0.2
 max_epochs = 10
 # END Parameters
 
+best_f1 = -1.0
+
 for cost_fn in all_cost_functions:
 
     cost_function_name = cost_fn.__name__
@@ -256,7 +258,6 @@ for cost_fn in all_cost_functions:
                             'three_words', 'third_order', 'unigrams']  # type: List[str]
 
     # current_extractor_names = set(all_extractor_fn_names[1:])
-    best_f1 = -1.0
 
     logger.info("-" * LINE_WIDTH)
 
