@@ -253,7 +253,7 @@ for cost_fn in all_cost_functions:
     # best
     best_extractor_names = ['three_words', 'between_word_features', 'size_features', 'single_words'] # type: List[str] # type: List[str]
     # current_extractor_names = set(all_extractor_fn_names[1:])
-    
+
     logger.info("-" * LINE_WIDTH)
 
     BASE_LEARNER_FACT = lambda : LogisticRegression(dual=dual,
