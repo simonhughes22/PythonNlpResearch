@@ -20,7 +20,7 @@ class ShiftReduceParser(object):
         n_arc = norm_arc(arc)
         #assert n_arc not in self.normed_arcs, "Arc already processed %s" % str(n_arc)
         self.arcs.append(arc)
-        self.normed_arcs.add(arc)
+        self.normed_arcs.add(n_arc)
         self.children.add(tos)
         self.actions.append("L ARC   : " + str(tos) + "->" + str(buffer))
 

@@ -106,7 +106,6 @@ class SearnModelTemplateFeatures(object):
             micro_metrics = micro_rpfa(class2metrics.values())  # type: rpfa
             self.log("Training Metrics: {metrics}".format(metrics=micro_metrics))
 
-            # TODO, dictionary vectorize examples, train a weighted binary classifier for each separate parsing action
             self.train_parse_models(parse_examples)
             self.train_crel_models(crel_examples)
 
