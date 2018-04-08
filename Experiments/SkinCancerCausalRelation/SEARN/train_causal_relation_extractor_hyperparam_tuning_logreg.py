@@ -243,7 +243,10 @@ for ngrams in [1]:
 
             #current_extractor_names = []  # type: List[str]
             # best
-            best_extractor_names = ['three_words', 'between_word_features', 'size_features', 'single_words'] # type: List[str] # type: List[str]
+            best_extractor_names = ['three_words',
+                                    'between_word_features',
+                                    'size_features',
+                                    'single_words'] # type: List[str] # type: List[str]
             # current_extractor_names = set(all_extractor_fn_names[1:])
             best_f1 = -1.0
 

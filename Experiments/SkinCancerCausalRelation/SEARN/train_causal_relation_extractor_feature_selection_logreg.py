@@ -240,6 +240,14 @@ for ngrams in [1]:
             logger.info("COST FN: {cost_fn}".format(cost_fn=cost_function_name))
 
             current_extractor_names = []  # type: List[str]
+
+            # Evaluate performance with 6 feats
+            # current_extractor_names = [
+            #  'three_words',
+            #  'between_word_features',
+            #  'size_features',
+            #  'single_words', 'third_order']
+
             # best
             #current_extractor_names = ["single_words","between_word_features","label_set","three_words","third_order","size_features"]  # type: List[str]
             # current_extractor_names = set(all_extractor_fn_names[1:])
