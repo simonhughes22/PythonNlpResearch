@@ -256,7 +256,7 @@ for ngrams in [1]:
                 # for fit_intercept in [True, False]: # remove as non-optimal and to speed up
                 for fit_intercept in [True]:
                     for penalty in ["l1", "l2"]:
-                        # dual only support l2
+                        # dual only support l2 
                         if dual and penalty != "l2":
                             continue
 
