@@ -262,9 +262,9 @@ for ngrams in [1]:
                             continue
 
                         for beta in [0.5]:
-                            for max_epochs in [5]:
+                            for max_epochs in [2]:
 
-                                for C in [0.1]:
+                                for C in [0.5]:
 
                                     BASE_LEARNER_FACT = lambda : LogisticRegression(dual=dual,
                                                                                C=C,

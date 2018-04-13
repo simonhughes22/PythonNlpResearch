@@ -306,13 +306,13 @@ for ngrams in [1]:
             for dual in [False]:
                 # for fit_intercept in [True, False]: # remove as non-optimal and to speed up
                 for fit_intercept in [True]:
-                    for penalty in ["l2"]:
+                    for penalty in ["l1"]:
                         # dual only support l2
                         if dual and penalty != "l2":
                             continue
 
-                        for beta in [0.2]:
-                            for max_epochs in [5]:
+                        for beta in [0.3]:
+                            for max_epochs in [3]:
 
                                 for C in [0.5]:
 

@@ -315,9 +315,9 @@ for ngrams in [1]:
                             continue
 
                         for beta in [0.5]:
-                            for max_epochs in [5]:
+                            for max_epochs in [2]:
 
-                                for C in [0.1]:
+                                for C in [0.5]:
 
                                     BASE_LEARNER_FACT = lambda : LogisticRegression(
                                        dual=dual,
@@ -373,4 +373,6 @@ for ngrams in [1]:
                                         overlap=avg_overlap_preds, without=avg_none_overlap_preds))
 
 
+
+# Micro-precision, overlap: 0.6852966466036113 without: 0.7552902875746066
 
