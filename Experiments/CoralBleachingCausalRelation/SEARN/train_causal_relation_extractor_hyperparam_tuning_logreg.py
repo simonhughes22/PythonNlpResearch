@@ -262,7 +262,8 @@ for ngrams in [1]:
                             continue
 
                         for beta in [0.1, 0.2, 0.3, 0.4, 0.5]:
-                            for max_epochs in [5, 10, 15, 20]:
+                            #for max_epochs in [5, 10, 15, 20]:
+                            for max_epochs in [1, 2, 3]:
 
                                 for C in [0.1, 0.5, 1.0, 10.0, 100.0]:
 
