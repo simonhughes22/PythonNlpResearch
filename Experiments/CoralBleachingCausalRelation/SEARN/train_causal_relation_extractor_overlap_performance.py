@@ -374,5 +374,6 @@ for ngrams in [1]:
 
 
 
-# Micro-precision, overlap: 0.6852966466036113 without: 0.7552902875746066
+# Micro-precision, overlap: 0.6792777300085985 without: 0.7525773195876289
+
 

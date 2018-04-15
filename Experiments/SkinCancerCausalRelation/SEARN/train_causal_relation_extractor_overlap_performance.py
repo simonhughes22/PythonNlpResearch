@@ -369,5 +369,4 @@ for ngrams in [1]:
                                     print("Micro-precision, overlap: {overlap} without: {without}".format(
                                         overlap=avg_overlap_preds, without=avg_none_overlap_preds))
 
-
-
+# Micro-precision, overlap: 0.6743224621038126 without: 0.7533071147658206
