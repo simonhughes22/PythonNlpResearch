@@ -273,6 +273,7 @@ for ngrams in [1]:
                 # as no good parsing decisions can be made
                 extractor_names = all_extractor_fn_names if len(
                     current_extractor_names) >= 1 else base_extractor_fn_names
+
                 for new_extractor_name in extractor_names:
                     # Don't add extractors in current set
                     if new_extractor_name in current_extractor_names:
