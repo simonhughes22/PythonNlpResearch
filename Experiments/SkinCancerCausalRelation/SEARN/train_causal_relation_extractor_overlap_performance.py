@@ -366,7 +366,8 @@ for ngrams in [1]:
                                         preds_for_NONE_overlap.extend(none_overlap_preds)
 
                                     avg_overlap_preds, avg_none_overlap_preds = np.mean(preds_for_overlap), np.mean(preds_for_NONE_overlap)
-                                    print("Micro-precision, overlap: {overlap} without: {without}".format(
+                                    # Note this is recall NOT precision - we are filtering by the labels (recall) not by the predictions (precision)
+                                    print("Micro-recall, overlap: {overlap} without: {without}".format(
                                         overlap=avg_overlap_preds, without=avg_none_overlap_preds))
 
 # Micro-precision, overlap: 0.6743224621038126 without: 0.7533071147658206
