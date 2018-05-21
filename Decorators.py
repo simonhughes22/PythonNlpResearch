@@ -112,6 +112,18 @@ def memoize(f):
             return ret
     return memo_dict(f)
 
+def deterministic_hash_fn(s):
+    # SH: In python 3.3 and upwards, the inbuilt hash function is non-deterministic
+    try:
+        import zlib
+        # byte encode string
+        if type(s) != str:
+            s = str(s)
+        byts = s.encode('utf-8')
+        return str(zlib.adler32(byts))
+    except:
+        return str(hash(s))
+
 class memoize_to_disk(object):
 
     def __init__(self, filename_prefix, verbose=True):
@@ -122,13 +134,14 @@ class memoize_to_disk(object):
         # decorate f
         def wrapped_f(*args, **kwargs):
             # don't hash args, just kwargs
-            s_pickle_key = "_".join(map(lambda tpl: tpl[0] + "_" + self.__value2str__(tpl[1]), sorted(kwargs.items())))
+            s_pickle_key = "_".join(map(lambda tpl: tpl[0] + "_" + self.__value2str__(tpl[1]),
+                                        sorted(kwargs.items(), key = lambda tpl: tpl[0])))
             # hash long filesnames
             #if len(pickle_key) > 225:
             if self.verbose:
                 print("Pickle Key:", s_pickle_key)
 
-            pickle_key = str(hash(s_pickle_key))
+            pickle_key = deterministic_hash_fn(s_pickle_key)
             pickle_file = self.filename_prefix + pickle_key
             if os.path.exists(pickle_file):
                 return pickle.load(open(pickle_file, "rb+"))
