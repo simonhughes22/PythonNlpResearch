@@ -86,7 +86,7 @@ assert len(essay2parsed) == len(essay2tagged)
 
 failed_cnt = 0
 COREF_PHRASE = "COREF_PHRASE"
-SCAN_LENGTH = 4
+SCAN_LENGTH = 2
 
 replacements = []
 fuzzy_matches = []
