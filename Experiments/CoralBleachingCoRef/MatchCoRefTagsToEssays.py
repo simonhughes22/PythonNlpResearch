@@ -134,8 +134,8 @@ for ename, tagged_essay in essay2tagged.items():
         if current_mention != "":
             mentions.append((current_mention, mention_ixs))
 
-    if len(mentions) == 0:
-        continue
+    # if len(mentions) == 0:
+    #     continue
 
     ix_a, ix_b = 0, 0
     wd1ix_wd2ix = {}
@@ -243,6 +243,7 @@ for ename, tagged_essay in essay2tagged.items():
     essay.sentences = new_sentences
     updated_essays.append(essay)
 
+print(len(updated_essays), "updated essays")
 with open(coref_root + partition.lower() + "_processed.dill", "wb+") as f:
     dill.dump(updated_essays, f)
 
