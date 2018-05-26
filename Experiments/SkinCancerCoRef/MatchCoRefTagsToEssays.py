@@ -9,8 +9,8 @@ CV_FOLDS = 5
 DEV_SPLIT = 0.1
 
 settings = Settings()
-root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
-partition = "Test"
+root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
+partition = "Test" # Train | Test
 target_folder = root_folder + partition + "/"
 processed_essay_filename_prefix =  root_folder + "Pickled/essays_proc_pickled_"
 
@@ -70,7 +70,12 @@ def parse_stanfordnlp_tagged_essays(coref_files):
                         key, val = splt
                         tag_dict[key] = val
                     else:
-                        raise Exception("Error")
+                        if len(splt) > 2:
+                            key = splt[0]
+                            val = ":".join(splt[1:])
+                            tag_dict[key] = val
+                        else:
+                            raise Exception("Error")
                 if word == "...":
                     tagged_words.append((".", tag_dict))
                     tagged_words.append((".", tag_dict))
@@ -91,7 +96,7 @@ assert len(essay2parsed) == len(essay2tagged)
 
 failed_cnt = 0
 COREF_PHRASE = "COREF_PHRASE"
-SCAN_LENGTH = 2
+SCAN_LENGTH = 3
 
 replacements = []
 fuzzy_matches = []
