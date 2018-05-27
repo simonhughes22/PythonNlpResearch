@@ -10,13 +10,13 @@ DEV_SPLIT = 0.1
 
 settings = Settings()
 root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
-partition = "Test"
+partition = "Training" # Training | Test
 target_folder = root_folder + partition + "/"
 processed_essay_filename_prefix =  root_folder + "Pickled/essays_proc_pickled_"
 
 config = get_config(target_folder)
 # override this so we don't replace INFREQUENT words
-config["min_df"] = 0
+#config["min_df"] = 0
 
 mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_prefix)(load_process_essays)
 tagged_essays = mem_process_essays(**config)
@@ -91,7 +91,7 @@ assert len(essay2parsed) == len(essay2tagged)
 
 failed_cnt = 0
 COREF_PHRASE = "COREF_PHRASE"
-SCAN_LENGTH = 2
+SCAN_LENGTH = 3
 
 replacements = []
 fuzzy_matches = []

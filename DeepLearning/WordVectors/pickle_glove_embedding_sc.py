@@ -22,10 +22,12 @@ root_folder = settings.data_directory + DATA_SET + "/Thesis_Dataset/"
 training_folder = root_folder + "Training/"
 test_folder     = root_folder + "Test/"
 config = get_config(training_folder)
+config["min_df"] = 0
 
 tagged_essays = load_process_essays(**config)
 
 test_config = dict(config.items())
+test_config["min_df"] = 0
 test_config["folder"] = test_folder
 test_tagged_essays = load_process_essays(**test_config)
 
@@ -50,17 +52,21 @@ for essay in tagged_essays:
         for word, tags in sentence:
             unique_words.add(word)
 
+print(len(unique_words))
 for essay in test_tagged_essays:
     for sentence in essay.sentences:
         for word, tags in sentence:
             unique_words.add(word)
 
 cbe_matrix = {}
+cnt = 0
 for wd in unique_words:
     if wd in embeddings_index:
         coeff = embeddings_index[wd]
         cbe_matrix[wd] = coeff
+        cnt += 1
 
+print("{0} words matched".format(cnt))
 with open(OUTPUT_FILE, "wb+") as f:
     pickle.dump(cbe_matrix, f, fix_imports=True)
 
