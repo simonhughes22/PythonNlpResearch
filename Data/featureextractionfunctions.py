@@ -16,7 +16,10 @@ def stem(word):
 
 # initialize spaCy parser
 # http://honnibal.github.io/spaCy/quickstart.html#install
-parser = Parser()
+if IS_PYTHON_3:
+    parser = None
+else:
+    parser = Parser()
 
 """
 TODO - SpaCy - Try brown cluster labels
