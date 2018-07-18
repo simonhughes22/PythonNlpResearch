@@ -116,9 +116,12 @@ def evaluate_tagger(dual, C, penalty, fit_intercept, multi_class, max_mention_le
 
 feat_config = dict(list(config.items()) + [("extractors", extractors)])
 
-for max_reference_len in [1, 2, 3, 5, 10, 100]:
-    for max_mention_len in [1, 2, 3, 5, 10, 100]:
-        for must_not_have_noun_phrase in [True, False]: # Don't replace if there is one or more real noun phrases in the reference
+# for max_reference_len in [1, 2, 3, 5, 10, 100]:
+#     for max_mention_len in [1, 2, 3, 5, 10, 100]:
+for max_reference_len in [0]:
+    for max_mention_len in [0]:
+        # for must_not_have_noun_phrase in [True, False]: # Don't replace if there is one or more real noun phrases in the reference
+        for must_not_have_noun_phrase in [True]: # Don't replace if there is one or more real noun phrases in the reference
             updated_essays = get_processed_essays(tagged_essays, coref_files,
                                                   max_mention_len=max_mention_len, max_reference_len=max_reference_len,
                                                   must_not_have_noun_phrase=must_not_have_noun_phrase)
