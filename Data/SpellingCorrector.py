@@ -21,7 +21,8 @@ class SpellingCorrector(object):
 
         if not words:
             large_text_file = dir + "big.txt"
-            words = self.extract_words(file(large_text_file).read())
+            with open(large_text_file) as file:
+                words = self.extract_words(file(large_text_file).read())
 
         word_freq = self.train(words)
 
