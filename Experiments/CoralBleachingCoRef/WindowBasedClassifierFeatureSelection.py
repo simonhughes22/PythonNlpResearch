@@ -128,6 +128,7 @@ def evaluate_window_size(config, window_size, features_filename_prefix):
         # end 'for each feat extractor'
 
         if not f1_improved:
+            print("$$$$$$$ No improvement, stopping fwd feature selection step $$$$$$$")
             break
         else:
             existing_extractors.append(new_best_feature_set)
