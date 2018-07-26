@@ -71,6 +71,8 @@ def evaluate_window_size(config, window_size, features_filename_prefix):
     trigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
     pos_tag_window = fact_extract_positional_POS_features(offset)
     bow_pos_tag_bow_window = fact_extract_bow_POS_features(offset)
+    ext_brn_cluster = attach_function_identifier(extract_brown_cluster,dict())
+    ext_dep_reln = attach_function_identifier(extract_dependency_relation,dict())
 
     base_extractors = [
         unigram_window,
@@ -80,8 +82,9 @@ def evaluate_window_size(config, window_size, features_filename_prefix):
         pos_tag_window,
         bow_pos_tag_bow_window,
 
-        extract_dependency_relation,
-        extract_brown_cluster
+        # Don't work in python 3
+        # ext_dep_reln,
+        # ext_brn_cluster
     ]
 
     bigram_extractors = [
@@ -191,7 +194,7 @@ def evaluate_feature_set(config, existing_extractors, new_extractor, features_fi
     SUFFIX = "_FEAT_SELECTION"
     CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
     parameters = dict(config)
-    parameters["extractors"] = map(lambda fn: fn.func_name, feat_extractors)
+    parameters["extractors"] = list(map(lambda fn: fn.func_name, feat_extractors))
     parameters["min_feat_freq"] = MIN_FEAT_FREQ
 
     wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag,
@@ -207,7 +210,7 @@ def evaluate_feature_set(config, existing_extractors, new_extractor, features_fi
 
 best_win_size = -1
 best_micro_f1 = 0
-for win_size in [1, 3, 5, 7, 9, 11, 13]:
+for win_size in [7, 9, 11, 13, 1, 3, 5]:
     macro_f1 = evaluate_window_size(config=config, window_size=win_size, features_filename_prefix=features_filename_prefix)
     if macro_f1 > best_micro_f1:
         print(("!" * 8) + " NEW BEST AVERAGE F1 FOR WINDOW SIZE " + ("!" * 8))
