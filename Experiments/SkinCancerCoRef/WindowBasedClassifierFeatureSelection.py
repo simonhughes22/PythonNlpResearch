@@ -168,13 +168,16 @@ def evaluate_feature_set(config, existing_extractors, new_extractor, features_fi
         td_X, vd_X = feature_transformer.fit_transform(td_feats), feature_transformer.transform(vd_feats)
         wd_td_ys_bytag = get_wordlevel_ys_by_code(td_tags, wd_train_tags)
         wd_vd_ys_bytag = get_wordlevel_ys_by_code(vd_tags, wd_train_tags)
+
+        num_fts = vd_X.shape[-1]
+
         """ TRAIN Tagger """
         tag2word_classifier = train_classifier_per_code(td_X, wd_td_ys_bytag, lambda: LogisticRegression(),
                                                         wd_train_tags, verbose=False)
         """ TEST Tagger """
         td_wd_predictions_by_code = test_classifier_per_code(td_X, tag2word_classifier, wd_test_tags)
         vd_wd_predictions_by_code = test_classifier_per_code(vd_X, tag2word_classifier, wd_test_tags)
-        return td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag
+        return num_fts, td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag
 
     #results = Parallel(n_jobs=CV_FOLDS)(
     #        delayed(train_tagger)(essays_TD, essays_VD, wd_test_tags, wd_train_tags)
@@ -183,12 +186,17 @@ def evaluate_feature_set(config, existing_extractors, new_extractor, features_fi
     results = [train_tagger(essays_TD, essays_VD, wd_test_tags, wd_train_tags)
                for (essays_TD, essays_VD) in folds]
 
+    number_of_feats = []
     for result in results:
-        td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag = result
+        num_fts, td_wd_predictions_by_code, vd_wd_predictions_by_code, wd_td_ys_bytag, wd_vd_ys_bytag = result
+        number_of_feats.append(num_fts)
+
         merge_dictionaries(wd_td_ys_bytag, cv_wd_td_ys_by_tag)
         merge_dictionaries(wd_vd_ys_bytag, cv_wd_vd_ys_by_tag)
         merge_dictionaries(td_wd_predictions_by_code, cv_wd_td_predictions_by_tag)
         merge_dictionaries(vd_wd_predictions_by_code, cv_wd_vd_predictions_by_tag)
+
+    avg_feats = np.mean(number_of_feats)
 
     # print results for each code
     """ Persist Results to Mongo DB """
@@ -197,6 +205,8 @@ def evaluate_feature_set(config, existing_extractors, new_extractor, features_fi
     parameters = dict(config)
     parameters["extractors"] = list(map(lambda fn: fn.func_name, feat_extractors))
     parameters["min_feat_freq"] = MIN_FEAT_FREQ
+    parameters["num_feats_MEAN"] = avg_feats
+    parameters["num_feats_per_fold"] = number_of_feats
 
     wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag,
                                                cv_wd_td_predictions_by_tag, parameters, wd_algo)
