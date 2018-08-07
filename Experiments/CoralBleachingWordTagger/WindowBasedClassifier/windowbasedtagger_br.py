@@ -97,8 +97,8 @@ folds = cross_validation(essay_feats, CV_FOLDS)
 def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags):
     # TD and VD are lists of Essay objects. The sentences are lists
     # of featureextractortransformer.Word objects
-    print "\nFold %s" % fold
-    print "Training Tagging Model"
+    print("\nFold %s" % fold)
+    print("Training Tagging Model")
 
     """ Data Partitioning and Training """
     td_feats, td_tags = flatten_to_wordlevel_feat_tags(essays_TD)
@@ -143,6 +143,6 @@ wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv
 
 # This outputs 0's for MEAN CONCEPT CODES as we aren't including those in the outputs
 
-print processor.results_to_string(wd_td_objectid,   CB_TAGGING_TD,  wd_vd_objectid,     CB_TAGGING_VD,  "TAGGING")
+print(processor.results_to_string(wd_td_objectid,   CB_TAGGING_TD,  wd_vd_objectid,     CB_TAGGING_VD,  "TAGGING"))
 logger.info("Results Processed")
 
