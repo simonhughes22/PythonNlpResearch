@@ -14,9 +14,7 @@ from collections import defaultdict
 
 import numpy as np
 from joblib import Parallel, delayed
-
-# Note this uses a now deprecated Keras module. Use a Dense layer, but make it TimeDistributed
-from keras.layers.core import Activation, TimeDistributedDense # see above
+from keras.layers.core import Activation, TimeDistributedDense # Note this uses a now deprecated Keras module. Use a Dense layer, but make it TimeDistributed
 from keras.layers.embeddings import Embedding
 from keras.layers.recurrent import GRU
 from keras.models import Sequential

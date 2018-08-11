@@ -52,7 +52,7 @@ tagged_essays_tmp = load_process_essays(**config)
 
 with open(training_pickled, "rb+") as f:
     tagged_essays = pickle.load(f)
-len(tagged_essays)
+print(len(tagged_essays),"essays")
 
 import datetime, logging
 
@@ -374,7 +374,7 @@ i = 0
 #         for num_rnns in [1, 2]:
 #             for merge_mode in ["sum"]:
 #                 for hidden_size in [64, 128, 256]:
-for use_pretrained_embedding in [True,]:
+for use_pretrained_embedding in [True]:
     for bi_directional in [True]:
         for num_rnns in [2]:
             for merge_mode in ["sum"]:
