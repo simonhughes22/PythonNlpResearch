@@ -584,7 +584,11 @@ if __name__ == "__main__":
     settings = Settings.Settings()
     bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
     #bratt_root_folder = settings.data_directory + "SkinCancer/EBA1415_Merged/"
-    essays = load_bratt_essays(include_normal=False, directory=bratt_root_folder)
+    #essays = load_bratt_essays(include_normal=False, directory=bratt_root_folder)
+
+    # folder to test the anaphora parsing - with essays with anaphora refs
+    anaphora_folder = "/Users/simon.hughes/Google Drive/PhD/Data/Test_Anaphora_Parsing"
+    essays = load_bratt_essays(include_normal=False, directory=anaphora_folder)
 
     print("ABORTED SPLITS")
     for essay in essays:
