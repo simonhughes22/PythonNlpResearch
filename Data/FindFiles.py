@@ -19,3 +19,20 @@ def find_files(folder, regex=".*", remove_empty = False):
         matches = [f for f in matches if os.path.getsize(f) > 0]
     matches.sort()
     return matches
+
+
+def find_files_recursively(folder, fname_filter=None):
+    """
+    Find all files matching the filename in [folder]
+
+    folder  :   string
+                    folder to search recursive
+    fname_filter : string
+                    filename to match (if provided)
+    """
+    files = []
+    for root, directories, filenames in os.walk(folder):
+        for filename in filenames:
+            if fname_filter is None or filename == fname_filter:
+                files.append(os.path.join(root,filename))
+    return sorted(set(files))
