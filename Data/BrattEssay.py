@@ -582,8 +582,8 @@ if __name__ == "__main__":
 
     #essays = load_bratt_essays(include_normal=False)
     settings = Settings.Settings()
-    #bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
-    bratt_root_folder = settings.data_directory + "SkinCancer/EBA1415_Merged/"
+    bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
+    #bratt_root_folder = settings.data_directory + "SkinCancer/EBA1415_Merged/"
     essays = load_bratt_essays(include_normal=False, directory=bratt_root_folder)
 
     print("ABORTED SPLITS")
