@@ -7,6 +7,8 @@ from collections import defaultdict
 from nltk.tokenize import sent_tokenize
 from IterableFP import flatten
 
+ANAPHORA = "Anaphor"
+
 class AnnotationBase(object):
     def __init__(self, line):
         self.split = line.strip().split("\t")
@@ -151,7 +153,14 @@ class AttributeAnnotation(AnnotationBase):
 class RelationshipAnnotation(AnnotationBase):
     def __init__(self, line):
         AnnotationBase.__init__(self, line)
-        pass
+
+        assert len(self.contents) == 3, len(self.contents)
+        antecedent, arg1, arg2 = self.contents
+        assert antecedent == "antecedent", antecedent
+        assert arg1.startswith("Arg1")
+        assert arg2.startswith("Arg2")
+        self.arg1_code = arg1.split(":")[1]
+        self.arg2_code = arg2.split(":")[1]
 
 class EventAnnotation(AnnotationBase):
     def __init__(self, line, id2annotation):
@@ -211,15 +220,15 @@ class Essay(object):
         self.include_normal = include_normal
         self.include_vague = include_vague
 
+        txt_file = full_path[:-4] + ".txt"
         if essay_text is None:
             self.full_path = full_path
             self.file_name = full_path.split("/")[-1]
-            txt_file = full_path[:-4] + ".txt"
             with open(txt_file, "r+") as f:
                 self.txt = f.read()
         else:
             if load_annotations:
-                raise Exception("Can't load annotations when pasing in essay as text string")
+                raise Exception("Can't load annotations when passing in essay as text string")
             self.full_path = "None"
             self.file_name = "None"
             self.txt = essay_text
@@ -277,6 +286,7 @@ class Essay(object):
 
         annotations_with_dependencies = []
         text_annotations = []
+        antecedent_mapping = defaultdict(set) # map of id to a Set[id] for resolving co-references
         vague_ids = set()
         normal_ids = set()
         for line in lines:
@@ -328,6 +338,7 @@ class Essay(object):
                     annotation.child_annotations.append(self.id2annotation[id])
             elif first_char == "R":
                 annotation = RelationshipAnnotation(line)
+                antecedent_mapping[annotation.arg1_code].add(annotation.arg2_code)
             elif first_char == "E":
                 annotation = EventAnnotation(line, self.id2annotation)
                 annotations_with_dependencies.append(annotation)
@@ -345,7 +356,8 @@ class Essay(object):
                 continue
             if not include_normal and annotation.id in normal_ids:
                 continue
-            process_text_annotation(annotation)
+            if process_text_annotation(annotation) and annotation.code == ANAPHORA:
+                pass
 
         for annotation in annotations_with_dependencies:
             deps = annotation.dependencies()
