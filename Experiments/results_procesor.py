@@ -13,6 +13,19 @@ def is_a_regular_code(code):
     return (code[0].isdigit() or code[0].lower() == 'p') \
             and "->" not in code and ":" not in code
 
+
+# Check mongo is running
+def is_mongo_runnning():
+    import pymongo
+    client = pymongo.MongoClient(serverSelectionTimeoutMS=100)
+    db = client.metrics_codes
+    coll = db.get_collection("CB_TAGGING_TD_AVG_PERCEPTRON_MOST_COMMON_TAG")
+    l = list(coll.find({}))
+
+# Run this here so any code referencing this module will blow up when mongo is not running
+# SH: - confirmed this did work as intended
+is_mongo_runnning()
+
 class ResultsProcessor(object):
 
     def __init__(self, dbname = None, fltr = None):
@@ -171,6 +184,8 @@ class ResultsProcessor(object):
 
         metrics = self.db[collection].find_one({"_id": objectid})
         return metrics[metric_key]
+
+
 
 if __name__ == "__main__":
 
