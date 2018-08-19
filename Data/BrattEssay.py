@@ -20,7 +20,7 @@ class AnnotationBase(object):
         self.code = self.contents[0]
 
     def __repr__(self):
-        return "[" + str(type(self)) + "]" + self.code + ":" + self.type
+        return "[" + str(type(self)).replace("__main__","") + "] " + self.code + ":" + self.type
 
 def is_compound(line):
     if ";" in line:
@@ -159,7 +159,9 @@ class RelationshipAnnotation(AnnotationBase):
         assert antecedent == "antecedent", antecedent
         assert arg1.startswith("Arg1")
         assert arg2.startswith("Arg2")
+        # id of the anaphora tag (a 'T' tag - text)
         self.arg1_code = arg1.split(":")[1]
+        # id of the code belonging to the anaphora
         self.arg2_code = arg2.split(":")[1]
 
 class EventAnnotation(AnnotationBase):
@@ -264,17 +266,45 @@ class Essay(object):
                 typ = typ[:-1]
             return typ + ":" + id
 
-        def process_causal_relations(causer, result):
+        def process_causal_relations(causer, result, antecedent_mapping):
             start = min(causer.start, result.start)
             end = max(causer.end, result.end)
             if start == end:
                 return False
-            cr_code = get_code(causer) + "->" + get_code(result)
+            causer_code = get_code(causer)
+            result_code = get_code(result)
+
+            cr_code = causer_code + "->" + result_code
             codes_start[start].add(cr_code)
             codes_end[end].add(cr_code)
+
+            if ANAPHORA.lower() in causer_code.lower():
+                #assert causer.id in antecedent_mapping, "No antecedent mapping found for annotation:" + str(causer)
+                reference_ids = antecedent_mapping[causer.id]
+                for ref_id in reference_ids:
+                    reference_annotation = self.id2annotation[ref_id]
+                    cr_ana_code = "{causer_code}[{reference_code}]->{result_code}".format(
+                        causer_code=causer_code, reference_code=reference_annotation.code,
+                        result_code=result_code
+                    )
+                    codes_start[start].add(cr_ana_code)
+                    codes_end[end].add(cr_ana_code)
+
+            if ANAPHORA.lower() in result_code.lower():
+                #assert result.id in antecedent_mapping, "No antecedent mapping found for annotation:" + str(result)
+                reference_ids = antecedent_mapping[result.id]
+                for ref_id in reference_ids:
+                    reference_annotation = self.id2annotation[ref_id]
+                    cr_ana_code = "{causer_code}->{result_code}[{reference_code}]".format(
+                        causer_code=causer_code, reference_code=reference_annotation.code,
+                        result_code=result_code
+                    )
+                    codes_start[start].add(cr_ana_code)
+                    codes_end[end].add(cr_ana_code)
+
             return True
 
-        def process_text_annotation(annotation):
+        def process_text_annotation_and_add_codes(annotation):
             if annotation.start == annotation.end:
                 return False
             codes_end[annotation.end].add(get_code(annotation))
@@ -284,7 +314,21 @@ class Essay(object):
                 codes_end[annotation.end].add(annotation.dep_type)
             return True
 
-        annotations_with_dependencies = []
+        def process_anaphoric_reference(anaphora_annotation, reference_annotation)->None:
+            """
+            Adds start and end code for anaphoric references, resolving them with the
+            location of the anphora tag, but the code from the reference annotation
+            :param anaphora_annotation:  text annotation with the Anaphor tag
+            :param reference_annotation:  text annotation that was a reference for that tag
+            :return: None
+            """
+            assert anaphora_annotation.code == ANAPHORA, "Code is not anaphora"
+            # prepend Anaphor tag to the code so we can differentiate from the regular codes
+            reference_code =  "{anaphora}:[{code}]".format(anaphora=ANAPHORA, code=get_code(reference_annotation))
+            codes_end[anaphora_annotation.end].add(reference_code)
+            codes_start[anaphora_annotation.start].add(reference_code)
+
+        annotations_with_dependencies_inc_crels = []
         text_annotations = []
         antecedent_mapping = defaultdict(set) # map of id to a Set[id] for resolving co-references
         vague_ids = set()
@@ -341,7 +385,7 @@ class Essay(object):
                 antecedent_mapping[annotation.arg1_code].add(annotation.arg2_code)
             elif first_char == "E":
                 annotation = EventAnnotation(line, self.id2annotation)
-                annotations_with_dependencies.append(annotation)
+                annotations_with_dependencies_inc_crels.append(annotation)
             elif first_char == "#":
                 annotation = NoteAnnotation(line)
                 for id in annotation.child_annotation_ids:
@@ -356,16 +400,28 @@ class Essay(object):
                 continue
             if not include_normal and annotation.id in normal_ids:
                 continue
-            if process_text_annotation(annotation) and annotation.code == ANAPHORA:
-                pass
 
-        for annotation in annotations_with_dependencies:
+            # add concept code to
+            is_valid = process_text_annotation_and_add_codes(annotation)
+            # Process / resolve antecedent relations (anaphora refs)
+            if is_valid and annotation.code == ANAPHORA:
+                # some anaphora tags don't have antecedent mappings
+                if annotation.id in antecedent_mapping:
+                    # get all references
+                    ref_ids = antecedent_mapping[annotation.id]
+                    # for each reference, add a new "Anaphora:<code>" tag
+                    for id in ref_ids:
+                        reference_annotation = self.id2annotation[id]
+                        process_anaphoric_reference(anaphora_annotation=annotation,
+                                                reference_annotation=reference_annotation)
+        # process causal relations,
+        for annotation in annotations_with_dependencies_inc_crels:
             deps = annotation.dependencies()
             # group items
             grp_causer = dict()
             grp_result = dict()
             for dependency in deps:
-                process_text_annotation(dependency)
+                process_text_annotation_and_add_codes(dependency)
 
                 code = dependency.code
                 splt = code.split(":")
@@ -384,23 +440,22 @@ class Essay(object):
                 if len(grp_causer) == 1 and len(grp_result) == 1:
                     causer = list(grp_causer.values())[0]
                     result = list(grp_result.values())[0]
-                    process_causal_relations(causer, result)
+                    process_causal_relations(causer, result, antecedent_mapping)
                 elif len(grp_causer) == len(grp_result):
                     for key in grp_causer.keys():
                         causer = grp_causer[key]
                         result = grp_result[key]
-                        process_causal_relations(causer, result)
+                        process_causal_relations(causer, result, antecedent_mapping)
                 elif len(grp_causer) == 1:
                     causer = list(grp_causer.values())[0]
                     for key, result in grp_result.items():
-                        process_causal_relations(causer, result)
+                        process_causal_relations(causer, result, antecedent_mapping)
                 elif len(grp_result) == 1:
                     result = list(grp_result.values())[0]
                     for key, causer in grp_causer.items():
-                        process_causal_relations(causer, result)
+                        process_causal_relations(causer, result, antecedent_mapping)
                 else:
                     raise Exception("Unbalanced CR codes")
-
 
         codes = set()
         current_word = ""
@@ -534,8 +589,11 @@ class Essay(object):
                 current_word = ""
 
             if ix in codes_start:
+                # add in all new codes here
                 codes.update(codes_start[ix])
             if ix in codes_end:
+                # remove all codes from the set that end here
+                # this is basically like a remove ALL based on what's in 'codes_end[ix]'
                 codes.difference_update(codes_end[ix])
 
         # add any remaining
@@ -595,12 +653,12 @@ if __name__ == "__main__":
     #essays = load_bratt_essays(include_normal=False)
     settings = Settings.Settings()
     bratt_root_folder = settings.data_directory + "CoralBleaching/BrattData/EBA1415_Merged/"
-    #bratt_root_folder = settings.data_directory + "SkinCancer/EBA1415_Merged/"
-    #essays = load_bratt_essays(include_normal=False, directory=bratt_root_folder)
+    # bratt_root_folder = settings.data_directory + "SkinCancer/EBA1415_Merged/"
+    essays = load_bratt_essays(include_normal=False, directory=bratt_root_folder)
 
     # folder to test the anaphora parsing - with essays with anaphora refs
-    anaphora_folder = "/Users/simon.hughes/Google Drive/PhD/Data/Test_Anaphora_Parsing"
-    essays = load_bratt_essays(include_normal=False, directory=anaphora_folder)
+    # anaphora_folder = "/Users/simon.hughes/Google Drive/PhD/Data/Test_Anaphora_Parsing"
+    # essays = load_bratt_essays(include_normal=False, directory=anaphora_folder)
 
     print("ABORTED SPLITS")
     for essay in essays:
