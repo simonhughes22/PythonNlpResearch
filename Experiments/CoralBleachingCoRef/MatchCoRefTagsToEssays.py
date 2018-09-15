@@ -1,3 +1,4 @@
+from CoRefHelper import parse_stanfordnlp_tagged_essays
 from Decorators import memoize_to_disk
 from FindFiles import find_files
 from Settings import Settings
@@ -28,58 +29,6 @@ coref_folder = coref_root + partition
 coref_files = find_files(coref_folder, ".*\.tagged")
 print("{0} co-ref tagged files loaded".format(len(coref_files)))
 assert len(coref_files) == len(tagged_essays)
-
-
-def parse_stanfordnlp_tagged_essays(coref_files):
-    DELIM = "->"
-    DELIM_TAG = "|||"
-
-    essay2tagged = {}
-    for fname in coref_files:
-        with open(fname) as f:
-            lines = f.readlines()
-
-        tagged_lines = []
-        for line in lines:
-            tagged_words = []
-            line = line.strip()
-            wds = []
-            for t_token in line.split(" "):
-                ##print(t_token)
-
-                word, tags = t_token.split(DELIM)
-                if word == "-lrb-":
-                    word = "("
-                if word == "-rrb-":
-                    word = ")"
-                if word == "\'\'":
-                    word = "\""
-                # if word == "not" and len(wds) > 0 and wds[-1] == "can":
-                #     last_wd, tag_dict = tagged_words[-1]
-                #     tagged_words[-1] = ("cannot", tag_dict)
-                #     wds[-1] = "cannot"
-                #     continue
-
-                wds.append(word)
-                tag_dict = {}
-                for tag in tags.split(DELIM_TAG):
-                    if not tag:
-                        continue
-                    splt = tag.split(":")
-                    if len(splt) == 2:
-                        key, val = splt
-                        tag_dict[key] = val
-                    else:
-                        raise Exception("Error")
-                if word == "...":
-                    tagged_words.append((".", tag_dict))
-                    tagged_words.append((".", tag_dict))
-                    tagged_words.append((".", tag_dict))
-                else:
-                    tagged_words.append((word, tag_dict))
-            tagged_lines.append(tagged_words)
-        essay2tagged[fname.split("/")[-1].split(".")[0]] = tagged_lines
-    return essay2tagged
 
 essay2coref_tagged = parse_stanfordnlp_tagged_essays(coref_files)
 
