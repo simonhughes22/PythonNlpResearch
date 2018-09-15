@@ -4,6 +4,7 @@ from Settings import Settings
 from load_data import load_process_essays
 from window_based_tagger_config import get_config
 from CoRefHelper import parse_stanfordnlp_tagged_essays
+# needed for serialization I think
 import dill
 
 CV_FOLDS = 5
