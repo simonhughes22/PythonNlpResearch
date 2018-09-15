@@ -18,9 +18,9 @@ def get_source_folders(src_root = None):
         src_root = os.getcwd()
 
     folders = set()
-    print "Searching:"
+    print("Searching:")
     for (fullpath, directories, files) in os.walk(src_root):
-        python_files = filter(is_python_file, files)
+        python_files = list(filter(is_python_file, files))
         if len(python_files) > 0 and valid_dir(fullpath):
             folders.add(fullpath)
     return sorted(folders)
@@ -33,23 +33,26 @@ def update_path(folders):
 
 def import_python_files_from_path(src_root):
     src_folders = get_source_folders(src_root)
-    print "Found source folders\n:{0}\n\nAdding to path".format(str(src_folders))
+    print("Found source folders\n:{0}\n\nAdding to path".format(str(src_folders)))
     update_path(src_folders)
 
 if __name__ == "__main__":
 
     #look up user
-    #user = os.environ["USER"]
+    user = os.environ["USER"]
 
     """ Writes a path.txt file to the profile dir. Copy into the ~/bash_profile """
     path = ("/Users/%s/GitHub/NlpResearch/PythonNlpResearch" % user)
-    fname = path + "/launch_notebook.sh"
 
     folders = get_source_folders(path)
     py_path = "'" + os.pathsep.join(folders) + "'"
-    with open(fname, "w+") as f:
-        f.write("export PYTHONPATH=" + py_path + "\n")
-        f.write("cd Notebooks\n")
-        f.write("ipython notebook --pylab inline\n")
 
-    print "len:", len(py_path),"\n", "\n".join(folders)
+    print("Python path:\n", py_path)
+    # To write the path:
+    # fname = path + "/launch_notebook.sh"
+    # with open(fname, "w+") as f:
+    #     f.write("export PYTHONPATH=" + py_path + "\n")
+    #     f.write("cd Notebooks\n")
+    #     f.write("ipython notebook --pylab inline\n")
+    #
+    # print "len:", len(py_path),"\n", "\n".join(folders)
