@@ -13,6 +13,10 @@ from load_data import load_process_essays, extract_features
 from window_based_tagger_config import get_config
 from wordtagginghelper import *
 
+"""
+NOTE: This was created just to do predictions to evaluate perf
+"""
+
 # END Classifiers
 
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)

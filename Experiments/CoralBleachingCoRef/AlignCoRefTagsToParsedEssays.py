@@ -43,7 +43,6 @@ coref_files = find_files(coref_folder, ".*\.tagged")
 print("{0} co-ref tagged files loaded".format(len(coref_files)))
 assert len(coref_files) == len(tagged_essays)
 
-
 essay2coref_tagged = parse_stanfordnlp_tagged_essays(coref_files)
 assert len(essay2tagged) == len(essay2coref_tagged)
 
@@ -202,7 +201,7 @@ for ename, coref_essay in essay2coref_tagged.items():
     updated_essays.append(tagged_essay)
 
 print(len(updated_essays), "updated essays")
-with open(coref_root + partition.lower() + "_processed.dill", "wb+") as f:
-    dill.dump(updated_essays, f)
+# with open(coref_root + partition.lower() + "_processed.dill", "wb+") as f:
+#     dill.dump(updated_essays, f)
 
 print(failed_cnt)

@@ -1,5 +1,11 @@
 from processessays import Essay
 
+def bratt_essays_2_hash_map(essays):
+    lu = {}
+    for e in essays:
+        # remove the extension
+        lu[e.name.replace(".ann","")] = e
+    return lu
 
 def parse_stanfordnlp_tagged_essays(coref_files):
     DELIM = "->"
