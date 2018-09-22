@@ -1,3 +1,8 @@
+from typing import List, Set, Dict, Any
+
+import BrattEssay
+import Rpfa
+
 __author__ = 'simon.hughes'
 
 import pymongo
@@ -6,6 +11,8 @@ from Metrics import compute_tp_fp_fn, rpf1a_from_tp_fp_tn_fn
 from datetime import datetime
 from collections import defaultdict
 
+import pandas
+
 __MACRO_F1__ = "MACRO_F1"
 __MICRO_F1__ = "MICRO_F1"
 
@@ -13,6 +20,23 @@ def is_a_regular_code(code):
     return (code[0].isdigit() or code[0].lower() == 'p') \
             and "->" not in code and ":" not in code
 
+def metrics_to_df(metrics: Dict[str, Any])->pandas.DataFrame:
+    """
+    Given a metrics Dictionary, returns a Pandas DataFrame
+    :param metrics:
+    :return:
+    """
+    rows = []
+    for k,val in metrics.items():
+        if type(val) == Rpfa.rpfa:
+            d = dict(val.__dict__) # convert obj to dict
+        elif type(val) == dict:
+            d = dict(val)
+        else:
+            d = dict()
+        d["code"] = k
+        rows.append(d)
+    return pandas.DataFrame(rows)
 
 # Check mongo is running
 def is_mongo_runnning():
@@ -68,9 +92,85 @@ class ResultsProcessor(object):
         return metrics_by_tag
 
     @staticmethod
-    def compute_mean_metrics(ys_by_tag, predictions_by_tag, fltr=is_a_regular_code):
+    def compute_mean_metrics(ys_by_tag, predictions_by_tag, fltr=is_a_regular_code)->Dict[str, float]:
         metrics = ResultsProcessor.compute_metrics(ys_by_tag, predictions_by_tag)
         return ResultsProcessor.add_mean_metrics(metrics, fltr)
+
+    @staticmethod
+    def __get_label_(tag, expected_tag_set):
+        if tag in expected_tag_set:
+            return 1
+        else:
+            return 0
+
+    @staticmethod
+    def get_wd_level_lbs(essays, expected_tags):
+        expected_tags = set(expected_tags)
+        ysbycode = defaultdict(list)
+        for e in essays:
+            for sent in e.sentences:
+                for wd, tag_set in sent:
+                    for etag in expected_tags:
+                        ysbycode[etag].append(ResultsProcessor.__get_label_(etag, tag_set))
+        return ysbycode
+
+    @staticmethod
+    def get_wd_level_preds(essays, expected_tags):
+        expected_tags = set(expected_tags)
+        ysbycode = defaultdict(list)
+        for e in essays:
+            for sentix in range(len(e.sentences)):
+                p_ccodes = e.pred_tagged_sentences[sentix]
+                for wordix in range(len(p_ccodes)):
+                    ptag_set = {p_ccodes[wordix]}
+                    assert len(ptag_set) >= 1, "No tags found"
+                    for exp_tag in expected_tags:
+                        ysbycode[exp_tag].append(ResultsProcessor.__get_label_(exp_tag, ptag_set))
+        return ysbycode
+
+    @staticmethod
+    def compute_mean_metrics_from_tagged_essays(
+            tagged_esssays: List[BrattEssay.Essay], expected_tags: Set[str])->Dict[str, float]:
+        """
+        Given a set of already tagged essays, computes the mean metrics using the BrattEssay.pred_tagged_sentences list
+        :param tagged_esssays:
+        :param expected_tags:
+        :return:
+        """
+
+        # this give flexibility to look at anaphora, cc or both
+        act_ys_bycode  = ResultsProcessor.get_wd_level_lbs(tagged_esssays, expected_tags)
+        pred_ys_bycode = ResultsProcessor.get_wd_level_preds(tagged_esssays, expected_tags)
+
+        assert len(act_ys_bycode.keys()) == len(pred_ys_bycode.keys()) == len(expected_tags), "Miss-matched codes"
+        first_tag = list(expected_tags)[0]
+        last_tag  = list(expected_tags)[-1]
+        assert len(act_ys_bycode[first_tag]) == len(pred_ys_bycode[first_tag]), "Different numbers of words"
+        assert len(act_ys_bycode[last_tag]) == len(pred_ys_bycode[last_tag]),   "Different numbers of words"
+
+        return ResultsProcessor.compute_mean_metrics(act_ys_bycode, pred_ys_bycode)
+
+    @staticmethod
+    def compute_metrics_from_tagged_essays(
+            tagged_esssays: List[BrattEssay.Essay], expected_tags: Set[str]) -> Dict[str, Dict[str, Rpfa.rpfa]]:
+        """
+        Given a set of already tagged essays, computes the regular metrics using the BrattEssay.pred_tagged_sentences list
+        :param tagged_esssays:
+        :param expected_tags:
+        :return:
+        """
+
+        # this give flexibility to look at anaphora, cc or both
+        act_ys_bycode  = ResultsProcessor.get_wd_level_lbs(tagged_esssays,   expected_tags)
+        pred_ys_bycode = ResultsProcessor.get_wd_level_preds(tagged_esssays, expected_tags)
+
+        assert len(act_ys_bycode.keys()) == len(pred_ys_bycode.keys()) == len(expected_tags), "Miss-matched codes"
+        first_tag = list(expected_tags)[0]
+        last_tag  = list(expected_tags)[-1]
+        assert len(act_ys_bycode[first_tag]) == len(pred_ys_bycode[first_tag]), "Different numbers of words"
+        assert len(act_ys_bycode[last_tag]) == len(pred_ys_bycode[last_tag]),   "Different numbers of words"
+
+        return ResultsProcessor.compute_metrics(act_ys_bycode, pred_ys_bycode)
 
     @staticmethod
     def add_mean_metrics(dict_mean_metrics, fltr=is_a_regular_code):
