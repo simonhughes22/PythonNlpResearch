@@ -1,7 +1,5 @@
-from Decorators import memoize_to_disk
 from FindFiles import find_files
 from Settings import Settings
-from load_data import load_process_essays
 from window_based_tagger_config import get_config
 from CoRefHelper import parse_stanfordnlp_tagged_essays
 # needed for serialization I think
@@ -16,20 +14,25 @@ there's a commonly well defined (and easily debuggable) function that can be ste
 the different nb's as needed (or py scripts).
 
 """
+DATASET = "CoralBleaching"
+PARTITION = "Training" # Training | Test
 
 settings = Settings()
-root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
-partition = "Training" # Training | Test
-target_folder = root_folder + partition + "/"
-processed_essay_filename_prefix =  root_folder + "Pickled/essays_proc_pickled_"
+root_folder = settings.data_directory + DATASET + "/Thesis_Dataset/"
+merged_predictions_folder = root_folder + "Predictions/CoRef/MergedTags/"
 
-config = get_config(target_folder)
 # override this so we don't replace INFREQUENT words
 #config["min_df"] = 0
+with open(merged_predictions_folder + "merged_essays_train.dill", "rb+") as f:
+    tagged_essays_train = dill.load(f)
 
-mem_process_essays = memoize_to_disk(filename_prefix=processed_essay_filename_prefix)(load_process_essays)
-tagged_essays = mem_process_essays(**config)
-print("{0} essays loaded".format(len(tagged_essays)))
+with open(merged_predictions_folder + "merged_essays_test.dill", "rb+") as f:
+    tagged_essays_test = dill.load(f)
+
+print("{0} training essays loaded".format(len(tagged_essays_train)))
+print("{0} test essays loaded".format(len(tagged_essays_test)))
+
+
 # map parsed essays to essay name
 essay2tagged = {}
 for e in tagged_essays:
@@ -38,7 +41,7 @@ for e in tagged_essays:
 # Load CoRef Parsed Essays
 
 coref_root = root_folder + "CoReference/"
-coref_folder = coref_root + partition
+coref_folder = coref_root + PARTITION
 
 coref_files = find_files(coref_folder, ".*\.tagged")
 print("{0} co-ref tagged files loaded".format(len(coref_files)))
