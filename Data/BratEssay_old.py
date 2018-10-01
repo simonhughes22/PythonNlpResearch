@@ -204,7 +204,7 @@ class NoteAnnotation(AnnotationBase):
         self.child_annotation_ids = self.contents[1:]
         pass
 
-class Essay(object):
+class Essay_Old(object):
 
     def __init__(self, full_path, include_vague = True, include_normal = True, load_annotations = True, essay_text = None):
 
@@ -537,7 +537,7 @@ class Essay(object):
         #if len(self.tagged_sentences) > 60:
         #    raise Exception("Too many sentences (%s) in essay %s" % (str(len(self.sentence_tags)), self.file_name))
 
-def load_bratt_essays(directory = None, include_vague = True, include_normal = True, load_annotations = True):
+def load_bratt_essays_old(directory = None, include_vague = True, include_normal = True, load_annotations = True):
     import warnings
 
     bratt_root_folder = directory
@@ -562,7 +562,7 @@ def load_bratt_essays(directory = None, include_vague = True, include_normal = T
                     print("Skipping %s file as .txt file is %s'" % (f, contents))
                     continue
 
-            essay = Essay(f, include_vague=include_vague, include_normal=include_normal, load_annotations=load_annotations)
+            essay = Essay_Old(f, include_vague=include_vague, include_normal=include_normal, load_annotations=load_annotations)
             if len(essay.tagged_sentences) > 60:
                 warnings.warn("Too many sentences (%s) in essay %s" % (str(len(essay.sentence_tags)), essay.file_name))
                 print("Too many sentences (%s) in essay %s" % (str(len(essay.sentence_tags)), essay.file_name))
