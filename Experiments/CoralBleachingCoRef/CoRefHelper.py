@@ -55,12 +55,28 @@ def parse_stanfordnlp_tagged_essays(coref_files):
                 else:
                     tagged_words.append((word, tag_dict))
             tagged_lines.append(tagged_words)
-        essay2tagged[fname.split("/")[-1].split(".")[0]] = tagged_lines
+        ename = fname.split("/")[-1].split(".")[0]
+        essay2tagged[ename] = tagged_lines
+        # coref_essay = Essay(name=ename, sentences=tagged_lines)
+        # essay2tagged[ename] = coref_essay
     return essay2tagged
 
-def get_processed_essays(tagged_essays, coref_files,
-                         min_reference_len=1, max_reference_len = 100,
-                         min_mention_len=1, max_mention_len = 100, must_not_have_noun_phrase = False):
+def replace_corefs_with_mentions(tagged_essays, coref_files,
+                                 min_reference_len=1, max_reference_len = 100,
+                                 min_mention_len=1, max_mention_len = 100, must_not_have_noun_phrase = False):
+    """
+    This function is used in CVTrainWordWindosTaggingModel - it takes the coref output, and replaces the anaphors
+    with their antecedents (or corefs with their mentions).
+
+    :param tagged_essays:
+    :param coref_files:
+    :param min_reference_len:
+    :param max_reference_len:
+    :param min_mention_len:
+    :param max_mention_len:
+    :param must_not_have_noun_phrase:
+    :return:
+    """
     essay2parsed = {}
     for e in tagged_essays:
         essay2parsed[e.name.split(".")[0]] = e

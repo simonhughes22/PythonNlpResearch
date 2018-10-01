@@ -10,7 +10,7 @@ from featureextractionfunctions import fact_extract_positional_word_features_ste
 from load_data import load_process_essays, extract_features
 from results_procesor import ResultsProcessor, __MICRO_F1__
 from window_based_tagger_config import get_config
-from CoRefHelper import get_processed_essays
+from CoRefHelper import replace_corefs_with_mentions
 from TrainingHelper import train_tagger
 from wordtagginghelper import *
 import logging
@@ -122,9 +122,9 @@ for max_reference_len in [0]:
     for max_mention_len in [0]:
         # for must_not_have_noun_phrase in [True, False]: # Don't replace if there is one or more real noun phrases in the reference
         for must_not_have_noun_phrase in [True]: # Don't replace if there is one or more real noun phrases in the reference
-            updated_essays = get_processed_essays(tagged_essays, coref_files,
-                                                  max_mention_len=max_mention_len, max_reference_len=max_reference_len,
-                                                  must_not_have_noun_phrase=must_not_have_noun_phrase)
+            updated_essays = replace_corefs_with_mentions(tagged_essays, coref_files,
+                                                          max_mention_len=max_mention_len, max_reference_len=max_reference_len,
+                                                          must_not_have_noun_phrase=must_not_have_noun_phrase)
             """ LOAD DATA """
             assert len(updated_essays) == len(tagged_essays), "Must be same number of essays after processing"
             print(len(updated_essays), "updated essays")
