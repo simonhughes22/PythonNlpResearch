@@ -1,5 +1,6 @@
 from FindFiles import find_files
 from Settings import Settings
+from validate_tagged_essays_align import validate_tagged_essays
 from window_based_tagger_config import get_config
 from CoRefHelper import parse_stanfordnlp_tagged_essays
 # needed for serialization I think
@@ -14,24 +15,35 @@ there's a commonly well defined (and easily debuggable) function that can be ste
 the different nb's as needed (or py scripts).
 
 """
+
+""" Begin Settings """
 DATASET = "CoralBleaching"
-PARTITION = "Training" # Training | Test
+PARTITION = "Test" # Training | Test
+SCAN_LENGTH = 3
+""" END Settings """
+
 
 settings = Settings()
 root_folder = settings.data_directory + DATASET + "/Thesis_Dataset/"
 merged_predictions_folder = root_folder + "Predictions/CoRef/MergedTags/"
 
+coref_root = root_folder + "CoReference/"
+coref_folder = coref_root + PARTITION
+
 # override this so we don't replace INFREQUENT words
 #config["min_df"] = 0
-with open(merged_predictions_folder + "merged_essays_train.dill", "rb+") as f:
-    tagged_essays_train = dill.load(f)
 
-with open(merged_predictions_folder + "merged_essays_test.dill", "rb+") as f:
-    tagged_essays_test = dill.load(f)
+if PARTITION.lower() == "training":
+    merged_essays_fname =  "merged_essays_train.dill"
+elif PARTITION.lower() == "test":
+    merged_essays_fname = "merged_essays_test.dill"
+else:
+    raise Exception("Invalid partition: " + PARTITION)
 
-print("{0} training essays loaded".format(len(tagged_essays_train)))
-print("{0} test essays loaded".format(len(tagged_essays_test)))
+with open(merged_predictions_folder + merged_essays_fname, "rb+") as f:
+    tagged_essays = dill.load(f)
 
+print("{0} training essays loaded".format(len(tagged_essays)))
 
 # map parsed essays to essay name
 essay2tagged = {}
@@ -39,39 +51,28 @@ for e in tagged_essays:
     essay2tagged[e.name.split(".")[0]] = e
 
 # Load CoRef Parsed Essays
-
-coref_root = root_folder + "CoReference/"
-coref_folder = coref_root + PARTITION
-
 coref_files = find_files(coref_folder, ".*\.tagged")
 print("{0} co-ref tagged files loaded".format(len(coref_files)))
 assert len(coref_files) == len(tagged_essays)
 
 essay2coref_tagged = parse_stanfordnlp_tagged_essays(coref_files)
-assert len(essay2tagged) == len(essay2coref_tagged)
+
+# VALIDATE THE SAME SET OF ESSAYS
+assert essay2tagged.keys() == essay2coref_tagged.keys()
+intersect = set(essay2tagged.keys()).intersection(essay2coref_tagged.keys())
+assert len(intersect) == len(essay2tagged.keys())
+assert len(essay2tagged.keys()) > 1
+assert len(essay2tagged.keys()) == len(essay2coref_tagged.keys())
 
 failed_cnt = 0
 COREF_PHRASE = "COREF_PHRASE"
-SCAN_LENGTH = 3
 
 replacements = []
 fuzzy_matches = []
 
 updated_essays = []
-for ename, coref_essay in essay2coref_tagged.items():
-    assert ename in essay2tagged
-    tagged_essay = essay2tagged[ename]
 
-    wds_tagd = []
-    taggedwd2sentixs = {}
-    replacement_sent2wdix = {}
-    for sent_ix, sent in enumerate(tagged_essay.sentences):
-        for wd_ix, (wd, tags) in enumerate(sent):
-            taggedwd2sentixs[len(wds_tagd)] = (sent_ix, wd_ix)
-            if wd == "\'\'":
-                wd = "\""
-            wds_tagd.append((wd, tags))
-
+def map_mentions_to_word_ixs(coref_essay):
     wds_coref = []
     mentions = []
     for sent_ix, sent in enumerate(coref_essay):
@@ -94,6 +95,24 @@ for ename, coref_essay in essay2coref_tagged.items():
                 mention_ixs.add(len(wds_coref) - 1)
         if current_mention != "":
             mentions.append((current_mention, mention_ixs))
+    return wds_coref, mentions
+
+
+for ename, coref_essay in essay2coref_tagged.items():
+    assert ename in essay2tagged
+    tagged_essay = essay2tagged[ename]
+
+    wds_tagd = []
+    taggedwd2sentixs = {}
+
+    for sent_ix, sent in enumerate(tagged_essay.sentences):
+        for wd_ix, (wd, tags) in enumerate(sent):
+            taggedwd2sentixs[len(wds_tagd)] = (sent_ix, wd_ix)
+            if wd == "\'\'":
+                wd = "\""
+            wds_tagd.append((wd, tags))
+
+    wds_coref, mentions = map_mentions_to_word_ixs(coref_essay)
 
     # if len(mentions) == 0:
     #     continue
@@ -136,6 +155,7 @@ for ename, coref_essay in essay2coref_tagged.items():
                 break
 
     # replace the corefs/amaphors with their antecedents
+    replacement_sent2wdix = {}
     for mention, ixs in mentions:
         first_ix = min(ixs)
         is_fuzzy = False
