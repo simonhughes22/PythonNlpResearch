@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from processessays import Essay
 
 def bratt_essays_2_hash_map(essays):
@@ -38,14 +40,14 @@ def parse_stanfordnlp_tagged_essays(coref_files):
                 #     continue
 
                 wds.append(word)
-                tag_dict = {}
+                tag_dict = defaultdict(set)
                 for tag in tags.split(DELIM_TAG):
                     if not tag:
                         continue
                     splt = tag.split(":")
                     if len(splt) == 2:
                         key, val = splt
-                        tag_dict[key] = val
+                        tag_dict[key].add(val)
                     else:
                         raise Exception("Error")
                 if word == "...":
