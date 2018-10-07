@@ -18,7 +18,7 @@ the different nb's as needed (or py scripts).
 
 """ Begin Settings """
 DATASET = "CoralBleaching"
-PARTITION = "Training" # Training | Test
+PARTITION = "Test" # Training | Test
 SCAN_LENGTH = 3
 """ END Settings """
 
