@@ -1,10 +1,9 @@
-from FindFiles import find_files
-from Settings import Settings
-from validate_tagged_essays_align import validate_tagged_essays
-from window_based_tagger_config import get_config
-from CoRefHelper import parse_stanfordnlp_tagged_essays
 # needed for serialization I think
 import dill
+
+from CoRefHelper import parse_stanfordnlp_tagged_essays
+from FindFiles import find_files
+from Settings import Settings
 
 CV_FOLDS = 5
 DEV_SPLIT = 0.1
@@ -72,76 +71,77 @@ fuzzy_matches = []
 
 updated_essays = []
 
-def map_mentions_to_word_ixs(coref_essay):
-    wds_coref = []
-    mentions = []
-    for sent_ix, sent in enumerate(coref_essay):
-        current_mention = ""
-        mention_ixs = set()
-        for wd_ix, (wd, tag_dict) in enumerate(sent):
-            wds_coref.append((wd, tag_dict))
-            if COREF_PHRASE not in tag_dict:
-                if current_mention != "":
-                    mentions.append((current_mention, mention_ixs))
-                current_mention = ""
-                mention_ixs = set()
-            else:
-                phrase = tag_dict[COREF_PHRASE].replace("_", " ")
-                if phrase != current_mention and current_mention != "":
-                    mentions.append((current_mention, mention_ixs))
-                    current_mention = ""
-                    mention_ixs = set()
-                current_mention = phrase
-                mention_ixs.add(len(wds_coref) - 1)
-        if current_mention != "":
-            mentions.append((current_mention, mention_ixs))
-    return wds_coref, mentions
+def map_tagged_words_to_word_ixs(tagged_essay):
 
-
-for ename, coref_essay in essay2coref_tagged.items():
-    assert ename in essay2tagged
-    tagged_essay = essay2tagged[ename]
-
-    wds_tagd = []
+    wd2tags = []
     taggedwd2sentixs = {}
-
     for sent_ix, sent in enumerate(tagged_essay.sentences):
         for wd_ix, (wd, tags) in enumerate(sent):
-            taggedwd2sentixs[len(wds_tagd)] = (sent_ix, wd_ix)
+            taggedwd2sentixs[len(wd2tags)] = (sent_ix, wd_ix)
             if wd == "\'\'":
                 wd = "\""
-            wds_tagd.append((wd, tags))
+            wd2tags.append((wd, tags))
+    return wd2tags, taggedwd2sentixs
 
-    wds_coref, mentions = map_mentions_to_word_ixs(coref_essay)
 
-    # if len(mentions) == 0:
-    #     continue
+def replace_underscore(mention):
+    return set(map(lambda s: s.replace("_"," "), mention))
+
+def map_mentions_to_word_ixs(coref_essay):
+    #TODO - fix this, it assume one mention per word, but we can have multiple
+    wds2coref = []
+    mentions = []
+    for sent_ix, sent in enumerate(coref_essay):
+        current_mentions = set()
+        mention_ixs = set()
+        for wd_ix, (wd, tag_dict) in enumerate(sent):
+            wds2coref.append((wd, tag_dict))
+            if COREF_PHRASE not in tag_dict:
+                if len(current_mentions) > 0:
+                    mentions.append((current_mentions, mention_ixs))
+                current_mentions = set()
+                mention_ixs = set()
+            else:
+                phrases = replace_underscore(tag_dict[COREF_PHRASE])
+                if phrases != current_mentions and len(current_mentions) > 0:
+                    mentions.append((current_mentions, mention_ixs))
+                    current_mentions = set()
+                    mention_ixs = set()
+                current_mentions = phrases
+                mention_ixs.add(len(wds2coref) - 1)
+        if len(current_mentions) > 0:
+            mentions.append((current_mentions, mention_ixs))
+    return wds2coref, mentions
+
+
+def map_words_between_essays(wd2_tags, wds2coref):
+    errors = []
 
     ix_tagd, ix_coref = 0, 0
     ixtagd_2_ixcoref = {}
     ixcoref_2_ixtagd = {}
 
-    while ix_tagd < (len(wds_tagd) - 1) and ix_coref < (len(wds_coref) - 1):
-        wd_tagd, atags = wds_tagd[ix_tagd]
-        wd_coref, btag_dict = wds_coref[ix_coref]
+    while ix_tagd < (len(wd2tags) - 1) and ix_coref < (len(wds2coref) - 1):
+        wd_tagd, atags = wd2tags[ix_tagd]
+        wd_coref, btag_dict = wds2coref[ix_coref]
 
         if wd_tagd == wd_coref or wd_tagd == "cannot" and wd_coref == "can":
-            ixtagd_2_ixcoref[ix_tagd]  = ix_coref
+            ixtagd_2_ixcoref[ix_tagd] = ix_coref
             ixcoref_2_ixtagd[ix_coref] = ix_tagd
-            ix_tagd  += 1
+            ix_tagd += 1
             ix_coref += 1
         else:
             # look ahead in wds2 for item that matches next a
             found_match = False
-            for offseta, (aa, atags) in enumerate(wds_tagd[ix_tagd: ix_tagd + 1 + SCAN_LENGTH]):
-                for offsetb, (bb, bb_tag_dict) in enumerate(wds_coref[ix_coref:ix_coref + 1 + SCAN_LENGTH]):
+            for offseta, (aa, atags) in enumerate(wd2tags[ix_tagd: ix_tagd + 1 + SCAN_LENGTH]):
+                for offsetb, (bb, bb_tag_dict) in enumerate(wds2coref[ix_coref:ix_coref + 1 + SCAN_LENGTH]):
                     if aa == bb:
                         if offseta == offsetb:
                             for i in range(ix_tagd, ix_tagd + offseta):
                                 if i not in ixtagd_2_ixcoref:
                                     ixtagd_2_ixcoref[i] = i
 
-                        ix_tagd  = ix_tagd + offseta
+                        ix_tagd = ix_tagd + offseta
                         ix_coref = ix_coref + offsetb
                         ixtagd_2_ixcoref[ix_tagd] = ix_coref
                         ixcoref_2_ixtagd[ix_coref] = ix_tagd
@@ -150,14 +150,31 @@ for ename, coref_essay in essay2coref_tagged.items():
                 if found_match:
                     break
             if not found_match:
-                print("Failed: " + ename, wd_tagd, wd_coref, ix_tagd, len(wds_tagd), ix_coref, len(wds_coref))
-                failed_cnt += 1
+                errors.append((ename, wd_tagd, wd_coref, ix_tagd, ix_coref))
                 break
+    return ixtagd_2_ixcoref, ixcoref_2_ixtagd, errors
+
+for ename, coref_essay in essay2coref_tagged.items():
+    assert ename in essay2tagged
+    tagged_essay = essay2tagged[ename]
+
+    wd2tags, taggedwd2sentixs = map_tagged_words_to_word_ixs(tagged_essay)
+    wds2coref, mentions = map_mentions_to_word_ixs(coref_essay)
+
+    # if len(mentions) == 0:
+    #     continue
+
+    ixtagd_2_ixcoref, ixcoref_2_ixtagd, errors = map_words_between_essays(wd2tags, wds2coref)
+    if errors:
+        # Print errors
+        for ename, wd_tagd, wd_coref, ix_tagd, ix_coref in errors:
+            failed_cnt += 1
+            print("Failed: " + ename, wd_tagd, wd_coref, ix_tagd, ix_coref)
 
     # replace the corefs/amaphors with their antecedents
     replacement_sent2wdix = {}
-    for mention, ixs in mentions:
-        first_ix = min(ixs)
+    for mention, mention_ixs in mentions:
+        first_ix = min(mention_ixs)
         is_fuzzy = False
         if first_ix not in ixcoref_2_ixtagd:
             while first_ix > 0 and first_ix not in ixcoref_2_ixtagd:
@@ -166,17 +183,17 @@ for ename, coref_essay in essay2coref_tagged.items():
                 e_first_wd_ix = 0
             # one past last matching index
             else:
-                e_first_wd_ix = min(len(wds_tagd) - 1, ixcoref_2_ixtagd[first_ix] + 1)
+                e_first_wd_ix = min(len(wd2tags) - 1, ixcoref_2_ixtagd[first_ix] + 1)
             is_fuzzy = True
         else:
             e_first_wd_ix = ixcoref_2_ixtagd[first_ix]
 
-        last_ix = max(ixs)
+        last_ix = max(mention_ixs)
         if last_ix not in ixcoref_2_ixtagd:
-            while last_ix < len(wds_coref) and last_ix not in ixcoref_2_ixtagd:
+            while last_ix < len(wds2coref) and last_ix not in ixcoref_2_ixtagd:
                 last_ix += 1
             if last_ix not in ixcoref_2_ixtagd:
-                e_last_wd_ix = len(wds_tagd) - 1
+                e_last_wd_ix = len(wd2tags) - 1
             else:
                 e_last_wd_ix = max(0, ixcoref_2_ixtagd[last_ix] - 1)
             is_fuzzy = True
@@ -202,8 +219,8 @@ for ename, coref_essay in essay2coref_tagged.items():
                 fuzzy_matches.append((mention, replacement))
 
 
-        if len(replacement) < (len(ixs)):
-            print("WARNING", ("|" + mention + "|||").ljust(50), "!"+ " ".join(list(zip(*replacement))[0]) + "!!!" , len(replacement), len(ixs))
+        if len(replacement) < (len(mention_ixs)):
+            print("WARNING", ("|" + mention + "|||").ljust(50), "!" + " ".join(list(zip(*replacement))[0]) + "!!!", len(replacement), len(mention_ixs))
 
     new_sentences = []
     for sent_ix, sent in enumerate(tagged_essay.sentences):
