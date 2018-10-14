@@ -18,11 +18,10 @@ the different nb's as needed (or py scripts).
 """
 
 """ Begin Settings """
-DATASET = "CoralBleaching"
+DATASET = "SkinCancer" # CoralBleaching | SkinCancer
 PARTITION = "Test" # Training | Test
 SCAN_LENGTH = 3
 """ END Settings """
-
 
 settings = Settings()
 root_folder = settings.data_directory + DATASET + "/Thesis_Dataset/"
@@ -65,9 +64,6 @@ assert len(intersect) == len(essay2tagged.keys())
 assert len(essay2tagged.keys()) > 1
 assert len(essay2tagged.keys()) == len(essay2coref_tagged.keys())
 
-failed_cnt = 0
-COREF_PHRASE = "COREF_PHRASE"
-
 def map_tagged_words_to_word_ixs(tagged_essay):
 
     tagged_wds = []
@@ -84,14 +80,23 @@ def replace_underscore(mention):
     return set(map(lambda s: s.replace("_"," "), mention))
 
 def map_mentions_to_word_ixs(coref_essay, keys):
-    #TODO - fix this, it assume one mention per word, but we can have multiple
+    # returns:
+    #   1. coref_wd2_tags       - list of word, tag_dict pairs (so you can index into them
+    #   2. coref_ids_2_wd_ixs   - maps coref ids to word indexes - Dict[int, List[Set[int]]]
+    #                             the values are a list of sets. Each set represents a
+    #                             contiguous sequence of tagged words
+
     coref_wd2_tags = []
     coref_ids_2_wd_ixs = defaultdict(list) # maps a coref id to a list of set of ixs
     for sent_ix, sent in enumerate(coref_essay):
-        current_coref_ids = set()
-        for wd_ix, (wd, tag_dict) in enumerate(sent):
+        # current set of active coref_ids (between words)
+        prev_wd_coref_ids = set()
+        for wd, tag_dict in sent:
+            wd_essay_ix = len(coref_wd2_tags)
+            # note that this needs to occur after getting the length above
             coref_wd2_tags.append((wd,tag_dict))
 
+            # unique coref ids for current word
             wd_coref_ids = set()
             for k in keys:
                 wd_coref_ids.update(tag_dict[k])
@@ -99,20 +104,18 @@ def map_mentions_to_word_ixs(coref_essay, keys):
             for cref_id in wd_coref_ids:
                 prev_ixs = coref_ids_2_wd_ixs[cref_id]
                 # continuation of existing sequence
-                wd_essay_ix = len(coref_wd2_tags)-1
-                if cref_id in current_coref_ids:
-                    if len(prev_ixs) == 0:
-                        prev_ixs.append(set())
+                if cref_id in prev_wd_coref_ids:
+                    # if len(prev_ixs) == 0: # initialize set
+                    #     prev_ixs.append(set())
                     prev_ixs[-1].add(wd_essay_ix)
                 else:
                     # else create a new set and add it
                     prev_ixs.append({wd_essay_ix})
 
-            current_coref_ids = wd_coref_ids
+            prev_wd_coref_ids = wd_coref_ids
     return coref_wd2_tags, coref_ids_2_wd_ixs
 
-
-def map_words_between_essays(tagged_wds, coref_wd2_tags):
+def map_words_between_essays(tagged_wds, coref_wd2_tags, scan_length):
     errors = []
 
     ix_tagd, ix_coref = 0, 0
@@ -131,8 +134,8 @@ def map_words_between_essays(tagged_wds, coref_wd2_tags):
         else:
             # look ahead in wds2 for item that matches next a
             found_match = False
-            for offseta, aa in enumerate(tagged_wds[ix_tagd: ix_tagd + 1 + SCAN_LENGTH]):
-                for offsetb, (bb, _) in enumerate(coref_wd2_tags[ix_coref:ix_coref + 1 + SCAN_LENGTH]):
+            for offseta, aa in enumerate(tagged_wds[ix_tagd: ix_tagd + 1 + scan_length]):
+                for offsetb, (bb, _) in enumerate(coref_wd2_tags[ix_coref:ix_coref + 1 + scan_length]):
                     if aa == bb:
                         if offseta == offsetb:
                             for i in range(ix_tagd, ix_tagd + offseta):
@@ -152,27 +155,7 @@ def map_words_between_essays(tagged_wds, coref_wd2_tags):
                 break
     return ixtagd_2_ixcoref, ixcoref_2_ixtagd, errors
 
-def print_errors(errors):
-    # Print errors
-    for ename, wd_tagd, wd_coref, ix_tagd, ix_coref in errors:
-        print("Failed: " + ename, wd_tagd, wd_coref, ix_tagd, ix_coref)
-
-updated_essays = []
-for ename, coref_essay in essay2coref_tagged.items():
-    assert ename in essay2tagged
-    tagged_essay = essay2tagged[ename]
-
-    tagged_wds, taggedwd2sentixs = map_tagged_words_to_word_ixs(tagged_essay)
-
-    coref_wd2_tags, coref_ids_2_wd_ixs = map_mentions_to_word_ixs(coref_essay)
-
-    ixtagd_2_ixcoref, ixcoref_2_ixtagd, errors = map_words_between_essays(tagged_wds, coref_wd2_tags)
-    if errors:
-        failed_cnt += len(errors)
-        print_errors(errors)
-
-    # replace the corefs/amaphors with their antecedents
-
+def map_wds_to_coref_ids(coref_ids_2_wd_ixs, ixcoref_2_ixtagd, coref_wd2_tags, tagged_wds, taggedwd2sentixs):
     sent_wdix_2_corefids = defaultdict(set)
     for coref_id, list_wd_ix_seq in coref_ids_2_wd_ixs.items():
         for wd_ixs in list_wd_ix_seq:
@@ -205,10 +188,45 @@ for ename, coref_essay in essay2coref_tagged.items():
 
             for e_wd_ix in range(e_first_wd_ix, e_last_wd_ix + 1):
                 sent_ix, sent_wd_ix = taggedwd2sentixs[e_wd_ix]
-                sentence = tagged_essay.sentences[sent_ix]
-                wd, tags = sentence[sent_wd_ix]
-
                 sent_wdix_2_corefids[(sent_ix, sent_wd_ix)].add(coref_id)
+    return sent_wdix_2_corefids
+
+def print_errors(errors):
+    # Print errors
+    for ename, wd_tagd, wd_coref, ix_tagd, ix_coref in errors:
+        print("Failed: " + ename, wd_tagd, wd_coref, ix_tagd, ix_coref)
+
+COREF_PHRASE = "COREF_PHRASE"
+COREF_ID     = "COREF_ID"
+COREF_REF    = "COREF_REF"
+
+failed_cnt = 0
+updated_essays = []
+
+for ename in essay2coref_tagged.keys():
+
+    coref_essay = essay2coref_tagged[ename]
+    tagged_essay = essay2tagged[ename]
+
+    # pivot essays to be a list of words
+    tagged_wds, taggedwd2sentixs = map_tagged_words_to_word_ixs(tagged_essay)
+    coref_wd2_tags, coref_ids_2_wd_ixs = map_mentions_to_word_ixs(coref_essay,
+                                                                  keys={COREF_ID, COREF_REF})
+
+    ixtagd_2_ixcoref, ixcoref_2_ixtagd, errors = map_words_between_essays(tagged_wds=tagged_wds,
+                                                                          coref_wd2_tags=coref_wd2_tags,
+                                                                          scan_length=SCAN_LENGTH )
+    if errors:
+        # Print errors
+        for ename, wd_tagd, wd_coref, ix_tagd, ix_coref in errors:
+            failed_cnt += 1
+            print("Failed: " + ename, wd_tagd, wd_coref, ix_tagd, ix_coref)
+
+    sent_wdix_2_corefids = map_wds_to_coref_ids(coref_ids_2_wd_ixs=coref_ids_2_wd_ixs,
+                                                ixcoref_2_ixtagd=ixcoref_2_ixtagd,
+                                                coref_wd2_tags=coref_wd2_tags,
+                                                tagged_wds=tagged_wds,
+                                                taggedwd2sentixs=taggedwd2sentixs)
 
     predicted_corefids_sentences = []
     for sent_ix, sent in enumerate(tagged_essay.sentences):
@@ -224,8 +242,13 @@ for ename, coref_essay in essay2coref_tagged.items():
     tagged_essay.predicted_corefids = predicted_corefids_sentences
     updated_essays.append(tagged_essay)
 
-print(len(updated_essays), "updated essays")
-# with open(coref_root + partition.lower() + "_processed.dill", "wb+") as f:
-#     dill.dump(updated_essays, f)
+    num_processed = len(updated_essays)
+    if num_processed % 100 == 0:
+        print("Processed {np} out of {num_essays}".format(np=num_processed, num_essays=len(tagged_essays)))
 
-print(failed_cnt)
+print(len(updated_essays), "updated essays")
+with open(coref_root + PARTITION.lower() + "_processed.dill", "wb+") as f:
+    dill.dump(updated_essays, f)
+
+print(failed_cnt,  " failed essays")
+assert failed_cnt == 0
