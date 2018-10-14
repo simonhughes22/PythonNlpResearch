@@ -1,6 +1,10 @@
 from collections import defaultdict
-
 from processessays import Essay
+
+POS_KEY = "POS"
+NER_KEY = "NER"
+OUTSIDE_TAG = "O" # i.e. no NER tags
+EMPTY = "Empty"
 
 def bratt_essays_2_hash_map(essays):
     lu = {}
@@ -119,7 +123,7 @@ def replace_corefs_with_mentions(tagged_essays, coref_files,
             reference = []
             for wd_ix, (wd, tag_dict) in enumerate(sent):
 
-                pos = tag_dict["POS"]
+                pos = tag_dict[POS_KEY]
                 pos_aggregated[pos][wd] += 1
 
                 wds2.append((wd, tag_dict))
@@ -198,7 +202,7 @@ def replace_corefs_with_mentions(tagged_essays, coref_files,
             if must_not_have_noun_phrase:
                 has_np = False
                 for td in tag_dicts:
-                    pos = td["POS"]
+                    pos = td[POS_KEY]
                     if pos.startswith("NN"):
                         has_np = True
                         break
