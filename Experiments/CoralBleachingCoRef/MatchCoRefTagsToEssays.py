@@ -6,6 +6,7 @@ import dill
 from CoRefHelper import parse_stanfordnlp_tagged_essays
 from FindFiles import find_files
 from Settings import Settings
+from CoRefHelper import POS_KEY, NER_KEY, OUTSIDE_TAG, EMPTY
 
 CV_FOLDS = 5
 DEV_SPLIT = 0.1
@@ -203,6 +204,85 @@ COREF_REF    = "COREF_REF"
 failed_cnt = 0
 updated_essays = []
 
+
+def assign_coref_labels(tagged_essay, sent_wdix_2_corefids):
+    predicted_corefids_sentences = []
+    for sent_ix, sent in enumerate(tagged_essay.sentences):
+
+        predicted_coref_ids_wds = []
+        predicted_corefids_sentences.append(predicted_coref_ids_wds)
+
+        for wd_ix in range(len((sent))):
+            wd_coref_ids = sent_wdix_2_corefids[(sent_ix, wd_ix)]
+            predicted_coref_ids_wds.append(wd_coref_ids)
+
+    tagged_essay.pred_corefids = predicted_corefids_sentences
+    return tagged_essay
+
+def assign_pos_tags(tagged_essay, ixtagd_2_ixcoref, coref_wd2_tags):
+    predicted_pos_tags_sentences = []
+    essay_wd_ix = -1
+    for sent_ix, sent in enumerate(tagged_essay.sentences):
+        pos_tags_wds = []
+        predicted_pos_tags_sentences.append(pos_tags_wds)
+
+        for wd_ix in range(len((sent))):
+            essay_wd_ix += 1
+            assert sent[wd_ix][0] == tagged_wds[essay_wd_ix], \
+                (wd_ix, sent[wd_ix], essay_wd_ix, tagged_wds[essay_wd_ix])
+
+            if essay_wd_ix in ixtagd_2_ixcoref:
+                # look up corresponding word ix
+                ix_coref = ixtagd_2_ixcoref[essay_wd_ix]
+                # get tag_dict
+                coref_wd, tag_dict = coref_wd2_tags[ix_coref]
+                # POS TAGS
+                pos_tags = tag_dict[POS_KEY]
+                assert len(pos_tags) <= 1, "Too many pos tags"
+                if len(pos_tags) == 0:
+                    pos_tags_wds.append(EMPTY)
+                else:
+                    pos_tag = list(pos_tags)[0]
+                    pos_tags_wds.append(pos_tag)
+            else:
+                pos_tags_wds.append(EMPTY)
+
+    tagged_essay.pred_pos_tags_sentences = predicted_pos_tags_sentences
+    return tagged_essay
+
+def assign_ner_tags(tagged_essay, ixtagd_2_ixcoref, coref_wd2_tags):
+    predicted_ner_tags_sentences = []
+    essay_wd_ix = -1
+    for sent_ix, sent in enumerate(tagged_essay.sentences):
+        ner_tags_wds = []
+        predicted_ner_tags_sentences.append(ner_tags_wds)
+
+        for wd_ix in range(len((sent))):
+            essay_wd_ix += 1
+            assert sent[wd_ix][0] == tagged_wds[essay_wd_ix], \
+                (wd_ix, sent[wd_ix], essay_wd_ix, tagged_wds[essay_wd_ix])
+
+            if essay_wd_ix in ixtagd_2_ixcoref:
+                # look up corresponding word ix
+                ix_coref = ixtagd_2_ixcoref[essay_wd_ix]
+                # get tag_dict
+                coref_wd, tag_dict = coref_wd2_tags[ix_coref]
+                # NER TAGS
+                ner_tags = tag_dict[NER_KEY]
+                assert len(ner_tags) <= 1, "Too many NER tags"
+                if len(ner_tags) == 0:
+                    ner_tags_wds.append(EMPTY)
+                else:
+                    ner_tag = list(ner_tags)[0]
+                    if ner_tag == OUTSIDE_TAG:
+                        ner_tag = EMPTY
+                    ner_tags_wds.append(ner_tag)
+            else:
+                ner_tags_wds.append(EMPTY)
+
+    tagged_essay.pred_ner_tags_sentences = predicted_ner_tags_sentences
+    return tagged_essay
+
 for ename in essay2coref_tagged.keys():
 
     coref_essay = essay2coref_tagged[ename]
@@ -228,18 +308,15 @@ for ename in essay2coref_tagged.keys():
                                                 tagged_wds=tagged_wds,
                                                 taggedwd2sentixs=taggedwd2sentixs)
 
-    predicted_corefids_sentences = []
-    for sent_ix, sent in enumerate(tagged_essay.sentences):
-        changed_ix = -1
+    tagged_essay = assign_coref_labels(tagged_essay=tagged_essay,
+                                       sent_wdix_2_corefids=sent_wdix_2_corefids)
 
-        predicted_coref_ids_wds = []
-        predicted_corefids_sentences.append(predicted_coref_ids_wds)
+    tagged_essay = assign_pos_tags(tagged_essay=tagged_essay,
+                                   ixtagd_2_ixcoref=ixtagd_2_ixcoref, coref_wd2_tags=coref_wd2_tags)
 
-        for wd_ix in range(len((sent))):
-            wd_coref_ids = sent_wdix_2_corefids[(sent_ix, wd_ix)]
-            predicted_coref_ids_wds.append(wd_coref_ids)
+    tagged_essay = assign_ner_tags(tagged_essay=tagged_essay,
+                                   ixtagd_2_ixcoref=ixtagd_2_ixcoref, coref_wd2_tags=coref_wd2_tags)
 
-    tagged_essay.predicted_corefids = predicted_corefids_sentences
     updated_essays.append(tagged_essay)
 
     num_processed = len(updated_essays)
