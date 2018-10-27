@@ -19,8 +19,8 @@ the different nb's as needed (or py scripts).
 """
 
 """ Begin Settings """
-DATASET = "SkinCancer" # CoralBleaching | SkinCancer
-PARTITION = "Test" # Training | Test
+DATASET = "CoralBleaching" # CoralBleaching | SkinCancer
+PARTITION = "Training" # Training | Test
 SCAN_LENGTH = 3
 """ END Settings """
 
@@ -203,7 +203,6 @@ COREF_REF    = "COREF_REF"
 
 failed_cnt = 0
 updated_essays = []
-
 
 def assign_coref_labels(tagged_essay, sent_wdix_2_corefids):
     predicted_corefids_sentences = []
