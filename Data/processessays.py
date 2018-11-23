@@ -11,6 +11,15 @@ class Essay(object):
         self.name = name
         self.sentences = sentences
 
+    def clone(self):
+        e = Essay(self.name, [])
+        for sent in self.sentences:
+            new_sent = []
+            for wd, tags in sent:
+                new_sent.append((wd, set(tags)))
+            e.sentences.append(new_sent)
+        return e
+
 class Sentence(object):
     def __init__(self, tagged_words, sentence_tags):
         self.sentence_tags = sentence_tags
