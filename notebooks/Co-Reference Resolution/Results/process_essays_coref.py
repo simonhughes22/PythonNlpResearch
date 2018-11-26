@@ -62,8 +62,29 @@ def find_coref_length(chain, sent_ix, word_ix):
     assert length > 0, "can't find matching coref"
     return length
 
+def find_nearest_reference(chain, sent_ix, word_ix):
+    if len(chain) == 0:
+        return []
+    
+    ana_ix = -1
+    for ix,phrase in enumerate(chain):
+        first_pair = phrase[0]
+        last_pair = phrase[-1]
+        first_sent, first_word = first_pair
+        last_sent, last_word = last_pair
+
+        # within same sentence
+        if sent_ix >= first_sent and sent_ix <= last_sent:
+            assert first_sent == last_sent, "Phrase spans different sentences"
+            if word_ix >= first_word and word_ix <= last_word:
+                ana_ix = ix
+                break
+    if ana_ix > 0: # not -1 and not 0 (no prev references):
+        return [chain[ana_ix-1]]
+    return []
 
 def get_coref_processed_essays(essays, format_ana_tags=True, filter_to_predicted_tags=True, look_back_only=True,
+                               nearest_ref_only=False,
                                max_ana_phrase_len=None, max_cref_phrase_len=None,
                                ner_ch_filter=None, pos_ana_filter=None, pos_ch_filter=None
                                ):
@@ -74,6 +95,7 @@ def get_coref_processed_essays(essays, format_ana_tags=True, filter_to_predicted
     format_ana_tags:          bool - Add ana tags as Anaphor[xyz] or as just the regular concept codes
     filter_to_predicted_tags: bool - Filter to just the predicted anaphor tags
     look_back_only:           bool - Only look to coreferences occuring earlier in the essay
+    nearest_ref_only:         bool - Only look at the nearest reference (last preceding entry in the chain)
 
     max_ana_phrase_len:       Union(int,None) - if specified, maximum  length to consider
     max_cref_phrase_len:      Union(int,None) - if specified, maximum coreference length to consider
@@ -151,6 +173,9 @@ def get_coref_processed_essays(essays, format_ana_tags=True, filter_to_predicted
                         anaphor_length = find_coref_length(chain=segmented_chain, sent_ix=sent_ix, word_ix=wd_ix)
                         if anaphor_length > max_ana_phrase_len:
                             continue
+                            
+                    if nearest_ref_only:
+                        segmented_chain = find_nearest_reference(chain=segmented_chain, sent_ix=sent_ix, word_ix=wd_ix)
 
                     for cref_phrase in segmented_chain:  # iterate thru the list of sent_ix,wd_ix's
                         # in 1 cref phrase
