@@ -16,6 +16,8 @@ def build_chain(e):
         for wd_ix in range(len(sent)):
             wd_coref_ids = coref_ids[wd_ix]  # Set[str]
             for cr_id in wd_coref_ids:
+                if cr_id.strip() == "":
+                    continue
                 pair = (sent_ix, wd_ix)
                 corefid_2_chain[cr_id].append(pair)
     return corefid_2_chain
@@ -62,9 +64,10 @@ def find_coref_length(chain, sent_ix, word_ix):
     assert length > 0, "can't find matching coref"
     return length
 
-def find_nearest_reference(chain, sent_ix, word_ix):
+#def find_nearest_reference(chain, sent_ix, word_ix):
+def find_reference_ix(chain, sent_ix, word_ix):
     if len(chain) == 0:
-        return []
+        return -1
     
     ana_ix = -1
     for ix,phrase in enumerate(chain):
@@ -79,9 +82,16 @@ def find_nearest_reference(chain, sent_ix, word_ix):
             if word_ix >= first_word and word_ix <= last_word:
                 ana_ix = ix
                 break
-    if ana_ix > 0: # not -1 and not 0 (no prev references):
-        return [chain[ana_ix-1]]
-    return []
+    return ana_ix
+
+# some of the parsed data has empty string id's in it
+def fix_coref_ids(essay):
+    corefids = essay.pred_corefids
+    for sent in corefids:
+        for set_ids in sent:
+            if "" in set_ids:
+                set_ids.remove("")
+
 
 def get_coref_processed_essays(essays, format_ana_tags=True, filter_to_predicted_tags=True, look_back_only=True,
                                nearest_ref_only=False,
@@ -115,8 +125,14 @@ def get_coref_processed_essays(essays, format_ana_tags=True, filter_to_predicted
     ana_tagged_essays = []
     for eix, e in enumerate(essays):
 
+        fix_coref_ids(e)
+
         ana_tagged_e = Essay(e.name, e.sentences)
         ana_tagged_e.pred_tagged_sentences = []
+        ana_tagged_e.pred_pos_tags_sentences = list(e.pred_pos_tags_sentences)
+        ana_tagged_e.pred_ner_tags_sentences = list(e.pred_pos_tags_sentences)
+        ana_tagged_e.ana_tagged_sentences    = list(e.ana_tagged_sentences)
+        ana_tagged_e.pred_corefids           = list(e.pred_corefids)
         ana_tagged_essays.append(ana_tagged_e)
 
         # map coref ids to sent_ix, wd_ix tuples
@@ -167,6 +183,7 @@ def get_coref_processed_essays(essays, format_ana_tags=True, filter_to_predicted
 
                 # Get codes for corresponding co-ref chain entries
                 for cr_id in wd_coref_ids:
+
                     segmented_chain = corefid_2_chain[cr_id]
 
                     if max_ana_phrase_len:
@@ -174,11 +191,23 @@ def get_coref_processed_essays(essays, format_ana_tags=True, filter_to_predicted
                         if anaphor_length > max_ana_phrase_len:
                             continue
                             
-                    if nearest_ref_only:
-                        segmented_chain = find_nearest_reference(chain=segmented_chain, sent_ix=sent_ix, word_ix=wd_ix)
+                    ana_ix = find_reference_ix(chain=segmented_chain, sent_ix=sent_ix, word_ix=wd_ix)
+                    assert ana_ix > -1, "Could not find matching reference"
 
-                    for cref_phrase in segmented_chain:  # iterate thru the list of sent_ix,wd_ix's
-                        # in 1 cref phrase
+                    if nearest_ref_only:
+                        if ana_ix > 0: # must be >= 1 as there is no prev ref to the first phrase
+                            nearest_phrase  = segmented_chain[ana_ix-1]
+                            segmented_chain = [nearest_phrase]
+                        else:
+                            continue
+                                                
+                    for cix, cref_phrase in enumerate(segmented_chain):  # iterate thru the list of sent_ix,wd_ix's
+                        # phrase contains current word
+                        if cix == ana_ix:
+                            continue
+
+                        if look_back_only is True and cix > ana_ix:
+                            continue
 
                         # LENGTH FILTER
                         if max_cref_phrase_len and len(cref_phrase) > max_cref_phrase_len:
