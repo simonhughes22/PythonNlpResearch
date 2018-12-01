@@ -3,7 +3,7 @@ from collections import defaultdict
 import dill
 
 def get_essays(folder, partition):
-    essay_files = find_files(folder)
+    essay_files = find_files(folder, regex=".*.dill")
     if partition == "Training":
         essay_files = [e for e in essay_files if "train" in e]
     else:
