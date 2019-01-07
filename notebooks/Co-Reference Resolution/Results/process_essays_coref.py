@@ -300,3 +300,83 @@ def processed_essays_replace_ana_tags_with_regular(essays):
             assert len(e.sentences[ix]) == len(e.pred_tagged_sentences[ix]), (len(e.sentences[ix]), len(e.pred_tagged_sentences[ix]))
 
     return ana_tagged_essays
+
+    
+def processed_essays_predict_most_recent_tag(essays, format_ana_tags=True):
+
+    """
+    Uses the most recently predicted concept code as the predicted tag
+    
+            essays:                   List[Essay] objects - merged tagged essays
+    """
+
+    ana_tagged_essays = []
+    for eix, e in enumerate(essays):
+
+        fix_coref_ids(e)
+        seq_pred_tags = [] # all predicted tags
+        
+        ana_tagged_e = Essay(e.name, e.sentences)
+        ana_tagged_e.pred_tagged_sentences = []
+        ana_tagged_e.pred_pos_tags_sentences = list(e.pred_pos_tags_sentences)
+        ana_tagged_e.pred_ner_tags_sentences = list(e.pred_pos_tags_sentences)
+        ana_tagged_e.ana_tagged_sentences    = list(e.ana_tagged_sentences)
+        ana_tagged_e.pred_corefids           = list(e.pred_corefids)
+        ana_tagged_essays.append(ana_tagged_e)
+
+        # map coref ids to sent_ix, wd_ix tuples
+        corefid_2_chain = build_segmented_chain(e)
+    
+
+        # now look for ana tags that are also corefs, and cross reference
+        for sent_ix in range(len(e.sentences)):
+            ana_tagged_sent = []
+            ana_tagged_e.pred_tagged_sentences.append(ana_tagged_sent)
+
+            sent = e.sentences[sent_ix]
+
+            # SENTENCE LEVEL TAGS / PREDICTIONS
+            ana_tags = e.ana_tagged_sentences[sent_ix]
+            coref_ids = e.pred_corefids[sent_ix]
+            # ner_tags = e.pred_ner_tags_sentences[sent_ix]
+            pos_tags = e.pred_pos_tags_sentences[sent_ix]
+            ptags = e.pred_tagged_sentences[sent_ix]
+
+            for wd_ix in range(len(sent)):
+                pos_tag = pos_tags[wd_ix]  # POS tag
+
+                word, _ = sent[wd_ix]  # ignore actual tags
+                pred_cc_tag = ptags[wd_ix]  # predict cc tag
+
+                is_ana_tag = ana_tags[wd_ix] == ANAPHORA
+                wd_coref_ids = coref_ids[wd_ix]  # Set[str]
+
+                # note we are changing this to a set rather than a single string
+                wd_ptags = set()
+                # initialize predicted tags, inc. cc tag
+                # DON'T run continue until after this point
+                ana_tagged_sent.append(wd_ptags)
+
+                # add predicted concept code tag (filtered out by evaluation code, which filters to specific tags)
+                if pred_cc_tag != EMPTY:
+                    seq_pred_tags.append(pred_cc_tag)
+                    wd_ptags.add(pred_cc_tag)
+                # else here because we don't want to assign additional cc tags if there are already ones
+                elif is_ana_tag and len(seq_pred_tags) > 0:
+                    code=seq_pred_tags[-1]
+                    if format_ana_tags:
+                        code = "{anaphora}:[{code}]".format(anaphora=ANAPHORA, code=code)
+                    wd_ptags.add(code)
+#                     if len(seq_pred_tags) > 1:     
+#                         code = "{anaphora}:[{code}]".format(
+#                                             anaphora=ANAPHORA, code=seq_pred_tags[-2])
+#                         wd_ptags.add(code)
+                
+    # validation check
+    #   check essay and sent lengths align
+    for e in ana_tagged_essays:
+        assert len(e.sentences) == len(e.pred_tagged_sentences)
+        for ix in range(len(e.sentences)):
+            assert len(e.sentences[ix]) == len(e.pred_tagged_sentences[ix])
+
+    return ana_tagged_essays
