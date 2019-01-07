@@ -396,7 +396,9 @@ def processed_essays_predict_most_recent_tag(essays, format_ana_tags=True):
                     wd_ptags.add(pred_cc_tag)
                 # else here because we don't want to assign additional cc tags if there are already ones
                 elif is_ana_tag and pred_cc_tag == EMPTY: # and current tag is EMPTY
-                    code = find_previous_predicted_tag(seq_ix, seq_pred_tags, seq_is_ana_tag)                
+                    code = find_previous_predicted_tag(seq_ix, seq_pred_tags, seq_is_ana_tag)  
+                    if code is None:
+                    	code = EMPTY              
                     if format_ana_tags:
                         code = "{anaphora}:[{code}]".format(anaphora=ANAPHORA, code=code)
                     wd_ptags.add(code)
