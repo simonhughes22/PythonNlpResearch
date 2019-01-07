@@ -302,6 +302,35 @@ def processed_essays_replace_ana_tags_with_regular(essays):
     return ana_tagged_essays
 
     
+def find_previous_predicted_tag(ix, seq_ptags, seq_is_ana_tag):
+    """
+        Given a sequence of predicted tags and booleans indicating whether or not a tag is 
+        a (predicted) anaphora tag, finds the previously predicted tag (before current)
+        anaphora sequence.
+    
+    """
+    assert len(seq_ptags) == len(seq_is_ana_tag)
+    if len(seq_ptags) == 0:
+        return None
+    
+    current_ix = ix
+    current_is_ana = seq_is_ana_tag[current_ix]
+    
+    # Find first non-anaphora tag
+    while current_is_ana:
+        current_ix -= 1
+        if current_ix < 0:
+            return None
+        current_is_ana = seq_is_ana_tag[current_ix]
+    
+    current_ptag = seq_ptags[current_ix]
+    while current_ptag == EMPTY:
+        current_ix -= 1
+        if current_ix < 0:
+            return None
+        current_ptag = seq_ptags[current_ix]
+    return current_ptag
+
 def processed_essays_predict_most_recent_tag(essays, format_ana_tags=True):
 
     """
@@ -314,7 +343,11 @@ def processed_essays_predict_most_recent_tag(essays, format_ana_tags=True):
     for eix, e in enumerate(essays):
 
         fix_coref_ids(e)
-        seq_pred_tags = [] # all predicted tags
+        
+        # following are flattened so they span sentences
+        seq_pred_tags  = [] # all predicted tags
+        seq_is_ana_tag = [] # is ana tag
+        seq_ix = -1
         
         ana_tagged_e = Essay(e.name, e.sentences)
         ana_tagged_e.pred_tagged_sentences = []
@@ -323,10 +356,6 @@ def processed_essays_predict_most_recent_tag(essays, format_ana_tags=True):
         ana_tagged_e.ana_tagged_sentences    = list(e.ana_tagged_sentences)
         ana_tagged_e.pred_corefids           = list(e.pred_corefids)
         ana_tagged_essays.append(ana_tagged_e)
-
-        # map coref ids to sent_ix, wd_ix tuples
-        corefid_2_chain = build_segmented_chain(e)
-    
 
         # now look for ana tags that are also corefs, and cross reference
         for sent_ix in range(len(e.sentences)):
@@ -343,12 +372,17 @@ def processed_essays_predict_most_recent_tag(essays, format_ana_tags=True):
             ptags = e.pred_tagged_sentences[sent_ix]
 
             for wd_ix in range(len(sent)):
+                seq_ix +=1
+                
                 pos_tag = pos_tags[wd_ix]  # POS tag
 
                 word, _ = sent[wd_ix]  # ignore actual tags
                 pred_cc_tag = ptags[wd_ix]  # predict cc tag
+                seq_pred_tags.append(pred_cc_tag)
 
                 is_ana_tag = ana_tags[wd_ix] == ANAPHORA
+                seq_is_ana_tag.append(is_ana_tag)
+                
                 wd_coref_ids = coref_ids[wd_ix]  # Set[str]
 
                 # note we are changing this to a set rather than a single string
@@ -359,19 +393,14 @@ def processed_essays_predict_most_recent_tag(essays, format_ana_tags=True):
 
                 # add predicted concept code tag (filtered out by evaluation code, which filters to specific tags)
                 if pred_cc_tag != EMPTY:
-                    seq_pred_tags.append(pred_cc_tag)
                     wd_ptags.add(pred_cc_tag)
                 # else here because we don't want to assign additional cc tags if there are already ones
-                elif is_ana_tag and len(seq_pred_tags) > 0:
-                    code=seq_pred_tags[-1]
+                elif is_ana_tag and pred_cc_tag == EMPTY: # and current tag is EMPTY
+                    code = find_previous_predicted_tag(seq_ix, seq_pred_tags, seq_is_ana_tag)                
                     if format_ana_tags:
                         code = "{anaphora}:[{code}]".format(anaphora=ANAPHORA, code=code)
                     wd_ptags.add(code)
-#                     if len(seq_pred_tags) > 1:     
-#                         code = "{anaphora}:[{code}]".format(
-#                                             anaphora=ANAPHORA, code=seq_pred_tags[-2])
-#                         wd_ptags.add(code)
-                
+
     # validation check
     #   check essay and sent lengths align
     for e in ana_tagged_essays:
