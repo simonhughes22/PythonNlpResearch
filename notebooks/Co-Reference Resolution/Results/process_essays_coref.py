@@ -251,3 +251,52 @@ def get_coref_processed_essays(essays, format_ana_tags=True, filter_to_predicted
             assert len(e.sentences[ix]) == len(e.pred_tagged_sentences[ix])
 
     return ana_tagged_essays
+    
+def processed_essays_replace_ana_tags_with_regular(essays):
+    """
+        Replaces  Anaphor[xyz] tags with the original tag
+        
+        essays:                   List[Essay] objects - merged tagged essays
+    """
+
+    ana_tagged_essays = []
+    for eix, e in enumerate(essays):
+
+        fix_coref_ids(e)
+        seq_pred_tags = [] # all predicted tags
+        
+        new_sentences = []
+        ana_tagged_e = Essay(e.name, new_sentences)
+        ana_tagged_e.pred_tagged_sentences   = list(e.pred_tagged_sentences)
+        ana_tagged_e.pred_pos_tags_sentences = list(e.pred_pos_tags_sentences)
+        ana_tagged_e.pred_ner_tags_sentences = list(e.pred_pos_tags_sentences)
+        ana_tagged_e.ana_tagged_sentences    = list(e.ana_tagged_sentences)
+        ana_tagged_e.pred_corefids           = list(e.pred_corefids)
+        ana_tagged_essays.append(ana_tagged_e)
+    
+        # now look for ana tags that are also corefs, and cross reference
+        for sent_ix in range(len(e.sentences)):
+            new_sent = []
+            new_sentences.append(new_sent)
+            
+            sent = e.sentences[sent_ix]
+            for wd, tags in sent:
+                new_tags = set()
+                for t in tags:
+                    if t.startswith("Anaphor:["):
+                        t_old = t
+                        t = t.replace("Anaphor:[","").replace("]","")
+#                         print(t_old, t)
+                    new_tags.add(t)
+                new_sent.append((wd, new_tags))
+            assert len(new_sent) == len(sent)
+        assert len(new_sentences) == len(e.sentences)
+    
+    # validation check
+    #   check essay and sent lengths align
+    for e in ana_tagged_essays:
+        assert len(e.sentences) == len(e.pred_tagged_sentences), (e.name, len(e.sentences),len(e.pred_tagged_sentences))
+        for ix in range(len(e.sentences)):
+            assert len(e.sentences[ix]) == len(e.pred_tagged_sentences[ix]), (len(e.sentences[ix]), len(e.pred_tagged_sentences[ix]))
+
+    return ana_tagged_essays
