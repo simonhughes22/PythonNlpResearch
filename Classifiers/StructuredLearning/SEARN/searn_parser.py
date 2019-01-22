@@ -258,7 +258,7 @@ class SearnModelTemplateFeatures(object):
             all_actual_crels = set()
 
         if len(all_predicted_rtags) == 0:
-            return []
+            return set()
 
         words = [wd for wd, tags in tagged_sentence]
 
@@ -280,7 +280,7 @@ class SearnModelTemplateFeatures(object):
         rtag_seq = [t for t, i in pos_ptag_seq if t[0].isdigit()]
         # if not at least 2 concept codes, then can't parse
         if len(rtag_seq) < 2:
-            return []
+            return set()
 
         tag2words = defaultdict(list)
         for ix, tag_pair in enumerate(pos_ptag_seq):
