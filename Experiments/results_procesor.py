@@ -41,7 +41,7 @@ def metrics_to_df(metrics: Dict[str, Any])->pandas.DataFrame:
 # Check mongo is running
 def is_mongo_runnning():
     import pymongo
-    client = pymongo.MongoClient(serverSelectionTimeoutMS=100)
+    client = pymongo.MongoClient(serverSelectionTimeoutMS=100, host="127.0.0.1")
     db = client.metrics_codes
     coll = db.get_collection("CB_TAGGING_TD_AVG_PERCEPTRON_MOST_COMMON_TAG")
     l = list(coll.find({}))
@@ -61,7 +61,7 @@ class ResultsProcessor(object):
             fltr = lambda k: k[0].isdigit()
 
         self.fltr = fltr
-        self.client = pymongo.MongoClient()
+        self.client = pymongo.MongoClient(serverSelectionTimeoutMS=100, host="127.0.0.1")
         self.db = self.client[dbname]
         self.dbname = dbname
 

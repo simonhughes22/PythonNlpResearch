@@ -2,25 +2,23 @@
 import datetime
 import logging
 from collections import defaultdict
-from typing import Any, List, Set, Tuple
+from typing import Any
 
 import dill
 import numpy as np
 import pymongo
-from joblib import Parallel, delayed
 from sklearn.linear_model import LogisticRegression
 
 from CrossValidation import cross_validation
 from Settings import Settings
+from cost_functions import *
 from crel_helper import get_cr_tags
 from function_helpers import get_function_names, get_functions_by_name
-from load_data import load_process_essays
 from results_procesor import ResultsProcessor, __MICRO_F1__
 from searn_parser import SearnModelTemplateFeatures
+from template_feature_extractor import *
 from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
-from cost_functions import *
-from template_feature_extractor import *
 
 # Logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
