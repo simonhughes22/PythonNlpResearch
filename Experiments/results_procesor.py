@@ -46,13 +46,14 @@ def is_mongo_runnning():
     coll = db.get_collection("CB_TAGGING_TD_AVG_PERCEPTRON_MOST_COMMON_TAG")
     l = list(coll.find({}))
 
-# Run this here so any code referencing this module will blow up when mongo is not running
-# SH: - confirmed this did work as intended
-is_mongo_runnning()
 
 class ResultsProcessor(object):
 
     def __init__(self, dbname = None, fltr = None):
+        # Run this here so any code referencing this module will blow up when mongo is not running
+        # SH: - confirmed this did work as intended
+        is_mongo_runnning()
+        
         if dbname is None:
             dbname = "metrics"
             print("WARNING - No db name specified - should be either 'metrics_causal' or 'metrics'. Defaulting to 'metrics' ")
