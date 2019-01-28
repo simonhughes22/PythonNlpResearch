@@ -48,9 +48,12 @@ class AveragedPerceptron(object):
     def update(self, truth, guess, features):
         '''Update the feature weights.'''
         def upd_feat(c, f, w, v):
-            param = (f, c)
+            param = (f, c) # feature, class
+            # update the totals by the number of timestamps the current value has survived * val
             self._totals[param] += (self.i - self._tstamps[param]) * w
+            # store latest update timestamp
             self._tstamps[param] = self.i
+            # finally, update the current weight
             self.weights[f][c] = w + v
 
         self.i += 1
