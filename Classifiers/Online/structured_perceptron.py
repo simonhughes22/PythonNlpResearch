@@ -6,7 +6,6 @@ from collections import defaultdict
 import pickle
 
 class StructuredPerceptron(object):
-
     '''A structured perceptron, as implemented by Matthew Honnibal.
     See more implementation details here:
         http://honnibal.wordpress.com/2013/09/11/a-good-part-of-speechpos-tagger-in-about-200-lines-of-python/
@@ -33,12 +32,12 @@ class StructuredPerceptron(object):
             scores2index[i] = self.decision_function(feats)
         # return a ranking of the scores, by best to worse
 
-        return [ ix for ix, score in sorted(scores2index.items(), key = lambda tpl: -tpl[-1]) ]
+        return [ix for ix, score in sorted(scores2index.items(), key=lambda tpl: -tpl[-1])]
 
     def train(self, best_feats, other_feats_array):
         best_ix = self.rank([best_feats] + list(other_feats_array))
         if best_ix != 0:
-            predicted_feats = other_feats_array[best_ix-1]
+            predicted_feats = other_feats_array[best_ix - 1]
             self.update(best_feats=best_feats, highest_ranked_feats=predicted_feats)
 
     def decision_function(self, features):
@@ -52,7 +51,8 @@ class StructuredPerceptron(object):
 
     def update(self, best_feats, highest_ranked_feats):
         '''Update the feature weights.'''
-        #TODO - weight the weight update by the difference in errors
+
+        # TODO - weight the weight update by the difference in errors
         def upd_feat(feat, val):
             w = self.weights[feat]
             # update the totals by the number of timestamps the current value has survived * val
