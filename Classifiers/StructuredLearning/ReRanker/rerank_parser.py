@@ -245,3 +245,38 @@ class DependencyClassifier(object):
             unique_cr_tags = namesent2pred[essay.name]
             add_cr_labels(unique_cr_tags, pred_ys_bytag_essay)
         return pred_ys_bytag_essay
+
+if __name__ == "__main__":
+
+    def to_short_tag(tag):
+        return tag.replace("Causer:", "").replace("Result:", "")
+
+    def build_chains_inner(tree, l, depth=0):
+        chains = []
+        if l not in tree:
+            return [l]
+        for r in tree[l]:
+            for ch in build_chains_inner(tree, r, depth + 1):
+                chains.append([r] + ch)
+        return chains
+
+
+    def build_chains(tree):
+        chains = []
+        for l, rhs in tree.items():
+            for r in rhs:
+                for ch in build_chains_inner(tree, r, 0):
+                    chains.append([l, r] + ch)
+        return chains
+
+
+    parse = ["Causer:3->Result:4", "Causer:1->Result:3", "Causer:4->Result:50", "Causer:5->Result:7",
+             "Causer:9->Result:11"]
+
+    tree = defaultdict(set)  # maps causers to effects for building chains
+    for crel in parse:
+        l, r = crel.split("->")
+        l_short, r_short = to_short_tag(l), to_short_tag(r)
+        tree[l_short].add(r_short)
+
+    build_chains(tree)
