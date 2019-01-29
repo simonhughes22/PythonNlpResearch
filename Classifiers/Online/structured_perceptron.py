@@ -13,6 +13,7 @@ class StructuredPerceptron(object):
 
     def __init__(self, learning_rate=0.3, max_update_items=1):
         # Each feature gets its own weight
+        # needs to be non zero otherwise first
         self.weights = defaultdict(lambda : 1.0)
         self.learning_rate = learning_rate
         # The accumulated values, for the averaging. These will be keyed by
@@ -47,6 +48,7 @@ class StructuredPerceptron(object):
     def train(self, best_feats, other_feats_array):
         feats_array = [best_feats] + list(other_feats_array)
         ixs = self.rank(feats_array)
+
         # go thru up to |max_update_items| items ranked above the best, and update the weights
         best_ix = ixs[0]
         if best_ix != 0:
@@ -55,8 +57,7 @@ class StructuredPerceptron(object):
                 if ix == 0 or rank >= self.max_update_items:
                     break
 
-                predicted_feats = feats_array[ix]
-                self.update(best_feats=best_feats, highest_ranked_feats=predicted_feats)
+                self.update(best_feats=best_feats, highest_ranked_feats=feats_array[ix])
 
     def decision_function(self, features):
         '''Dot-product the features and current weights and return the score.'''
@@ -106,3 +107,15 @@ class StructuredPerceptron(object):
         '''Load the pickled model weights.'''
         self.weights = pickle.load(open(path))
         return None
+
+if __name__ == "__main__":
+
+    p = StructuredPerceptron(learning_rate=0.1)
+    best = defaultdict(float)
+    best.update({ "a": 1, "b": 2})
+
+    rest = defaultdict(float)
+    rest.update({"a": -1, "b": 3, "c": 4})
+
+    p.train(best, [rest])
+    pass
