@@ -11,9 +11,9 @@ class StructuredPerceptron(object):
         http://honnibal.wordpress.com/2013/09/11/a-good-part-of-speechpos-tagger-in-about-200-lines-of-python/
     '''
 
-    def __init__(self, learning_rate):
+    def __init__(self, learning_rate=0.3, max_update_items=1):
         # Each feature gets its own weight
-        self.weights = defaultdict(float)
+        self.weights = defaultdict(lambda : 1.0)
         self.learning_rate = learning_rate
         # The accumulated values, for the averaging. These will be keyed by
         # feature/clas tuples
@@ -24,6 +24,16 @@ class StructuredPerceptron(object):
         self._tstamps = defaultdict(int)
         # Number of instances seen
         self.i = 0
+        # how many items do we use to update the weights?
+        self.max_update_items = max_update_items
+
+    def clone(self):
+        p = StructuredPerceptron(self.learning_rate)
+        p.weights.update(self.weights)
+        p._totals.update(self._totals)
+        p._tstamps.update(self._tstamps)
+        p.i = self.i
+        return p
 
     def rank(self, features_array):
         '''Dot-product the features and current weights and return the best label.'''
@@ -35,16 +45,24 @@ class StructuredPerceptron(object):
         return [ix for ix, score in sorted(scores2index.items(), key=lambda tpl: -tpl[-1])]
 
     def train(self, best_feats, other_feats_array):
-        best_ix = self.rank([best_feats] + list(other_feats_array))
+        feats_array = [best_feats] + list(other_feats_array)
+        ixs = self.rank(feats_array)
+        # go thru up to |max_update_items| items ranked above the best, and update the weights
+        best_ix = ixs[0]
         if best_ix != 0:
-            predicted_feats = other_feats_array[best_ix - 1]
-            self.update(best_feats=best_feats, highest_ranked_feats=predicted_feats)
+            for rank, ix in enumerate(ixs):
+                # don't update items ranked below the best parse
+                if ix == 0 or rank >= self.max_update_items:
+                    break
+
+                predicted_feats = feats_array[ix]
+                self.update(best_feats=best_feats, highest_ranked_feats=predicted_feats)
 
     def decision_function(self, features):
         '''Dot-product the features and current weights and return the score.'''
         score = 0.0
         for feat, value in features.items():
-            if feat not in self.weights or value == 0:
+            if value == 0:
                 continue
             score += self.weights[feat] * value
         return score
