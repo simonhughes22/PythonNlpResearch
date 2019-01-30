@@ -1,7 +1,3 @@
-"""
-Structured perceptron classifier. Implementation geared for simplicity rather than
-efficiency.
-"""
 from collections import defaultdict
 import pickle
 
@@ -45,6 +41,15 @@ class StructuredPerceptron(object):
 
         return [ix for ix, score in sorted(scores2index.items(), key=lambda tpl: -tpl[-1])]
 
+    def decision_function(self, features):
+        '''Dot-product the features and current weights and return the score.'''
+        score = 0.0
+        for feat, value in features.items():
+            if value == 0:
+                continue
+            score += self.weights[feat] * value
+        return score
+
     def train(self, best_feats, other_feats_array):
         feats_array = [best_feats] + list(other_feats_array)
         ixs = self.rank(feats_array)
@@ -59,32 +64,22 @@ class StructuredPerceptron(object):
 
                 self.update(best_feats=best_feats, highest_ranked_feats=feats_array[ix])
 
-    def decision_function(self, features):
-        '''Dot-product the features and current weights and return the score.'''
-        score = 0.0
-        for feat, value in features.items():
-            if value == 0:
-                continue
-            score += self.weights[feat] * value
-        return score
+    def __upd_feat__(self, feat, val):
+        w = self.weights[feat]
+        # update the totals by the number of timestamps the current value has survived * val
+        self._totals[feat] += (self.i - self._tstamps[feat]) * w
+        # store latest update timestamp
+        self._tstamps[feat] = self.i
+        # finally, update the current weight
+        self.weights[feat] = w + (self.learning_rate * val)
 
     def update(self, best_feats, highest_ranked_feats):
         '''Update the feature weights.'''
 
-        # TODO - weight the weight update by the difference in errors
-        def upd_feat(feat, val):
-            w = self.weights[feat]
-            # update the totals by the number of timestamps the current value has survived * val
-            self._totals[feat] += (self.i - self._tstamps[feat]) * w
-            # store latest update timestamp
-            self._tstamps[feat] = self.i
-            # finally, update the current weight
-            self.weights[feat] = w + (self.learning_rate * val)
-
         self.i += 1
         for feat, weight in self.weights.items():
             val = best_feats[feat] - highest_ranked_feats[feat]
-            upd_feat(feat, val)
+            self.__upd_feat__(feat, val)
         return None
 
     def average_weights(self):
@@ -108,9 +103,38 @@ class StructuredPerceptron(object):
         self.weights = pickle.load(open(path))
         return None
 
+class CostSensitiveStructuredPerceptron(StructuredPerceptron):
+    def __init__(self, *args, **kwargs):
+        super(CostSensitiveStructuredPerceptron, self).__init__(*args, **kwargs)
+
+    def train(self, best_feats, other_feats_array, other_costs_array):
+
+        feats_array = [best_feats] + list(other_feats_array)
+        ixs = self.rank(feats_array)
+
+        # go thru up to |max_update_items| items ranked above the best, and update the weights
+        best_ix = ixs[0]
+        if best_ix != 0:
+            for rank, ix in enumerate(ixs):
+                # don't update items ranked below the best parse
+                if ix == 0 or rank >= self.max_update_items:
+                    break
+
+                self.update(best_feats=best_feats,
+                            highest_ranked_feats=feats_array[ix], highest_ranked_cost=other_costs_array[ix])
+
+    def update(self, best_feats, highest_ranked_feats, highest_ranked_cost):
+        '''Update the feature weights.'''
+
+        self.i += 1
+        for feat, weight in self.weights.items():
+            val = (best_feats[feat] - highest_ranked_feats[feat]) * highest_ranked_cost
+            self.__upd_feat__(feat, val)
+        return None
+
 if __name__ == "__main__":
 
-    p = StructuredPerceptron(learning_rate=0.1)
+    p = CostSensitiveStructuredPerceptron(learning_rate=0.1)
     best = defaultdict(float)
     best.update({ "a": 1, "b": 2})
 
