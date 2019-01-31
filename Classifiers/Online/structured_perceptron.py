@@ -7,10 +7,11 @@ class StructuredPerceptron(object):
         http://honnibal.wordpress.com/2013/09/11/a-good-part-of-speechpos-tagger-in-about-200-lines-of-python/
     '''
 
-    def __init__(self, learning_rate=0.3, max_update_items=1):
+    def __init__(self, learning_rate=0.3, max_update_items=1, initial_weight=1):
         # Each feature gets its own weight
         # needs to be non zero otherwise first
-        self.weights = defaultdict(lambda : 1.0)
+        self.initial_weight = initial_weight
+        self.weights = defaultdict(lambda : initial_weight)
         self.learning_rate = learning_rate
         # The accumulated values, for the averaging. These will be keyed by
         # feature/clas tuples
@@ -32,26 +33,28 @@ class StructuredPerceptron(object):
         p.i = self.i
         return p
 
-    def rank(self, features_array):
+    def rank(self, features_array, existence_check=True):
         '''Dot-product the features and current weights and return the best label.'''
         scores2index = {}
         for i, feats in enumerate(features_array):
-            scores2index[i] = self.decision_function(feats)
+            scores2index[i] = self.decision_function(feats, existence_check)
         # return a ranking of the scores, by best to worse
         return [ix for ix, score in sorted(scores2index.items(), key=lambda tpl: -tpl[-1])]
 
-    def decision_function(self, features):
+    def decision_function(self, features, existence_check=True):
         '''Dot-product the features and current weights and return the score.'''
         score = 0.0
         for feat, value in features.items():
             if value == 0:
+                continue
+            if existence_check and feat not in self.weights:
                 continue
             score += self.weights[feat] * value
         return score
 
     def train(self, best_feats, other_feats_array):
         feats_array = [best_feats] + list(other_feats_array)
-        ixs = self.rank(feats_array)
+        ixs = self.rank(feats_array, existence_check=False)
 
         # go thru up to |max_update_items| items ranked above the best, and update the weights
         best_ix = ixs[0]
@@ -102,6 +105,7 @@ class StructuredPerceptron(object):
         self.weights = pickle.load(open(path))
         return None
 
+
 class CostSensitiveStructuredPerceptron(StructuredPerceptron):
     def __init__(self, *args, **kwargs):
         super(CostSensitiveStructuredPerceptron, self).__init__(*args, **kwargs)
@@ -109,7 +113,8 @@ class CostSensitiveStructuredPerceptron(StructuredPerceptron):
     def train(self, best_feats, other_feats_array, other_costs_array):
 
         feats_array = [best_feats] + list(other_feats_array)
-        ixs = self.rank(feats_array)
+        costs_array = [0] + other_costs_array
+        ixs = self.rank(feats_array, existence_check=False)
 
         # go thru up to |max_update_items| items ranked above the best, and update the weights
         best_ix = ixs[0]
@@ -120,7 +125,7 @@ class CostSensitiveStructuredPerceptron(StructuredPerceptron):
                     break
 
                 self.update(best_feats=best_feats,
-                            highest_ranked_feats=feats_array[ix], highest_ranked_cost=other_costs_array[ix])
+                            highest_ranked_feats=feats_array[ix], highest_ranked_cost=costs_array[ix])
 
     def update(self, best_feats, highest_ranked_feats, highest_ranked_cost):
         '''Update the feature weights.'''
@@ -130,14 +135,6 @@ class CostSensitiveStructuredPerceptron(StructuredPerceptron):
             val = (best_feats[feat] - highest_ranked_feats[feat]) * highest_ranked_cost
             self.__upd_feat__(feat, val)
         return None
-
-    def clone(self):
-        p = CostSensitiveStructuredPerceptron(self.learning_rate)
-        p.weights.update(self.weights)
-        p._totals.update(self._totals)
-        p._tstamps.update(self._tstamps)
-        p.i = self.i
-        return p
 
 
 if __name__ == "__main__":
