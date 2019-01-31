@@ -83,6 +83,14 @@ class ALMA(object):
 
     def train(self, best_feats, other_feats_array):
 
+        feats_array = [best_feats] + list(other_feats_array)
+        ixs = self.rank(feats_array)
+
+        # go thru up to |max_update_items| items ranked above the best, and update the weights
+        best_ix = ixs[0]
+        if best_ix == 0:
+            return
+
         best_fts_prod = self.weight_product(self.to_unitl2_norm(best_feats))
         num_other_feats = len(other_feats_array)
         assert num_other_feats > 0
