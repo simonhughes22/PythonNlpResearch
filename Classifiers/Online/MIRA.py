@@ -8,11 +8,12 @@ class MIRA(StructuredPerceptron):
         http://jmlr.csail.mit.edu/papers/volume7/crammer06a/crammer06a.pdf
     '''
 
-    def __init__(self, C=0.01, max_update_items=1, pa_type=1):
+    def __init__(self, C=0.01, max_update_items=1, pa_type=1, initial_weight=1):
         self.C = C
         # Each feature gets its own weight
         # needs to be non zero otherwise first
-        self.weights = defaultdict(lambda : 0.0)
+        assert initial_weight >= 0.0
+        self.weights = defaultdict(lambda : initial_weight)
         # The accumulated values, for the averaging. These will be keyed by
         # feature/clas tuples
         self._totals = defaultdict(int)
