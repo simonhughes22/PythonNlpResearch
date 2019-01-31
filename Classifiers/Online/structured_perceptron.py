@@ -38,7 +38,6 @@ class StructuredPerceptron(object):
         for i, feats in enumerate(features_array):
             scores2index[i] = self.decision_function(feats)
         # return a ranking of the scores, by best to worse
-
         return [ix for ix, score in sorted(scores2index.items(), key=lambda tpl: -tpl[-1])]
 
     def decision_function(self, features):
