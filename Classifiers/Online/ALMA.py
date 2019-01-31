@@ -1,20 +1,21 @@
 from collections import defaultdict
 import pickle
 
+
 class ALMA(object):
     ''' ALMA Algorithm - see pages 175-176 in my structured learning book
     '''
 
-    def __init__(self, features, alpha=1.0, B=None, C=2**0.5):
+    def __init__(self, features, alpha=1.0, B=None, C=2 ** 0.5):
         # Each feature gets its own weight
         # needs to be non zero otherwise first
         if B is None:
-            B = 1/alpha
+            B = 1 / alpha
         self.C = C
         self.B = B
         self.alpha = alpha
         self.features = features
-        self.weights = self.proj(dict([(f,1) for f in features]))
+        self.weights = self.proj(dict([(f, 1) for f in features]))
         self.k = 1
 
     def l2_norm(self, weights):
@@ -77,7 +78,7 @@ class ALMA(object):
         return prod
 
     def add_dicts(self, d1, d2):
-        for k,v in d2.items():
+        for k, v in d2.items():
             d1[k] += v
         return d1
 
@@ -91,6 +92,7 @@ class ALMA(object):
         if best_ix == 0:
             return
 
+        other_feats_array = [feats_array[best_ix]]
         best_fts_prod = self.weight_product(self.to_unitl2_norm(best_feats))
         num_other_feats = len(other_feats_array)
         assert num_other_feats > 0
@@ -103,14 +105,16 @@ class ALMA(object):
         delta = dict()
         # normalize by the number of other features
         for feat in self.features:
-            delta[feat] = best_fts_prod[feat] - (other_feats_product[feat] / num_other_feats) # need to normalize the other feats value
+            delta[feat] = best_fts_prod[feat] - (
+                        other_feats_product[feat] / num_other_feats)  # need to normalize the other feats value
 
         proj_delta = self.proj(delta)
         new_weights = defaultdict(float)
         for ft in self.features:
-            new_weights[ft] = self.weights[ft] + (self.C * self.k**-0.5 * proj_delta[ft])
+            new_weights[ft] = self.weights[ft] + (self.C * self.k ** -0.5 * proj_delta[ft])
         new_weights = self.proj(new_weights)
         self.weights = new_weights
+        self.k += 1
 
     def save(self, path):
         '''Save the pickled model weights.'''
@@ -122,11 +126,11 @@ class ALMA(object):
         return None
 
 
-# p = ALMA(features={"a","b","c"})
-# best = defaultdict(float)
-# best.update({ "a": 1, "b": 2})
-#
-# rest = defaultdict(float)
-# rest.update({"a": -1, "b": 3, "c": 4})
-#
-# p.train(best, [rest])
+p = ALMA(features={"a", "b", "c"})
+best = defaultdict(float)
+best.update({"a": 1, "b": 2})
+
+rest = defaultdict(float)
+rest.update({"a": -1, "b": 3, "c": 4})
+
+p.train(best, [rest])
