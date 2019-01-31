@@ -132,6 +132,15 @@ class CostSensitiveStructuredPerceptron(StructuredPerceptron):
             self.__upd_feat__(feat, val)
         return None
 
+    def clone(self):
+        p = CostSensitiveStructuredPerceptron(self.learning_rate)
+        p.weights.update(self.weights)
+        p._totals.update(self._totals)
+        p._tstamps.update(self._tstamps)
+        p.i = self.i
+        return p
+
+
 if __name__ == "__main__":
 
     p = CostSensitiveStructuredPerceptron(learning_rate=0.1)
