@@ -60,7 +60,10 @@ class SearnModelAllParses(SearnModelTemplateFeatures):
                           tag2span, tag2words, tag_ix, words, current_parse_probs):
 
         if tag_ix >= len(pos_ptag_seq):
-            return [current_parse_probs]
+            if len(current_parse_probs) == 0:
+                return []
+            else:
+                return [current_parse_probs]
 
         full_parses = []
 
@@ -127,22 +130,22 @@ class SearnModelAllParses(SearnModelTemplateFeatures):
         for action, prob in action_probabilities.items():
             # Decide the direction of the causal relation
             new_relations = set()
+            new_cause2effects = self.clone_default_dict(cause2effects)
+            new_effect2causers = self.clone_default_dict(effect2causers)
+
             if action in [LARC, RARC]:
-                feats_copy = dict(feats) # don't modify feats as we iterate through possibilities
+                feats_copy = dict(feats)  # don't modify feats as we iterate through possibilities
                 cause_effect, effect_cause = self.update_feats_with_action(action, buffer_tag, feats_copy, tos_tag)
                 lr_action = self.predict_crel_action(feats=feats_copy,
                                                      model=self.crel_models[-1],
                                                      vectorizer=self.crel_feat_vectorizers[-1])
-
-                new_cause2effects  = self.clone_default_dict(cause2effects)
-                new_effect2causers = self.clone_default_dict(effect2causers)
 
                 new_relations = self.update_cause_effects(buffer_tag_pair,
                                                           new_cause2effects, cause_effect,
                                                           new_effect2causers, effect_cause,
                                                           lr_action, tos_tag_pair)
 
-            parse_action_result = ParseActionResult(action, new_relations, prob)
+            parse_action_result = ParseActionResult(action, new_relations, prob, new_cause2effects, new_effect2causers)
             parse_action_results.append(parse_action_result)
         return parse_action_results
 
