@@ -20,7 +20,7 @@ class SearnModelAllParses(SearnModelTemplateFeatures):
     def __init__(self, *args, **kwargs):
         super(SearnModelAllParses, self).__init__(*args, **kwargs)
 
-    def generate_all_potential_parses_for_sentence(self, tagged_sentence, predicted_tags):
+    def generate_all_potential_parses_for_sentence(self, tagged_sentence, predicted_tags, min_probability=0.1):
 
         pos_ptag_seq, _, tag2span, all_predicted_rtags, _ = self.get_tags_relations_for(
             tagged_sentence, predicted_tags, self.cr_tags)
@@ -48,7 +48,7 @@ class SearnModelAllParses(SearnModelTemplateFeatures):
             tag2words[tag_pair] = self.ngram_extractor.extract(words[bstart:bstop + 1])  # type: List[str]
 
         all_parses = self.recursively_parse(defaultdict(set), defaultdict(set),
-                                            oracle, pos_ptag_seq, tag2span, tag2words, 0, words, defaultdict(list))
+                                            oracle, pos_ptag_seq, tag2span, tag2words, 0, words, defaultdict(list), min_probability)
         return all_parses
 
     def clone_default_dict(self, d):
@@ -57,7 +57,7 @@ class SearnModelAllParses(SearnModelTemplateFeatures):
         return new_dd
 
     def recursively_parse(self, cause2effects, effect2causers, oracle, pos_ptag_seq,
-                          tag2span, tag2words, tag_ix, words, current_parse_probs):
+                          tag2span, tag2words, tag_ix, words, current_parse_probs, min_prob):
 
         if tag_ix >= len(pos_ptag_seq):
             if len(current_parse_probs) == 0:
@@ -78,7 +78,10 @@ class SearnModelAllParses(SearnModelTemplateFeatures):
                                                              remaining_buffer_tags,
                                                              tag2span, tag2words, words)
 
-        for pa_result in parse_action_results:
+        for pa_result in sorted(parse_action_results, key = lambda par: -par.prob):
+            if pa_result.prob < min_prob:
+                continue
+
             new_current_parse_probs = self.clone_default_dict(current_parse_probs)
             new_oracle = oracle.clone()
             if pa_result.relations:
@@ -90,14 +93,14 @@ class SearnModelAllParses(SearnModelTemplateFeatures):
                 full_parses.extend(self.recursively_parse(pa_result.cause2effects, pa_result.effect2causers,
                                     new_oracle, pos_ptag_seq, tag2span, tag2words,
                                     tag_ix+1,
-                                    words, new_current_parse_probs))
+                                    words, new_current_parse_probs, min_prob))
             else:
                 # advance parse state
                 # don't increment tag index'
                 full_parses.extend(self.recursively_parse(pa_result.cause2effects, pa_result.effect2causers,
                                     new_oracle, pos_ptag_seq, tag2span, tag2words,
                                     tag_ix,
-                                    words, new_current_parse_probs))
+                                    words, new_current_parse_probs, min_prob))
         return full_parses
 
     def get_parse_action_results(self, bstart, buffer_tag, buffer_tag_pair, cause2effects, effect2causers, tos_tag_pair,
