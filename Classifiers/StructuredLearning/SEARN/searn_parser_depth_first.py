@@ -16,9 +16,9 @@ class ParseActionResult(object):
         self.cause2effects = cause2effects
         self.effect2causers = effect2causers
 
-class SearnModelAllParses(SearnModelTemplateFeatures):
+class SearnModelDepthFirst(SearnModelTemplateFeatures):
     def __init__(self, *args, **kwargs):
-        super(SearnModelAllParses, self).__init__(*args, **kwargs)
+        super(SearnModelDepthFirst, self).__init__(*args, **kwargs)
 
     def generate_all_potential_parses_for_sentence(self, tagged_sentence, predicted_tags, min_probability=0.1):
 

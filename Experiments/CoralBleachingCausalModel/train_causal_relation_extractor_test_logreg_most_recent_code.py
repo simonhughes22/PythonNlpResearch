@@ -17,7 +17,7 @@ from function_helpers import get_function_names, get_functions_by_name
 from load_data import load_process_essays
 from results_procesor import ResultsProcessor, __MICRO_F1__
 from searn_parser import SearnModelTemplateFeatures
-from searn_parser_all_parses import SearnModelAllParses
+from searn_parser_depth_first import SearnModelDepthFirst
 from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
 from cost_functions import *
@@ -78,14 +78,14 @@ def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_nam
     else:
         ngram_extractor = NgramExtractor(max_ngram_len=ngrams)
 
-    parse_model = SearnModelAllParses(feature_extractor=template_feature_extractor,
-                                             cost_function=cost_fn,
-                                             min_feature_freq=MIN_FEAT_FREQ,
-                                             ngram_extractor=ngram_extractor, cr_tags=cr_tags,
-                                             base_learner_fact=BASE_LEARNER_FACT,
-                                             beta=beta,
-                                             # log_fn=lambda s: print(s))
-                                             log_fn=lambda s: None)
+    parse_model = SearnModelDepthFirst(feature_extractor=template_feature_extractor,
+                                       cost_function=cost_fn,
+                                       min_feature_freq=MIN_FEAT_FREQ,
+                                       ngram_extractor=ngram_extractor, cr_tags=cr_tags,
+                                       base_learner_fact=BASE_LEARNER_FACT,
+                                       beta=beta,
+                                       # log_fn=lambda s: print(s))
+                                       log_fn=lambda s: None)
 
     parse_model.train(essays_TD, max_epochs=max_epochs)
 
