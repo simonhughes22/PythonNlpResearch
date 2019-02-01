@@ -263,10 +263,10 @@ class SearnModelTemplateFeatures(object):
         words = [wd for wd, tags in tagged_sentence]
 
         # Initialize stack, basic parser and oracle
-        stack = Stack(verbose=False)
+
         # needs to be a tuple
-        stack.push((ROOT, 0))
-        parser = ShiftReduceParser(stack)
+        parser = ShiftReduceParser(Stack(verbose=False))
+        parser.stack.push((ROOT, 0))
         oracle = Oracle(pos_ground_truth_crels, parser)
 
         predicted_relations = set()  # type: Set[str]
@@ -313,7 +313,7 @@ class SearnModelTemplateFeatures(object):
                 distance = len(btwn_word_seq)
                 btwn_word_ngrams = self.ngram_extractor.extract(btwn_word_seq)  # type: List[str]
 
-                feats = self.feat_extractor.extract(stack_tags=stack.contents(), buffer_tags=remaining_buffer_tags,
+                feats = self.feat_extractor.extract(stack_tags=oracle.parser.stack.contents(), buffer_tags=remaining_buffer_tags,
                                                     tag2word_seq=tag2words,
                                                     between_word_seq=btwn_word_ngrams, distance=distance,
                                                     cause2effects=cause2effects, effect2causers=effect2causers,
