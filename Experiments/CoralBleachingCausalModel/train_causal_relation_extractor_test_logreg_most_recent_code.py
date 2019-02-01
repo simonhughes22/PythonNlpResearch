@@ -36,7 +36,7 @@ CV_FOLDS = 5
 MIN_FEAT_FREQ = 5
 
 # Global settings
-
+logger.info("Started at: " + str(datetime.datetime.now()))
 settings = Settings()
 root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
 training_folder = root_folder + "Training" + "/"
@@ -56,7 +56,6 @@ test_fname = coref_output_folder + "test_crel_anatagged_essays_most_recent_code.
 with open(test_fname, "rb") as f:
     pred_tagged_essays_test = dill.load(f)
 
-logger.info("Started at: " + str(datetime.datetime.now()))
 logger.info("Number of pred tagged essays %i" % len(pred_tagged_essays_train))  # should be 902
 
 cr_tags = get_cr_tags(train_tagged_essays=pred_tagged_essays_train, tag_essays_test=pred_tagged_essays_test)
@@ -157,9 +156,11 @@ BASE_LEARNER_FACT = lambda : LogisticRegression(dual=dual, C=C, penalty=penalty,
 best_extractor_names = ['single_words', 'between_word_features', 'label_set',
                                     'three_words', 'third_order', 'unigrams'] # type: List[str]
 
+logger.info("Training Model")
 train_result = model_train_predict(pred_tagged_essays_train, pred_tagged_essays_test, best_extractor_names, cost_function_name, ngrams, stemmed, beta, max_epochs)
 parse_model, num_feats, sent_td_ys_bycode, sent_vd_ys_bycode, sent_td_pred_ys_bycode, sent_vd_pred_ys_bycode = train_result
 
+logger.info("Predicting")
 parses = []
 for eix, essay in enumerate(pred_tagged_essays_test):
     for sent_ix, taggged_sentence in enumerate(essay.sentences):
