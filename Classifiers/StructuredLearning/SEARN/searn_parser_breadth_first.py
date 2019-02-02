@@ -5,22 +5,50 @@ from StructuredLearning.SEARN.stack import Stack
 from oracle import Oracle
 from shift_reduce_helper import *
 from shift_reduce_parser import ShiftReduceParser
+import numpy as np
 
 from Classifiers.StructuredLearning.SEARN.searn_parser import SearnModelTemplateFeatures
 
 class ParseActionResult(object):
-    def __init__(self, action, relations, prob, cause2effects, effect2causers):
+    def __init__(self, action, relations, prob, cause2effects, effect2causers, oracle, tag_ix, ctx, parent_action):
         self.action = action
         self.relations = relations
         self.prob = prob
         self.cause2effects = cause2effects
         self.effect2causers = effect2causers
+        self.oracle = oracle
+        self.current_tag_ix = tag_ix # store for reference / debugging
+        self.tag_ix = tag_ix
+        self.ctx = ctx
+        self.parent_action = parent_action
 
-class SearnModelDepthFirst(SearnModelTemplateFeatures):
+        self.probs = [self.prob]
+        if parent_action is not None:
+            self.probs = parent_action.probs + self.probs
+        self.cum_prob = np.mean(self.probs)
+        self.__execute__()
+
+    def __execute__(self):
+        buffer_tag_pair = self.ctx.pos_ptag_seq[self.tag_ix]
+        if not self.oracle.__execute__(self.action, self.oracle.tos(), buffer_tag_pair) or self.oracle.is_stack_empty():
+            # increment tag_ix
+            self.tag_ix += 1
+
+    def is_terminal(self):
+        return self.tag_ix >= len(self.ctx.pos_ptag_seq)
+
+class ParseContext(object):
+    def __init__(self, pos_ptag_seq, tag2span, tag2words, words):
+        self.words = words
+        self.tag2words = tag2words
+        self.tag2span = tag2span
+        self.pos_ptag_seq = pos_ptag_seq
+
+class SearnModelBreadthFirst(SearnModelTemplateFeatures):
     def __init__(self, *args, **kwargs):
-        super(SearnModelDepthFirst, self).__init__(*args, **kwargs)
+        super(SearnModelBreadthFirst, self).__init__(*args, **kwargs)
 
-    def generate_all_potential_parses_for_sentence(self, tagged_sentence, predicted_tags, min_probability=0.1):
+    def generate_all_potential_parses_for_sentence(self, tagged_sentence, predicted_tags, top_n):
 
         pos_ptag_seq, _, tag2span, all_predicted_rtags, _ = self.get_tags_relations_for(
             tagged_sentence, predicted_tags, self.cr_tags)
@@ -36,90 +64,68 @@ class SearnModelDepthFirst(SearnModelTemplateFeatures):
 
         words = [wd for wd, tags in tagged_sentence]
 
-        # Initialize stack, basic parser and oracle
-        parser = ShiftReduceParser(Stack(verbose=False))
-        parser.stack.push((ROOT, 0))
-        # needs to be a tuple
-        oracle = Oracle([], parser)
-
         tag2words = defaultdict(list)
         for ix, tag_pair in enumerate(pos_ptag_seq):
             bstart, bstop = tag2span[tag_pair]
             tag2words[tag_pair] = self.ngram_extractor.extract(words[bstart:bstop + 1])  # type: List[str]
 
-        all_parses = self.recursively_parse(defaultdict(set), defaultdict(set),
-                                            oracle, pos_ptag_seq, tag2span, tag2words, 0, words, defaultdict(list), min_probability)
-        return all_parses
+        ctx = ParseContext(pos_ptag_seq=pos_ptag_seq, tag2span=tag2span, tag2words=tag2words)
 
-    def clone_default_dict(self, d):
-        new_dd = defaultdict(d.default_factory)
-        new_dd.update(d)
-        return new_dd
+        terminal_actions = []
+        actions_queue = [None]
+        while True:
+            current_actions_queue = list(actions_queue)
+            actions_queue = []
+            for act in current_actions_queue:
+                if act.is_terminal():
+                    terminal_actions.append(act)
+                actions_queue.extend(self.get_next_actions(act, ctx))
 
-    def recursively_parse(self, cause2effects, effect2causers, oracle, pos_ptag_seq,
-                          tag2span, tag2words, tag_ix, words, current_parse_probs, min_prob):
+            if len(terminal_actions) >= top_n:
+                break
+            # trim to top_n
+            actions_queue = sorted(actions_queue,   key=lambda act: -act.cum_prob)[:top_n]
 
-        if tag_ix >= len(pos_ptag_seq):
-            if len(current_parse_probs) == 0:
-                return []
-            else:
-                return [current_parse_probs]
+        terminal_actions = sorted(terminal_actions, key=lambda act: -act.cum_prob)
+        return terminal_actions[:top_n]
 
-        full_parses = []
+    def get_next_actions(self, parse_action, ctx):
+        next_actions = []
+        if parse_action is None:
+            # Initialize stack, basic parser and oracle
+            oracle = self.create_oracle()
+            tag_ix = 0
+            cause2effects, effect2causers = defaultdict(set), defaultdict(set)
+        else:
+            oracle = parse_action.oracle
+            tag_ix = parse_action.tag_ix
+            cause2effects, effect2causers = parse_action.cause2effects, parse_action.effect2causers
 
-        buffer_tag_pair = pos_ptag_seq[tag_ix]
+            if tag_ix >= len(ctx.pos_ptag_seq):
+                return next_actions
+
+        return self.get_parse_action_results(cause2effects, effect2causers, oracle, tag_ix, ctx, parse_action)
+
+    def get_parse_action_results(self, cause2effects, effect2causers, oracle, tag_ix, ctx, parent_action):
+        buffer_tag_pair = ctx.pos_ptag_seq[tag_ix]
         buffer_tag = buffer_tag_pair[0]
-        bstart, bstop = tag2span[buffer_tag_pair]
-        remaining_buffer_tags = pos_ptag_seq[tag_ix:]
-        # Consume the stack
+        bstart, bstop = ctx.tag2span[buffer_tag_pair]
+        remaining_buffer_tags = ctx.pos_ptag_seq[tag_ix:]
+
         tos_tag_pair = oracle.tos()
-        parse_action_results = self.get_parse_action_results(bstart, buffer_tag, buffer_tag_pair, cause2effects,
-                                                             effect2causers, tos_tag_pair, oracle.parser,
-                                                             remaining_buffer_tags,
-                                                             tag2span, tag2words, words)
-
-        for pa_result in sorted(parse_action_results, key = lambda par: -par.prob):
-            if pa_result.prob < min_prob:
-                continue
-
-            new_current_parse_probs = self.clone_default_dict(current_parse_probs)
-            new_oracle = oracle.clone()
-            if pa_result.relations:
-                for reln in pa_result.relations:
-                    new_current_parse_probs[reln].append(pa_result.prob)
-
-            if not new_oracle.__execute__(pa_result.action, tos_tag_pair, buffer_tag_pair) or new_oracle.is_stack_empty():
-                # increment tag_ix
-                full_parses.extend(self.recursively_parse(pa_result.cause2effects, pa_result.effect2causers,
-                                    new_oracle, pos_ptag_seq, tag2span, tag2words,
-                                    tag_ix+1,
-                                    words, new_current_parse_probs, min_prob))
-            else:
-                # advance parse state
-                # don't increment tag index'
-                full_parses.extend(self.recursively_parse(pa_result.cause2effects, pa_result.effect2causers,
-                                    new_oracle, pos_ptag_seq, tag2span, tag2words,
-                                    tag_ix,
-                                    words, new_current_parse_probs, min_prob))
-        return full_parses
-
-    def get_parse_action_results(self, bstart, buffer_tag, buffer_tag_pair, cause2effects, effect2causers, tos_tag_pair,
-                                 parser, remaining_buffer_tags, tag2span, tag2words, words):
-
-
         tos_tag = tos_tag_pair[0]
         # Returns -1,-1 if TOS is ROOT
         if tos_tag == ROOT:
             tstart, tstop = -1, -1
         else:
-            tstart, tstop = tag2span[tos_tag_pair]
+            tstart, tstop = ctx.tag2span[tos_tag_pair]
         # Note that the end ix in tag2span is always the last index, not the last + 1
-        btwn_start, btwn_stop = min(tstop + 1, len(words)), max(0, bstart)
-        btwn_word_seq = words[btwn_start:btwn_stop]
+        btwn_start, btwn_stop = min(tstop + 1, len(ctx.words)), max(0, bstart)
+        btwn_word_seq = ctx.words[btwn_start:btwn_stop]
         distance = len(btwn_word_seq)
         btwn_word_ngrams = self.ngram_extractor.extract(btwn_word_seq)  # type: List[str]
-        feats = self.feat_extractor.extract(stack_tags=parser.stack.contents(), buffer_tags=remaining_buffer_tags,
-                                            tag2word_seq=tag2words,
+        feats = self.feat_extractor.extract(stack_tags=oracle.parser.stack.contents(), buffer_tags=remaining_buffer_tags,
+                                            tag2word_seq=ctx.tag2words,
                                             between_word_seq=btwn_word_ngrams, distance=distance,
                                             cause2effects=cause2effects, effect2causers=effect2causers,
                                             positive_val=self.positive_val)
@@ -148,7 +154,8 @@ class SearnModelDepthFirst(SearnModelTemplateFeatures):
                                                           new_effect2causers, effect_cause,
                                                           lr_action, tos_tag_pair)
 
-            parse_action_result = ParseActionResult(action, new_relations, prob, new_cause2effects, new_effect2causers)
+            parse_action_result = ParseActionResult(
+                action, new_relations, prob, new_cause2effects, new_effect2causers, oracle.clone(), tag_ix, ctx, parent_action)
             parse_action_results.append(parse_action_result)
         return parse_action_results
 
@@ -182,6 +189,17 @@ class SearnModelDepthFirst(SearnModelTemplateFeatures):
         else:
             raise Exception("Invalid CREL type")
         return new_relations
+
+    def clone_default_dict(self, d):
+        new_dd = defaultdict(d.default_factory)
+        new_dd.update(d)
+        return new_dd
+
+    def create_oracle(self):
+        parser = ShiftReduceParser(Stack(verbose=False))
+        parser.stack.push((ROOT, 0))
+        # needs to be a tuple
+        return Oracle([], parser)
 
     def predict_parse_action_probabilities(self, feats, tos, models, vectorizer):
 

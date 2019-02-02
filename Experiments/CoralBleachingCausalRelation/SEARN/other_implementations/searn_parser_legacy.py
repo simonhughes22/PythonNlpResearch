@@ -183,7 +183,7 @@ class SearnModel_Legacy(object):
                     action = forced_action
                     first_action = False
                 self.add_relation(action, tos, buffer, ground_truth, relns)
-                if not oracle.execute(action, tos, buffer):
+                if not oracle.__execute__(action, tos, buffer):
                     break
                 if oracle.is_stack_empty():
                     break
