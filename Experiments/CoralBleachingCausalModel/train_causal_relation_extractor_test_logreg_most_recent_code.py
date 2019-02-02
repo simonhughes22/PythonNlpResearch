@@ -1,27 +1,18 @@
 # coding: utf-8
 import datetime
 import logging
-from collections import defaultdict
-from typing import Any, List, Set, Tuple
 
 import dill
-import numpy as np
 import pymongo
-from joblib import Parallel, delayed
 from sklearn.linear_model import LogisticRegression
 
-from CrossValidation import cross_validation
 from Settings import Settings
+from cost_functions import *
 from crel_helper import get_cr_tags
 from function_helpers import get_function_names, get_functions_by_name
-from load_data import load_process_essays
-from results_procesor import ResultsProcessor, __MICRO_F1__
-from searn_parser import SearnModelTemplateFeatures
-from searn_parser_depth_first import SearnModelDepthFirst
-from window_based_tagger_config import get_config
-from wordtagginghelper import merge_dictionaries
-from cost_functions import *
+from searn_parser_breadth_first import SearnModelBreadthFirst
 from template_feature_extractor import *
+from window_based_tagger_config import get_config
 
 # Logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -78,7 +69,7 @@ def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_nam
     else:
         ngram_extractor = NgramExtractor(max_ngram_len=ngrams)
 
-    parse_model = SearnModelDepthFirst(feature_extractor=template_feature_extractor,
+    parse_model = SearnModelBreadthFirst(feature_extractor=template_feature_extractor,
                                        cost_function=cost_fn,
                                        min_feature_freq=MIN_FEAT_FREQ,
                                        ngram_extractor=ngram_extractor, cr_tags=cr_tags,
@@ -169,6 +160,7 @@ for eix, essay in enumerate(pred_tagged_essays_test):
         if len(unq_ptags) > 3:
             print(eix)
             print("tags: ", len(unq_ptags))
-            pred_parses = parse_model.generate_all_potential_parses_for_sentence(tagged_sentence=taggged_sentence, predicted_tags=predicted_tags)
+            pred_parses = parse_model.generate_all_potential_parses_for_sentence(
+                tagged_sentence=taggged_sentence, predicted_tags=predicted_tags, top_n=100)
             parses.append((eix, sent_ix, pred_parses))
             print("parses:", len(pred_parses))

@@ -30,7 +30,7 @@ class ParseActionResult(object):
 
     def __execute__(self):
         buffer_tag_pair = self.ctx.pos_ptag_seq[self.tag_ix]
-        if not self.oracle.__execute__(self.action, self.oracle.tos(), buffer_tag_pair) or self.oracle.is_stack_empty():
+        if not self.oracle.execute(self.action, self.oracle.tos(), buffer_tag_pair) or self.oracle.is_stack_empty():
             # increment tag_ix
             self.tag_ix += 1
 
@@ -39,10 +39,10 @@ class ParseActionResult(object):
 
 class ParseContext(object):
     def __init__(self, pos_ptag_seq, tag2span, tag2words, words):
-        self.words = words
-        self.tag2words = tag2words
-        self.tag2span = tag2span
         self.pos_ptag_seq = pos_ptag_seq
+        self.tag2span = tag2span
+        self.tag2words = tag2words
+        self.words = words
 
 class SearnModelBreadthFirst(SearnModelTemplateFeatures):
     def __init__(self, *args, **kwargs):
@@ -69,7 +69,7 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
             bstart, bstop = tag2span[tag_pair]
             tag2words[tag_pair] = self.ngram_extractor.extract(words[bstart:bstop + 1])  # type: List[str]
 
-        ctx = ParseContext(pos_ptag_seq=pos_ptag_seq, tag2span=tag2span, tag2words=tag2words)
+        ctx = ParseContext(pos_ptag_seq=pos_ptag_seq, tag2span=tag2span, tag2words=tag2words, words=words)
 
         terminal_actions = []
         actions_queue = [None]
@@ -77,11 +77,11 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
             current_actions_queue = list(actions_queue)
             actions_queue = []
             for act in current_actions_queue:
-                if act.is_terminal():
+                if act and act.is_terminal():
                     terminal_actions.append(act)
                 actions_queue.extend(self.get_next_actions(act, ctx))
 
-            if len(terminal_actions) >= top_n:
+            if len(actions_queue) == 0:
                 break
             # trim to top_n
             actions_queue = sorted(actions_queue,   key=lambda act: -act.cum_prob)[:top_n]
@@ -97,6 +97,8 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
             tag_ix = 0
             cause2effects, effect2causers = defaultdict(set), defaultdict(set)
         else:
+            if parse_action.is_terminal():
+                return []
             oracle = parse_action.oracle
             tag_ix = parse_action.tag_ix
             cause2effects, effect2causers = parse_action.cause2effects, parse_action.effect2causers
