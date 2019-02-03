@@ -10,7 +10,7 @@ import numpy as np
 from Classifiers.StructuredLearning.SEARN.searn_parser import SearnModelTemplateFeatures
 
 class ParseActionResult(object):
-    def __init__(self, action, relations, prob, cause2effects, effect2causers, oracle, tag_ix, ctx, parent_action, lr_action):
+    def __init__(self, action, relations, prob, cause2effects, effect2causers, oracle, tag_ix, ctx, parent_action, lr_action_probs):
         self.action = action
         self.relations = relations
         self.prob = prob
@@ -21,7 +21,7 @@ class ParseActionResult(object):
         self.tag_ix = tag_ix
         self.ctx = ctx
         self.parent_action = parent_action
-        self.lr_action = lr_action
+        self.lr_action_probs = lr_action_probs
 
         self.probs = [self.prob]
         if parent_action is not None:
@@ -151,21 +151,22 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
             new_cause2effects = self.clone_default_dict(cause2effects)
             new_effect2causers = self.clone_default_dict(effect2causers)
 
-            lr_action = None
+            lr_action_probs = dict()
             if action in [LARC, RARC]:
                 feats_copy = dict(feats)  # don't modify feats as we iterate through possibilities
                 cause_effect, effect_cause = self.update_feats_with_action(action, buffer_tag, feats_copy, tos_tag)
-                lr_action = self.predict_crel_action(feats=feats_copy,
+                lr_action_probs = self.predict_parse_action_probabilities(feats=feats_copy,
                                                      model=self.crel_models[-1],
                                                      vectorizer=self.crel_feat_vectorizers[-1])
 
+                lr_action = max(lr_action_probs.keys(), key = lambda k: lr_action_probs[k])
                 new_relations = self.update_cause_effects(buffer_tag_pair,
                                                           new_cause2effects, cause_effect,
                                                           new_effect2causers, effect_cause,
                                                           lr_action, tos_tag_pair)
 
             parse_action_result = ParseActionResult(
-                action, new_relations, prob, new_cause2effects, new_effect2causers, oracle.clone(), tag_ix, ctx, parent_action, lr_action)
+                action, new_relations, prob, new_cause2effects, new_effect2causers, oracle.clone(), tag_ix, ctx, parent_action, lr_action_probs)
             parse_action_results.append(parse_action_result)
         return parse_action_results
 
