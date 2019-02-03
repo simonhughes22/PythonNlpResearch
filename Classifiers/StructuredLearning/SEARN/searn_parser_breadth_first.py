@@ -10,7 +10,7 @@ import numpy as np
 from Classifiers.StructuredLearning.SEARN.searn_parser import SearnModelTemplateFeatures
 
 class ParseActionResult(object):
-    def __init__(self, action, relations, prob, cause2effects, effect2causers, oracle, tag_ix, ctx, parent_action):
+    def __init__(self, action, relations, prob, cause2effects, effect2causers, oracle, tag_ix, ctx, parent_action, lr_action):
         self.action = action
         self.relations = relations
         self.prob = prob
@@ -21,11 +21,12 @@ class ParseActionResult(object):
         self.tag_ix = tag_ix
         self.ctx = ctx
         self.parent_action = parent_action
+        self.lr_action = lr_action
 
         self.probs = [self.prob]
         if parent_action is not None:
             self.probs = parent_action.probs + self.probs
-        self.cum_prob = np.mean(self.probs)
+        self.cum_prob = np.product(self.probs)
         self.__execute__()
 
     def __execute__(self):
@@ -48,19 +49,18 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
     def __init__(self, *args, **kwargs):
         super(SearnModelBreadthFirst, self).__init__(*args, **kwargs)
 
-    def generate_all_potential_parses_for_sentence(self, tagged_sentence, predicted_tags, top_n):
-
+    def build_parse_context(self, tagged_sentence, predicted_tags):
         pos_ptag_seq, _, tag2span, all_predicted_rtags, _ = self.get_tags_relations_for(
             tagged_sentence, predicted_tags, self.cr_tags)
 
         if len(all_predicted_rtags) == 0:
-            return []
+            return None
 
         # tags without positional info
         rtag_seq = [t for t, i in pos_ptag_seq if t[0].isdigit()]
         # if not at least 2 concept codes, then can't parse
         if len(rtag_seq) < 2:
-            return []
+            return None
 
         words = [wd for wd, tags in tagged_sentence]
 
@@ -70,6 +70,13 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
             tag2words[tag_pair] = self.ngram_extractor.extract(words[bstart:bstop + 1])  # type: List[str]
 
         ctx = ParseContext(pos_ptag_seq=pos_ptag_seq, tag2span=tag2span, tag2words=tag2words, words=words)
+        return ctx
+
+    def generate_all_potential_parses_for_sentence(self, tagged_sentence, predicted_tags, top_n):
+
+        ctx = self.build_parse_context(tagged_sentence, predicted_tags)
+        if not ctx:
+            return []
 
         terminal_actions = []
         actions_queue = [None]
@@ -144,6 +151,7 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
             new_cause2effects = self.clone_default_dict(cause2effects)
             new_effect2causers = self.clone_default_dict(effect2causers)
 
+            lr_action = None
             if action in [LARC, RARC]:
                 feats_copy = dict(feats)  # don't modify feats as we iterate through possibilities
                 cause_effect, effect_cause = self.update_feats_with_action(action, buffer_tag, feats_copy, tos_tag)
@@ -157,7 +165,7 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
                                                           lr_action, tos_tag_pair)
 
             parse_action_result = ParseActionResult(
-                action, new_relations, prob, new_cause2effects, new_effect2causers, oracle.clone(), tag_ix, ctx, parent_action)
+                action, new_relations, prob, new_cause2effects, new_effect2causers, oracle.clone(), tag_ix, ctx, parent_action, lr_action)
             parse_action_results.append(parse_action_result)
         return parse_action_results
 
