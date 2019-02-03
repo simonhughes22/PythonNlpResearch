@@ -155,7 +155,7 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
             if action in [LARC, RARC]:
                 feats_copy = dict(feats)  # don't modify feats as we iterate through possibilities
                 cause_effect, effect_cause = self.update_feats_with_action(action, buffer_tag, feats_copy, tos_tag)
-                lr_action_probs = self.predict_parse_action_probabilities(feats=feats_copy,
+                lr_action_probs = self.predict_crel_action_probs(feats=feats_copy,
                                                      model=self.crel_models[-1],
                                                      vectorizer=self.crel_feat_vectorizers[-1])
 
