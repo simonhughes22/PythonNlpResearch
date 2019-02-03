@@ -9,8 +9,11 @@ import numpy as np
 
 from Classifiers.StructuredLearning.SEARN.searn_parser import SearnModelTemplateFeatures
 
+def geo_mean(vals):
+    return np.product(vals)**(1/len(vals))
+
 class ParseActionResult(object):
-    def __init__(self, action, relations, prob, cause2effects, effect2causers, oracle, tag_ix, ctx, parent_action, lr_action_probs):
+    def __init__(self, action, relations, prob, cause2effects, effect2causers, oracle, tag_ix, ctx, parent_action, lr_action):
         self.action = action
         self.relations = relations
         self.prob = prob
@@ -21,12 +24,13 @@ class ParseActionResult(object):
         self.tag_ix = tag_ix
         self.ctx = ctx
         self.parent_action = parent_action
-        self.lr_action_probs = lr_action_probs
+        self.lr_action = lr_action
 
         self.probs = [self.prob]
         if parent_action is not None:
             self.probs = parent_action.probs + self.probs
-        self.cum_prob = np.product(self.probs)
+        # use the geometric mean here so we don't penalize longer parses
+        self.cum_prob = geo_mean(self.probs)
         self.__execute__()
 
     def __execute__(self):
@@ -116,11 +120,13 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
         return self.get_parse_action_results(cause2effects, effect2causers, oracle, tag_ix, ctx, parse_action)
 
     def get_parse_action_results(self, cause2effects, effect2causers, oracle, tag_ix, ctx, parent_action):
+        # Get Buffer Info
         buffer_tag_pair = ctx.pos_ptag_seq[tag_ix]
         buffer_tag = buffer_tag_pair[0]
         bstart, bstop = ctx.tag2span[buffer_tag_pair]
         remaining_buffer_tags = ctx.pos_ptag_seq[tag_ix:]
 
+        # Get Stack Info
         tos_tag_pair = oracle.tos()
         tos_tag = tos_tag_pair[0]
         # Returns -1,-1 if TOS is ROOT
@@ -128,6 +134,8 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
             tstart, tstop = -1, -1
         else:
             tstart, tstop = ctx.tag2span[tos_tag_pair]
+
+        # Get Between features
         # Note that the end ix in tag2span is always the last index, not the last + 1
         btwn_start, btwn_stop = min(tstop + 1, len(ctx.words)), max(0, bstart)
         btwn_word_seq = ctx.words[btwn_start:btwn_stop]
@@ -145,29 +153,34 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
                                            vectorizer=self.parser_feature_vectorizers[-1])
 
         parse_action_results = []
-        for action, prob in action_probabilities.items():
+        for action, parse_action_prob in action_probabilities.items():
             # Decide the direction of the causal relation
-            new_relations = set()
-            new_cause2effects = self.clone_default_dict(cause2effects)
-            new_effect2causers = self.clone_default_dict(effect2causers)
-
-            lr_action_probs = dict()
             if action in [LARC, RARC]:
                 feats_copy = dict(feats)  # don't modify feats as we iterate through possibilities
                 cause_effect, effect_cause = self.update_feats_with_action(action, buffer_tag, feats_copy, tos_tag)
+
                 lr_action_probs = self.predict_crel_action_probs(feats=feats_copy,
                                                      model=self.crel_models[-1],
                                                      vectorizer=self.crel_feat_vectorizers[-1])
 
-                lr_action = max(lr_action_probs.keys(), key = lambda k: lr_action_probs[k])
-                new_relations = self.update_cause_effects(buffer_tag_pair,
-                                                          new_cause2effects, cause_effect,
-                                                          new_effect2causers, effect_cause,
-                                                          lr_action, tos_tag_pair)
+                for lr_action, lra_prob in lr_action_probs.items():
+                    new_cause2effects = self.clone_default_dict(cause2effects)
+                    new_effect2causers = self.clone_default_dict(effect2causers)
+                    new_relations = self.update_cause_effects(buffer_tag_pair,
+                                                              new_cause2effects, cause_effect,
+                                                              new_effect2causers, effect_cause,
+                                                              lr_action, tos_tag_pair)
 
-            parse_action_result = ParseActionResult(
-                action, new_relations, prob, new_cause2effects, new_effect2causers, oracle.clone(), tag_ix, ctx, parent_action, lr_action_probs)
-            parse_action_results.append(parse_action_result)
+                    parse_action_result = ParseActionResult(
+                        action, new_relations, parse_action_prob * lra_prob, new_cause2effects, new_effect2causers, oracle.clone(), tag_ix, ctx,
+                        parent_action, lr_action)
+                    parse_action_results.append(parse_action_result)
+            else:
+                parse_action_result = ParseActionResult(
+                    action, set(), parse_action_prob, self.clone_default_dict(cause2effects), self.clone_default_dict(effect2causers),
+                    oracle.clone(), tag_ix, ctx, parent_action, None)
+                parse_action_results.append(parse_action_result)
+
         return parse_action_results
 
     def update_cause_effects(self, buffer_tag_pair, cause2effects, cause_effect, effect2causers, effect_cause,
