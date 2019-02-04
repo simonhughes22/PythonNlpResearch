@@ -173,11 +173,11 @@ for eix, essay in enumerate(pred_tagged_essays_test):
             pred_crels = parse_model.predict_sentence(tagged_sentence=taggged_sentence, predicted_tags=predicted_tags)
 
             pred_parses = parse_model.generate_all_potential_parses_for_sentence(
-                tagged_sentence=taggged_sentence, predicted_tags=predicted_tags, top_n=100)
+                tagged_sentence=taggged_sentence, predicted_tags=predicted_tags, top_n=10)
             parses.append((eix, sent_ix, pred_parses))
 
             if pred_crels != get_crels(pred_parses[0]):
                 pred_parses2 = parse_model.generate_all_potential_parses_for_sentence(
-                    tagged_sentence=taggged_sentence, predicted_tags=predicted_tags, top_n=100)
+                    tagged_sentence=taggged_sentence, predicted_tags=predicted_tags, top_n=10)
 
             print("parses:", len(pred_parses))

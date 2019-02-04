@@ -39,7 +39,8 @@ class ParseActionResult(object):
         else:
             return 0
 
-    def __init__(self, action, relations, action_prob, cause2effects, effect2causers, oracle, tag_ix, ctx, parent_action, lr_action, lr_action_prob):
+    def __init__(self, action, relations, action_prob, cause2effects, effect2causers, oracle, tag_ix, ctx,
+                 parent_action, lr_action, lr_action_prob, action_probs, lr_action_probs, feats):
         self.action = action
         self.relations = relations
         self.action_prob = action_prob
@@ -52,6 +53,10 @@ class ParseActionResult(object):
         self.parent_action = parent_action
         self.lr_action = lr_action
         self.lr_action_prob = lr_action_prob
+
+        self.action_probs = action_probs
+        self.lr_action_probs = lr_action_probs
+        self.feats = feats
 
         self.probs = [self.action_prob] if self.lr_action is None else [self.action_prob, self.lr_action_prob]
         if parent_action is not None:
@@ -198,8 +203,8 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
         parse_action_results = []
         for action, parse_action_prob in action_probabilities.items():
             # Decide the direction of the causal relation
+            feats_copy = dict(feats.items())  # don't modify feats as we iterate through possibilities
             if action in [LARC, RARC]:
-                feats_copy = dict(feats)  # don't modify feats as we iterate through possibilities
                 cause_effect, effect_cause = self.update_feats_with_action(action, buffer_tag, feats_copy, tos_tag)
 
                 lr_action_probs = self.predict_crel_action_probs(feats=feats_copy,
@@ -207,7 +212,7 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
                                                      vectorizer=self.crel_feat_vectorizers[-1])
 
                 for lr_action, lra_prob in lr_action_probs.items():
-                    new_cause2effects = self.clone_default_dict(cause2effects)
+                    new_cause2effects  = self.clone_default_dict(cause2effects)
                     new_effect2causers = self.clone_default_dict(effect2causers)
                     new_relations = self.update_cause_effects(buffer_tag_pair,
                                                               new_cause2effects, cause_effect,
@@ -216,12 +221,12 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
 
                     parse_action_result = ParseActionResult(
                         action, new_relations, parse_action_prob, new_cause2effects, new_effect2causers, oracle.clone(), tag_ix, ctx,
-                        parent_action, lr_action, lra_prob)
+                        parent_action, lr_action, lra_prob, action_probabilities, lr_action_probs, feats_copy)
                     parse_action_results.append(parse_action_result)
             else:
                 parse_action_result = ParseActionResult(
                     action, set(), parse_action_prob, self.clone_default_dict(cause2effects), self.clone_default_dict(effect2causers),
-                    oracle.clone(), tag_ix, ctx, parent_action, None, -1)
+                    oracle.clone(), tag_ix, ctx, parent_action, None, -1, action_probabilities, {}, feats_copy)
                 parse_action_results.append(parse_action_result)
 
         return parse_action_results
