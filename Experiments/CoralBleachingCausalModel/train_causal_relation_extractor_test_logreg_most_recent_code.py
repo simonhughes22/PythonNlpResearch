@@ -177,5 +177,7 @@ for eix, essay in enumerate(pred_tagged_essays_test):
             parses.append((eix, sent_ix, pred_parses))
 
             if pred_crels != get_crels(pred_parses[0]):
-                error = True
+                pred_parses2 = parse_model.generate_all_potential_parses_for_sentence(
+                    tagged_sentence=taggged_sentence, predicted_tags=predicted_tags, top_n=100)
+
             print("parses:", len(pred_parses))
