@@ -14,6 +14,7 @@ def geo_mean(vals):
     return np.product(vals)**(1/len(vals))
 
 class ParseActionResult(object):
+
     @classmethod
     def sort_actions(cls, a1, a2):
         act1 = a1.get_action_sequence()
@@ -142,11 +143,15 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
                 break
             # trim to top_n
             # important - sort by the top last action probability
-            actions_queue = sorted(actions_queue, key=functools.cmp_to_key(ParseActionResult.sort_actions), reverse=True)[:top_n]
+            actions_queue = sorted(actions_queue,
+                                   key=functools.cmp_to_key(ParseActionResult.sort_actions),
+                                   reverse=True)[:top_n]
 
         # sort, observing parse ordering
-        terminal_actions = sorted(terminal_actions, key=functools.cmp_to_key(ParseActionResult.sort_actions), reverse=True)
-        return terminal_actions[:top_n]
+        terminal_actions = sorted(terminal_actions,
+                                  key=functools.cmp_to_key(ParseActionResult.sort_actions),
+                                  reverse=True)[:top_n]
+        return terminal_actions
 
     def get_next_actions(self, parse_action, ctx):
         next_actions = []
