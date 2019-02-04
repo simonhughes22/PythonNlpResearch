@@ -177,6 +177,7 @@ class SearnModelTemplateFeatures(object):
     def predict_crel_action_probs(self, feats, model, vectorizer):
         xs = vectorizer.transform(feats)
         probs = model.predict_proba(xs).tolist()[0]
+        assert len(probs) == len(model.classes_)
         return dict(zip(model.classes_,probs))
 
     def get_tags_relations_for(self, tagged_sentence, predicted_tags, cr_tags):
