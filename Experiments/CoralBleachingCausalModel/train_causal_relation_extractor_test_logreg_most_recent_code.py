@@ -153,6 +153,16 @@ parse_model, num_feats, sent_td_ys_bycode, sent_vd_ys_bycode, sent_td_pred_ys_by
 
 logger.info("Predicting")
 parses = []
+
+def get_crels(parse):
+    crels = set()
+    p = parse
+    while p:
+        if p.relations:
+            crels.update(p.relations)
+        p = p.parent_action
+    return crels
+
 for eix, essay in enumerate(pred_tagged_essays_test):
     for sent_ix, taggged_sentence in enumerate(essay.sentences):
         predicted_tags = essay.pred_tagged_sentences[sent_ix]
@@ -160,7 +170,12 @@ for eix, essay in enumerate(pred_tagged_essays_test):
         if len(unq_ptags) > 3:
             print(eix)
             print("tags: ", len(unq_ptags))
+            pred_crels = parse_model.predict_sentence(tagged_sentence=taggged_sentence, predicted_tags=predicted_tags)
+
             pred_parses = parse_model.generate_all_potential_parses_for_sentence(
                 tagged_sentence=taggged_sentence, predicted_tags=predicted_tags, top_n=100)
             parses.append((eix, sent_ix, pred_parses))
+
+            if pred_crels != get_crels(pred_parses[0]):
+                error = True
             print("parses:", len(pred_parses))
