@@ -1,5 +1,6 @@
 from collections import defaultdict
 from typing import Set, List
+import functools
 
 from StructuredLearning.SEARN.stack import Stack
 from oracle import Oracle
@@ -13,10 +14,35 @@ def geo_mean(vals):
     return np.product(vals)**(1/len(vals))
 
 class ParseActionResult(object):
-    def __init__(self, action, relations, prob, cause2effects, effect2causers, oracle, tag_ix, ctx, parent_action, lr_action):
+    @classmethod
+    def sort_actions(cls, a1, a2):
+        act1 = a1.get_action_sequence()
+        act2 = a2.get_action_sequence()
+        for i in range(min(len(act1), len(act2))):
+            pa1 = act1[i]
+            pa2 = act2[i]
+            if pa1.action_prob < pa2.action_prob:
+                return -1
+            elif pa1.action_prob > pa2.action_prob:
+                return 1
+            else:
+                if pa1.lr_action and pa2.lr_action:
+                    if pa1.lr_action_prob < pa2.lr_action_prob:
+                        return -1
+                    elif pa1.lr_action_prob > pa2.lr_action_prob:
+                        return 1
+        # exceeded length
+        if a1.cum_prob < a2.cum_prob:
+            return -1
+        elif a1.cum_prob > a2.cum_prob:
+            return 1
+        else:
+            return 0
+
+    def __init__(self, action, relations, action_prob, cause2effects, effect2causers, oracle, tag_ix, ctx, parent_action, lr_action, lr_action_prob):
         self.action = action
         self.relations = relations
-        self.prob = prob
+        self.action_prob = action_prob
         self.cause2effects = cause2effects
         self.effect2causers = effect2causers
         self.oracle = oracle
@@ -25,8 +51,9 @@ class ParseActionResult(object):
         self.ctx = ctx
         self.parent_action = parent_action
         self.lr_action = lr_action
+        self.lr_action_prob = lr_action_prob
 
-        self.probs = [self.prob]
+        self.probs = [self.action_prob] if self.lr_action is None else [self.action_prob, self.lr_action_prob]
         if parent_action is not None:
             self.probs = parent_action.probs + self.probs
         # use the geometric mean here so we don't penalize longer parses
@@ -41,6 +68,20 @@ class ParseActionResult(object):
 
     def is_terminal(self):
         return self.tag_ix >= len(self.ctx.pos_ptag_seq)
+
+    def get_action_sequence(self):
+        actions = [self]
+        p = self
+        while p:
+            actions.append(p)
+            p = p.parent_action
+        return actions[::-1]
+
+    def __repr__(self):
+        return "{action}:{action_prob:.4f} \t {lr_action}:{lr_action_prob:.4f}".format(
+            action=self.action, action_prob=self.action_prob,
+            lr_action = "" if not self.lr_action else self.lr_action, lr_action_prob=self.lr_action_prob
+        )
 
 class ParseContext(object):
     def __init__(self, pos_ptag_seq, tag2span, tag2words, words):
@@ -95,9 +136,11 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
             if len(actions_queue) == 0:
                 break
             # trim to top_n
-            actions_queue = sorted(actions_queue,   key=lambda act: -act.cum_prob)[:top_n]
+            # important - sort by the top last action probability
+            actions_queue = sorted(actions_queue, key=functools.cmp_to_key(ParseActionResult.sort_actions), reverse=True)[:top_n]
 
-        terminal_actions = sorted(terminal_actions, key=lambda act: -act.cum_prob)
+        # sort, observing parse ordering
+        terminal_actions = sorted(terminal_actions, key=functools.cmp_to_key(ParseActionResult.sort_actions), reverse=True)
         return terminal_actions[:top_n]
 
     def get_next_actions(self, parse_action, ctx):
@@ -172,13 +215,13 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
                                                               lr_action, tos_tag_pair)
 
                     parse_action_result = ParseActionResult(
-                        action, new_relations, parse_action_prob * lra_prob, new_cause2effects, new_effect2causers, oracle.clone(), tag_ix, ctx,
-                        parent_action, lr_action)
+                        action, new_relations, parse_action_prob, new_cause2effects, new_effect2causers, oracle.clone(), tag_ix, ctx,
+                        parent_action, lr_action, lra_prob)
                     parse_action_results.append(parse_action_result)
             else:
                 parse_action_result = ParseActionResult(
                     action, set(), parse_action_prob, self.clone_default_dict(cause2effects), self.clone_default_dict(effect2causers),
-                    oracle.clone(), tag_ix, ctx, parent_action, None)
+                    oracle.clone(), tag_ix, ctx, parent_action, None, -1)
                 parse_action_results.append(parse_action_result)
 
         return parse_action_results
