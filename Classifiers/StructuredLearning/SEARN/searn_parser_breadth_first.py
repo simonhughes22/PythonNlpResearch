@@ -172,6 +172,12 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
 
         return self.get_parse_action_results(cause2effects, effect2causers, oracle, tag_ix, ctx, parse_action)
 
+    def clone_cause2effect(self, d):
+        cloney = defaultdict(set)
+        for k,v in d.items():
+            cloney[k] = set(v)
+        return cloney
+
     def get_parse_action_results(self, cause2effects, effect2causers, oracle, tag_ix, ctx, parent_action):
         # Get Buffer Info
         buffer_tag_pair = ctx.pos_ptag_seq[tag_ix]
@@ -217,8 +223,8 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
                                                      vectorizer=self.crel_feat_vectorizers[-1])
 
                 for lr_action, lra_prob in lr_action_probs.items():
-                    new_cause2effects  = self.clone_default_dict(cause2effects)
-                    new_effect2causers = self.clone_default_dict(effect2causers)
+                    new_cause2effects  = self.clone_cause2effect(cause2effects)
+                    new_effect2causers = self.clone_cause2effect(effect2causers)
                     new_relations = self.update_cause_effects(buffer_tag_pair,
                                                               new_cause2effects, cause_effect,
                                                               new_effect2causers, effect_cause,
@@ -230,7 +236,7 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
                     parse_action_results.append(parse_action_result)
             else:
                 parse_action_result = ParseActionResult(
-                    action, set(), parse_action_prob, self.clone_default_dict(cause2effects), self.clone_default_dict(effect2causers),
+                    action, set(), parse_action_prob, self.clone_cause2effect(cause2effects), self.clone_cause2effect(effect2causers),
                     oracle.clone(), tag_ix, ctx, parent_action, None, -1, action_probabilities, {}, feats_copy)
                 parse_action_results.append(parse_action_result)
 
@@ -266,11 +272,6 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
         else:
             raise Exception("Invalid CREL type")
         return new_relations
-
-    def clone_default_dict(self, d):
-        new_dd = defaultdict(d.default_factory)
-        new_dd.update(d)
-        return new_dd
 
     def create_oracle(self):
         parser = ShiftReduceParser(Stack(verbose=False))
