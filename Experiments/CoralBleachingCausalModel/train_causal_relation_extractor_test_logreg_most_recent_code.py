@@ -152,7 +152,6 @@ train_result = model_train_predict(pred_tagged_essays_train, pred_tagged_essays_
 parse_model, num_feats, sent_td_ys_bycode, sent_vd_ys_bycode, sent_td_pred_ys_bycode, sent_vd_pred_ys_bycode = train_result
 
 logger.info("Predicting")
-parses = []
 
 def get_crels(parse):
     crels = set()
@@ -167,14 +166,17 @@ for eix, essay in enumerate(pred_tagged_essays_test):
     for sent_ix, taggged_sentence in enumerate(essay.sentences):
         predicted_tags = essay.pred_tagged_sentences[sent_ix]
         unq_ptags = set(predicted_tags)
-        if len(unq_ptags) > 2:
+        if len(unq_ptags) >= 2:
             pred_crels = parse_model.predict_sentence(tagged_sentence=taggged_sentence, predicted_tags=predicted_tags)
 
             pred_parses = parse_model.generate_all_potential_parses_for_sentence(
                 tagged_sentence=taggged_sentence, predicted_tags=predicted_tags, top_n=100)
-            parses.append((eix, sent_ix, pred_parses))
 
-            assert pred_crels == get_crels(pred_parses[0]), "Parser miss match"
+            pred_crels_beam_parse = set()
+            if len(pred_parses) > 0:
+                pred_crels_beam_parse = get_crels(pred_parses[0])
+
+            assert pred_crels == pred_crels_beam_parse, "Parser miss match"
             print("tags: ", len(unq_ptags), "\tparses:", len(pred_parses))
 
 logger.info("Fimnished")
