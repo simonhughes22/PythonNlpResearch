@@ -167,9 +167,7 @@ for eix, essay in enumerate(pred_tagged_essays_test):
     for sent_ix, taggged_sentence in enumerate(essay.sentences):
         predicted_tags = essay.pred_tagged_sentences[sent_ix]
         unq_ptags = set(predicted_tags)
-        if len(unq_ptags) > 2:
-            print(eix)
-            print("tags: ", len(unq_ptags))
+        if len(unq_ptags) >= 2:
             pred_crels = parse_model.predict_sentence(tagged_sentence=taggged_sentence, predicted_tags=predicted_tags)
 
             pred_parses = parse_model.generate_all_potential_parses_for_sentence(
@@ -177,9 +175,6 @@ for eix, essay in enumerate(pred_tagged_essays_test):
             parses.append((eix, sent_ix, pred_parses))
 
             assert pred_crels == get_crels(pred_parses[0]), "Parser miss match"
+            print("tags: ", len(unq_ptags), "\tparses:", len(pred_parses))
 
-            # if pred_crels != get_crels(pred_parses[0]):
-            #     pred_parses2 = parse_model.generate_all_potential_parses_for_sentence(
-            #         tagged_sentence=taggged_sentence, predicted_tags=predicted_tags, top_n=10)
-
-            print("parses:", len(pred_parses))
+logger.info("Fimnished")
