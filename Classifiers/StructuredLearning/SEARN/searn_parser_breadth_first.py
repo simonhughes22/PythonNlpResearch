@@ -41,7 +41,7 @@ class ParseActionResult(object):
             return 0
 
     def __init__(self, action, relations, action_prob, cause2effects, effect2causers, oracle, tag_ix, ctx,
-                 parent_action, lr_action, lr_action_prob, action_probs, lr_action_probs, feats):
+                 parent_action, lr_action, lr_action_prob):
         self.action = action
         self.relations = relations
         self.action_prob = action_prob
@@ -54,10 +54,6 @@ class ParseActionResult(object):
         self.parent_action = parent_action
         self.lr_action = lr_action
         self.lr_action_prob = lr_action_prob
-
-        self.action_probs = action_probs
-        self.lr_action_probs = lr_action_probs
-        self.feats = feats
 
         self.probs = [self.action_prob] if self.lr_action is None else [self.action_prob, self.lr_action_prob]
         if parent_action is not None:
@@ -135,6 +131,8 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
             current_actions_queue = list(actions_queue)
             actions_queue = []
             for act in current_actions_queue:
+                if len(actions_queue) > top_n:
+                    break
                 if act and act.is_terminal():
                     terminal_actions.append(act)
                 actions_queue.extend(self.get_next_actions(act, ctx))
@@ -142,10 +140,7 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
             if len(actions_queue) == 0:
                 break
             # trim to top_n
-            # important - sort by the top last action probability
-            actions_queue = sorted(actions_queue,
-                                   key=functools.cmp_to_key(ParseActionResult.sort_actions),
-                                   reverse=True)[:top_n]
+            actions_queue = actions_queue[:top_n]
 
         # sort, observing parse ordering
         terminal_actions = sorted(terminal_actions,
@@ -232,15 +227,15 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
 
                     parse_action_result = ParseActionResult(
                         action, new_relations, parse_action_prob, new_cause2effects, new_effect2causers, oracle.clone(), tag_ix, ctx,
-                        parent_action, lr_action, lra_prob, action_probabilities, lr_action_probs, feats_copy)
+                        parent_action, lr_action, lra_prob)
                     parse_action_results.append(parse_action_result)
             else:
                 parse_action_result = ParseActionResult(
                     action, set(), parse_action_prob, self.clone_cause2effect(cause2effects), self.clone_cause2effect(effect2causers),
-                    oracle.clone(), tag_ix, ctx, parent_action, None, -1, action_probabilities, {}, feats_copy)
+                    oracle.clone(), tag_ix, ctx, parent_action, None, -1)
                 parse_action_results.append(parse_action_result)
 
-        return parse_action_results
+        return sorted(parse_action_results, key = lambda pa: (-pa.action_prob, -pa.lr_action_prob))
 
     def update_cause_effects(self, buffer_tag_pair, cause2effects, cause_effect, effect2causers, effect_cause,
                              lr_action, tos_tag_pair):
