@@ -131,8 +131,6 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
             current_actions_queue = list(actions_queue)
             actions_queue = []
             for act in current_actions_queue:
-                if len(actions_queue) > top_n:
-                    break
                 if act and act.is_terminal():
                     terminal_actions.append(act)
                 actions_queue.extend(self.get_next_actions(act, ctx))
