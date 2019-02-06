@@ -1,5 +1,6 @@
 from collections import defaultdict
 import pickle
+import numpy as np
 
 class StructuredPerceptron(object):
     '''A structured perceptron, as implemented by Matthew Honnibal.
@@ -49,7 +50,11 @@ class StructuredPerceptron(object):
                 continue
             if existence_check and feat not in self.weights:
                 continue
+
             score += self.weights[feat] * value
+            assert np.isnan(score) == False, \
+                "decision function value is nan for feat: {feat} and val: {val} and weight: {weight}".format(
+                feat=feat, val=value, weight=self.weights[feat])
         return score
 
     def train(self, best_feats, other_feats_array):
