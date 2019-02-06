@@ -119,7 +119,7 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
         ctx = ParseContext(pos_ptag_seq=pos_ptag_seq, tag2span=tag2span, tag2words=tag2words, words=words)
         return ctx
 
-    def generate_all_potential_parses_for_sentence(self, tagged_sentence, predicted_tags, top_n):
+    def generate_all_potential_parses_for_sentence(self, tagged_sentence, predicted_tags, top_n, search_mode_max_prob=False):
 
         ctx = self.build_parse_context(tagged_sentence, predicted_tags)
         if not ctx:
@@ -127,6 +127,10 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
 
         terminal_actions = []
         actions_queue = [None]
+
+        sort_fn = functools.cmp_to_key(ParseActionResult.sort_actions)
+        if search_mode_max_prob:
+            sort_fn = lambda pa: pa.cum_prob # note that reverse == True
         while True:
             current_actions_queue = list(actions_queue)
             actions_queue = []
@@ -138,12 +142,10 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
             if len(actions_queue) == 0:
                 break
             # trim to top_n
-            actions_queue = actions_queue[:top_n]
+            actions_queue = sorted(actions_queue, key=sort_fn, reverse=True)[:top_n]
 
         # sort, observing parse ordering
-        terminal_actions = sorted(terminal_actions,
-                                  key=functools.cmp_to_key(ParseActionResult.sort_actions),
-                                  reverse=True)[:top_n]
+        terminal_actions = sorted(terminal_actions, key=sort_fn, reverse=True)[:top_n]
         return terminal_actions
 
     def get_next_actions(self, parse_action, ctx):
@@ -233,7 +235,7 @@ class SearnModelBreadthFirst(SearnModelTemplateFeatures):
                     oracle.clone(), tag_ix, ctx, parent_action, None, -1)
                 parse_action_results.append(parse_action_result)
 
-        return sorted(parse_action_results, key = lambda pa: (-pa.action_prob, -pa.lr_action_prob))
+        return parse_action_results
 
     def update_cause_effects(self, buffer_tag_pair, cause2effects, cause_effect, effect2causers, effect_cause,
                              lr_action, tos_tag_pair):
