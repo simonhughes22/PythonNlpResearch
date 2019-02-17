@@ -16,7 +16,7 @@ class StructuredPerceptron(object):
         self.learning_rate = learning_rate
         # The accumulated values, for the averaging. These will be keyed by
         # feature/clas tuples
-        self._totals = defaultdict(int)
+        self._totals = defaultdict(float)
         # The last time the feature was changed, for the averaging. Also
         # keyed by feature/clas tuples
         # (tstamps is short for timestamps)
@@ -25,14 +25,16 @@ class StructuredPerceptron(object):
         self.i = 0
         # how many items do we use to update the weights?
         self.max_update_items = max_update_items
+        self.averaged = False
 
     def clone(self):
-        p = StructuredPerceptron(self.learning_rate)
-        p.weights.update(self.weights)
-        p._totals.update(self._totals)
-        p._tstamps.update(self._tstamps)
-        p.i = self.i
-        return p
+        cloney = StructuredPerceptron(self.learning_rate)
+        cloney.weights.update(self.weights)
+        cloney._totals.update(self._totals)
+        cloney._tstamps.update(self._tstamps)
+        cloney.i = self.i
+        cloney.averaged = self.averaged
+        return cloney
 
     def rank(self, features_array, existence_check=True):
         '''Dot-product the features and current weights and return the best label.'''
@@ -90,6 +92,8 @@ class StructuredPerceptron(object):
         return None
 
     def average_weights(self):
+        # This operation is not 100% idempotent, so prevent doing it multiple times
+        assert self.averaged == False, "Weights already averaged"
         '''Average weights from all iterations.'''
         new_feat_weights = defaultdict(float)
         for feat, weight in self.weights.items():
@@ -99,6 +103,7 @@ class StructuredPerceptron(object):
             if averaged != 0.0:
                 new_feat_weights[feat] = averaged
         self.weights = new_feat_weights
+        self.averaged = True
         return None
 
     def save(self, path):
