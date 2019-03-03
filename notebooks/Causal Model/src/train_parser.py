@@ -1,10 +1,35 @@
 from collections import defaultdict
 
-from cost_functions import micro_f1_cost_plusepsilon
+from cost_functions import *
 from function_helpers import get_functions_by_name
 from searn_parser_breadth_first import SearnModelBreadthFirst
-from template_feature_extractor import NonLocalTemplateFeatureExtractor, NgramExtractorStemmed, NgramExtractor
+from template_feature_extractor import *
 
+def create_extractor_functions():
+    base_extractors = [
+        single_words,
+        word_pairs,
+        three_words,
+        between_word_features
+    ]
+    all_extractor_fns = base_extractors + [
+        word_distance,
+        valency,
+        unigrams,
+        third_order,
+        label_set,
+        size_features
+    ]
+    all_cost_functions = [
+        micro_f1_cost,
+        micro_f1_cost_squared,
+        micro_f1_cost_plusone,
+        micro_f1_cost_plusepsilon,
+        binary_cost,
+        inverse_micro_f1_cost,
+        uniform_cost
+    ]
+    return base_extractors, all_extractor_fns, all_cost_functions
 
 def add_labels(observed_tags, ys_bytag_sent, set_cr_tags):
     for tag in set_cr_tags:

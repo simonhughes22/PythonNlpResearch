@@ -2,10 +2,12 @@ from typing import Any
 
 import dill
 from sklearn.linear_model import LogisticRegression
+import numpy as np
 
 from CrossValidation import cross_validation
+from MIRA import CostSensitiveMIRA
 from Settings import Settings
-from cost_functions import *
+
 from crel_helper import get_cr_tags
 from crel_processing import essay_to_crels_cv
 from evaluation import evaluate_model_essay_level, get_micro_metrics, metrics_to_df
@@ -13,9 +15,9 @@ from feature_extraction import get_features_from_probabilities
 from feature_normalization import min_max_normalize_feats
 from function_helpers import get_function_names
 from results_procesor import ResultsProcessor
-from template_feature_extractor import *
-from train_parser import essay_to_crels
-from train_reranker import train_model_parallel
+from train_parser import essay_to_crels, create_extractor_functions
+from cost_functions import micro_f1_cost_plusepsilon
+from train_reranker import train_model_parallel, train_model, train_cost_sensitive_instance
 from window_based_tagger_config import get_config
 
 # Data Set Partition
@@ -48,41 +50,8 @@ print(cr_tags[0:10])
 
 set_cr_tags = set(cr_tags)
 
-LINE_WIDTH = 80
-
 # other settings
-DOWN_SAMPLE_RATE = 1.0  # For faster smoke testing the algorithm
-BASE_LEARNER_FACT = None
-COLLECTION_PREFIX = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_MOST_RECENT_CODE"
-
-# some of the other extractors aren't functional if the system isn't able to do a basic parse
-# so the base extractors are the MVP for getting to a basic parser, then additional 'meta' parse
-# features from all_extractors can be included
-base_extractors = [
-    single_words,
-    word_pairs,
-    three_words,
-    between_word_features
-]
-
-all_extractor_fns = base_extractors + [
-    word_distance,
-    valency,
-    unigrams,
-    third_order,
-    label_set,
-    size_features
-]
-
-all_cost_functions = [
-    micro_f1_cost,
-    micro_f1_cost_squared,
-    micro_f1_cost_plusone,
-    micro_f1_cost_plusepsilon,
-    binary_cost,
-    inverse_micro_f1_cost,
-    uniform_cost
-]
+base_extractors, all_extractor_fns, all_cost_functions = create_extractor_functions()
 
 all_extractor_fn_names = get_function_names(all_extractor_fns)
 base_extractor_fn_names = get_function_names(base_extractors)
@@ -113,7 +82,7 @@ result_test_essay_level = evaluate_model_essay_level(
     ngrams=ngrams,
     beta=beta,
     stemmed=stemmed,
-    down_sample_rate=DOWN_SAMPLE_RATE,
+    down_sample_rate=1.0,
     max_epochs=max_epochs)
 
 models, cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag, cv_td_preds_by_sent, cv_sent_vd_ys_by_tag = result_test_essay_level
@@ -133,7 +102,7 @@ result_final_test = evaluate_model_essay_level(
     ngrams=ngrams,
     beta=beta,
     stemmed=stemmed,
-    down_sample_rate=DOWN_SAMPLE_RATE,
+    down_sample_rate=1.0,
     max_epochs=max_epochs)
 
 models_test, cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag, cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag = result_final_test
@@ -174,3 +143,24 @@ for train, test in cv_folds_rerank:
 xs_test_rerank = essay_to_crels_cv(test_folds, final_test_model, top_n=best_top_n, search_mode_max_prob=False)
 xs_test = get_features_from_probabilities(xs_test_rerank, name2crels, best_max_parses, min_feat_freq=1,
                                           min_prob=best_min_prob)
+# Normalize both using training data
+xs_train_mm, xs_test_mm = min_max_normalize_feats(xs_train,xs_test)
+
+# partition data
+num_train = int(0.8 * len(xs_train_mm))
+tmp_train_copy = list(xs_train_mm)
+np.random.shuffle(tmp_train_copy)
+tmp_train, tmp_test = tmp_train_copy[:num_train], tmp_train_copy[num_train:]
+
+# Train With Early Stopping to Determine number of iterations
+C = best_C
+pa_type = 1
+loss_type= "ml"
+max_update_items = best_max_upd
+
+mdl = CostSensitiveMIRA(C=C, pa_type=pa_type, loss_type=loss_type,
+                        max_update_items=max_update_items, initial_weight=0.01)
+
+best_mdl, test_acc_df_ml = train_model(mdl, xs_train=tmp_train, xs_test=tmp_test, name2essay=name2essay, set_cr_tags=set_cr_tags,
+     max_epochs=20, early_stop_iters=5, train_instance_fn = train_cost_sensitive_instance, verbose=True)
+

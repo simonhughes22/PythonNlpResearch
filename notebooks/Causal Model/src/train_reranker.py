@@ -37,6 +37,7 @@ def train_model(model, xs_train, xs_test, name2essay, set_cr_tags, max_epochs=30
     essay2crels_test = essay_to_crels(test_essays,   set_cr_tags)
 
     xs_train_copy = list(xs_train)
+    best_iterations = -1
     for i in range(max_epochs):
         shuffle(xs_train_copy)
         for parser_input in xs_train_copy:
@@ -55,6 +56,7 @@ def train_model(model, xs_train, xs_test, name2essay, set_cr_tags, max_epochs=30
             best_model = model.clone()
             best_test_accuracy = test_accuracy_df
             num_declining_acc = 0
+            best_iterations = i+1
         else:
             num_declining_acc += 1
             if num_declining_acc >= early_stop_iters:
@@ -62,7 +64,7 @@ def train_model(model, xs_train, xs_test, name2essay, set_cr_tags, max_epochs=30
         test_accs.append(test_accuracy)
     if verbose:
         print("Best Test Acc: {acc:.4f}".format(acc=max(test_accs)))
-    return best_model, best_test_accuracy
+    return best_model, best_test_accuracy, best_iterations
 
 
 def shuffle_split_dict(dct, train_pct):
@@ -75,7 +77,7 @@ def shuffle_split_dict(dct, train_pct):
 def train_model_fold(xs_train, xs_test, name2essay, C, pa_type, loss_type, max_update_items, set_cr_tags):
     mdl = CostSensitiveMIRA(C=C, pa_type=pa_type, loss_type=loss_type, max_update_items=max_update_items,
                             initial_weight=1)
-    best_mdl, test_acc_df_ml = train_model(mdl, xs_train=xs_train, xs_test=xs_test, name2essay=name2essay,
+    best_mdl, test_acc_df_ml, best_iter = train_model(mdl, xs_train=xs_train, xs_test=xs_test, name2essay=name2essay,
                                            max_epochs=20, early_stop_iters=5, set_cr_tags=set_cr_tags,
                                            train_instance_fn=train_cost_sensitive_instance, verbose=False)
     f1 = test_acc_df_ml["f1_score"].values[0]
