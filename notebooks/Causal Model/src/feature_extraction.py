@@ -40,22 +40,22 @@ def extract_features_from_parse(parse, crel2probs):
         probs = crel2probs[crel]
         max_p = max(probs)
         max_probs.append(max_p)
-        feats["{crel}-MAX(prob)".format(crel=crel)] = max_p
-        feats["{crel}-MIN(prob)".format(crel=crel)] = min(probs)
-        feats["{crel}-pred-count".format(crel=crel)] = len(probs)
-        feats["{crel}-pred-count={count}".format(crel=crel, count=len(probs))] = 1
+        feats["CREL_{crel}-MAX(prob)".format(crel=crel)] = max_p
+        feats["CREL_{crel}-MIN(prob)".format(crel=crel)] = min(probs)
+        feats["CREL_{crel}-pred-count".format(crel=crel)] = len(probs)
+        feats["CREL_{crel}-pred-count={count}".format(crel=crel, count=len(probs))] = 1
 
         # with type
         l, r = crel.split("->")
-        code_tally[l] += 1
-        code_tally[r] += 1
+        code_tally["Tally-" + l] += 1
+        code_tally["Tally-" + r] += 1
 
         # without type
         l_short, r_short = to_short_tag(l), to_short_tag(r)
-        code_tally[l_short] += 1
-        code_tally[r_short] += 1
+        code_tally["Tally-" + l_short] += 1
+        code_tally["Tally-" + r_short] += 1
         # ordering of the codes, ignoring the causal direction
-        feats[l_short + ":" + r_short] = 1
+        feats["CREL_" + l_short + ":" + r_short] = 1
 
         # build tree structure so we can retrieve the chains
         tree[l_short].add(r_short)
@@ -66,10 +66,10 @@ def extract_features_from_parse(parse, crel2probs):
             inverted_count += 1
 
     if inverted_count:
-        feats["inverted"] = 1
-        feats["num_inverted"] = inverted_count
+        feats["Inv-inverted"] = 1
+        feats["Inv-num_inverted"] = inverted_count
     else:
-        feats["not_inverted"] = 1
+        feats["Inv-not_inverted"] = 1
 
     # counts
     feats.update(code_tally)
@@ -86,46 +86,46 @@ def extract_features_from_parse(parse, crel2probs):
     # need to sort so that order of a and b is consistent across parses
     pairs = combinations(sorted(parse), r=2)
     for a, b in pairs:
-        feats["{a}|{b}".format(a=a, b=b)] = 1
+        feats["CREL_Pair-{a}|{b}".format(a=a, b=b)] = 1
 
     # chains
     chains = build_chains(tree)
     causer_chains = extend_chains(chains)
     max_chain_len = 0
     for ch in causer_chains:
-        feats["CChain:" + ch] = 1
+        feats["CChain-:" + ch] = 1
         max_chain_len = max(max_chain_len, len(ch.split(",")))
-    feats["MaxChain_Len=" + str(max_chain_len)] = 1
 
+    feats["CChainStats-MaxChain_Len=" + str(max_chain_len)] = 1
     distinct_chains = get_distinct_chains(chains)
     num_distinct = len(distinct_chains)
-    feats["num_distinct_chains=" + str(num_distinct)] = 1
+    feats["CChainStats-num_distinct_chains=" + str(num_distinct)] = 1
     for i in range(6):
         if num_distinct <= i:
-            feats["num_distinct_chains <=" + str(i)] = 1
+            feats["CChainStats-num_distinct_chains <=" + str(i)] = 1
         else:
-            feats["num_distinct_chains > " + str(i)] = 1
+            feats["CChainStats-num_distinct_chains > " + str(i)] = 1
 
     if num_distinct > 0:
-        feats["crels_per_distinct_chain"] = num_crels / num_distinct
+        feats["CChainStats-crels_per_distinct_chain"] = num_crels / num_distinct
 
     if max_probs:  # might be an empty parse
         for cutoff in [0.2, 0.3, 0.5, 0.7, 0.8, 0.9, 0.95]:
             above = len([p for p in max_probs if p >= cutoff])
             feats["Above-{cutoff}".format(cutoff=cutoff)] = above
-            feats["%-Above-{cutoff}".format(cutoff=cutoff)] = above / len(max_probs)
+            feats["Above-%-{cutoff}".format(cutoff=cutoff)] = above / len(max_probs)
             if above == len(max_probs):
-                feats["All-Above-{cutoff}".format(cutoff=cutoff)] = 1
+                feats["Above-All-Above-{cutoff}".format(cutoff=cutoff)] = 1
 
-        feats["avg-prob"] = np.mean(max_probs)
-        feats["med-prob"] = np.median(max_probs)
-        feats["prod-prob"] = np.product(max_probs)
-        feats["min-prob"] = np.min(max_probs)
-        feats["max-prob"] = np.max(max_probs)
+        feats["Prob-avg-prob"] = np.mean(max_probs)
+        feats["Prob-med-prob"] = np.median(max_probs)
+        feats["Prob-prod-prob"] = np.product(max_probs)
+        feats["Prob-min-prob"] = np.min(max_probs)
+        feats["Prob-max-prob"] = np.max(max_probs)
         for p in [5, 10, 25, 75, 90, 95]:
-            feats["{p}%-prob".format(p=p)] = np.percentile(max_probs, p)
+            feats["Prob-{p}%-prob".format(p=p)] = np.percentile(max_probs, p)
         # geometric mean
-        feats["geo-mean"] = np.prod(max_probs) ** (1 / len(max_probs))
+        feats["Prob-geo-mean"] = np.prod(max_probs) ** (1 / len(max_probs))
     return feats
 
 def get_crels_above(crel2maxprob, threshold):

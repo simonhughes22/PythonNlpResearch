@@ -13,6 +13,7 @@ from crel_processing import essay_to_crels_cv
 from evaluation import evaluate_model_essay_level, get_micro_metrics, metrics_to_df
 from feature_extraction import get_features_from_probabilities
 from feature_normalization import min_max_normalize_feats
+from filter_features import filter_feats
 from function_helpers import get_function_names
 from results_procesor import ResultsProcessor
 from train_parser import essay_to_crels, create_extractor_functions
@@ -164,3 +165,49 @@ mdl = CostSensitiveMIRA(C=C, pa_type=pa_type, loss_type=loss_type,
 best_mdl, test_acc_df_ml = train_model(mdl, xs_train=tmp_train, xs_test=tmp_test, name2essay=name2essay, set_cr_tags=set_cr_tags,
      max_epochs=20, early_stop_iters=5, train_instance_fn = train_cost_sensitive_instance, verbose=True)
 
+
+prefixes = [
+    "Prob-",
+    "CREL_Pair-",
+    "Inv-",
+    "num_crels",
+    "Tally-",
+    "CChain-",
+    "CChainStats-",
+    "Above-",
+    "CREL_"
+]
+# xs_fltr_train, xs_fltr_test = filter_feats(xs_train_mm, xs_test_mm, prefixes)
+assert len(prefixes) == len(set(prefixes)), "Duplicate prefixes found"
+
+best_f1 = -1
+current_best = []
+remaining = list(prefixes)
+
+while True:
+    if len(remaining) == 0:
+        break
+
+    f1_by_prefix = dict()
+    for prefix in remaining:
+        new_prefixes = current_best + [prefix]
+
+        cv_filtered = []
+        for tr, test in cv_folds_mm:
+            x_tr, x_test = filter_feats(tr, test, new_prefixes)
+            cv_filtered.append((x_tr, x_test))
+
+        f1_by_prefix[prefix] = train_model_parallel(cv_folds=cv_filtered, name2essay=name2essay, C=best_C,
+                                                    pa_type=1, loss_type="ml", max_update_items=best_max_upd,
+                                                    set_cr_tags=set_cr_tags)
+
+    best_prefix, new_best_f1 = sorted(f1_by_prefix.items(), key=lambda tpl: -tpl[1])[0]
+    if new_best_f1 > best_f1:
+        best_f1 = new_best_f1
+        current_best.append(best_prefix)
+        remaining.remove(best_prefix)
+        print("{length} feats, new Best F1: {f1:.f4} Prefixes: {prefixes}".format(
+            length=len(current_best), f1=best_f1, prefixes=current_best))
+    else:
+        print("No further improvement, stopping")
+        break

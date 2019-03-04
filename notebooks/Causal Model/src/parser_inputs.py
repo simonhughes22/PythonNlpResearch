@@ -1,8 +1,6 @@
 from collections import defaultdict
 
 from costs import compute_costs
-from feature_extraction import extract_features_from_parse
-
 
 def copy_dflt_dict(d):
     copy = defaultdict(d.default_factory)
@@ -11,6 +9,8 @@ def copy_dflt_dict(d):
 
 class ParserInputs(object):
     def __init__(self, essay_name, opt_parse, all_parses, crel2probs, compute_feats=True):
+        from feature_extraction import extract_features_from_parse
+
         self.essay_name = essay_name
         self.opt_parse = opt_parse
         self.crel2probs = crel2probs
@@ -39,8 +39,8 @@ class ParserInputs(object):
         c = ParserInputs(essay_name=self.essay_name, opt_parse=self.opt_parse,
                          all_parses=self.all_parses, crel2probs=self.crel2probs, compute_feats=False)
 
-        c.other_parses = self.other_parses
-        c.other_costs_array = self.other_costs_array
+        c.other_parses = list(self.other_parses)
+        c.other_costs_array = list(self.other_costs_array)
         return c
 
     def clone(self):
@@ -49,7 +49,7 @@ class ParserInputs(object):
 
         c.all_feats_array = [copy_dflt_dict(f) for f in self.all_feats_array]
         c.opt_features = copy_dflt_dict(self.opt_features)
-        c.other_parses = self.other_parses
+        c.other_parses = list(self.other_parses)
         c.other_features_array = [copy_dflt_dict(f) for f in self.other_features_array]
-        c.other_costs_array = self.other_costs_array
+        c.other_costs_array = list(self.other_costs_array)
         return c
