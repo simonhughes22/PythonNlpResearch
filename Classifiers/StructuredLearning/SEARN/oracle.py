@@ -5,6 +5,8 @@ class Oracle(object):
     def __init__(self, crels, parser):
         self.parser = parser
         self.raw_crels = crels
+        # Note - the oracle ignores the ordering of the relation and so stardardizes a crel
+        # a separate part of the code figures out the direction of the causality
         self.crels = norm_arcs(crels)  # type: Set[Tuple[str,str]]
         self.mapping = self.build_mappings(crels)
 
