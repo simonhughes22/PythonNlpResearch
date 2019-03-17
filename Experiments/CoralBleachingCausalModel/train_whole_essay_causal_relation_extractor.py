@@ -24,6 +24,7 @@ from template_feature_extractor import *
 # Logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
+logger.info("Starting Training Process")
 
 # Data Set Partition
 CV_FOLDS = 5
@@ -280,6 +281,6 @@ for ngrams in [1]:
                                         max_epochs=max_epochs)
 
                                     mean_metrics = ResultsProcessor.compute_mean_metrics(essay_ys_by_code, essay_preds_by_code)
-                                    print(get_micro_metrics(metrics_to_df(mean_metrics)))
+                                    logger.info("\n" + str(get_micro_metrics(metrics_to_df(mean_metrics))))
 
 
