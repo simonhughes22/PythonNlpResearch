@@ -60,15 +60,18 @@ class SearnModelEssayParser(object):
 
     def get_label_data(self, tagged_essays):
 
+        all_tagged_sents = []
+        for essay_ix, essay in enumerate(tagged_essays):
+            flat_tagged_sent, flat_pred_tags = self.__flatten_essay_(essay)
+            all_tagged_sents.append(flat_tagged_sent)
+
         # outputs
         ys_bytag_sent = defaultdict(list)
-
-        for essay in tagged_essays:
-            for sentence in essay.sentences:
-                unique_cr_tags = set()
-                for word, tags in sentence:
-                    unique_cr_tags.update(self.cr_tags.intersection(tags))
-                self.add_cr_labels(unique_cr_tags, ys_bytag_sent)
+        for sentence in all_tagged_sents:
+            unique_cr_tags = set()
+            for word, tags in sentence:
+                unique_cr_tags.update(self.cr_tags.intersection(tags))
+            self.add_cr_labels(unique_cr_tags, ys_bytag_sent)
         return ys_bytag_sent
 
     def predict(self, tagged_essays):
@@ -90,11 +93,11 @@ class SearnModelEssayParser(object):
 
             flat_pred_tags.extend(essay.pred_tagged_sentences[sent_ix])
             flat_pred_tags.append(self.SENT)
+        assert len(flat_tagged_sent) == len(flat_pred_tags), "Tagged essay should be the same length as the predicted tags"
         return flat_tagged_sent, flat_pred_tags
 
     def train(self, tagged_essays, max_epochs):
 
-        ys_by_sent = self.get_label_data(tagged_essays)
         essay2collapsed = dict()
         for essay_ix, essay in enumerate(tagged_essays):
             essay2collapsed[essay.name] = self.__flatten_essay_(essay)
@@ -115,10 +118,6 @@ class SearnModelEssayParser(object):
                     flat_taggged_sent, flat_pred_tags, parse_examples, crel_examples)
                 # Store predictions for evaluation
                 self.add_cr_labels(pred_relations, pred_ys_by_sent)
-
-            class2metrics = ResultsProcessor.compute_metrics(ys_by_sent, pred_ys_by_sent)
-            micro_metrics = micro_rpfa(class2metrics.values())  # type: rpfa
-            self.log("Training Metrics: {metrics}".format(metrics=micro_metrics))
 
             self.train_parse_models(parse_examples)
             self.train_crel_models(crel_examples)
