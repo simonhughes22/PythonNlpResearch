@@ -96,18 +96,18 @@ def evaluate_model(
         folds = new_folds  # type: List[Tuple[Any, Any]]
 
     print("To make this faster, switch to parallel execution")
-    # parallel_results = Parallel(n_jobs=len(folds))(
-    #     delayed(model_train_predict)(essays_TD, essays_VD, extractor_fn_names_lst, cost_function_name, ngrams, stemmed,
-    #                                  beta, max_epochs)
-    #     for essays_TD, essays_VD in folds)
 
-    parallel_results = [model_train_predict(essays_TD, essays_VD, extractor_fn_names_lst, cost_function_name, ngrams, stemmed,
+    parallel_results = Parallel(n_jobs=len(folds))(
+        delayed(model_train_predict)(essays_TD, essays_VD, extractor_fn_names_lst, cost_function_name, ngrams, stemmed,
                                      beta, max_epochs)
-        for essays_TD, essays_VD in folds]
+        for essays_TD, essays_VD in folds)
+
+    # parallel_results = [model_train_predict(essays_TD, essays_VD, extractor_fn_names_lst, cost_function_name, ngrams, stemmed,
+    #                                  beta, max_epochs)
+    #     for essays_TD, essays_VD in folds]
 
     cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag = defaultdict(list), defaultdict(list)
     cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
-    #
 
     # Parallel is almost 5X faster!!!
     for fold_ix, \
@@ -121,7 +121,7 @@ def evaluate_model(
         merge_dictionaries(sent_vd_pred_ys_bycode, cv_sent_vd_predictions_by_tag)
 
     # Mongo settings recording
-    return sent_vd_pred_ys_bycode, cv_sent_vd_ys_by_tag
+    return cv_sent_vd_predictions_by_tag, cv_sent_vd_ys_by_tag
 
 def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_name, ngrams, stemmed, beta, max_epochs):
 
@@ -160,76 +160,6 @@ def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_nam
 
     return num_feats, sent_td_ys_bycode, sent_vd_ys_bycode, sent_td_pred_ys_bycode, sent_vd_pred_ys_bycode
 
-
-def get_training_data_word_labels(tessays):
-    # outputs
-
-    ys_bytag = defaultdict(list)
-    seq_lens = []
-
-    # cut texts after this number of words (among top max_features most common words)
-    for essay in tessays:
-        for sentence in essay.sentences:
-            row = []
-            y_found = False
-            y_seq = []
-            unique_tags = set()
-
-            for word, tags in sentence:
-
-                row.append(id)
-                # remove unwanted tags
-                tags = set(cr_tags).intersection(tags)
-                unique_tags.update(tags)
-                # retain all tags for evaluation (not just most common)
-
-                for t in cr_tags:
-                    if t in tags:
-                        ys_bytag[t].append(1)
-                    else:
-                        ys_bytag[t].append(0)
-
-            seq_lens.append(len(sentence))
-    assert len(ys_bytag[list(ys_bytag.keys())[0]]) == sum(seq_lens)
-    return ys_bytag, seq_lens
-
-def get_overlapping_codes(seq_lens, ys_by_tag):
-
-    offset = 0
-    sentix2overlapping_codes = defaultdict(set)
-    sentix2NONEoverlapping_codes = defaultdict(set)
-
-    for i in range(len(seq_lens)):
-        len_of_sequence = seq_lens[i]
-        end_offset = offset + len_of_sequence
-        ysbytag4seq = {}
-        for tag in cr_tags:
-            all_ys = ys_by_tag[tag]
-            ys = all_ys[offset: end_offset]
-            assert len(ys) == len_of_sequence, "[{i}] {a} : {b} : {c} tag={tag}".format(
-                i=i, a=len(ys), b=len_of_sequence, c=len(all_ys), tag=tag)
-            # any labels?
-            if sum(ys) > 0:
-                ysbytag4seq[tag] = ys
-
-        if len(ysbytag4seq) > 0:
-            if len(ysbytag4seq) > 1:
-                for posn in range(len_of_sequence):
-                    overlapping_tags = set()
-                    for t in ysbytag4seq.keys():
-                        yval = ysbytag4seq[t][posn]
-                        if yval == 1:
-                            overlapping_tags.add(t)
-                    if len(overlapping_tags) > 1:
-                        sentix2overlapping_codes[i].update(overlapping_tags)
-            # get all overlapping tags for sentence
-            all_overlapping_tags = sentix2overlapping_codes[i]
-            for tag in ysbytag4seq.keys():  # for all sentence tags
-                if tag not in all_overlapping_tags:
-                    sentix2NONEoverlapping_codes[i].add(tag)
-        offset = end_offset
-    return sentix2overlapping_codes, sentix2NONEoverlapping_codes
-
 def compute_preds(pred_test_predictions_by_tag_sent, sentix2overlapping_codes):
     preds = []
     for six, tags in sentix2overlapping_codes.items():
@@ -240,10 +170,6 @@ def compute_preds(pred_test_predictions_by_tag_sent, sentix2overlapping_codes):
 
 fold2_ys_word  = {}
 fold2_seq_lens = {}
-
-for fold_ix, (essays_TD, essays_VD) in enumerate(cv_folds):
-    # Test Data
-    fold2_ys_word[fold_ix], fold2_seq_lens[fold_ix] = get_training_data_word_labels(essays_VD)
 
 LINE_WIDTH = 80
 
