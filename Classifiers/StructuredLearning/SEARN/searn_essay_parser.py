@@ -211,7 +211,7 @@ class SearnModelEssayParser(object):
 
             active_tag = None
             rtag = predicted_tags[i]
-            if rtag != EMPTY_TAG:
+            if rtag != EMPTY_TAG and rtag != self.SENT:
                 active_tag = rtag
                 sent_reg_predicted_tags.add(active_tag)
                 # if no prev tag and the current matches -2 (a gap of one), skip over
