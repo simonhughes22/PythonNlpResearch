@@ -822,30 +822,10 @@ def gbl_sentence_position_features(stack_tags: List[Tuple[str, int]], buffer_tag
                   positive_val: int) -> Dict[str, int]:
 
     feats = {}
-    ordered_tags = sorted(tag2word_seq.keys(), key=lambda tpl: tpl[1])
-    if len(buffer_tags) > 0:
-        tos =  buffer_tags[0]
-    else:
-        tos = ordered_tags[-1]
-
-    if len(stack_tags) > 0:
-        buffer = stack_tags[-1]
-    else:
-        buffer = ordered_tags[0]
-
+    buffer, ordered_tags, tos = get_tos_buffer(buffer_tags, stack_tags, tag2word_seq)
     # get all tags, sprted by index
-    num_essay_sents = 0
-    sents_before = -1
-    buffer_sents_before = -1
-    for i, tpl in enumerate(ordered_tags):
-        if tpl == tos:
-            sents_before = num_essay_sents
-        if tpl == buffer:
-            buffer_sents_before = num_essay_sents
-        if tpl[0] == SearnModelEssayParser.SENT:
-            num_essay_sents += 1
+    num_essay_sents, sents_after, sents_before = sentence_stats(buffer, ordered_tags, tos)
 
-    sents_after = num_essay_sents - buffer_sents_before
     sents_between = 0
     for word in between_word_seq:
         if word.lower() == SearnModelEssayParser.SENT.lower():
@@ -874,6 +854,35 @@ def gbl_sentence_position_features(stack_tags: List[Tuple[str, int]], buffer_tag
     partition(feats, "sent_posn", rel_posn, num_partitions=3, positive_val=positive_val)
     return feats
 
+
+def get_tos_buffer(buffer_tags, stack_tags, tag2word_seq):
+    ordered_tags = sorted(tag2word_seq.keys(), key=lambda tpl: tpl[1])
+    if len(buffer_tags) > 0:
+        tos = buffer_tags[0]
+    else:
+        tos = ordered_tags[-1]
+    if len(stack_tags) > 0:
+        buffer = stack_tags[-1]
+    else:
+        buffer = ordered_tags[0]
+    return buffer, ordered_tags, tos
+
+
+def sentence_stats(buffer, ordered_tags, tos):
+    num_essay_sents = 0
+    sents_before = -1
+    buffer_sents_before = -1
+    for i, tpl in enumerate(ordered_tags):
+        if tpl == tos:
+            sents_before = num_essay_sents
+        if tpl == buffer:
+            buffer_sents_before = num_essay_sents
+        if tpl[0] == SearnModelEssayParser.SENT:
+            num_essay_sents += 1
+    sents_after = num_essay_sents - buffer_sents_before
+    return num_essay_sents, sents_after, sents_before
+
+
 def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
                   tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
                   distance: int,
@@ -881,17 +890,12 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
                   effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
                   positive_val: int) -> Dict[str, int]:
     feats = {}
-    for i in [0,1,2,3,5]:
-        if len(cause2effects) > i:
-            feats["num_causes gtr " + str(i)] = positive_val
-        else:
-            feats["num_causes lte " + str(i)] = positive_val
+    buffer, ordered_tags, tos = get_tos_buffer(buffer_tags, stack_tags, tag2word_seq)
+    # get all tags, sprted by index
+    num_essay_sents, sents_after, sents_before = sentence_stats(buffer, ordered_tags, tos)
 
-    for i in [0,1,2,3,5]:
-        if len(effect2causers) > i:
-            feats["num_effects gtr " + str(i)] = positive_val
-        else:
-            feats["num_effects lte " + str(i)] = positive_val
+    greater_than_feats(feats, "num_causes", value=len(cause2effects), vals=[0, 1, 2, 3, 5], positive_val=positive_val)
+    greater_than_feats(feats, "num_effects", value=len(effect2causers), vals=[0, 1, 2, 3, 5], positive_val=positive_val)
 
     num_crels = 0
     crel_tally = defaultdict(int)
@@ -910,8 +914,12 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
             if inverted in crel_tally:
                 num_inversions += 1
 
+    feats["Max_Dupe_Crels_" + str(max(crel_tally.values()))] = positive_val
     greater_than_feats(feats, "num_inversions", value=num_inversions, vals=[0,1,2,3], positive_val=positive_val)
+    partition(feats, "propn_inv", num_inversions/num_crels, num_partitions=4, positive_val=positive_val)
     greater_than_feats(feats, "num_crels", value=num_crels, vals=[0,1,2,3,5,7,10], positive_val=positive_val)
+    partition(feats, "propn_crel_sents", num_crels / num_essay_sents, num_partitions=10, positive_val=positive_val)
+
     return feats
 
 def partition(fts, ft_name, propn, num_partitions=3, positive_val=1):
