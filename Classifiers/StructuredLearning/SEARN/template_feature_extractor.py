@@ -1,9 +1,13 @@
+from collections import defaultdict
 from typing import List, Dict, Tuple, Set
 
 from Decorators import memoize
 from NgramGenerator import compute_ngrams
 
 # NOTE: These template features are based on the list on p2 on http://www.aclweb.org/anthology/P11-2033
+from searn_essay_parser import SearnModelEssayParser
+import math
+
 class NgramExtractor(object):
     def __init__(self, max_ngram_len):
         self.max_ngram_len = max_ngram_len
@@ -150,7 +154,7 @@ def three_words(stack_tags:  List[Tuple[str,int]],
     n0p = buffer_tags[0]
     str_n0p = str(n0p[0])
 
-    s0_left_mods_causer, s0_right_mods_causer = __get_left_right_modifiers__(tag_pair=s0p,   causal_mapping=effect2causers)
+    s0_left_mods_causer,  s0_right_mods_causer  = __get_left_right_modifiers__(tag_pair=s0p, causal_mapping=effect2causers)
     s0_left_mods_effects, s0_right_mods_effects = __get_left_right_modifiers__(tag_pair=s0p, causal_mapping=cause2effects)
 
     # Combine left modifiers
@@ -696,6 +700,232 @@ def size_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str
 
     feats["num_relations_" + str(num_arcs)] = positive_val
     return feats
+
+def gbl_concept_code_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
+                  tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
+                  distance: int,
+                  cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                  effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                  positive_val: int) -> Dict[str, int]:
+
+    feats = {}
+    ordered_tags = sorted(tag2word_seq.keys(), key=lambda tpl: tpl[1])
+    if len(buffer_tags) > 0:
+        top_buffer_tag, top_ix = buffer_tags[0]
+    else:
+        top_buffer_tag, top_ix = ordered_tags[-1]
+
+    if len(stack_tags) > 0:
+        top_stack_tag, bottom_ix = stack_tags[-1]
+    else:
+        top_stack_tag, bottom_ix = ordered_tags[0]
+
+    # get all tags, sprted by index
+    prev_tags, subsequent_tags = [], []
+    for tpl in ordered_tags:
+        tag, ix = tpl
+        if ix < bottom_ix:
+            prev_tags.append(tpl[0])
+        elif ix > top_ix:
+            subsequent_tags.append(tpl[0])
+
+    for i in [0, 1, 2, 3, 5, 8]:
+        i_str = str(i)
+        if len(prev_tags) > i:
+            feats["num_prev_tags gtr " + i_str] = positive_val
+        else:
+            feats["num_prev_tags lte " + i_str] = positive_val
+
+        if len(subsequent_tags) > i:
+            feats["num_subsq_tag gtr" + i_str] = positive_val
+        else:
+            feats["num_subsq_tag lte" + i_str] = positive_val
+
+        if len(ordered_tags) > i:
+            feats["num_all_ptags gtr " + i_str] = positive_val
+        else:
+            feats["num_all_ptags lte " + i_str] = positive_val
+
+    for tag in prev_tags:
+        feats["prev_tag_" + tag] = positive_val
+
+    for tag in subsequent_tags:
+        feats["subsq_tag_" + tag] = positive_val
+
+    return feats
+
+def gbl_sentence_code_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
+                  tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
+                  distance: int,
+                  cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                  effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                  positive_val: int) -> Dict[str, int]:
+
+    feats = {}
+    ordered_tags = sorted(tag2word_seq.keys(), key=lambda tpl: tpl[1])
+    tos, buffer = None, None
+    if len(buffer_tags) > 0:
+        tos =  buffer_tags[0]
+    else:
+        tos = ordered_tags[-1]
+
+    if len(stack_tags) > 0:
+        buffer = stack_tags[-1]
+    else:
+        buffer = ordered_tags[0]
+
+    # get all tags, sprted by index
+    tos_ix = -1
+    buffer_ix = len(ordered_tags)
+    for i, tpl in enumerate(ordered_tags):
+        if tpl == tos:
+            tos_ix = i
+        if tpl == buffer:
+            buffer_ix = i
+
+    prev_sent_tags = []
+    next_sent_tags = []
+
+    i = tos_ix
+    current_tag = ""
+    # Keep going backwards until we hit the next sentence
+    while i > 0 and current_tag.upper() != SearnModelEssayParser.SENT:
+        i -= 1
+        tpl = ordered_tags[i]
+        current_tag = tpl[0]
+        prev_sent_tags.append(current_tag)
+
+    i = buffer_ix
+    current_tag = ""
+    # Keep going forwards until we hit the next sentence
+    while i > (len(ordered_tags) - 1) and current_tag.upper() != SearnModelEssayParser.SENT:
+        i += 1
+        tpl = ordered_tags[i]
+        current_tag = tpl[0]
+        next_sent_tags.append(current_tag)
+
+    for tag in prev_sent_tags:
+        feats["prev_sent_tag_" + tag] = positive_val
+    feats["num_prev_sent_tags_" + str(len(prev_sent_tags))] = positive_val
+
+    for tag in next_sent_tags:
+        feats["next_sent_tag_" + tag] = positive_val
+    feats["num_next_sent_tags_" + str(len(next_sent_tags))] = positive_val
+
+    return feats
+
+def gbl_sentence_position_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
+                  tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
+                  distance: int,
+                  cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                  effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                  positive_val: int) -> Dict[str, int]:
+
+    feats = {}
+    ordered_tags = sorted(tag2word_seq.keys(), key=lambda tpl: tpl[1])
+    if len(buffer_tags) > 0:
+        tos =  buffer_tags[0]
+    else:
+        tos = ordered_tags[-1]
+
+    if len(stack_tags) > 0:
+        buffer = stack_tags[-1]
+    else:
+        buffer = ordered_tags[0]
+
+    # get all tags, sprted by index
+    num_essay_sents = 0
+    sents_before = -1
+    buffer_sents_before = -1
+    for i, tpl in enumerate(ordered_tags):
+        if tpl == tos:
+            sents_before = num_essay_sents
+        if tpl == buffer:
+            buffer_sents_before = num_essay_sents
+        if tpl[0] == SearnModelEssayParser.SENT:
+            num_essay_sents += 1
+
+    sents_after = num_essay_sents - buffer_sents_before
+    sents_between = 0
+    for word in between_word_seq:
+        if word.lower() == SearnModelEssayParser.SENT.lower():
+            sents_between += 1
+
+    # How many sentences between the TOS and buffer?
+    for i in [0,1,2,3,5]:
+        if sents_between > i:
+            feats["num_sentences_between gtr " + str(i)] = positive_val
+        else:
+            feats["num_sentences_between lte " + str(i)] = positive_val
+
+    for i in [0,1,2,3,5]:
+        if sents_before > i:
+            feats["num_sentences_before gtr " + str(i)] = positive_val
+        else:
+            feats["num_sentences_before lte " + str(i)] = positive_val
+
+    for i in [0,1,2,3,5]:
+        if sents_after > i:
+            feats["num_sentences_after gtr " + str(i)] = positive_val
+        else:
+            feats["num_sentences_after lte " + str(i)] = positive_val
+
+    rel_posn = sents_before / num_essay_sents
+    partition(feats, "sent_posn", rel_posn, num_partitions=3, positive_val=positive_val)
+    return feats
+
+def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
+                  tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
+                  distance: int,
+                  cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                  effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                  positive_val: int) -> Dict[str, int]:
+    feats = {}
+    for i in [0,1,2,3,5]:
+        if len(cause2effects) > i:
+            feats["num_causes gtr " + str(i)] = positive_val
+        else:
+            feats["num_causes lte " + str(i)] = positive_val
+
+    for i in [0,1,2,3,5]:
+        if len(effect2causers) > i:
+            feats["num_effects gtr " + str(i)] = positive_val
+        else:
+            feats["num_effects lte " + str(i)] = positive_val
+
+    num_crels = 0
+    crel_tally = defaultdict(int)
+    for cause, crels in cause2effects.items():
+        num_crels += len(crels)
+        for (crel, ix) in crels: # deconstruct the tuples
+            crel_tally[crel] += 1
+
+    # Tally of currently parsed crels
+    num_inversions = 0
+    for crel, cnt in crel_tally.items():
+        feats["Num_Crel_" + crel + "_" + str(cnt)] = positive_val
+        lhs, rhs = crel.split("->")
+        if lhs < rhs: # don't double count inversions
+            inverted = rhs + "->" + lhs
+            if inverted in crel_tally:
+                num_inversions += 1
+
+    greater_than_feats(feats, "num_inversions", value=num_inversions, vals=[0,1,2,3], positive_val=positive_val)
+    greater_than_feats(feats, "num_crels", value=num_crels, vals=[0,1,2,3,5,7,10], positive_val=positive_val)
+    return feats
+
+def partition(fts, ft_name, propn, num_partitions=3, positive_val=1):
+    if propn >= 1.0:
+        propn = 0.999 # ensure if 1 that it does not go into a different bucket
+    partition = str(math.floor(propn * num_partitions))
+    fts[ft_name + "_" + partition] = positive_val
+
+def greater_than_feats(fts, ft_name, value, vals=list(range(5)), positive_val=1):
+    for i in vals:
+        if value > i:
+            fts[ft_name + " gtr " + str(i)] = positive_val
+        else:
+            fts[ft_name + " lte " + str(i)] = positive_val
 
 """ Template Feature Helpers"""
 def __prefix_feats_(prefix, feats_in, positive_val = 1):
