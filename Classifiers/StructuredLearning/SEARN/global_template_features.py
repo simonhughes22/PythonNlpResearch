@@ -191,6 +191,16 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
         if len(stack_tags) > 0 and len(buffer_tags) > 0:
             feats["CREL_" + crel + "_TOS_" + tos + "_BUFFER_" + buffer] = positive_val
 
+    possible_crels = [
+        buffer + "->" + tos,
+        tos + "->" + buffer,
+    ]
+    for crel in possible_crels:
+        if crel in crel_tally:
+            feats["CREL_already_exists"] = positive_val
+            greater_than_feats(feats, "existing_crel_count", value=crel_tally[crel],
+                               vals=[0, 1, 2, 3], positive_val=positive_val)
+
     feats["Max_Dupe_Crels_" + str(max(crel_tally.values()))] = positive_val
     greater_than_feats(feats, "num_inversions", value=num_inversions, vals=[0,1,2,3], positive_val=positive_val)
     partition(feats, "propn_inv", num_inversions/num_crels, num_partitions=4, positive_val=positive_val)
