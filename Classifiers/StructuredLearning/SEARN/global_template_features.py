@@ -6,12 +6,12 @@ from typing import Dict, Tuple, Set, List
 from searn_essay_parser import SearnModelEssayParser
 
 
-def gbl_concept_code_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
-                  tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
-                  distance: int,
-                  cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
-                  effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
-                  positive_val: int) -> Dict[str, int]:
+def gbl_concept_code_cnt_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
+                                  tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
+                                  distance: int,
+                                  cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                                  effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                                  positive_val: int) -> Dict[str, int]:
 
     feats = {}
     ordered_tags = sorted(tag2word_seq.keys(), key=lambda tpl: tpl[1])
@@ -34,37 +34,20 @@ def gbl_concept_code_features(stack_tags: List[Tuple[str, int]], buffer_tags: Li
         elif ix > top_ix:
             subsequent_tags.append(tpl[0])
 
-    for i in [0, 1, 2, 3, 5, 8]:
-        i_str = str(i)
-        if len(prev_tags) > i:
-            feats["num_prev_tags gtr " + i_str] = positive_val
-        else:
-            feats["num_prev_tags lte " + i_str] = positive_val
+    greater_than_feats(feats, "num_prev_tags", value=len(prev_tags),        vals=[0, 1, 2, 3, 5, 7, 10], positive_val=positive_val)
+    greater_than_feats(feats, "num_subsq",     value=len(subsequent_tags),  vals=[0, 1, 2, 3, 5, 7, 10], positive_val=positive_val)
+    greater_than_feats(feats, "num_all_ptags", value=len(ordered_tags),     vals=[0, 1, 2, 3, 5, 7, 10], positive_val=positive_val)
 
-        if len(subsequent_tags) > i:
-            feats["num_subsq_tag gtr" + i_str] = positive_val
-        else:
-            feats["num_subsq_tag lte" + i_str] = positive_val
-
-        if len(ordered_tags) > i:
-            feats["num_all_ptags gtr " + i_str] = positive_val
-        else:
-            feats["num_all_ptags lte " + i_str] = positive_val
-
-    for tag in prev_tags:
-        feats["prev_tag_" + tag] = positive_val
-
-    for tag in subsequent_tags:
-        feats["subsq_tag_" + tag] = positive_val
-
+    partition(feats, "propn_prev_tags", len(prev_tags) / len(ordered_tags),         num_partitions=4, positive_val=positive_val)
+    partition(feats, "propn_subsq_tags", len(subsequent_tags) / len(ordered_tags),  num_partitions=4, positive_val=positive_val)
     return feats
 
-def gbl_sentence_code_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
-                  tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
-                  distance: int,
-                  cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
-                  effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
-                  positive_val: int) -> Dict[str, int]:
+def gbl_adjacent_sent_code_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
+                                    tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
+                                    distance: int,
+                                    cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                                    effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                                    positive_val: int) -> Dict[str, int]:
 
     feats = {}
     buffer, ordered_tags, tos = get_tos_buffer(buffer_tags, stack_tags, tag2word_seq)
@@ -100,13 +83,26 @@ def gbl_sentence_code_features(stack_tags: List[Tuple[str, int]], buffer_tags: L
         next_sent_tags.append(current_tag)
 
     for tag in prev_sent_tags:
-        feats["prev_sent_tag_" + tag] = positive_val
-    feats["num_prev_sent_tags_" + str(len(prev_sent_tags))] = positive_val
+        if len(stack_tags) > 0:
+            feats["prev_sent_tag_" + tag + "_TOS_" + tos] = positive_val
+        if len(buffer_tags) > 0:
+            feats["prev_sent_tag_" + tag + "_BUFFER_" + buffer] = positive_val
+        if len(stack_tags) > 0 and len(buffer_tags) > 0:
+            feats["prev_sent_tag_" + tag + "_TOS_" + tos + "_BUFFER_" + buffer] = positive_val
+
+    greater_than_feats(feats, "num_prev_sent_tags_", value=len(prev_sent_tags), vals=[0, 1, 2, 3, 5, 7, 10],
+                       positive_val=positive_val)
 
     for tag in next_sent_tags:
-        feats["next_sent_tag_" + tag] = positive_val
-    feats["num_next_sent_tags_" + str(len(next_sent_tags))] = positive_val
+        if len(stack_tags) > 0:
+            feats["next_sent_tag_" + tag + "_TOS_" + tos] = positive_val
+        if len(buffer_tags) > 0:
+            feats["next_sent_tag_" + tag + "_BUFFER_" + buffer] = positive_val
+        if len(stack_tags) > 0 and len(buffer_tags) > 0:
+            feats["next_sent_tag_" + tag + "_TOS_" + tos + "_BUFFER_" + buffer] = positive_val
 
+    greater_than_feats(feats, "num_next_sent_tags_", value=len(next_sent_tags), vals=[0, 1, 2, 3, 5, 7, 10],
+                       positive_val=positive_val)
     return feats
 
 def gbl_sentence_position_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
@@ -147,8 +143,8 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
     # get all tags, sprted by index
     num_essay_sents, sents_after, sents_before, sent_ixs = sentence_stats(buffer, ordered_tags, tos)
 
-    greater_than_feats(feats, "num_causes", value=len(cause2effects), vals=[0, 1, 2, 3, 5], positive_val=positive_val)
-    greater_than_feats(feats, "num_effects", value=len(effect2causers), vals=[0, 1, 2, 3, 5], positive_val=positive_val)
+    greater_than_feats(feats, "num_distinct_causes",  value=len(cause2effects), vals=[0, 1, 2, 3, 5], positive_val=positive_val)
+    greater_than_feats(feats, "num_distinct_effects", value=len(effect2causers), vals=[0, 1, 2, 3, 5], positive_val=positive_val)
 
     num_crels = 0
     crel_tally = defaultdict(int)
@@ -184,7 +180,12 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
                 num_inversions += 1
 
     for crel in crel_tally.keys():
-        feats["CREL_" + crel] = positive_val
+        if len(stack_tags) > 0:
+            feats["CREL_" + crel + "_TOS_" + tos] = positive_val
+        if len(buffer_tags) > 0:
+            feats["CREL_" + crel + "_BUFFER_" + buffer] = positive_val
+        if len(stack_tags) > 0 and len(buffer_tags) > 0:
+            feats["CREL_" + crel + "_TOS_" + tos + "_BUFFER_" + buffer] = positive_val
 
     feats["Max_Dupe_Crels_" + str(max(crel_tally.values()))] = positive_val
     greater_than_feats(feats, "num_inversions", value=num_inversions, vals=[0,1,2,3], positive_val=positive_val)
