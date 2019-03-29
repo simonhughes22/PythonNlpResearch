@@ -824,7 +824,7 @@ def gbl_sentence_position_features(stack_tags: List[Tuple[str, int]], buffer_tag
     feats = {}
     buffer, ordered_tags, tos = get_tos_buffer(buffer_tags, stack_tags, tag2word_seq)
     # get all tags, sprted by index
-    num_essay_sents, sents_after, sents_before = sentence_stats(buffer, ordered_tags, tos)
+    num_essay_sents, sents_after, sents_before, sent_ixs = sentence_stats(buffer, ordered_tags, tos)
 
     sents_between = 0
     for word in between_word_seq:
@@ -832,23 +832,9 @@ def gbl_sentence_position_features(stack_tags: List[Tuple[str, int]], buffer_tag
             sents_between += 1
 
     # How many sentences between the TOS and buffer?
-    for i in [0,1,2,3,5]:
-        if sents_between > i:
-            feats["num_sentences_between gtr " + str(i)] = positive_val
-        else:
-            feats["num_sentences_between lte " + str(i)] = positive_val
-
-    for i in [0,1,2,3,5]:
-        if sents_before > i:
-            feats["num_sentences_before gtr " + str(i)] = positive_val
-        else:
-            feats["num_sentences_before lte " + str(i)] = positive_val
-
-    for i in [0,1,2,3,5]:
-        if sents_after > i:
-            feats["num_sentences_after gtr " + str(i)] = positive_val
-        else:
-            feats["num_sentences_after lte " + str(i)] = positive_val
+    greater_than_feats(feats, "num_sentences_between", value=sents_between, vals=[0, 1, 2, 3, 5], positive_val=positive_val)
+    greater_than_feats(feats, "num_sentences_before",  value=sents_before,  vals=[0, 1, 2, 3, 5], positive_val=positive_val)
+    greater_than_feats(feats, "num_sentences_after",   value=sents_after,   vals=[0, 1, 2, 3, 5], positive_val=positive_val)
 
     rel_posn = sents_before / num_essay_sents
     partition(feats, "sent_posn", rel_posn, num_partitions=3, positive_val=positive_val)
@@ -872,6 +858,7 @@ def sentence_stats(buffer, ordered_tags, tos):
     num_essay_sents = 0
     sents_before = -1
     buffer_sents_before = -1
+    sent_ixs = set()
     for i, tpl in enumerate(ordered_tags):
         if tpl == tos:
             sents_before = num_essay_sents
@@ -879,8 +866,9 @@ def sentence_stats(buffer, ordered_tags, tos):
             buffer_sents_before = num_essay_sents
         if tpl[0] == SearnModelEssayParser.SENT:
             num_essay_sents += 1
+            sent_ixs.add(tpl[-1])
     sents_after = num_essay_sents - buffer_sents_before
-    return num_essay_sents, sents_after, sents_before
+    return num_essay_sents, sents_after, sents_before, sent_ixs
 
 
 def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
@@ -892,17 +880,33 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
     feats = {}
     buffer, ordered_tags, tos = get_tos_buffer(buffer_tags, stack_tags, tag2word_seq)
     # get all tags, sprted by index
-    num_essay_sents, sents_after, sents_before = sentence_stats(buffer, ordered_tags, tos)
+    num_essay_sents, sents_after, sents_before, sent_ixs = sentence_stats(buffer, ordered_tags, tos)
 
     greater_than_feats(feats, "num_causes", value=len(cause2effects), vals=[0, 1, 2, 3, 5], positive_val=positive_val)
     greater_than_feats(feats, "num_effects", value=len(effect2causers), vals=[0, 1, 2, 3, 5], positive_val=positive_val)
 
     num_crels = 0
     crel_tally = defaultdict(int)
-    for cause, crels in cause2effects.items():
-        num_crels += len(crels)
-        for (crel, ix) in crels: # deconstruct the tuples
+    num_crels_crossing_sents = 0
+    num_fwd_relns = 0
+    for cause, r_codes in cause2effects.items():
+        lcode, l_ix = cause
+        num_crels += len(r_codes)
+        for (rcode, r_ix) in r_codes: # deconstruct the tuples
+            crel = lcode + "->" + rcode
             crel_tally[crel] += 1
+            if r_ix > l_ix: # Is effect after causer in sentence?
+                num_fwd_relns += 1
+            small_ix, large_ix = sorted([l_ix, r_ix])
+            for six in sent_ixs:
+                # Is sentence boundary between codes
+                if six > small_ix and six < large_ix:
+                    num_crels_crossing_sents += 1
+                    break
+
+    partition(feats, "propn_fwd_crels", num_fwd_relns / num_crels, num_partitions=5, positive_val=positive_val)
+    greater_than_feats(feats, "num_crels_crossing_sents", value=num_crels_crossing_sents, positive_val=positive_val)
+    partition(feats, "propn_crossing_crels", num_crels_crossing_sents / num_crels, num_partitions=5, positive_val=positive_val)
 
     # Tally of currently parsed crels
     num_inversions = 0
@@ -913,6 +917,9 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
             inverted = rhs + "->" + lhs
             if inverted in crel_tally:
                 num_inversions += 1
+
+    for crel in crel_tally.keys():
+        feats["CREL_" + crel] = positive_val
 
     feats["Max_Dupe_Crels_" + str(max(crel_tally.values()))] = positive_val
     greater_than_feats(feats, "num_inversions", value=num_inversions, vals=[0,1,2,3], positive_val=positive_val)
