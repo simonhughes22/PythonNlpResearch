@@ -1,21 +1,19 @@
 import string
 from collections import defaultdict
-
-import numpy as np
-from oracle import Oracle
-from shift_reduce_helper import *
 from typing import Set, List
 
+import numpy as np
+
+from StructuredLearning.SEARN.stack import Stack
+from featurevectorizer import FeatureVectorizer
+from oracle import Oracle
+from shift_reduce_helper import *
 from shift_reduce_parser import ShiftReduceParser
 from weighted_examples import WeightedExamples
 
-from Rpfa import micro_rpfa
-from StructuredLearning.SEARN.stack import Stack
-from featurevectorizer import FeatureVectorizer
-from results_procesor import ResultsProcessor
-
-
 class SearnModelEssayParser(object):
+    SENT = "<SENT>"
+
     def __init__(self, ngram_extractor, feature_extractor, cost_function, min_feature_freq, cr_tags, base_learner_fact,
                  beta=0.2, positive_val=1, sparse=True, log_fn=lambda s: print(s)):
 
@@ -49,7 +47,6 @@ class SearnModelEssayParser(object):
         self.training_datasets_parsing = {}
         self.training_datasets_crel = {}
         self.current_model = None
-        self.SENT = "<SENT>"
 
     def add_cr_labels(self, observed_tags, ys_bytag_sent):
         for tag in self.cr_tags:
@@ -208,12 +205,15 @@ class SearnModelEssayParser(object):
         for i, (wd, tags) in enumerate(tagged_sentence):
             if wd in string.punctuation:
                 continue
+            # if wd in self.SENT:
+            #     continue
 
             active_tag = None
             rtag = predicted_tags[i]
-            if rtag != EMPTY_TAG and rtag != self.SENT:
+            if rtag != EMPTY_TAG:
                 active_tag = rtag
-                sent_reg_predicted_tags.add(active_tag)
+                if active_tag != self.SENT:
+                    sent_reg_predicted_tags.add(active_tag)
                 # if no prev tag and the current matches -2 (a gap of one), skip over
                 if active_tag != tag_seq[-1] and \
                         not (tag_seq[-1] is None and (len(tag_seq) > 2) and active_tag == tag_seq[-2]):
@@ -271,6 +271,7 @@ class SearnModelEssayParser(object):
 
         pos_ptag_seq, pos_ground_truth_crels, tag2span, all_predicted_rtags, all_actual_crels = self.get_tags_relations_for(
             tagged_sentence, predicted_tags, self.cr_tags)
+
         if predict_only:
             # clear labels
             pos_ground_truth_crels = []
