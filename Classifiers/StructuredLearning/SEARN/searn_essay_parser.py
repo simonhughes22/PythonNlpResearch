@@ -308,6 +308,9 @@ class SearnModelEssayParser(object):
             word_seq = words[bstart:bstop + 1]
             tag2words[tag_pair] = self.ngram_extractor.extract(word_seq)  # type: List[str]
 
+        # Store all words for use in feature extraction
+        # tag2words["ALL"] = words
+
         # Oracle parsing logic
         # consume the buffer
         for tag_ix, buffer_tag_pair in enumerate(pos_ptag_seq):
