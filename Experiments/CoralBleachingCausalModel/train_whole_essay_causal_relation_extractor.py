@@ -97,13 +97,12 @@ def evaluate_model(
             new_folds.append((essays_TD, essays_VD))
         folds = new_folds  # type: List[Tuple[Any, Any]]
 
-    print("To make this faster, switch to parallel execution")
-
     # parallel_results = Parallel(n_jobs=len(folds))(
     #     delayed(model_train_predict)(essays_TD, essays_VD, extractor_fn_names_lst, cost_function_name, ngrams, stemmed,
     #                                  beta, max_epochs)
     #     for essays_TD, essays_VD in folds)
 
+    print("To make this faster, switch to parallel execution")
     parallel_results = [model_train_predict(essays_TD, essays_VD, extractor_fn_names_lst, cost_function_name, ngrams, stemmed,
                                      beta, max_epochs)
         for essays_TD, essays_VD in folds]

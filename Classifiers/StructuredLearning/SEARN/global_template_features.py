@@ -7,7 +7,7 @@ from searn_essay_parser import SearnModelEssayParser
 
 from shift_reduce_parser import ROOT
 ARROW = "->"
-
+SKIP_CODES = {ROOT, SearnModelEssayParser.SENT, None}
 
 def gbl_concept_code_cnt_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
                                   tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
@@ -60,59 +60,64 @@ def gbl_adjacent_sent_code_features(stack_tags: List[Tuple[str, int]], buffer_ta
     feats = {}
     buffer, ordered_tags, tos = get_tos_buffer(buffer_tags, stack_tags, tag2word_seq)
 
+
     # get all tags, sprted by index
     tos_ix = -1
+    prev_sent_ixs, next_sent_ixs = [],[]
+
     buffer_ix = len(ordered_tags)
     for i, tpl in enumerate(ordered_tags):
         if tpl == tos:
             tos_ix = i
         if tpl == buffer:
             buffer_ix = i
+        if tpl[0] == SearnModelEssayParser.SENT:
+            ix = tpl[1]
+            if tos_ix == -1:
+                prev_sent_ixs.append(ix)
+            if buffer_ix < len(ordered_tags):
+                next_sent_ixs.append(ix)
 
     prev_sent_tags = []
     next_sent_tags = []
 
-    i = tos_ix
-    current_tag = ""
-    # Keep going backwards until we hit the next sentence
-    while i > 0 and current_tag.upper() != SearnModelEssayParser.SENT:
-        i -= 1
-        tpl = ordered_tags[i]
-        current_tag = tpl[0]
-        prev_sent_tags.append(current_tag)
+    if len(prev_sent_ixs) == 1:
+        prev_sent_tags = [tpl[0] for tpl in ordered_tags
+                          if tpl[1] < prev_sent_ixs[-1] and tpl[0] not in SKIP_CODES]
 
-    i = buffer_ix
-    current_tag = ""
-    # Keep going forwards until we hit the next sentence
-    while i < (len(ordered_tags) - 1) and current_tag.upper() != SearnModelEssayParser.SENT:
-        i += 1
-        tpl = ordered_tags[i]
-        current_tag = tpl[0]
-        next_sent_tags.append(current_tag)
+    elif len(prev_sent_ixs) >= 2:
+        prev_sent_tags = [tpl[0] for tpl in ordered_tags
+                          if tpl[1] < prev_sent_ixs[-1] and tpl[1] > prev_sent_ixs[-2] and tpl[0] not in SKIP_CODES]
 
-    SKIP_CODES = {ROOT, SearnModelEssayParser.SENT, None}
+    if len(next_sent_ixs) == 1:
+        next_sent_tags = [tpl[0] for tpl in ordered_tags
+                          if tpl[1] > next_sent_ixs[0] and tpl[0] not in SKIP_CODES]
+    elif len(next_sent_ixs) >= 2:
+        next_sent_tags = [tpl[0] for tpl in ordered_tags
+                          if tpl[1] > next_sent_ixs[0] and tpl[1] < next_sent_ixs[1] and tpl[0] not in SKIP_CODES]
+
     for tag in prev_sent_tags:
-        if len(stack_tags) > 0 and tos not in SKIP_CODES:
+        if len(stack_tags) > 0 and tos[0] not in SKIP_CODES:
             feats["prev_sent_tag_" + tag + "_TOS_" + tos[0]] = positive_val
-            if tag == tos:
+            if tag == tos[0]:
                 feats["Prev_sent_has_TOS"] = positive_val
-        if len(buffer_tags) > 0 and buffer not in SKIP_CODES:
+        if len(buffer_tags) > 0 and buffer[0] not in SKIP_CODES:
             feats["prev_sent_tag_" + tag + "_BUFFER_" + buffer[0]] = positive_val
-            if tag == buffer:
+            if tag == buffer[0]:
                 feats["Prev_sent_has_BUFFER"] = positive_val
-        if len(stack_tags) > 0 and len(buffer_tags) > 0 and tos not in SKIP_CODES and buffer not in SKIP_CODES:
-            feats["prev_sent_tag_" + tag + "_TOS_" + tos[0] + "_BUFFER_" + buffer] = positive_val
+        if len(stack_tags) > 0 and len(buffer_tags) > 0 and tos[0] not in SKIP_CODES and buffer[0] not in SKIP_CODES:
+            feats["prev_sent_tag_" + tag + "_TOS_" + tos[0] + "_BUFFER_" + buffer[0]] = positive_val
 
     greater_than_feats(feats, "num_prev_sent_tags_", value=len(prev_sent_tags),
                        vals=[0, 1, 2, 3, 5, 7, 10],
                        positive_val=positive_val)
 
     for tag in next_sent_tags:
-        if len(stack_tags) > 0 and tos not in SKIP_CODES:
+        if len(stack_tags) > 0 and tos[0] not in SKIP_CODES:
             feats["next_sent_tag_" + tag + "_TOS_" + tos[0]] = positive_val
-        if len(buffer_tags) > 0 and buffer not in SKIP_CODES:
+        if len(buffer_tags) > 0 and buffer[0] not in SKIP_CODES:
             feats["next_sent_tag_" + tag + "_BUFFER_" + buffer[0]] = positive_val
-        if len(stack_tags) > 0 and len(buffer_tags) > 0 and tos not in SKIP_CODES and buffer not in SKIP_CODES:
+        if len(stack_tags) > 0 and len(buffer_tags) > 0 and tos[0] not in SKIP_CODES and buffer[0] not in SKIP_CODES:
             feats["next_sent_tag_" + tag + "_TOS_" + tos[0] + "_BUFFER_" + buffer[0]] = positive_val
 
     greater_than_feats(feats, "num_next_sent_tags_", value=len(next_sent_tags),
@@ -197,18 +202,17 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
             if inverted in crel_tally:
                 num_inversions += 1
 
-    SKIP_CODES = {ROOT, SearnModelEssayParser.SENT, None}
     for crel in crel_tally.keys():
-        if len(stack_tags) > 0 and tos not in SKIP_CODES:
+        if len(stack_tags) > 0 and tos[0] not in SKIP_CODES:
             feats["CREL_" + crel + "_TOS_" + tos[0]] = positive_val
-        if len(buffer_tags) > 0 and buffer not in SKIP_CODES:
+        if len(buffer_tags) > 0 and buffer[0] not in SKIP_CODES:
             feats["CREL_" + crel + "_BUFFER_" + buffer[0]] = positive_val
-        if len(stack_tags) > 0 and len(buffer_tags) > 0 and tos not in SKIP_CODES and buffer not in SKIP_CODES:
+        if len(stack_tags) > 0 and len(buffer_tags) > 0 and tos[0] not in SKIP_CODES and buffer[0] not in SKIP_CODES:
             feats["CREL_" + crel + "_TOS_" + tos[0] + "_BUFFER_" + buffer[0]] = positive_val
 
     possible_crels = [
         buffer[0] + ARROW + tos[0],
-        tos[0] + ARROW + buffer[0],
+        tos[0]    + ARROW + buffer[0],
     ]
     for i, crel in enumerate(possible_crels):
         if crel in crel_tally:
