@@ -45,8 +45,9 @@ def gbl_concept_code_cnt_features(stack_tags: List[Tuple[str, int]], buffer_tags
     greater_than_feats(feats, "num_subsq",     value=len(subsequent_tags),  vals=[0, 1, 2, 3, 5, 7, 10], positive_val=positive_val)
     greater_than_feats(feats, "num_all_ptags", value=len(code_tags),        vals=[0, 1, 2, 3, 5, 7, 10], positive_val=positive_val)
 
-    partition(feats, "propn_prev_tags", len(prev_tags) / len(code_tags),         num_partitions=4, positive_val=positive_val)
-    partition(feats, "propn_subsq_tags", len(subsequent_tags) / len(code_tags),  num_partitions=4, positive_val=positive_val)
+    if len(code_tags) > 0:
+        partition(feats, "propn_prev_tags", len(prev_tags) / len(code_tags),         num_partitions=4, positive_val=positive_val)
+        partition(feats, "propn_subsq_tags", len(subsequent_tags) / len(code_tags),  num_partitions=4, positive_val=positive_val)
     return feats
 
 def gbl_adjacent_sent_code_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
@@ -89,18 +90,18 @@ def gbl_adjacent_sent_code_features(stack_tags: List[Tuple[str, int]], buffer_ta
         current_tag = tpl[0]
         next_sent_tags.append(current_tag)
 
-    SKIP_CODES = {ROOT, SearnModelEssayParser.SENT}
+    SKIP_CODES = {ROOT, SearnModelEssayParser.SENT, None}
     for tag in prev_sent_tags:
         if len(stack_tags) > 0 and tos not in SKIP_CODES:
-            feats["prev_sent_tag_" + tag + "_TOS_" + tos] = positive_val
+            feats["prev_sent_tag_" + tag + "_TOS_" + tos[0]] = positive_val
             if tag == tos:
                 feats["Prev_sent_has_TOS"] = positive_val
         if len(buffer_tags) > 0 and buffer not in SKIP_CODES:
-            feats["prev_sent_tag_" + tag + "_BUFFER_" + buffer] = positive_val
+            feats["prev_sent_tag_" + tag + "_BUFFER_" + buffer[0]] = positive_val
             if tag == buffer:
                 feats["Prev_sent_has_BUFFER"] = positive_val
         if len(stack_tags) > 0 and len(buffer_tags) > 0 and tos not in SKIP_CODES and buffer not in SKIP_CODES:
-            feats["prev_sent_tag_" + tag + "_TOS_" + tos + "_BUFFER_" + buffer] = positive_val
+            feats["prev_sent_tag_" + tag + "_TOS_" + tos[0] + "_BUFFER_" + buffer] = positive_val
 
     greater_than_feats(feats, "num_prev_sent_tags_", value=len(prev_sent_tags),
                        vals=[0, 1, 2, 3, 5, 7, 10],
@@ -108,11 +109,11 @@ def gbl_adjacent_sent_code_features(stack_tags: List[Tuple[str, int]], buffer_ta
 
     for tag in next_sent_tags:
         if len(stack_tags) > 0 and tos not in SKIP_CODES:
-            feats["next_sent_tag_" + tag + "_TOS_" + tos] = positive_val
+            feats["next_sent_tag_" + tag + "_TOS_" + tos[0]] = positive_val
         if len(buffer_tags) > 0 and buffer not in SKIP_CODES:
-            feats["next_sent_tag_" + tag + "_BUFFER_" + buffer] = positive_val
+            feats["next_sent_tag_" + tag + "_BUFFER_" + buffer[0]] = positive_val
         if len(stack_tags) > 0 and len(buffer_tags) > 0 and tos not in SKIP_CODES and buffer not in SKIP_CODES:
-            feats["next_sent_tag_" + tag + "_TOS_" + tos + "_BUFFER_" + buffer] = positive_val
+            feats["next_sent_tag_" + tag + "_TOS_" + tos[0] + "_BUFFER_" + buffer[0]] = positive_val
 
     greater_than_feats(feats, "num_next_sent_tags_", value=len(next_sent_tags),
                        vals=[0, 1, 2, 3, 5, 7, 10],
@@ -180,9 +181,11 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
                     break
 
     # Fwd crels are ones where causer is before effect
-    partition(feats, "propn_fwd_crels", num_fwd_relns / num_crels, num_partitions=5, positive_val=positive_val)
+    if num_crels > 0:
+        partition(feats, "propn_fwd_crels", num_fwd_relns / num_crels, num_partitions=5, positive_val=positive_val)
+        partition(feats, "propn_crossing_crels", num_crels_crossing_sents / num_crels, num_partitions=5, positive_val=positive_val)
+
     greater_than_feats(feats, "num_crels_crossing_sents", value=num_crels_crossing_sents, positive_val=positive_val)
-    partition(feats, "propn_crossing_crels", num_crels_crossing_sents / num_crels, num_partitions=5, positive_val=positive_val)
 
     # Tally of currently parsed crels
     num_inversions = 0
@@ -194,18 +197,18 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
             if inverted in crel_tally:
                 num_inversions += 1
 
-    SKIP_CODES = {ROOT, SearnModelEssayParser.SENT}
+    SKIP_CODES = {ROOT, SearnModelEssayParser.SENT, None}
     for crel in crel_tally.keys():
         if len(stack_tags) > 0 and tos not in SKIP_CODES:
-            feats["CREL_" + crel + "_TOS_" + tos] = positive_val
+            feats["CREL_" + crel + "_TOS_" + tos[0]] = positive_val
         if len(buffer_tags) > 0 and buffer not in SKIP_CODES:
-            feats["CREL_" + crel + "_BUFFER_" + buffer] = positive_val
+            feats["CREL_" + crel + "_BUFFER_" + buffer[0]] = positive_val
         if len(stack_tags) > 0 and len(buffer_tags) > 0 and tos not in SKIP_CODES and buffer not in SKIP_CODES:
-            feats["CREL_" + crel + "_TOS_" + tos + "_BUFFER_" + buffer] = positive_val
+            feats["CREL_" + crel + "_TOS_" + tos[0] + "_BUFFER_" + buffer[0]] = positive_val
 
     possible_crels = [
-        buffer + ARROW + tos,
-        tos + ARROW + buffer,
+        buffer[0] + ARROW + tos[0],
+        tos[0] + ARROW + buffer[0],
     ]
     for i, crel in enumerate(possible_crels):
         if crel in crel_tally:
@@ -219,25 +222,30 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
                 greater_than_feats(feats, "existing_bkwd_crel_count", value=crel_tally[crel],
                                    vals=[0, 1, 2, 3], positive_val=positive_val)
 
-    feats["max_dupe_crels_" + str(max(crel_tally.values()))] = positive_val
+    if len(crel_tally) > 0:
+        feats["max_dupe_crels_" + str(max(crel_tally.values()))] = positive_val
+    else:
+        feats["max_dupe_crels_0"] = positive_val
 
     greater_than_feats(feats, "num_inversions", value=num_inversions, vals=[0,1,2,3], positive_val=positive_val)
-    partition(feats, "propn_inv", num_inversions/num_crels, num_partitions=4, positive_val=positive_val)
+    if num_crels > 0:
+        partition(feats, "propn_inv", num_inversions/num_crels, num_partitions=4, positive_val=positive_val)
+        greater_than_feats(feats, "num_crels", value=num_crels, vals=[0,1,2,3,5,7,10], positive_val=positive_val)
 
-    greater_than_feats(feats, "num_crels", value=num_crels, vals=[0,1,2,3,5,7,10], positive_val=positive_val)
-    partition(feats, "propn_crel_sents", num_crels / num_essay_sents, num_partitions=10, positive_val=positive_val)
+    if num_essay_sents > 0:
+        partition(feats, "propn_crel_sents", num_crels / num_essay_sents, num_partitions=10, positive_val=positive_val)
     return feats
 
 def get_tos_buffer(buffer_tags, stack_tags, tag2word_seq):
     ordered_tags = sorted(tag2word_seq.keys(), key=lambda tpl: tpl[1])
-    if len(buffer_tags) > 0:
-        tos = buffer_tags[0]
-    else:
-        tos = ordered_tags[-1]
     if len(stack_tags) > 0:
-        buffer = stack_tags[-1]
+        tos = stack_tags[-1]
     else:
-        buffer = ordered_tags[0]
+        tos = None
+    if len(buffer_tags) > 0:
+        buffer = buffer_tags[0]
+    else:
+        buffer = None
     return buffer, ordered_tags, tos
 
 def sentence_stats(buffer, ordered_tags, tos):

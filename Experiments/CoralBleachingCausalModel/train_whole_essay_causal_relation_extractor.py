@@ -20,6 +20,7 @@ from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
 from cost_functions import *
 from template_feature_extractor import *
+from global_template_features import *
 
 # Logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -98,14 +99,14 @@ def evaluate_model(
 
     print("To make this faster, switch to parallel execution")
 
-    parallel_results = Parallel(n_jobs=len(folds))(
-        delayed(model_train_predict)(essays_TD, essays_VD, extractor_fn_names_lst, cost_function_name, ngrams, stemmed,
-                                     beta, max_epochs)
-        for essays_TD, essays_VD in folds)
-
-    # parallel_results = [model_train_predict(essays_TD, essays_VD, extractor_fn_names_lst, cost_function_name, ngrams, stemmed,
+    # parallel_results = Parallel(n_jobs=len(folds))(
+    #     delayed(model_train_predict)(essays_TD, essays_VD, extractor_fn_names_lst, cost_function_name, ngrams, stemmed,
     #                                  beta, max_epochs)
-    #     for essays_TD, essays_VD in folds]
+    #     for essays_TD, essays_VD in folds)
+
+    parallel_results = [model_train_predict(essays_TD, essays_VD, extractor_fn_names_lst, cost_function_name, ngrams, stemmed,
+                                     beta, max_epochs)
+        for essays_TD, essays_VD in folds]
 
     cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag = defaultdict(list), defaultdict(list)
     cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
@@ -189,7 +190,14 @@ base_extractors = [
     between_word_features
 ]
 
-all_extractor_fns = base_extractors + [
+gbl_extractors = [
+    gbl_adjacent_sent_code_features,
+    gbl_causal_features,
+    gbl_concept_code_cnt_features,
+    gbl_sentence_position_features
+]
+
+all_extractor_fns = base_extractors + gbl_extractors + [
     word_distance,
     valency,
     unigrams,
@@ -232,8 +240,12 @@ for ngrams in [1]:
 
             #current_extractor_names = []  # type: List[str]
             # best
-            best_extractor_names = ['single_words', 'between_word_features', 'label_set',
-                                    'three_words', 'third_order', 'unigrams'] # type: List[str]
+            # best_extractor_names = ['single_words', 'between_word_features', 'label_set',
+            #                         'three_words', 'third_order', 'unigrams'] # type: List[str]
+
+            best_extractor_names = ['single_words', 'between_word_features', 'label_set', 'three_words',
+                                    'gbl_adjacent_sent_code_features', 'gbl_causal_features',
+                                    'gbl_concept_code_cnt_features',   'gbl_sentence_position_features']
 
             best_f1 = -1.0
             logger.info("-" * LINE_WIDTH)
