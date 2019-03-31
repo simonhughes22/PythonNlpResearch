@@ -43,7 +43,7 @@ def gbl_concept_code_cnt_features(stack_tags: List[Tuple[str, int]], buffer_tags
 
     greater_than_feats(feats, "num_prev_tags", value=len(prev_tags),        vals=[0, 1, 2, 3, 5, 7, 10], positive_val=positive_val)
     greater_than_feats(feats, "num_subsq",     value=len(subsequent_tags),  vals=[0, 1, 2, 3, 5, 7, 10], positive_val=positive_val)
-    greater_than_feats(feats, "num_all_ptags", value=len(ordered_tags),     vals=[0, 1, 2, 3, 5, 7, 10], positive_val=positive_val)
+    greater_than_feats(feats, "num_all_ptags", value=len(code_tags),        vals=[0, 1, 2, 3, 5, 7, 10], positive_val=positive_val)
 
     partition(feats, "propn_prev_tags", len(prev_tags) / len(code_tags),         num_partitions=4, positive_val=positive_val)
     partition(feats, "propn_subsq_tags", len(subsequent_tags) / len(code_tags),  num_partitions=4, positive_val=positive_val)
