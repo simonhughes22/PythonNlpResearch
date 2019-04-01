@@ -234,12 +234,12 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
             tos[0]    + ARROW + buffer[0]
         ]
 
-    # count of buffer and tos tags as causers amd effects
-    greater_than_feats(feats, "buffer_causer_count", value=causer_tally[buffer[0]],  positive_val=positive_val)
-    greater_than_feats(feats, "buffer_effect_count", value=effect_tally[buffer[0]],  positive_val=positive_val)
-
-    greater_than_feats(feats, "tos_causer_count",    value=causer_tally[tos[0]], positive_val=positive_val)
-    greater_than_feats(feats, "tos_effect_count",    value=effect_tally[tos[0]], positive_val=positive_val)
+    # # count of buffer and tos tags as causers amd effects
+    # greater_than_feats(feats, "buffer_causer_count", value=causer_tally[buffer[0]],  positive_val=positive_val)
+    # greater_than_feats(feats, "buffer_effect_count", value=effect_tally[buffer[0]],  positive_val=positive_val)
+    #
+    # greater_than_feats(feats, "tos_causer_count",    value=causer_tally[tos[0]], positive_val=positive_val)
+    # greater_than_feats(feats, "tos_effect_count",    value=effect_tally[tos[0]], positive_val=positive_val)
 
     for i, crel in enumerate(possible_crels):
         if crel in crel_tally:
