@@ -183,12 +183,16 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
     crel_tally = defaultdict(int)
     num_crels_crossing_sents = 0
     num_fwd_relns = 0
+    causer_tally, effect_tally = defaultdict(int), defaultdict(int)
+
     for cause, r_codes in cause2effects.items():
         lcode, l_ix = cause
         num_crels += len(r_codes)
+        causer_tally[lcode] += 1
         for (rcode, r_ix) in r_codes: # deconstruct the tuples
             crel = lcode + ARROW + rcode
             crel_tally[crel] += 1
+            effect_tally[rcode] += 1
             if r_ix > l_ix: # Is effect after causer in sentence?
                 num_fwd_relns += 1
             small_ix, large_ix = sorted([l_ix, r_ix])
@@ -230,25 +234,18 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
             tos[0]    + ARROW + buffer[0]
         ]
 
+    # count of buffer and tos tags as causers amd effects
+    greater_than_feats(feats, "buffer_causer_count", value=causer_tally[buffer[0]],  positive_val=positive_val)
+    greater_than_feats(feats, "buffer_effect_count", value=effect_tally[buffer[0]],  positive_val=positive_val)
+
+    greater_than_feats(feats, "tos_causer_count",    value=causer_tally[tos[0]], positive_val=positive_val)
+    greater_than_feats(feats, "tos_effect_count",    value=effect_tally[tos[0]], positive_val=positive_val)
+
     for i, crel in enumerate(possible_crels):
         if crel in crel_tally:
             feats["CREL_already_exists"] = positive_val
             greater_than_feats(feats, "existing_crel_count", value=crel_tally[crel],
                                vals=[0, 1, 2, 3], positive_val=positive_val)
-
-            # ltag, rtag = crel.replace("b","").split(ARROW)
-            # lint, rint = int(ltag), int(rtag)
-            # if lint < rint:
-            #     greater_than_feats(feats, "existing_fwd_crel_count",  value=crel_tally[crel],
-            #                        vals=[0, 1, 2, 3], positive_val=positive_val)
-            # else:
-            #     greater_than_feats(feats, "existing_bkwd_crel_count", value=crel_tally[crel],
-            #                        vals=[0, 1, 2, 3], positive_val=positive_val)
-
-    # if len(crel_tally) > 0:
-    #     feats["max_dupe_crels_" + str(max(crel_tally.values()))] = positive_val
-    # else:
-    #     feats["max_dupe_crels_0"] = positive_val
 
     greater_than_feats(feats, "num_crels",      value=num_crels, vals=[0,1,2,3,5,7,10], positive_val=positive_val)
     greater_than_feats(feats, "num_inversions", value=num_inversions, vals=[0,1,2,3], positive_val=positive_val)
