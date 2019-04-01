@@ -220,11 +220,9 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
 
     possible_crels = []
     if tos[0] not in SKIP_CODES and buffer[0] not in SKIP_CODES:
-        min_tag = min(buffer[0], tos[0])
-        max_tag = max(buffer[0], tos[0])
         possible_crels = [
-            min_tag + ARROW + max_tag,
-            max_tag + ARROW + min_tag,
+            buffer[0] + ARROW + tos[0],
+            tos[0]    + ARROW + buffer[0]
         ]
 
     for i, crel in enumerate(possible_crels):
@@ -232,7 +230,10 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
             feats["CREL_already_exists"] = positive_val
             greater_than_feats(feats, "existing_crel_count", value=crel_tally[crel],
                                vals=[0, 1, 2, 3], positive_val=positive_val)
-            if i == 0:
+
+            ltag, rtag = crel.replace("b","").split(ARROW)
+            lint, rint = int(ltag), int(rtag)
+            if lint < rint:
                 greater_than_feats(feats, "existing_fwd_crel_count",  value=crel_tally[crel],
                                    vals=[0, 1, 2, 3], positive_val=positive_val)
             else:
