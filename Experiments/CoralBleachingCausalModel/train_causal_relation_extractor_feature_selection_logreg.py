@@ -192,6 +192,8 @@ DOWN_SAMPLE_RATE = 1.0  # For faster smoke testing the algorithm
 BETA = 0.5
 MAX_EPOCHS = 10
 
+MAX_EXTRACTORS = 10
+
 # Use optimal settngs from CRel extraction exercise
 BASE_LEARNER_FACT = lambda: LogisticRegression(
                         dual=True,
@@ -240,6 +242,7 @@ all_cost_functions = [
 ]
 
 all_extractor_fn_names = get_function_names(all_extractor_fns)
+gbl_extractor_fn_names = get_function_names(gbl_extractors)
 base_extractor_fn_names = get_function_names(base_extractors)
 all_cost_fn_names = get_function_names(all_cost_functions)
 
@@ -261,14 +264,17 @@ for ngrams in [1]:
             logger.info("*" * LINE_WIDTH)
             logger.info("COST FN: {cost_fn}".format(cost_fn=cost_function_name))
 
-            current_extractor_names = []  # type: List[str]
+            # current_extractor_names = []  # type: List[str]
+            current_extractor_names = ['single_words', 'between_word_features', 'label_set',
+                                    'three_words', 'third_order', 'unigrams']  # type: List[str]
+
             # current_extractor_names = set(all_extractor_fn_names[1:])
             f1_has_improved = True
             best_f1 = -1.0
 
-            while len(current_extractor_names) <= 5 and \
-                            len(current_extractor_names) < len(all_extractor_fn_names) and \
-                    f1_has_improved:
+            remaining_extractor_names = set(gbl_extractor_fn_names)
+
+            while len(remaining_extractor_names) >0 and f1_has_improved:
 
                 logger.info("-" * LINE_WIDTH)
                 logger.info(
@@ -283,15 +289,8 @@ for ngrams in [1]:
 
                 # only use base extractors when no other extractors present as otherwise the more complex features don't kick in
                 # as no good parsing decisions can be made
-                if len(current_extractor_names) >= 1:
-                    extractor_names = all_extractor_fn_names
-                else:
-                    extractor_names = base_extractor_fn_names
 
-                for new_extractor_name in extractor_names:
-                    # Don't add extractors in current set
-                    if new_extractor_name in current_extractor_names:
-                        continue
+                for new_extractor_name in remaining_extractor_names:
 
                     new_extractor_list = current_extractor_names + [new_extractor_name]  # type : List[str]
 
@@ -325,3 +324,4 @@ for ngrams in [1]:
                     break
                 else:
                     current_extractor_names.append(best_new_feature_name)
+                    remaining_extractor_names.remove(best_new_feature_name)
