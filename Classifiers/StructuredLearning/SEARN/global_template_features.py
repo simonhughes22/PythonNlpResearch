@@ -9,7 +9,8 @@ from shift_reduce_parser import ROOT
 
 MAX_BUFFER = 999999
 ARROW = "->"
-SKIP_CODES = {ROOT, SearnModelEssayParser.SENT, None}
+ALL = "ALL"
+SKIP_CODES = {ROOT, SearnModelEssayParser.SENT, None, ALL}
 
 def gbl_concept_code_cnt_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
                                   tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
@@ -19,29 +20,9 @@ def gbl_concept_code_cnt_features(stack_tags: List[Tuple[str, int]], buffer_tags
                                   positive_val: int) -> Dict[str, int]:
 
     feats = {}
-    ordered_tags = sorted(tag2word_seq.keys(), key=lambda tpl: tpl[1])
-    if len(buffer_tags) > 0:
-        top_buffer_tag, top_ix = buffer_tags[0]
-    else:
-        top_buffer_tag, top_ix = ordered_tags[-1]
+    buffer, ordered_tags, tos = get_tos_buffer(buffer_tags, stack_tags, tag2word_seq)
 
-    if len(stack_tags) > 0:
-        top_stack_tag, bottom_ix = stack_tags[-1]
-    else:
-        top_stack_tag, bottom_ix = ordered_tags[0]
-
-    # get all tags, sprted by index
-    prev_tags, subsequent_tags, code_tags = [], [], []
-    for tpl in ordered_tags:
-        tag, ix = tpl
-        if tag in SKIP_CODES:
-            continue
-        else:
-            code_tags.append(tpl[0])
-        if ix < bottom_ix:
-            prev_tags.append(tpl[0])
-        elif ix > top_ix:
-            subsequent_tags.append(tpl[0])
+    code_tags, prev_tags, subsequent_tags = get_codes_before_after(buffer_tags, ordered_tags, stack_tags)
 
     greater_than_feats(feats, "num_prev_tags", value=len(prev_tags),        vals=[0, 1, 2, 3, 5, 7, 10], positive_val=positive_val)
     greater_than_feats(feats, "num_subsq",     value=len(subsequent_tags),  vals=[0, 1, 2, 3, 5, 7, 10], positive_val=positive_val)
@@ -52,6 +33,31 @@ def gbl_concept_code_cnt_features(stack_tags: List[Tuple[str, int]], buffer_tags
         partition(feats, "propn_subsq_tags", len(subsequent_tags) / len(code_tags),  num_partitions=4, positive_val=positive_val)
     return feats
 
+
+def get_codes_before_after(buffer_tags, ordered_tags, stack_tags):
+    if len(buffer_tags) > 0:
+        top_buffer_tag, top_ix = buffer_tags[0]
+    else:
+        top_buffer_tag, top_ix = ordered_tags[-1]
+    if len(stack_tags) > 0:
+        top_stack_tag, bottom_ix = stack_tags[-1]
+    else:
+        top_stack_tag, bottom_ix = ordered_tags[0]
+    # get all tags, sprted by index
+    prev_tags, subsequent_tags, code_tags = [], [], []
+    for tpl in ordered_tags:
+        tag, ix = tpl
+        if tag in SKIP_CODES:
+            continue
+
+        code_tags.append(tpl[0])
+        if ix < bottom_ix:
+            prev_tags.append(tpl[0])
+        elif ix > top_ix:
+            subsequent_tags.append(tpl[0])
+    return code_tags, prev_tags, subsequent_tags
+
+
 def gbl_adjacent_sent_code_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
                                     tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
                                     distance: int,
@@ -61,7 +67,6 @@ def gbl_adjacent_sent_code_features(stack_tags: List[Tuple[str, int]], buffer_ta
 
     feats = {}
     buffer, ordered_tags, tos = get_tos_buffer(buffer_tags, stack_tags, tag2word_seq)
-
 
     # get all tags, sprted by index
     tos_ix = -1
@@ -231,19 +236,19 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
             greater_than_feats(feats, "existing_crel_count", value=crel_tally[crel],
                                vals=[0, 1, 2, 3], positive_val=positive_val)
 
-            ltag, rtag = crel.replace("b","").split(ARROW)
-            lint, rint = int(ltag), int(rtag)
-            if lint < rint:
-                greater_than_feats(feats, "existing_fwd_crel_count",  value=crel_tally[crel],
-                                   vals=[0, 1, 2, 3], positive_val=positive_val)
-            else:
-                greater_than_feats(feats, "existing_bkwd_crel_count", value=crel_tally[crel],
-                                   vals=[0, 1, 2, 3], positive_val=positive_val)
+            # ltag, rtag = crel.replace("b","").split(ARROW)
+            # lint, rint = int(ltag), int(rtag)
+            # if lint < rint:
+            #     greater_than_feats(feats, "existing_fwd_crel_count",  value=crel_tally[crel],
+            #                        vals=[0, 1, 2, 3], positive_val=positive_val)
+            # else:
+            #     greater_than_feats(feats, "existing_bkwd_crel_count", value=crel_tally[crel],
+            #                        vals=[0, 1, 2, 3], positive_val=positive_val)
 
-    if len(crel_tally) > 0:
-        feats["max_dupe_crels_" + str(max(crel_tally.values()))] = positive_val
-    else:
-        feats["max_dupe_crels_0"] = positive_val
+    # if len(crel_tally) > 0:
+    #     feats["max_dupe_crels_" + str(max(crel_tally.values()))] = positive_val
+    # else:
+    #     feats["max_dupe_crels_0"] = positive_val
 
     greater_than_feats(feats, "num_crels",      value=num_crels, vals=[0,1,2,3,5,7,10], positive_val=positive_val)
     greater_than_feats(feats, "num_inversions", value=num_inversions, vals=[0,1,2,3], positive_val=positive_val)
@@ -254,8 +259,65 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
         partition(feats, "propn_crel_sents", num_crels / num_essay_sents, num_partitions=10, positive_val=positive_val)
     return feats
 
+def gbl_ratio_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
+                  tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
+                  distance: int,
+                  cause2effects: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                  effect2causers: Dict[Tuple[str, int], Set[Tuple[str, int]]],
+                  positive_val: int) -> Dict[str, int]:
+
+    feats = {}
+    buffer, ordered_tags, tos = get_tos_buffer(buffer_tags, stack_tags, tag2word_seq)
+    code_tags, prev_tags, subsequent_tags = get_codes_before_after(buffer_tags, ordered_tags, stack_tags)
+
+    # get all tags, sprted by index
+    num_essay_sents, sents_after, sents_before, sent_ixs = sentence_stats(buffer, ordered_tags, tos)
+    all_words = tag2word_seq[(ALL, -1)]
+    num_words = len(all_words)
+
+    num_crels = 0
+    for cause, r_codes in cause2effects.items():
+        num_crels += len(r_codes)
+
+    # feats["propn_crel_all_sents"] = num_crels / num_essay_sents
+    if sents_before > 0:
+        feats["crel_tos_sents_ratio"] = num_crels / sents_before
+        feats["prev_codes_tos_sents_ratio"] = len(prev_tags) / sents_before
+
+    if sents_after > 0:
+        feats["crel_buf_sents_ratio"] = num_crels / sents_after
+        feats["next_codes_tos_sents_ratio"] = len(subsequent_tags) / sents_after
+
+    feats["crel_all_sents_ratio"] = num_crels / num_essay_sents
+    feats["codes_all_sents_ratio"] = len(code_tags) / num_essay_sents
+
+    tos_words = tos[-1]
+    buf_words = buffer[-1]
+    if tos_words > 0:
+        feats["crel_tos_word_ratio"] = num_crels / tos_words
+        feats["prev_code_tos_word_ratio"] = len(prev_tags) / tos_words
+
+    if buf_words > 0:
+        feats["crel_buf_word_ratio"] = num_crels / buf_words
+        feats["next_code_buf_word_ratio"] = len(subsequent_tags) / buf_words
+
+    feats["crel_all_word_ratio"] = num_crels / num_words
+    feats["codes_all_word_ratio"] = len(code_tags) / num_words
+
+    if len(code_tags) > 0:
+        feats["crel_2_codes_ratio"] = num_crels / len(code_tags)
+        if len(prev_tags) > 0:
+            feats["crel_2_prev_codes_ratio"] = num_crels / len(prev_tags)
+        if len(subsequent_tags) > 0:
+            feats["crel_2_next_codes_ratio"] = num_crels / len(subsequent_tags)
+    return feats
+
+
 def get_tos_buffer(buffer_tags, stack_tags, tag2word_seq):
-    ordered_tags = sorted(tag2word_seq.keys(), key=lambda tpl: tpl[1])
+
+    keys = (tpl for tpl in tag2word_seq.keys() if tpl[0] != ALL)
+    ordered_tags = sorted(keys, key=lambda tpl: tpl[1])
+
     if len(stack_tags) > 0:
         tos = stack_tags[-1]
     else:
