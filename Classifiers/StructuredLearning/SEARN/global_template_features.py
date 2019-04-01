@@ -6,6 +6,8 @@ from typing import Dict, Tuple, Set, List
 from searn_essay_parser import SearnModelEssayParser
 
 from shift_reduce_parser import ROOT
+
+MAX_BUFFER = 999999
 ARROW = "->"
 SKIP_CODES = {ROOT, SearnModelEssayParser.SENT, None}
 
@@ -32,7 +34,7 @@ def gbl_concept_code_cnt_features(stack_tags: List[Tuple[str, int]], buffer_tags
     prev_tags, subsequent_tags, code_tags = [], [], []
     for tpl in ordered_tags:
         tag, ix = tpl
-        if tag == SearnModelEssayParser.SENT:
+        if tag in SKIP_CODES:
             continue
         else:
             code_tags.append(tpl[0])
@@ -65,7 +67,7 @@ def gbl_adjacent_sent_code_features(stack_tags: List[Tuple[str, int]], buffer_ta
     tos_ix = -1
     prev_sent_ixs, next_sent_ixs = [],[]
 
-    buffer_ix = len(ordered_tags)
+    buffer_ix = MAX_BUFFER
     for i, tpl in enumerate(ordered_tags):
         if tpl == tos:
             tos_ix = i
@@ -75,7 +77,7 @@ def gbl_adjacent_sent_code_features(stack_tags: List[Tuple[str, int]], buffer_ta
             ix = tpl[1]
             if tos_ix == -1:
                 prev_sent_ixs.append(ix)
-            if buffer_ix < len(ordered_tags):
+            if buffer_ix < MAX_BUFFER:
                 next_sent_ixs.append(ix)
 
     prev_sent_tags = []
@@ -265,7 +267,7 @@ def sentence_stats(buffer, ordered_tags, tos):
         if tpl[0] == SearnModelEssayParser.SENT:
             num_essay_sents += 1
             sent_ixs.add(tpl[-1])
-    sents_after = num_essay_sents - buffer_sents_before
+    sents_after = num_essay_sents - buffer_sents_before -1
     return num_essay_sents, sents_after, sents_before, sent_ixs
 
 def partition(fts, ft_name, propn, num_partitions=3, positive_val=1):
