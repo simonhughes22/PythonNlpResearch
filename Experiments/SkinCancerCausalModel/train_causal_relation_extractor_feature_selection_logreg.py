@@ -189,19 +189,19 @@ LINE_WIDTH = 80
 
 # other settings
 DOWN_SAMPLE_RATE = 1.0  # For faster smoke testing the algorithm
-BETA = 0.5
-MAX_EPOCHS = 2
+BETA = 0.3
+MAX_EPOCHS = 10
 
 MAX_EXTRACTORS = 10
 
 # Use optimal settngs from CRel extraction exercise
 BASE_LEARNER_FACT = lambda: LogisticRegression(
-                        dual=True,
+                        dual=False,
                         C=0.5,
-                        penalty="l2",
+                        penalty="l1",
                         fit_intercept=True)
 
-COLLECTION_PREFIX = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL"
+COLLECTION_PREFIX = "CR_SC_SHIFT_REDUCE_PARSER_TEMPLATED_FEATURE_SEL"
 
 # some of the other extractors aren't functional if the system isn't able to do a basic parse
 # so the base extractors are the MVP for getting to a basic parser, then additional 'meta' parse
@@ -265,8 +265,8 @@ for ngrams in [1]:
             logger.info("COST FN: {cost_fn}".format(cost_fn=cost_function_name))
 
             # current_extractor_names = []  # type: List[str]
-            current_extractor_names = ['single_words', 'between_word_features', 'label_set',
-                                    'three_words', 'third_order', 'unigrams']  # type: List[str]
+            current_extractor_names = ['three_words', 'between_word_features', 'size_features',
+                                    'single_words']  # type: List[str] # type: List[str]
 
             logger.info("-" * LINE_WIDTH)
             logger.info(
