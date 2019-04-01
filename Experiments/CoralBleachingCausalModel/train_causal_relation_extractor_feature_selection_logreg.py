@@ -268,9 +268,14 @@ for ngrams in [1]:
             current_extractor_names = ['single_words', 'between_word_features', 'label_set',
                                     'three_words', 'third_order', 'unigrams']  # type: List[str]
 
-            # current_extractor_names = set(all_extractor_fn_names[1:])
-            f1_has_improved = True
-            best_f1 = -1.0
+            logger.info("-" * LINE_WIDTH)
+            logger.info(
+                "Evaluating {num_features} features, with ngram size: {ngrams} and beta decay: {beta_decay}, current feature extractors: {extractors}".format(
+                    num_features=len(current_extractor_names) + 1,
+                    ngrams=ngrams, beta_decay=BETA,
+                    extractors=",".join(current_extractor_names))
+            )
+            logger.info("\tExtractors: {extractors}".format(extractors=",".join(current_extractor_names)))
 
             # Try once using existing features
             micro_f1 = evaluate_features(
@@ -285,9 +290,11 @@ for ngrams in [1]:
                 down_sample_rate=DOWN_SAMPLE_RATE)
 
             best_f1 = micro_f1
+            logger.info("\t\tMicro F1: {micro_f1} NEW BEST {stars}".format(micro_f1=micro_f1, stars="*" * 30))
 
             remaining_extractor_names = set(gbl_extractor_fn_names)
-            while len(remaining_extractor_names) >0 and f1_has_improved:
+
+            while len(remaining_extractor_names) > 0:
 
                 logger.info("-" * LINE_WIDTH)
                 logger.info(
@@ -303,7 +310,7 @@ for ngrams in [1]:
                 # only use base extractors when no other extractors present as otherwise the more complex features don't kick in
                 # as no good parsing decisions can be made
 
-                for new_extractor_name in remaining_extractor_names:
+                for new_extractor_name in sorted(remaining_extractor_names):
 
                     new_extractor_list = current_extractor_names + [new_extractor_name]  # type : List[str]
 
