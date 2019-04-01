@@ -41,10 +41,10 @@ MIN_FEAT_FREQ = 5
 # Global settings
 
 settings = Settings()
-root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
+root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
 training_folder = root_folder + "Training" + "/"
 test_folder = root_folder + "Test" + "/"
-training_pickled = settings.data_directory + "CoralBleaching/Thesis_Dataset/training.pl"
+training_pickled = settings.data_directory + "SkinCancer/Thesis_Dataset/training.pl"
 # NOTE: These predictions are generated from the "./notebooks/SEARN/Keras - Train Tagger and Save CV Predictions For Word Tags.ipynb" notebook
 # used as inputs to parsing model
 rnn_predictions_folder = root_folder + "Predictions/Bi-LSTM-4-SEARN/"
@@ -190,9 +190,7 @@ LINE_WIDTH = 80
 # other settings
 DOWN_SAMPLE_RATE = 1.0  # For faster smoke testing the algorithm
 BETA = 0.3
-MAX_EPOCHS = 10
-
-MAX_EXTRACTORS = 10
+MAX_EPOCHS = 3
 
 # Use optimal settngs from CRel extraction exercise
 BASE_LEARNER_FACT = lambda: LogisticRegression(
