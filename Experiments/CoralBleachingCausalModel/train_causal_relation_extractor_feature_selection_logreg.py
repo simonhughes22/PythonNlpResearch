@@ -192,8 +192,6 @@ DOWN_SAMPLE_RATE = 1.0  # For faster smoke testing the algorithm
 BETA = 0.5
 MAX_EPOCHS = 2
 
-MAX_EXTRACTORS = 10
-
 # Use optimal settngs from CRel extraction exercise
 BASE_LEARNER_FACT = lambda: LogisticRegression(
                         dual=True,
