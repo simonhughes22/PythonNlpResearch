@@ -149,8 +149,14 @@ def gbl_sentence_position_features(stack_tags: List[Tuple[str, int]], buffer_tag
     greater_than_feats(feats, "num_sentences_before",  value=sents_before,  vals=[0, 1, 2, 3, 5], positive_val=positive_val)
     greater_than_feats(feats, "num_sentences_after",   value=sents_after,   vals=[0, 1, 2, 3, 5], positive_val=positive_val)
 
-    rel_posn = sents_before / num_essay_sents
-    partition(feats, "sent_posn", rel_posn, num_partitions=3, positive_val=positive_val)
+    rel_posn_tos = sents_before / num_essay_sents
+    partition(feats, "sent_tos_posn", rel_posn_tos, num_partitions=3, positive_val=positive_val)
+
+    rel_posn_buffer = (num_essay_sents-sents_after) / num_essay_sents
+    partition(feats, "sent_buf_posn", rel_posn_buffer, num_partitions=3, positive_val=positive_val)
+
+    rel_propn_btwn = (sents_between) / num_essay_sents
+    partition(feats, "sent_propn_btwn", rel_propn_btwn, num_partitions=10, positive_val=positive_val)
     return feats
 
 
