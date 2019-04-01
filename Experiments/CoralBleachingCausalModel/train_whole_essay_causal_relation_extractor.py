@@ -193,7 +193,8 @@ gbl_extractors = [
     gbl_adjacent_sent_code_features,
     gbl_causal_features,
     gbl_concept_code_cnt_features,
-    gbl_sentence_position_features
+    gbl_sentence_position_features,
+    gbl_ratio_features
 ]
 
 all_extractor_fns = base_extractors + gbl_extractors + [
@@ -237,14 +238,10 @@ for ngrams in [1]:
             logger.info("*" * LINE_WIDTH)
             logger.info("COST FN: {cost_fn}".format(cost_fn=cost_function_name))
 
-            #current_extractor_names = []  # type: List[str]
-            # best
-            # best_extractor_names = ['single_words', 'between_word_features', 'label_set',
-            #                         'three_words', 'third_order', 'unigrams'] # type: List[str]
-
             best_extractor_names = ['single_words', 'between_word_features', 'label_set', 'three_words',
                                     'gbl_adjacent_sent_code_features', 'gbl_causal_features',
-                                    'gbl_concept_code_cnt_features',   'gbl_sentence_position_features']
+                                    'gbl_concept_code_cnt_features',   'gbl_sentence_position_features',
+                                    'gbl_ratio_features']
 
             best_f1 = -1.0
             logger.info("-" * LINE_WIDTH)
