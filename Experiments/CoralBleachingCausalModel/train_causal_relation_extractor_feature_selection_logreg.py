@@ -272,8 +272,21 @@ for ngrams in [1]:
             f1_has_improved = True
             best_f1 = -1.0
 
-            remaining_extractor_names = set(gbl_extractor_fn_names)
+            # Try once using existing features
+            micro_f1 = evaluate_features(
+                collection_prefix=COLLECTION_PREFIX,
+                folds=cv_folds,
+                extractor_fn_names_lst=current_extractor_names,
+                cost_function_name=cost_function_name,
+                ngrams=ngrams,
+                base_learner=BASE_LEARNER_FACT,
+                beta=BETA,
+                stemmed=stemmed,
+                down_sample_rate=DOWN_SAMPLE_RATE)
 
+            best_f1 = micro_f1
+
+            remaining_extractor_names = set(gbl_extractor_fn_names)
             while len(remaining_extractor_names) >0 and f1_has_improved:
 
                 logger.info("-" * LINE_WIDTH)
