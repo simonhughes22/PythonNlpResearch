@@ -245,10 +245,10 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
     else:
         feats["max_dupe_crels_0"] = positive_val
 
+    greater_than_feats(feats, "num_crels",      value=num_crels, vals=[0,1,2,3,5,7,10], positive_val=positive_val)
     greater_than_feats(feats, "num_inversions", value=num_inversions, vals=[0,1,2,3], positive_val=positive_val)
     if num_crels > 0:
         partition(feats, "propn_inv", num_inversions/num_crels, num_partitions=4, positive_val=positive_val)
-        greater_than_feats(feats, "num_crels", value=num_crels, vals=[0,1,2,3,5,7,10], positive_val=positive_val)
 
     if num_essay_sents > 0:
         partition(feats, "propn_crel_sents", num_crels / num_essay_sents, num_partitions=10, positive_val=positive_val)
