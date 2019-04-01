@@ -20,7 +20,8 @@ from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
 from cost_functions import *
 from template_feature_extractor import *
-from global_template_features import *
+from global_template_features import gbl_adjacent_sent_code_features, gbl_causal_features, \
+    gbl_concept_code_cnt_features, gbl_ratio_features, gbl_sentence_position_features
 
 # Logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -126,8 +127,6 @@ def evaluate_model(
 
 def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_name, ngrams, stemmed, beta, max_epochs):
 
-    #logger.info("\tModei={model}".format(model=str(BASE_LEARNER_FACT())))
-
     extractors = get_functions_by_name(extractor_names, all_extractor_fns)
     # get single cost function
     cost_fn = get_functions_by_name([cost_function_name], all_cost_functions)[0]
@@ -140,6 +139,7 @@ def model_train_predict(essays_TD, essays_VD, extractor_names, cost_function_nam
         ngram_extractor = NgramExtractorStemmed(max_ngram_len=ngrams)
     else:
         ngram_extractor = NgramExtractor(max_ngram_len=ngrams)
+
     parse_model = SearnModelEssayParser(feature_extractor=template_feature_extractor,
                                              cost_function=cost_fn,
                                              min_feature_freq=MIN_FEAT_FREQ,
