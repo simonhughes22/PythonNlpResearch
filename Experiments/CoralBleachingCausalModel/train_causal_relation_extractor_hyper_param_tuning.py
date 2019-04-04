@@ -252,7 +252,8 @@ for ngrams in [1]:
 
         for cost_function_name in [micro_f1_cost_plusepsilon.__name__]:
 
-            for max_epochs in [1, 2, 3, 5, 10, 15, 20]:
+            # for max_epochs in [1, 2, 3, 5, 10, 15, 20]:
+            for max_epochs in [1, 2, 3, 5]:#, 10, 15, 20]:
 
                 for dual in [True, False]:
                     # for fit_intercept in [True, False]: # remove as non-optimal and to speed up
