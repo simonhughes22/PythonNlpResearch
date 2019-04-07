@@ -190,7 +190,7 @@ LINE_WIDTH = 80
 # other settings
 DOWN_SAMPLE_RATE = 1.0  # For faster smoke testing the algorithm
 
-COLLECTION_PREFIX = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_HYPER_PARAM"
+COLLECTION_PREFIX = "CR_CB_SHIFT_REDUCE_PARSER_TEMPLATED_HYPER_PARAM2"
 
 # some of the other extractors aren't functional if the system isn't able to do a basic parse
 # so the base extractors are the MVP for getting to a basic parser, then additional 'meta' parse
@@ -252,8 +252,8 @@ for ngrams in [1]:
 
         for cost_function_name in [micro_f1_cost_plusepsilon.__name__]:
 
-            # for max_epochs in [1, 2, 3, 5, 10, 15, 20]:
-            for max_epochs in [1, 2, 3, 5]:#, 10, 15, 20]:
+            for max_epochs in [1, 2, 3, 5, 10, 15, 20]:
+            # for max_epochs in [1, 2, 3, 5]:#, 10, 15, 20]:
 
                 for dual in [True, False]:
                     # for fit_intercept in [True, False]: # remove as non-optimal and to speed up
