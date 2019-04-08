@@ -34,30 +34,6 @@ def gbl_concept_code_cnt_features(stack_tags: List[Tuple[str, int]], buffer_tags
     return feats
 
 
-def get_codes_before_after(buffer_tags, ordered_tags, stack_tags):
-    if len(buffer_tags) > 0:
-        top_buffer_tag, top_ix = buffer_tags[0]
-    else:
-        top_buffer_tag, top_ix = ordered_tags[-1]
-    if len(stack_tags) > 0:
-        top_stack_tag, bottom_ix = stack_tags[-1]
-    else:
-        top_stack_tag, bottom_ix = ordered_tags[0]
-    # get all tags, sprted by index
-    prev_tags, subsequent_tags, code_tags = [], [], []
-    for tpl in ordered_tags:
-        tag, ix = tpl
-        if tag in SKIP_CODES:
-            continue
-
-        code_tags.append(tpl[0])
-        if ix < bottom_ix:
-            prev_tags.append(tpl[0])
-        elif ix > top_ix:
-            subsequent_tags.append(tpl[0])
-    return code_tags, prev_tags, subsequent_tags
-
-
 def gbl_adjacent_sent_code_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
                                     tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
                                     distance: int,
@@ -132,6 +108,7 @@ def gbl_adjacent_sent_code_features(stack_tags: List[Tuple[str, int]], buffer_ta
                        positive_val=positive_val)
     return feats
 
+
 def gbl_sentence_position_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
                   tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
                   distance: int,
@@ -163,7 +140,6 @@ def gbl_sentence_position_features(stack_tags: List[Tuple[str, int]], buffer_tag
     rel_propn_btwn = (sents_between) / num_essay_sents
     partition(feats, "sent_propn_btwn", rel_propn_btwn, num_partitions=10, positive_val=positive_val)
     return feats
-
 
 def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
                   tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
@@ -256,6 +232,7 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
         partition(feats, "propn_crel_sents", num_crels / num_essay_sents, num_partitions=10, positive_val=positive_val)
     return feats
 
+
 def gbl_ratio_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
                   tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
                   distance: int,
@@ -308,6 +285,29 @@ def gbl_ratio_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tupl
         if len(subsequent_tags) > 0:
             feats["crel_2_next_codes_ratio"] = num_crels / len(subsequent_tags)
     return feats
+
+def get_codes_before_after(buffer_tags, ordered_tags, stack_tags):
+    if len(buffer_tags) > 0:
+        top_buffer_tag, top_ix = buffer_tags[0]
+    else:
+        top_buffer_tag, top_ix = ordered_tags[-1]
+    if len(stack_tags) > 0:
+        top_stack_tag, bottom_ix = stack_tags[-1]
+    else:
+        top_stack_tag, bottom_ix = ordered_tags[0]
+    # get all tags, sprted by index
+    prev_tags, subsequent_tags, code_tags = [], [], []
+    for tpl in ordered_tags:
+        tag, ix = tpl
+        if tag in SKIP_CODES:
+            continue
+
+        code_tags.append(tpl[0])
+        if ix < bottom_ix:
+            prev_tags.append(tpl[0])
+        elif ix > top_ix:
+            subsequent_tags.append(tpl[0])
+    return code_tags, prev_tags, subsequent_tags
 
 
 def get_tos_buffer(buffer_tags, stack_tags, tag2word_seq):
