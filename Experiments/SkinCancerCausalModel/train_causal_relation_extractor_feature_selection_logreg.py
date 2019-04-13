@@ -45,8 +45,6 @@ root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
 training_folder = root_folder + "Training" + "/"
 test_folder = root_folder + "Test" + "/"
 training_pickled = settings.data_directory + "SkinCancer/Thesis_Dataset/training.pl"
-# NOTE: These predictions are generated from the "./notebooks/SEARN/Keras - Train Tagger and Save CV Predictions For Word Tags.ipynb" notebook
-# used as inputs to parsing model
 
 coref_root = root_folder + "CoReference/"
 coref_output_folder = coref_root + "CRel/"
