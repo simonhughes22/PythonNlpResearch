@@ -45,28 +45,29 @@ root_folder = settings.data_directory + "CoralBleaching/Thesis_Dataset/"
 training_folder = root_folder + "Training" + "/"
 test_folder = root_folder + "Test" + "/"
 training_pickled = settings.data_directory + "CoralBleaching/Thesis_Dataset/training.pl"
-# NOTE: These predictions are generated from the "./notebooks/SEARN/Keras - Train Tagger and Save CV Predictions For Word Tags.ipynb" notebook
-# used as inputs to parsing model
-rnn_predictions_folder = root_folder + "Predictions/Bi-LSTM-4-SEARN/"
 
-config = get_config(training_folder)
+coref_root = root_folder + "CoReference/"
+coref_output_folder = coref_root + "CRel/"
+
+train_fname = coref_output_folder + "training_crel_anatagged_essays_most_recent_code.dill"
+with open(train_fname, "rb") as f:
+    pred_tagged_essays_train = dill.load(f)
+
+test_fname = coref_output_folder + "test_crel_anatagged_essays_most_recent_code.dill"
+with open(test_fname, "rb") as f:
+    tagged_essays_test = dill.load(f)
+
+config = get_config(coref_output_folder)
 results_processor = ResultsProcessor(dbname="metrics_causal_model")
 
 # Get Test Data In Order to Get Test CRELS
 # load the test essays to make sure we compute metrics over the test CR labels
-test_config = get_config(test_folder)
-tagged_essays_test = load_process_essays(**test_config)
-########################################################
-
-fname = rnn_predictions_folder + "essays_train_bi_directional-True_hidden_size-256_merge_mode-sum_num_rnns-2_use_pretrained_embedding-True.dill"
-with open(fname, "rb") as f:
-    pred_tagged_essays = dill.load(f)
 
 logger.info("Started at: " + str(datetime.datetime.now()))
-logger.info("Number of pred tagged essays %i" % len(pred_tagged_essays))  # should be 902
+logger.info("Number of pred tagged essays %i" % len(pred_tagged_essays_train))  # should be 902
 
-cr_tags = get_cr_tags(train_tagged_essays=pred_tagged_essays, tag_essays_test=tagged_essays_test)
-cv_folds = cross_validation(pred_tagged_essays, CV_FOLDS)  # type: List[Tuple[Any,Any]]
+cr_tags = get_cr_tags(train_tagged_essays=pred_tagged_essays_train, tag_essays_test=tagged_essays_test)
+cv_folds = cross_validation(pred_tagged_essays_train, CV_FOLDS)  # type: List[Tuple[Any,Any]]
 
 def evaluate_features(
         collection_prefix: str,
