@@ -42,9 +42,6 @@ MIN_FEAT_FREQ = 5
 
 settings = Settings()
 root_folder = settings.data_directory + "SkinCancer/Thesis_Dataset/"
-training_folder = root_folder + "Training" + "/"
-test_folder = root_folder + "Test" + "/"
-training_pickled = settings.data_directory + "SkinCancer/Thesis_Dataset/training.pl"
 
 coref_root = root_folder + "CoReference/"
 coref_output_folder = coref_root + "CRel/"
@@ -55,7 +52,7 @@ with open(train_fname, "rb") as f:
 
 test_fname = coref_output_folder + "test_crel_anatagged_essays_most_recent_code.dill"
 with open(test_fname, "rb") as f:
-    tagged_essays_test = dill.load(f)
+    pred_tagged_essays_test = dill.load(f)
 
 # Get Test Data In Order to Get Test CRELS
 # load the test essays to make sure we compute metrics over the test CR labels
@@ -64,10 +61,10 @@ results_processor = ResultsProcessor(dbname="metrics_causal_model")
 ########################################################
 
 logger.info("Started at: " + str(datetime.datetime.now()))
-logger.info("Number of pred tagged essays %i" % len(pred_tagged_essays))  # should be 902
+logger.info("Number of pred tagged essays %i" % len(pred_tagged_essays_train))  # should be 902
 
-cr_tags = get_cr_tags(train_tagged_essays=pred_tagged_essays, tag_essays_test=tagged_essays_test)
-cv_folds = cross_validation(pred_tagged_essays, CV_FOLDS)  # type: List[Tuple[Any,Any]]
+cr_tags = get_cr_tags(train_tagged_essays=pred_tagged_essays_train, tag_essays_test=pred_tagged_essays_test)
+cv_folds = cross_validation(pred_tagged_essays_train, CV_FOLDS)  # type: List[Tuple[Any,Any]]
 
 def evaluate_features(
         collection_prefix: str,
