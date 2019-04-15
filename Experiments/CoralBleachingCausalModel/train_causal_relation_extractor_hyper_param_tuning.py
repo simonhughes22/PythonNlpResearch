@@ -66,6 +66,8 @@ logger.info("Number of pred tagged essays %i" % len(pred_tagged_essays_train))  
 cr_tags = get_cr_tags(train_tagged_essays=pred_tagged_essays_train, tag_essays_test=pred_tagged_essays_test)
 cv_folds = cross_validation(pred_tagged_essays_train, CV_FOLDS)  # type: List[Tuple[Any,Any]]
 
+NUM_JOBS = 3
+
 def evaluate_features(
         collection_prefix: str,
         folds: List[Tuple[Any, Any]],
@@ -86,7 +88,7 @@ def evaluate_features(
             new_folds.append((essays_TD, essays_VD))
         folds = new_folds  # type: List[Tuple[Any, Any]]
 
-    parallel_results = Parallel(n_jobs=len(folds))(
+    parallel_results = Parallel(n_jobs=NUM_JOBS)(
         delayed(model_train_predict)(essays_TD, essays_VD, extractor_fn_names_lst, cost_function_name, ngrams, stemmed,
                                      beta, max_epochs)
         for essays_TD, essays_VD in folds)
@@ -250,7 +252,7 @@ for ngrams in [1]:
 
         for cost_function_name in [micro_f1_cost_plusepsilon.__name__]:
 
-            for max_epochs in [1, 2, 3]:# , 5, 10, 15, 20]:
+            for max_epochs in [5, 10]:# , 5, 10, 15, 20]:
             # for max_epochs in [1, 2, 3, 5]:#, 10, 15, 20]:
 
                 for dual in [True, False]:
