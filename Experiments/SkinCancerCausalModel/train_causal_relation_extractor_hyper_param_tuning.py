@@ -248,7 +248,7 @@ project = {
     "_id": 1
 }
 feats_pipeline = [{ "$project": project }]
-collection = COLLECTION_PREFIX = "_VD"
+collection = COLLECTION_PREFIX  + "_VD"
 rows = [row for row in db[collection].aggregate(feats_pipeline)]
 param_hash = set()
 for r in rows:
@@ -298,6 +298,7 @@ for ngrams in [1]:
                                     params["beta"] = beta
                                     params["max_epochs"] = max_epochs
                                     if hash_params(params) in param_hash:
+                                        print("Skipping", max_epochs, dual, penalty, beta, C)
                                         continue
 
                                     logger.info(
