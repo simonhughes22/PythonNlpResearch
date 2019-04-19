@@ -236,6 +236,24 @@ all_cost_fn_names = get_function_names(all_cost_functions)
 
 best_f1 = -1
 
+def hash_params(params):
+    return "{algo}|{beta}|{max_epochs}".format(algo=params["algorithm"], beta=params["beta"], max_epochs=params["max_epochs"])
+
+import pymongo
+
+client = pymongo.MongoClient()
+db = client.metrics_causal_model
+project = {
+    "params": "$parameters",
+    "_id": 1
+}
+feats_pipeline = [{ "$project": project }]
+collection = COLLECTION_PREFIX = "_VD"
+rows = [row for row in db[collection].aggregate(feats_pipeline)]
+param_hash = set()
+for r in rows:
+    param_hash.add(hash_params(r["params"]))
+
 for ngrams in [1]:
 
     logger.info("*" * LINE_WIDTH)
@@ -274,6 +292,13 @@ for ngrams in [1]:
                                                                                    C=C,
                                                                                    penalty=penalty,
                                                                                    fit_intercept=fit_intercept)
+
+                                    params = {}
+                                    params["algorithm"] = str(BASE_LEARNER_FACT())
+                                    params["beta"] = beta
+                                    params["max_epochs"] = max_epochs
+                                    if hash_params(params) in param_hash:
+                                        continue
 
                                     logger.info(
                                         "\tEvaluating parameters: beta={beta} max_epochs={max_epochs} dual={dual}, C={C}, penalty={penalty}, fit_intercept={fit_intercept}".format(
