@@ -237,6 +237,24 @@ all_cost_fn_names = get_function_names(all_cost_functions)
 
 best_f1 = -1
 
+def hash_params(params):
+    return "{algo}|{beta}|{max_epochs}".format(algo=params["algorithm"], beta=params["beta"], max_epochs=params["max_epochs"])
+
+import pymongo
+
+client = pymongo.MongoClient()
+db = client.metrics_causal_model
+project = {
+    "params": "$parameters",
+    "_id": 1
+}
+feats_pipeline = [{ "$project": project }]
+collection = COLLECTION_PREFIX  + "_VD"
+rows = [row for row in db[collection].aggregate(feats_pipeline)]
+param_hash = set()
+for r in rows:
+    param_hash.add(hash_params(r["params"]))
+
 for ngrams in [1]:
 
     logger.info("*" * LINE_WIDTH)
@@ -252,21 +270,21 @@ for ngrams in [1]:
 
         for cost_function_name in [micro_f1_cost_plusepsilon.__name__]:
 
-            for max_epochs in [5, 10]:# , 5, 10, 15, 20]:
+            for max_epochs in [15, 20]:# , 5, 10, 15, 20]:
             # for max_epochs in [1, 2, 3, 5]:#, 10, 15, 20]:
 
                 for dual in [True, False]:
                     # for fit_intercept in [True, False]: # remove as non-optimal and to speed up
                     for fit_intercept in [True]:
 
-                        for penalty in ["l1", "l2"]:
+                        for penalty in ["l2"]:
                             # dual only support l2
                             if dual and penalty != "l2":
                                 continue
 
-                            for beta in [0.1, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0]:
+                            for beta in [0.1, 0.3, 0.5, 0.75, 1.0]:
 
-                                for C in [0.1, 0.5, 1.0, 10.0, 100.0]:
+                                for C in [0.1, 1.0]:
 
                                     best_extractor_names = ['single_words', 'between_word_features', 'label_set',
                                                                'three_words', 'third_order',
@@ -277,6 +295,14 @@ for ngrams in [1]:
                                                                                    C=C,
                                                                                    penalty=penalty,
                                                                                    fit_intercept=fit_intercept)
+
+                                    params = {}
+                                    params["algorithm"] = str(BASE_LEARNER_FACT())
+                                    params["beta"] = beta
+                                    params["max_epochs"] = max_epochs
+                                    if hash_params(params) in param_hash:
+                                        print("Skipping", max_epochs, dual, penalty, beta, C)
+                                        continue
 
                                     logger.info(
                                         "\tEvaluating parameters: beta={beta} max_epochs={max_epochs} dual={dual}, C={C}, penalty={penalty}, fit_intercept={fit_intercept}".format(
