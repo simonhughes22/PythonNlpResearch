@@ -227,7 +227,7 @@ pip-log.txt
 
 .idea/*
 
-MongoDb/journal/
+#MongoDb/journal/
 MongoDb/mongod.lock
 MongoDb/diagnostic.data/*
 
