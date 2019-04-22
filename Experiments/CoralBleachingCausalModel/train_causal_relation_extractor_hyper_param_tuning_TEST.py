@@ -27,10 +27,6 @@ from wordtagginghelper import merge_dictionaries
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
-# Mongo connection
-client = pymongo.MongoClient(host="127.0.0.1")
-db = client.metrics
-
 # Data Set Partition
 CV_FOLDS = 5
 MIN_FEAT_FREQ = 5
@@ -239,7 +235,7 @@ def hash_params(params):
 
 import pymongo
 
-client = pymongo.MongoClient()
+client = pymongo.MongoClient(host="127.0.0.1")
 db = client.metrics_causal_model
 project = {
     "params": "$parameters",
