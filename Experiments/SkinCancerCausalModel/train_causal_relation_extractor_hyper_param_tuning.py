@@ -15,16 +15,13 @@ from Settings import Settings
 from cost_functions import *
 from crel_helper import get_cr_tags
 from function_helpers import get_function_names, get_functions_by_name
-from load_data import load_process_essays
+from global_template_features import gbl_adjacent_sent_code_features, gbl_causal_features, \
+    gbl_concept_code_cnt_features, gbl_ratio_features, gbl_sentence_position_features
 from results_procesor import ResultsProcessor, __MICRO_F1__
 from searn_essay_parser import SearnModelEssayParser
-from searn_parser import SearnModelTemplateFeatures
 from template_feature_extractor import *
 from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
-from global_template_features import gbl_adjacent_sent_code_features, gbl_causal_features, \
-    gbl_concept_code_cnt_features, gbl_ratio_features, gbl_sentence_position_features
-
 
 # Logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -65,7 +62,7 @@ logger.info("Number of pred tagged essays %i" % len(pred_tagged_essays_train))  
 
 cr_tags = get_cr_tags(train_tagged_essays=pred_tagged_essays_train, tag_essays_test=pred_tagged_essays_test)
 cv_folds = cross_validation(pred_tagged_essays_train, CV_FOLDS)  # type: List[Tuple[Any,Any]]
-NUM_JOBs = 3
+NUM_JOBs = 5
 
 def evaluate_features(
         collection_prefix: str,
@@ -241,7 +238,7 @@ def hash_params(params):
 
 import pymongo
 
-client = pymongo.MongoClient()
+client = pymongo.MongoClient(host="127.0.0.1")
 db = client.metrics_causal_model
 project = {
     "params": "$parameters",
@@ -269,7 +266,7 @@ for ngrams in [1]:
 
         for cost_function_name in [micro_f1_cost_plusepsilon.__name__]:
 
-            for max_epochs in [5,10]:#, 5, 10, 15, 20]:
+            for max_epochs in [1, 3, 5, 10]:
 
                 for dual in [True, False]:
                     # for fit_intercept in [True, False]: # remove as non-optimal and to speed up
@@ -286,7 +283,7 @@ for ngrams in [1]:
 
                                     best_extractor_names = ['three_words', 'between_word_features', 'size_features',
                                                             'single_words',
-                                                            'gbl_concept_code_cnt_features']  # type: List[str] # type: List[str]
+                                                            'gbl_concept_code_cnt_features', 'gbl_causal_features']  # type: List[str] # type: List[str]
 
                                     BASE_LEARNER_FACT = lambda: LogisticRegression(dual=dual,
                                                                                    C=C,

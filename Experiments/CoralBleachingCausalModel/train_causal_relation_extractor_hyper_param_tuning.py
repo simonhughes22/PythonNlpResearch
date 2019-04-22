@@ -15,23 +15,20 @@ from Settings import Settings
 from cost_functions import *
 from crel_helper import get_cr_tags
 from function_helpers import get_function_names, get_functions_by_name
-from load_data import load_process_essays
+from global_template_features import gbl_adjacent_sent_code_features, gbl_causal_features, \
+    gbl_concept_code_cnt_features, gbl_ratio_features, gbl_sentence_position_features
 from results_procesor import ResultsProcessor, __MICRO_F1__
 from searn_essay_parser import SearnModelEssayParser
-from searn_parser import SearnModelTemplateFeatures
 from template_feature_extractor import *
 from window_based_tagger_config import get_config
 from wordtagginghelper import merge_dictionaries
-from global_template_features import gbl_adjacent_sent_code_features, gbl_causal_features, \
-    gbl_concept_code_cnt_features, gbl_ratio_features, gbl_sentence_position_features
-
 
 # Logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 logger = logging.getLogger()
 
 # Mongo connection
-client = pymongo.MongoClient()
+client = pymongo.MongoClient(host="127.0.0.1")
 db = client.metrics
 
 # Data Set Partition
