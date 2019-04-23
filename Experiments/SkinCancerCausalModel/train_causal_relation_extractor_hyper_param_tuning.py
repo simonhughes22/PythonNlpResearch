@@ -272,14 +272,14 @@ for ngrams in [1]:
                     # for fit_intercept in [True, False]: # remove as non-optimal and to speed up
                     for fit_intercept in [True]:
 
-                        for penalty in ["l1", "l2"]:
+                        for penalty in ["l2"]:
                             # dual only support l2
                             if dual and penalty != "l2":
                                 continue
 
-                            for beta in [0.1, 0.2, 0.3, 0.4, 0.5, 0.75, 1.0]:
+                            for beta in [0.2, 0.3, 0.5, 0.75, 1.0]:
 
-                                for C in [0.1, 0.5, 1.0, 10.0, 100.0]:
+                                for C in [0.1, 0.5, 1.0]:
 
                                     best_extractor_names = ['three_words', 'between_word_features', 'size_features',
                                                             'single_words',
