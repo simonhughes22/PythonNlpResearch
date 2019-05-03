@@ -60,7 +60,7 @@ logger.info("Started at: " + str(datetime.datetime.now()))
 logger.info("Number of pred tagged essays %i" % len(pred_tagged_essays_train))  # should be 902
 
 cr_tags = get_cr_tags(train_tagged_essays=pred_tagged_essays_train, tag_essays_test=pred_tagged_essays_test)
-cv_folds = cross_validation(pred_tagged_essays_train, CV_FOLDS)  # type: List[Tuple[Any,Any]]
+cv_folds  = [(pred_tagged_essays_train, pred_tagged_essays_test)]  # type: List[Tuple[Any,Any]]
 
 def evaluate_model(
         collection_prefix: str,
@@ -186,7 +186,7 @@ LINE_WIDTH = 80
 # other settings
 DOWN_SAMPLE_RATE = 1.0  # For faster smoke testing the algorithm
 BASE_LEARNER_FACT = None
-COLLECTION_PREFIX = "SENT_CR_SC_SHIFT_REDUCE_PARSER_TEMPLATED_HYPER_PARAM"
+COLLECTION_PREFIX = "SENT_TEST_CR_SC_SHIFT_REDUCE_PARSER_TEMPLATED_HYPER_PARAM"
 
 # some of the other extractors aren't functional if the system isn't able to do a basic parse
 # so the base extractors are the MVP for getting to a basic parser, then additional 'meta' parse
