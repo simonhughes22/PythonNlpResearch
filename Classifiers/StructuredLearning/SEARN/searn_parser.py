@@ -70,6 +70,18 @@ class SearnModelTemplateFeatures(object):
                 self.add_cr_labels(unique_cr_tags, ys_bytag_sent)
         return ys_bytag_sent
 
+    def get_label_data_essay_level(self, tagged_essays):
+        # outputs
+        ys_bytag_essay = defaultdict(list)
+
+        for essay in tagged_essays:
+            unique_cr_tags = set()
+            for sentence in essay.sentences:
+                for word, tags in sentence:
+                    unique_cr_tags.update(self.cr_tags.intersection(tags))
+            self.add_cr_labels(unique_cr_tags, ys_bytag_essay)
+        return ys_bytag_essay
+
     def predict(self, tagged_essays):
 
         pred_ys_by_sent = defaultdict(list)
@@ -80,6 +92,18 @@ class SearnModelTemplateFeatures(object):
                 # Store predictions for evaluation
                 self.add_cr_labels(pred_relations, pred_ys_by_sent)
         return pred_ys_by_sent
+
+    def predict_essay_level(self, tagged_essays):
+        pred_ys_by_essay = defaultdict(list)
+        for essay_ix, essay in enumerate(tagged_essays):
+            p_crels = set()
+            for sent_ix, taggged_sentence in enumerate(essay.sentences):
+                predicted_tags = essay.pred_tagged_sentences[sent_ix]
+                pred_relations = self.predict_sentence(taggged_sentence, predicted_tags)
+                p_crels.update(pred_relations)
+                # Store predictions for evaluation
+            self.add_cr_labels(p_crels, pred_ys_by_essay)
+        return pred_ys_by_essay
 
     def train(self, tagged_essays, max_epochs):
 
