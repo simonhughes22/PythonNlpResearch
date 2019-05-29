@@ -7,7 +7,8 @@ import numpy as np
 from StructuredLearning.SEARN.stack import Stack
 from oracle import Oracle
 from searn_essay_parser import SearnModelEssayParser
-from shift_reduce_helper import *
+from shift_reduce_helper import \
+    SENT, ROOT, SHIFT, SKIP, REJECT, LARC, RARC, CAUSE_AND_EFFECT, EFFECT_CAUSE, CAUSE_EFFECT, denormalize_cr, allowed_action
 from shift_reduce_parser import ShiftReduceParser
 
 
@@ -213,6 +214,7 @@ class SearnModelEssayParserBreadthFirst(SearnModelEssayParser):
 
         action_probabilities = self.predict_parse_action_probabilities(feats=feats,
                                            tos=tos_tag,
+                                           buffer=buffer_tag,
                                            models=self.parser_models[-1],
                                            vectorizer=self.parser_feature_vectorizers[-1])
 
@@ -284,12 +286,15 @@ class SearnModelEssayParserBreadthFirst(SearnModelEssayParser):
         # needs to be a tuple
         return Oracle([], parser)
 
-    def predict_parse_action_probabilities(self, feats, tos, models, vectorizer):
+    def predict_parse_action_probabilities(self, feats, tos, buffer, models, vectorizer):
 
         xs = vectorizer.transform(feats)
         prob_by_label = {}
         for action in self.randomize_actions():
             if not allowed_action(action, tos):
+                continue
+
+            if (tos == SENT or buffer == SENT) and action != SKIP:
                 continue
 
             prob_by_label[action] = models[action].predict_proba(xs)[0][-1]

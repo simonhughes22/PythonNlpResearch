@@ -11,8 +11,10 @@ from shift_reduce_helper import *
 from shift_reduce_parser import ShiftReduceParser
 from weighted_examples import WeightedExamples
 
+import shift_reduce_helper
+
 class SearnModelEssayParser(object):
-    SENT = "<SENT>"
+    SENT = shift_reduce_helper.SENT
 
     def __init__(self, ngram_extractor, feature_extractor, cost_function, min_feature_freq, cr_tags, base_learner_fact,
                  beta=0.2, positive_val=1, sparse=True, log_fn=lambda s: print(s)):

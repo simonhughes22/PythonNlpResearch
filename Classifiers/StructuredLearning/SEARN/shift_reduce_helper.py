@@ -1,7 +1,10 @@
 EMPTY_TAG = "Empty"
 
+# Special tags
 ROOT = "root"
+SENT = "<SENT>"
 
+# Actions
 SHIFT = "Shift"
 REDUCE = "Reduce"
 LARC = "LArc"

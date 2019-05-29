@@ -4,13 +4,13 @@ from collections import defaultdict
 from typing import Dict, Tuple, Set, List
 
 from searn_essay_parser import SearnModelEssayParser
-
 from shift_reduce_parser import ROOT
+from shift_reduce_helper import SENT
 
 MAX_BUFFER = 999999
 ARROW = "->"
 ALL = "ALL"
-SKIP_CODES = {ROOT, SearnModelEssayParser.SENT, None, ALL}
+SKIP_CODES = {ROOT, SENT, None, ALL}
 
 def gbl_concept_code_cnt_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
                                   tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
@@ -54,7 +54,7 @@ def gbl_adjacent_sent_code_features(stack_tags: List[Tuple[str, int]], buffer_ta
             tos_ix = i
         if tpl == buffer:
             buffer_ix = i
-        if tpl[0] == SearnModelEssayParser.SENT:
+        if tpl[0] == SENT:
             ix = tpl[1]
             if tos_ix == -1:
                 prev_sent_ixs.append(ix)
@@ -123,7 +123,7 @@ def gbl_sentence_position_features(stack_tags: List[Tuple[str, int]], buffer_tag
 
     sents_between = 0
     for word in between_word_seq:
-        if word.lower() == SearnModelEssayParser.SENT.lower():
+        if word.lower() == SENT.lower():
             sents_between += 1
 
     # How many sentences between the TOS and buffer?
