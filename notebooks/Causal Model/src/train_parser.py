@@ -76,7 +76,7 @@ def predict_essay_level(parser, essays, set_cr_tags):
     return pred_ys_by_sent
 
 def train_sr_parser(essays_TD, essays_VD, extractor_names, all_extractor_fns, ngrams, stemmed, beta, max_epochs, set_cr_tags,
-                    min_feat_freq, cr_tags, base_learner_fact):
+                    min_feat_freq, cr_tags, base_learner_fact, model):
     extractors = get_functions_by_name(extractor_names, all_extractor_fns)
     # get single cost function
     cost_fn = micro_f1_cost_plusepsilon
@@ -88,7 +88,7 @@ def train_sr_parser(essays_TD, essays_VD, extractor_names, all_extractor_fns, ng
         ngram_extractor = NgramExtractorStemmed(max_ngram_len=ngrams)
     else:
         ngram_extractor = NgramExtractor(max_ngram_len=ngrams)
-    parse_model = SearnModelBreadthFirst(feature_extractor=template_feature_extractor,
+    parse_model = model(feature_extractor=template_feature_extractor,
                                          cost_function=cost_fn,
                                          min_feature_freq=min_feat_freq,
                                          ngram_extractor=ngram_extractor, cr_tags=cr_tags,

@@ -1,10 +1,14 @@
 from collections import defaultdict
 import pandas as pd
-from typing import List, Tuple, Any, Set
+from typing import List, Tuple, Any, Set, Union
 
 from results_procesor import ResultsProcessor
 from train_parser import train_sr_parser
 from wordtagginghelper import merge_dictionaries
+
+from searn_essay_parser import SearnModelEssayParser
+from searn_essay_parser_breadth_first import SearnModelEssayParserBreadthFirst
+from searn_parser import SearnModelTemplateFeatures
 
 def metrics_to_df(metrics):
     import Rpfa
@@ -35,7 +39,11 @@ def evaluate_model_essay_level(
         min_feat_freq:int,
         cr_tags: Set[str],
         base_learner_fact: Any,
-        down_sample_rate=1.0)-> Tuple[Any]:
+        down_sample_rate=1.0, model: Union[
+            SearnModelTemplateFeatures, SearnModelEssayParser, SearnModelEssayParserBreadthFirst] = None)-> Tuple[Any]:
+
+    if not model:
+        model = SearnModelEssayParser
 
     if down_sample_rate < 1.0:
         new_folds = []  # type: List[Tuple[Any, Any]]
@@ -47,7 +55,7 @@ def evaluate_model_essay_level(
 
     serial_results = [
         train_sr_parser(essays_TD, essays_VD, extractor_fn_names_lst, all_extractor_fns, ngrams, stemmed, beta,
-                        max_epochs, cr_tags, min_feat_freq, cr_tags, base_learner_fact)
+                        max_epochs, cr_tags, min_feat_freq, cr_tags, base_learner_fact, model)
         for essays_TD, essays_VD in folds
     ]
 
