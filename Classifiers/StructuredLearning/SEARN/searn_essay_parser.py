@@ -59,7 +59,7 @@ class SearnModelEssayParser(object):
 
         all_tagged_sents = []
         for essay_ix, essay in enumerate(tagged_essays):
-            flat_tagged_sent, flat_pred_tags = self.__flatten_essay_(essay)
+            flat_tagged_sent, flat_pred_tags = self.flatten_essay(essay)
             all_tagged_sents.append(flat_tagged_sent)
 
         # outputs
@@ -75,13 +75,13 @@ class SearnModelEssayParser(object):
 
         pred_ys_by_sent = defaultdict(list)
         for essay_ix, essay in enumerate(tagged_essays):
-            tagged_sentence, predicted_tags = self.__flatten_essay_(essay)
+            tagged_sentence, predicted_tags = self.flatten_essay(essay)
             pred_relations = self.predict_sentence(tagged_sentence, predicted_tags)
             # Store predictions for evaluation
             self.add_cr_labels(pred_relations, pred_ys_by_sent)
         return pred_ys_by_sent
 
-    def __flatten_essay_(self, essay):
+    def flatten_essay(self, essay):
         flat_tagged_sent = []
         flat_pred_tags = []
         for sent_ix, taggged_sentence in enumerate(essay.sentences):
@@ -97,7 +97,7 @@ class SearnModelEssayParser(object):
 
         essay2collapsed = dict()
         for essay_ix, essay in enumerate(tagged_essays):
-            essay2collapsed[essay.name] = self.__flatten_essay_(essay)
+            essay2collapsed[essay.name] = self.flatten_essay(essay)
 
         for i in range(0, max_epochs):
             self.epoch += 1

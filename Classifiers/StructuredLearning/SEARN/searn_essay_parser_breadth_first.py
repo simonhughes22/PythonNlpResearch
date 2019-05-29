@@ -126,7 +126,7 @@ class SearnModelEssayParserBreadthFirst(SearnModelEssayParser):
 
     def generate_all_potential_parses_for_essay(self, tagged_essay, top_n,
                                                    search_mode_max_prob=False):
-        tagged_sentence, predicted_tags = self.__flatten_essay_(tagged_essay)
+        tagged_sentence, predicted_tags = self.flatten_essay(tagged_essay)
         return self.generate_all_potential_parses_for_sentence(tagged_sentence, predicted_tags, top_n, search_mode_max_prob)
 
     def generate_all_potential_parses_for_sentence(self, tagged_sentence, predicted_tags, top_n, search_mode_max_prob=False):
