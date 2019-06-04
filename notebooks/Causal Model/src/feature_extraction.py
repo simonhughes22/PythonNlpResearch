@@ -1,6 +1,6 @@
 from collections import defaultdict
 from itertools import combinations
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from build_chains import build_chains, extend_chains, get_distinct_chains
 from parse_generator import get_all_combos, get_max_probs
@@ -29,7 +29,7 @@ def filter_by_min_freq(xs, feat_freq, min_freq):
 def to_short_tag(tag):
     return tag.replace("Causer:","").replace("Result:", "")
 
-def extract_features_from_parse(parse: List[str], crel2probs: Dict[str, List[float]] ):
+def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[float]] ):
     feats = defaultdict(float)
     tree = defaultdict(set)  # maps causers to effects for building chains
     max_probs = []
@@ -198,19 +198,19 @@ def get_features_essay_level(essay2parses, name2crels, min_feat_freq=1):
         #TODO - figure out the optimum parse probs to use
         #TODO - we want to include the cum prob from the parse action result as a feature
             # - how to compute this for the optimal parse?
-        
+
         opt_parse = tuple(sorted(act_crels.intersection(all_predicted_crels.keys())))
 
         # constrain optimal parse to only those crels that are predicted
         # This is because often the parser won't produce the optimal parse (ground truth) in the set of generated parses
         # So here the target is to learn the best match from the set of generated parses
 
-        x = ParserInputsEssayLevel(essay_name=ename, opt_parse=opt_parse, all_parses=all_parses, crel2probs=dict_parses)
+        x = ParserInputsEssayLevel(essay_name=ename, opt_parse_dict=opt_parse, all_parses=all_parses, dict_parses=dict_parses)
         xs.append(x)
 
         # Get unique features for essay
         all_feats = set()
-        for fts in x.all_feats_array:
+        for fts in x.__all_feats_array__:
             all_feats.update(fts.keys())
 
         for ft in all_feats:
