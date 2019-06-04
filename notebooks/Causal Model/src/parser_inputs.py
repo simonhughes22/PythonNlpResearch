@@ -2,7 +2,6 @@ from collections import defaultdict
 from typing import Tuple, List, Dict
 
 from costs import compute_costs
-from feature_extraction import extract_features_from_parse
 
 def copy_dflt_dict(d):
     copy = defaultdict(d.default_factory)
@@ -11,6 +10,9 @@ def copy_dflt_dict(d):
 
 class ParserInputs(object):
     def __init__(self, essay_name, opt_parse, all_parses, crel2probs, compute_feats=True):
+        # placing here as a cyclic dependency with feature_extraction file, so loading only at run time
+        from feature_extraction import extract_features_from_parse
+
         self.essay_name = essay_name
         self.opt_parse = opt_parse
         self.crel2probs = crel2probs
@@ -61,6 +63,9 @@ class ParserInputsEssayLevel(object):
     def __init__(self, essay_name: str, opt_parse_dict: Dict[str, List[float]],
                  all_parses: List[Dict[str, List[float]]], compute_feats : bool = True):
 
+        # placing here as a cyclic dependency with feature_extraction file, so loading only at run time
+        from feature_extraction import extract_features_from_parse
+
         self.essay_name = essay_name
         self.__opt_parse__ = dict2parse(opt_parse_dict)
         self.__dict_parses__ = list(all_parses)
@@ -73,7 +78,7 @@ class ParserInputsEssayLevel(object):
             other_feats_array = []
             all_feats_array = []
             for p in all_parses:
-                feats = extract_features_from_parse(p, dict_parses)
+                feats = extract_features_from_parse(dict2parse(p), p)
                 all_feats_array.append(feats)
                 if p != opt_parse_dict:
                     other_parses.append(p)
