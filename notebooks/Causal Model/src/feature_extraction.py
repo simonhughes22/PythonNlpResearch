@@ -1,6 +1,6 @@
 from collections import defaultdict
 from itertools import combinations
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Set, Union
 
 from build_chains import build_chains, extend_chains, get_distinct_chains
 from parse_generator import get_all_combos, get_max_probs
@@ -16,7 +16,8 @@ def to_freq_feats(feats, freq_feats):
             new_feats[f] = v
     return new_feats
 
-def filter_by_min_freq(xs, feat_freq, min_freq):
+def filter_by_min_freq(xs: List[Union[ParserInputs, ParserInputsEssayLevel]],
+                       feat_freq: Dict[str, int], min_freq: int)->List[Union[ParserInputs, ParserInputsEssayLevel]]:
     if min_freq <= 1:
         return xs
     freq_feats = set((f for f, cnt in feat_freq.items() if cnt >= min_freq))
@@ -26,7 +27,7 @@ def filter_by_min_freq(xs, feat_freq, min_freq):
                                              for x in parser_input.other_features_array]
     return xs
 
-def to_short_tag(tag):
+def to_short_tag(tag: str)->str:
     return tag.replace("Causer:","").replace("Result:", "")
 
 def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[float]] )->Dict[str,float]:
@@ -129,16 +130,19 @@ def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[fl
         feats["Prob-geo-mean"] = np.prod(max_probs) ** (1 / len(max_probs))
     return feats
 
-def get_crels_above(crel2maxprob, threshold):
+def get_crels_above(crel2maxprob: Dict[str, float], threshold: float)->List[str]:
     return [k for k, p in crel2maxprob.items() if p >= threshold]
 
-def get_features_from_probabilities(essay2probs, name2crels, top_n, min_feat_freq=1, min_prob=0.0):
+def get_features_from_probabilities(essay2probs: Dict[str, Dict[str, List[float]]],
+                                    name2crels: Dict[str, Set], top_n: int,
+                                    min_feat_freq:int =1, min_prob:float = 0.0)->List[ParserInputs]:
     xs = []
     feat_freq = defaultdict(int)
 
     for ename, crel2probs in essay2probs.items():
 
         act_crels = name2crels[ename]
+        # used so we can do some sampling below to generate different parses
         crel2maxprob = get_max_probs(crel2probs)
         crel2probs = dict(crel2probs)
 
@@ -177,35 +181,34 @@ def get_features_from_probabilities(essay2probs, name2crels, top_n, min_feat_fre
     assert len(xs) == len(essay2probs), "Parses for all essays should be generated"
     return filter_by_min_freq(xs, feat_freq, min_feat_freq)
 
-def get_features_essay_level(essay2parses, name2crels, min_feat_freq=1):
+def get_features_essay_level(essay2parses: Dict[str, List[Dict[str, List[float]]]],
+                             name2crels: Dict[str, Set], min_feat_freq:int =1)->List[ParserInputsEssayLevel]:
     xs = []
     feat_freq = defaultdict(int)
 
-    def dict2parse(crel2maxprobs):
-        return  [()] + [tuple(sorted(crel2maxprobs.keys()))]
-
-    for ename, dict_parses in essay2parses.items():
+    for ename, all_parse_dict in essay2parses.items():
 
         act_crels = name2crels[ename]
+
+        # for computing the optimal parse
         all_predicted_crels = set()
-        all_parses = []
-        for p in dict_parses:
-            crel2maxprob = get_max_probs(p)
-            parse = dict2parse(crel2maxprob)
-            all_parses.append(parse)
-            all_predicted_crels.update(p.keys())
+        for parse_dict in all_parse_dict: # type: Dict[str, List[float]]
+            crel2maxprob = get_max_probs(parse_dict)
+            all_predicted_crels.update(parse_dict.keys())
 
         #TODO - figure out the optimum parse probs to use
         #TODO - we want to include the cum prob from the parse action result as a feature
             # - how to compute this for the optimal parse?
 
         opt_parse = tuple(sorted(act_crels.intersection(all_predicted_crels.keys())))
+        #TODO
+        opt_parse_dict = dict()
 
         # constrain optimal parse to only those crels that are predicted
         # This is because often the parser won't produce the optimal parse (ground truth) in the set of generated parses
         # So here the target is to learn the best match from the set of generated parses
 
-        x = ParserInputsEssayLevel(essay_name=ename, opt_parse_dict=opt_parse, all_parse_dict=all_parses, dict_parses=dict_parses)
+        x = ParserInputsEssayLevel(essay_name=ename, opt_parse_dict=opt_parse_dict, all_parse_dict=all_parse_dict)
         xs.append(x)
 
         # Get unique features for essay

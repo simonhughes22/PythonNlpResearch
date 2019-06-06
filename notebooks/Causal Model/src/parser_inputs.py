@@ -111,7 +111,6 @@ class ParserInputsEssayLevel(object):
         c = ParserInputsEssayLevel(essay_name=self.essay_name, opt_parse_dict=self.__opt_parse_dict__,
                                    all_parse_dict=self.__all_parse_dict__, compute_feats=False)
 
-        c.opt_parse = tuple(self.opt_parse)
         c.other_parses = list(self.other_parses)
         c.other_costs_array = list(self.other_costs_array)
         return c
@@ -123,7 +122,6 @@ class ParserInputsEssayLevel(object):
         c.all_feats_array = [copy_dflt_dict(f) for f in self.all_feats_array]
         c.opt_features = copy_dflt_dict(self.opt_features)
 
-        c.opt_parse = tuple(self.opt_parse)
         c.other_parses = list(self.other_parses)
         c.other_features_array = [copy_dflt_dict(f) for f in self.other_features_array]
         c.other_costs_array = list(self.other_costs_array)
