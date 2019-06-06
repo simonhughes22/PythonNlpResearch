@@ -29,7 +29,7 @@ def filter_by_min_freq(xs, feat_freq, min_freq):
 def to_short_tag(tag):
     return tag.replace("Causer:","").replace("Result:", "")
 
-def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[float]] ):
+def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[float]] )->Dict[str,float]:
     feats = defaultdict(float)
     tree = defaultdict(set)  # maps causers to effects for building chains
     max_probs = []
@@ -205,12 +205,12 @@ def get_features_essay_level(essay2parses, name2crels, min_feat_freq=1):
         # This is because often the parser won't produce the optimal parse (ground truth) in the set of generated parses
         # So here the target is to learn the best match from the set of generated parses
 
-        x = ParserInputsEssayLevel(essay_name=ename, opt_parse_dict=opt_parse, all_parses=all_parses, dict_parses=dict_parses)
+        x = ParserInputsEssayLevel(essay_name=ename, opt_parse_dict=opt_parse, all_parse_dict=all_parses, dict_parses=dict_parses)
         xs.append(x)
 
         # Get unique features for essay
         all_feats = set()
-        for fts in x.__all_feats_array__:
+        for fts in x.all_feats_array:
             all_feats.update(fts.keys())
 
         for ft in all_feats:
