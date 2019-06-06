@@ -134,7 +134,7 @@ def get_crels_above(crel2maxprob: Dict[str, float], threshold: float)->List[str]
     return [k for k, p in crel2maxprob.items() if p >= threshold]
 
 def get_features_from_probabilities(essay2probs: Dict[str, Dict[str, List[float]]],
-                                    name2crels: Dict[str, Set], top_n: int,
+                                    name2crels: Dict[str, Set[str]], top_n: int,
                                     min_feat_freq:int =1, min_prob:float = 0.0)->List[ParserInputs]:
     xs = []
     feat_freq = defaultdict(int)
@@ -181,34 +181,49 @@ def get_features_from_probabilities(essay2probs: Dict[str, Dict[str, List[float]
     assert len(xs) == len(essay2probs), "Parses for all essays should be generated"
     return filter_by_min_freq(xs, feat_freq, min_feat_freq)
 
+def dict2parse(dct: Dict[str, List[float]])->Tuple[str]:
+    return tuple(sorted(dct.keys())) # type: Tuple[str]
+
 def get_features_essay_level(essay2parses: Dict[str, List[Dict[str, List[float]]]],
-                             name2crels: Dict[str, Set], min_feat_freq:int =1)->List[ParserInputsEssayLevel]:
+                             name2crels: Dict[str, Set[str]], min_feat_freq:int =1)->List[ParserInputsEssayLevel]:
     xs = []
     feat_freq = defaultdict(int)
 
     for ename, all_parse_dict in essay2parses.items():
 
-        act_crels = name2crels[ename]
+        act_crels = name2crels[ename]           # type: Set[str]
 
         # for computing the optimal parse
-        all_predicted_crels = set()
-        for parse_dict in all_parse_dict: # type: Dict[str, List[float]]
-            crel2maxprob = get_max_probs(parse_dict)
-            all_predicted_crels.update(parse_dict.keys())
+        all_parses = []                         # type: List[Tuple[str]]
 
-        #TODO - figure out the optimum parse probs to use
+        min_cost = 999999
+        opt_parse = None
+        opt_parse_dict = None
+        for parse_dict in all_parse_dict:       # type: Dict[str, List[float]]
+
+            parse_tuple = dict2parse(parse_dict) # type: Tuple[str]
+            all_parses.append(parse_tuple)
+            set_parse = set(parse_tuple)         # type: Set[str]
+
+            fp = set_parse - act_crels
+            fn = act_crels - set_parse
+            cost = len(fp) + len(fn)  # type: int
+            if cost < min_cost:
+                min_cost = cost
+                opt_parse_dict = parse_dict
+                opt_parse = parse_tuple
+
+        assert opt_parse is not None
+
         #TODO - we want to include the cum prob from the parse action result as a feature
             # - how to compute this for the optimal parse?
-
-        opt_parse = tuple(sorted(act_crels.intersection(all_predicted_crels.keys())))
-        #TODO
-        opt_parse_dict = dict()
 
         # constrain optimal parse to only those crels that are predicted
         # This is because often the parser won't produce the optimal parse (ground truth) in the set of generated parses
         # So here the target is to learn the best match from the set of generated parses
 
-        x = ParserInputsEssayLevel(essay_name=ename, opt_parse_dict=opt_parse_dict, all_parse_dict=all_parse_dict)
+        x = ParserInputsEssayLevel(essay_name=ename, opt_parse=opt_parse, opt_parse_dict=opt_parse_dict,
+                                   all_parses=all_parses, all_parses_dict=all_parse_dict)
         xs.append(x)
 
         # Get unique features for essay

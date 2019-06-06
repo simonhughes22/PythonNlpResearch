@@ -56,34 +56,32 @@ class ParserInputs(object):
         c.other_costs_array = list(self.other_costs_array)
         return c
 
-def dict2parse(dct: Dict[str, List[float]])->Tuple[str]:
-    return tuple(sorted(dct.keys())) # type: Tuple[str]
-
 class ParserInputsEssayLevel(object):
-    def __init__(self, essay_name: str, opt_parse_dict: Dict[str, List[float]],
-                 all_parse_dict: List[Dict[str, List[float]]], compute_feats : bool = True):
+    def __init__(self, essay_name: str,
+                 opt_parse: Tuple[str], opt_parse_dict: Dict[str, List[float]],
+                 all_parses: List[Tuple[str]], all_parses_dict: List[Dict[str, List[float]]],
+                 compute_feats : bool = True):
 
         # placing here as a cyclic dependency with feature_extraction file, so loading only at run time
         from feature_extraction import extract_features_from_parse
 
         self.essay_name = essay_name
-        self.opt_parse  = dict2parse(opt_parse_dict)    # type: Tuple[str]
+        self.opt_parse  = opt_parse
+        self.all_parses = all_parses
+
+        assert len(all_parses) == len(all_parses_dict)
 
         # needed for cloning
         self.__opt_parse_dict__ = opt_parse_dict
-        self.__all_parse_dict__ = list(all_parse_dict)  # type: List[Dict[str, List[float]]]
+        self.__all_parses_dict__ = list(all_parses_dict)  # type: List[Dict[str, List[float]]]
 
-        all_parses = []                                 # type: List[Tuple[str]]
         if compute_feats:
 
             other_parses = []                           # type: List[Tuple[str]]
             other_feats_array = []                      # type: List[Dict[str,float]]
             all_feats_array = []                        # type: List[Dict[str,float]]
 
-            for parse_dict in self.__all_parse_dict__:
-
-                parse_tuple = dict2parse(parse_dict)    # type: Tuple[str]
-                all_parses.append(parse_tuple)
+            for parse_tuple, parse_dict in zip(all_parses, self.__all_parses_dict__):
 
                 feats = extract_features_from_parse(parse_tuple, parse_dict) # type: Dict[str,float]
                 all_feats_array.append(feats)
@@ -105,24 +103,26 @@ class ParserInputsEssayLevel(object):
             # Public
             self.other_costs_array = compute_costs(self)
 
-        self.all_parses = all_parses
-
     def clone_without_feats(self):
-        c = ParserInputsEssayLevel(essay_name=self.essay_name, opt_parse_dict=self.__opt_parse_dict__,
-                                   all_parse_dict=self.__all_parse_dict__, compute_feats=False)
+        c = ParserInputsEssayLevel(essay_name=self.essay_name,
+                                   opt_parse=self.opt_parse, opt_parse_dict=self.__opt_parse_dict__,
+                                   all_parses=self.all_parses, all_parses_dict=self.__all_parses_dict__,
+                                   compute_feats=False)
 
         c.other_parses = list(self.other_parses)
         c.other_costs_array = list(self.other_costs_array)
         return c
 
     def clone(self):
-        c = ParserInputsEssayLevel(essay_name=self.essay_name, opt_parse_dict=self.__opt_parse_dict__,
-                                   all_parse_dict=self.__all_parse_dict__, compute_feats=False)
+        c = ParserInputsEssayLevel(essay_name=self.essay_name,
+                                   opt_parse=self.opt_parse, opt_parse_dict=self.__opt_parse_dict__,
+                                   all_parses=self.all_parses, all_parses_dict=self.__all_parses_dict__,
+                                   compute_feats=False)
 
-        c.all_feats_array = [copy_dflt_dict(f) for f in self.all_feats_array]
         c.opt_features = copy_dflt_dict(self.opt_features)
+        c.all_feats_array = [copy_dflt_dict(f) for f in self.all_feats_array]
+        c.other_features_array = [copy_dflt_dict(f) for f in self.other_features_array]
 
         c.other_parses = list(self.other_parses)
-        c.other_features_array = [copy_dflt_dict(f) for f in self.other_features_array]
         c.other_costs_array = list(self.other_costs_array)
         return c
