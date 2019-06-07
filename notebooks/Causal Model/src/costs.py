@@ -1,8 +1,6 @@
-from typing import List, Union
+from typing import List
 
-from parser_inputs import ParserInputs, ParserInputsEssayLevel
-
-def compute_costs(parser_input: Union[ParserInputs, ParserInputsEssayLevel])->List[int]:
+def compute_costs(parser_input)->List[int]:
     opt_parse = parser_input.opt_parse
     other_parses = parser_input.other_parses
 
