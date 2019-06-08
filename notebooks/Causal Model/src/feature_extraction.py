@@ -3,11 +3,21 @@ from itertools import combinations
 from typing import List, Dict, Tuple, Set, Union
 
 from build_chains import build_chains, extend_chains, get_distinct_chains
+from causal_model_features import build_cb_causal_model, build_sc_causal_model, distance_between
 from parse_generator import get_all_combos, get_max_probs
 from parser_inputs import ParserInputs, ParserInputsEssayLevel
 from sample_parses import get_top_parses
 
 import numpy as np
+
+# construct Causal Models
+CM_MDL = build_cb_causal_model()
+SC_MDL = build_sc_causal_model()
+
+TERMINAL = "50"
+cb_mdl = build_cb_causal_model()
+sc_mdl = build_sc_causal_model()
+
 
 def to_freq_feats(feats, freq_feats):
     new_feats = defaultdict(float)
@@ -30,14 +40,7 @@ def filter_by_min_freq(xs: List[Union[ParserInputs, ParserInputsEssayLevel]],
 def to_short_tag(tag: str)->str:
     return tag.replace("Causer:","").replace("Result:", "")
 
-def to_numeric_tag(tag: str)->int:
-    nums = ""
-    for c in tag:
-        if c.isdigit():
-            nums += c
-    return int(nums)
-
-def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[float]] )->Dict[str,float]:
+def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[float]], causal_model: Dict[str,str])->Dict[str,float]:
     feats = defaultdict(float)
     tree = defaultdict(set)  # maps causers to effects for building chains
     max_probs = []
@@ -51,6 +54,7 @@ def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[fl
 
     # differences inbetween codes
     num_adjacent = 0
+    num_crossing_crels = 0 # crels crossing chains - not reachable
     abs_diffs = []
     distinct_codes = set()
 
@@ -73,16 +77,20 @@ def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[fl
         distinct_codes.add(l_short)
         distinct_codes.add(r_short)
 
-        l_num, r_num = to_numeric_tag(l_short), to_numeric_tag(r_short)
         # numeric difference between codes
-        abs_difference = abs(l_num-r_num)
-        if abs_difference == 1:
-            num_adjacent += 1
-        abs_diffs.append(abs_difference)
+        abs_difference = distance_between(l_short, r_short, causal_model)
+        if abs_difference == -1:
+            num_crossing_crels += 1
+        else:
+            abs_diffs.append(abs_difference)
 
-        # Forward relations
-        if l_num < r_num:
-            num_fwd += 1
+            if abs_difference == 1:
+                num_adjacent += 1
+
+            # Forward relations
+            if l_num < r_num:
+                num_fwd += 1
+
         # Equal to
         if l_short == r_short:
             num_equal += 1
@@ -103,7 +111,7 @@ def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[fl
     if inverted_count:
         feats["Inv-inverted"] = 1
         feats["Inv-num_inverted"] = inverted_count
-        feats["Inv-propm_inverted"] = inverted_count / num_crels
+        feats["Inv-propn_inverted"] = inverted_count / num_crels
     else:
         feats["Inv-not_inverted"] = 1
 
@@ -125,11 +133,11 @@ def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[fl
 
     feats["num_crels"] = num_crels
     feats["num_crels=" + str(len(parse))] = 1  # includes a tag for the empty parse
-    for i in range(1, 11):
-        if num_crels <= i:
-            feats["num_crels<={i}".format(i=i)] = 1
-        else:
-            feats["num_crels>{i}".format(i=i)] = 1
+    # for i in range(1, 11):
+    #     if num_crels <= i:
+    #         feats["num_crels<={i}".format(i=i)] = 1
+    #     else:
+    #         feats["num_crels>{i}".format(i=i)] = 1
 
     # combination of crels
     # need to sort so that order of a and b is consistent across parses
@@ -149,11 +157,11 @@ def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[fl
     distinct_chains = get_distinct_chains(chains)
     num_distinct = len(distinct_chains)
     feats["CChainStats-num_distinct_chains=" + str(num_distinct)] = 1
-    for i in range(6):
-        if num_distinct <= i:
-            feats["CChainStats-num_distinct_chains <=" + str(i)] = 1
-        else:
-            feats["CChainStats-num_distinct_chains > " + str(i)] = 1
+    # for i in range(6):
+    #     if num_distinct <= i:
+    #         feats["CChainStats-num_distinct_chains <=" + str(i)] = 1
+    #     else:
+    #         feats["CChainStats-num_distinct_chains > " + str(i)] = 1
 
     if num_distinct > 0:
         feats["CChainStats-crels_per_distinct_chain"] = num_crels / num_distinct
