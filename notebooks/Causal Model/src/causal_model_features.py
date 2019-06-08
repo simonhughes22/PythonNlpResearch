@@ -1,5 +1,14 @@
 from typing import Dict
 
+class CausalModelType(object):
+
+    CORAL_BLEACHING = "CoralBleaching"
+    SKIN_CANCER     = "SkinCancer"
+
+    @classmethod
+    def is_valid(cls, val):
+        return val in {CausalModelType.CORAL_BLEACHING, CausalModelType.SKIN_CANCER}
+
 def build_cb_causal_model():
     cm = dict()
     for i in range(1,5):
@@ -30,17 +39,21 @@ def to_numeric_tag(tag: str)->int:
     return int(nums)
 
 TERMINAL = "50"
-def distance_between(a:str, b:str, causal_model: Dict[str, str]):
+def distance_between(a: str, b: str, causal_model: Dict[str, str]):
     # ensure a <= b
     a, b = str(a), str(b)
-    cross_over_node = (a == "6" and b in {"12", "14"})
-    if cross_over_node or (not cross_over_node and (to_numeric_tag(a) > to_numeric_tag(b))):
+    assert a in causal_model or a == TERMINAL, a + " is not in the model"
+    assert b in causal_model or b == TERMINAL, b + " is not in the model"
+
+    # generally want this to be in order, but there are some exceptions
+    if (to_numeric_tag(a) > to_numeric_tag(b)):
         a, b = b, a
 
-    assert a in causal_model or a == TERMINAL, "a is not in the model"
-    assert b in causal_model or b == TERMINAL, "b is not in the model"
-
-    return __nodes_between__(a, b, causal_model)
+    diff = __nodes_between__(a, b, causal_model)
+    if diff == -1:
+        # try reverse order
+        return __nodes_between__(b, a, causal_model)
+    return diff
 
 def __nodes_between__(a, b, causal_model):
     nodes_btwn = 0
@@ -55,7 +68,7 @@ def __nodes_between__(a, b, causal_model):
 
 def is_forward_relation(causer, effect, causal_model):
     causer, effect = str(causer), str(effect)
-    return __nodes_between__(causer, effect) > 0
+    return __nodes_between__(causer, effect, causal_model) > 0
 
 def is_starting_node(a):
     a = str(a).strip()

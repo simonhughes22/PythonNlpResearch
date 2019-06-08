@@ -2,21 +2,13 @@ from collections import defaultdict
 from itertools import combinations
 from typing import List, Dict, Tuple, Set, Union
 
+import numpy as np
+
 from build_chains import build_chains, extend_chains, get_distinct_chains
-from causal_model_features import build_cb_causal_model, build_sc_causal_model, distance_between
+from causal_model_features import distance_between, is_forward_relation, CausalModelType
 from parse_generator import get_all_combos, get_max_probs
 from parser_inputs import ParserInputs, ParserInputsEssayLevel
 from sample_parses import get_top_parses
-
-import numpy as np
-
-# construct Causal Models
-CM_MDL = build_cb_causal_model()
-SC_MDL = build_sc_causal_model()
-
-TERMINAL = "50"
-cb_mdl = build_cb_causal_model()
-sc_mdl = build_sc_causal_model()
 
 
 def to_freq_feats(feats, freq_feats):
@@ -88,7 +80,7 @@ def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[fl
                 num_adjacent += 1
 
             # Forward relations
-            if l_num < r_num:
+            if is_forward_relation(l_short, r_short, causal_model):
                 num_fwd += 1
 
         # Equal to
@@ -121,12 +113,15 @@ def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[fl
     if num_crels > 0:
         feats[PROPN + "fwd"] = num_fwd / num_crels
         feats[PROPN + "equal"] = num_equal / num_crels
-        feats[PROPN + "unique_codes"] = len(distinct_codes) / (2*num_crels) # 2 codes per crel
+        feats[PROPN + "unique_codes"]  = len(distinct_codes) / (2*num_crels) # 2 codes per crel
+        feats[PROPN + "unreachable"]   = num_crossing_crels / num_crels
 
         feats[DIFF + "adjacent_codes"] = num_adjacent / (num_crels)
-        feats[DIFF + "MEAN_diff"]      = np.mean(abs_diffs)
-        feats[DIFF + "MED_diff"]       = np.median(abs_diffs)
-        feats[DIFF + "MAX_diff"]       = np.max(abs_diffs)
+
+        if len(abs_diffs) > 0:
+            feats[DIFF + "MEAN_diff"]      = np.mean(abs_diffs)
+            feats[DIFF + "MED_diff"]       = np.median(abs_diffs)
+            feats[DIFF + "MAX_diff"]       = np.max(abs_diffs)
 
     # counts
     feats.update(code_tally)
@@ -240,7 +235,10 @@ def dict2parse(dct: Dict[str, List[float]])->Tuple[str]:
     return tuple(sorted(dct.keys())) # type: Tuple[str]
 
 def get_features_essay_level(essay2parses: Dict[str, List[Dict[str, List[float]]]],
-                             name2crels: Dict[str, Set[str]], min_feat_freq:int =1)->List[ParserInputsEssayLevel]:
+                             name2crels: Dict[str, Set[str]], causal_model_type: str, min_feat_freq:int =1)->List[ParserInputsEssayLevel]:
+
+    assert CausalModelType.is_valid(causal_model_type), "Unsupport causal model type"
+
     xs = []
     feat_freq = defaultdict(int)
 
@@ -278,7 +276,7 @@ def get_features_essay_level(essay2parses: Dict[str, List[Dict[str, List[float]]
         # So here the target is to learn the best match from the set of generated parses
 
         x = ParserInputsEssayLevel(essay_name=ename, opt_parse=opt_parse, opt_parse_dict=opt_parse_dict,
-                                   all_parses=all_parses, all_parses_dict=all_parse_dict)
+                                   all_parses=all_parses, all_parses_dict=all_parse_dict, causal_model_type=causal_model_type)
         xs.append(x)
 
         # Get unique features for essay
