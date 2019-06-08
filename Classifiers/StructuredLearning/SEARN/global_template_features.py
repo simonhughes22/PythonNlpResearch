@@ -223,15 +223,15 @@ def gbl_causal_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tup
             greater_than_feats(feats, "existing_crel_count", value=crel_tally[crel],
                                vals=[0, 1, 2, 3], positive_val=positive_val)
 
-    greater_than_feats(feats, "num_crels",      value=num_crels, vals=[0,1,2,3,5,7,10], positive_val=positive_val)
-    greater_than_feats(feats, "num_inversions", value=num_inversions, vals=[0,1,2,3], positive_val=positive_val)
+    greater_than_feats(feats, "num_crels",      value=num_crels,        vals=[0,1,2,3,5,7,10],  positive_val=positive_val)
+    greater_than_feats(feats, "num_inversions", value=num_inversions,   vals=[0,1,2,3],         positive_val=positive_val)
+
     if num_crels > 0:
         partition(feats, "propn_inv", num_inversions/num_crels, num_partitions=4, positive_val=positive_val)
 
     if num_essay_sents > 0:
         partition(feats, "propn_crel_sents", num_crels / num_essay_sents, num_partitions=10, positive_val=positive_val)
     return feats
-
 
 def gbl_ratio_features(stack_tags: List[Tuple[str, int]], buffer_tags: List[Tuple[str, int]],
                   tag2word_seq: Dict[Tuple[str, int], List[str]], between_word_seq: List[str],
