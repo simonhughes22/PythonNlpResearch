@@ -38,7 +38,7 @@ def get_crels(parse):
 
 # Sentence Parser
 def get_essays2crels(essays, sr_model, top_n, search_mode_max_prob=False):
-    trainessay2probs = defaultdict(list)
+    trainessay2probs = dict()
     for eix, essay in enumerate(essays):
         crel2probs = defaultdict(list)
         for sent_ix, taggged_sentence in enumerate(essay.sentences):

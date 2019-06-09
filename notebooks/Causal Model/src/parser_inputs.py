@@ -25,13 +25,13 @@ class ParserInputs(object):
         self.crel2probs = crel2probs
 
         if compute_feats:
-            self.opt_features = extract_features_from_parse(opt_parse, crel2probs)
+            self.opt_features = extract_features_from_parse(opt_parse, crel2probs, causal_model=causal_model)
 
             other_parses = []
             other_feats_array = []
             all_feats_array = []
             for p in all_parses:
-                feats = extract_features_from_parse(p, crel2probs, causal_model)
+                feats = extract_features_from_parse(p, crel2probs, causal_model=causal_model)
                 all_feats_array.append(feats)
                 if p != opt_parse:
                     other_parses.append(p)

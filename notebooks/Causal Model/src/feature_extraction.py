@@ -185,6 +185,7 @@ def get_crels_above(crel2maxprob: Dict[str, float], threshold: float)->List[str]
 
 def get_features_from_probabilities(essay2probs: Dict[str, Dict[str, List[float]]],
                                     name2crels: Dict[str, Set[str]], top_n: int,
+                                    causal_model_type: str,
                                     min_feat_freq:int =1, min_prob:float = 0.0)->List[ParserInputs]:
     xs = []
     feat_freq = defaultdict(int)
@@ -217,7 +218,7 @@ def get_features_from_probabilities(essay2probs: Dict[str, Dict[str, List[float]
         # This is because often the parser won't produce the optimal parse (ground truth) in the set of generated parses
         # So here the target is to learn the best match from the set of generated parses
         opt_parse = tuple(sorted(act_crels.intersection(crel2probs.keys())))
-        x = ParserInputs(essay_name=ename, opt_parse=opt_parse, all_parses=parses, crel2probs=crel2probs)
+        x = ParserInputs(essay_name=ename, opt_parse=opt_parse, all_parses=parses, crel2probs=crel2probs, causal_model_type=causal_model_type)
         xs.append(x)
 
         # Get unique features for essay
