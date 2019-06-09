@@ -128,11 +128,11 @@ def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[fl
 
     feats["num_crels"] = num_crels
     feats["num_crels=" + str(len(parse))] = 1  # includes a tag for the empty parse
-    # for i in range(1, 11):
-    #     if num_crels <= i:
-    #         feats["num_crels<={i}".format(i=i)] = 1
-    #     else:
-    #         feats["num_crels>{i}".format(i=i)] = 1
+    for i in range(1, 11):
+        if num_crels <= i:
+            feats["num_crels<={i}".format(i=i)] = 1
+        else:
+            feats["num_crels>{i}".format(i=i)] = 1
 
     # combination of crels
     # need to sort so that order of a and b is consistent across parses
@@ -152,11 +152,11 @@ def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[fl
     distinct_chains = get_distinct_chains(chains)
     num_distinct = len(distinct_chains)
     feats["CChainStats-num_distinct_chains=" + str(num_distinct)] = 1
-    # for i in range(6):
-    #     if num_distinct <= i:
-    #         feats["CChainStats-num_distinct_chains <=" + str(i)] = 1
-    #     else:
-    #         feats["CChainStats-num_distinct_chains > " + str(i)] = 1
+    for i in range(6):
+        if num_distinct <= i:
+            feats["CChainStats-num_distinct_chains <=" + str(i)] = 1
+        else:
+            feats["CChainStats-num_distinct_chains > " + str(i)] = 1
 
     if num_distinct > 0:
         feats["CChainStats-crels_per_distinct_chain"] = num_crels / num_distinct
