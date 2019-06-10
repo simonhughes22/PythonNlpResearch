@@ -1,14 +1,14 @@
 from collections import defaultdict
-import pandas as pd
 from typing import List, Tuple, Any, Set, Union
 
-from results_procesor import ResultsProcessor
-from train_parser import train_sr_parser
-from wordtagginghelper import merge_dictionaries
+import pandas as pd
 
 from searn_essay_parser import SearnModelEssayParser
 from searn_essay_parser_breadth_first import SearnModelEssayParserBreadthFirst
 from searn_parser import SearnModelTemplateFeatures
+from train_parser import train_sr_parser
+from wordtagginghelper import merge_dictionaries
+
 
 def metrics_to_df(metrics):
     import Rpfa
@@ -87,27 +87,3 @@ def add_cr_labels(observed_tags, ys_bytag_sent, set_cr_tags):
             ys_bytag_sent[tag].append(1)
         else:
             ys_bytag_sent[tag].append(0)
-
-def evaluate_ranker(model, xs, essay2crels, ys_bytag, set_cr_tags):
-    clone = model.clone()
-    if hasattr(model, "average_weights"):
-        clone.average_weights()
-    pred_ys_bytag = defaultdict(list)
-    ename2inps = dict()
-    for parser_input in xs:
-        ename2inps[parser_input.essay_name] = parser_input
-
-    for ename, act_crels in essay2crels.items():
-        if ename not in ename2inps:
-            # no predicted crels for this essay
-            highest_ranked = set()
-        else:
-            parser_input = ename2inps[ename]
-            ixs = clone.rank(parser_input.all_feats_array)
-            highest_ranked = parser_input.all_parses[ixs[0]]  # type: Tuple[str]
-
-        add_cr_labels(set(highest_ranked), pred_ys_bytag, set_cr_tags)
-
-    mean_metrics = ResultsProcessor.compute_mean_metrics(ys_bytag, pred_ys_bytag)
-    df = get_micro_metrics(metrics_to_df(mean_metrics))
-    return df
