@@ -7,7 +7,7 @@ import numpy as np
 from MIRA import CostSensitiveMIRA
 from evaluation import add_cr_labels
 from results_procesor import ResultsProcessor
-from train_parser import get_label_data_essay_level, essay_to_crels
+from train_parser import get_label_data_essay_level, essay_to_crels, List
 from wordtagginghelper import merge_dictionaries
 
 
@@ -53,7 +53,7 @@ def train_model(model, xs_train, xs_test, name2essay, set_cr_tags, max_epochs=30
 
     test_accs = [-1]
     best_model = None
-    best_test_accuracy = None
+    best_test_f1 = None
     num_declining_acc = 0
 
     train_essays = get_essays_for_data(xs_train, name2essay)
@@ -85,7 +85,7 @@ def train_model(model, xs_train, xs_test, name2essay, set_cr_tags, max_epochs=30
         if not early_stopping or (test_f1 > max(test_accs)):
             best_model = model.clone()
             num_declining_acc = 0
-            best_test_accuracy = test_f1
+            best_test_f1 = test_f1
             best_iterations = i+1
 
             train_ys_bytag, train_pred_ys_bytag, test_ys_bytag, test_pred_ys_bytag = \
@@ -101,9 +101,9 @@ def train_model(model, xs_train, xs_test, name2essay, set_cr_tags, max_epochs=30
 
     # If return metrics, then return everything
     if return_metrics:
-        return best_model, best_test_accuracy, best_iterations, train_ys_bytag, train_pred_ys_bytag, test_ys_bytag, test_pred_ys_bytag
+        return best_test_f1, best_iterations, train_ys_bytag, train_pred_ys_bytag, test_ys_bytag, test_pred_ys_bytag
 
-    return best_model, best_test_accuracy, best_iterations
+    return best_model, best_test_f1, best_iterations
 
 def shuffle_split_dict(dct, train_pct):
     items = list(dct.items())
@@ -112,38 +112,78 @@ def shuffle_split_dict(dct, train_pct):
     train_items, test_items = items[:num_train], items[num_train:]
     return dict(train_items), dict(test_items)
 
-def train_model_fold(xs_train, xs_test, name2essay, C, pa_type, loss_type, max_update_items, set_cr_tags, initial_weight):
+def train_model_fold(xs_train, xs_test, name2essay, C, pa_type, loss_type, max_update_items, set_cr_tags,\
+                     initial_weight, max_epochs, early_stop_iters):
 
     mdl = CostSensitiveMIRA(
         C=C, pa_type=pa_type, loss_type=loss_type, max_update_items=max_update_items, initial_weight=initial_weight)
 
     return train_model(mdl, xs_train=xs_train, xs_test=xs_test, name2essay=name2essay,
-            max_epochs=20, early_stop_iters=5, set_cr_tags=set_cr_tags, train_instance_fn=train_cost_sensitive_instance,
+            max_epochs=max_epochs, early_stop_iters=early_stop_iters, set_cr_tags=set_cr_tags,
+            train_instance_fn=train_cost_sensitive_instance,
             verbose=False, return_metrics=True, early_stopping=False)
 
-
-def train_model_parallel(cv_folds, name2essay, C, pa_type, loss_type, max_update_items, set_cr_tags, initial_weight):
+def train_model_parallel(cv_folds, name2essay, C, pa_type, loss_type, max_update_items, set_cr_tags, \
+                         initial_weight, max_epochs=5, early_stop_iters=5):
     try:
         results = Parallel(n_jobs=len(cv_folds))(
-            delayed(train_model_fold)(train, test, name2essay, C, pa_type, loss_type, max_update_items, set_cr_tags, initial_weight)
+            delayed(train_model_fold)(train, test, name2essay, C, pa_type, loss_type, max_update_items, set_cr_tags, \
+                                      initial_weight, max_epochs, early_stop_iters)
             for (train, test) in cv_folds)
 
+        f1s = []
+        for tpl in results:
+            best_test_f1, best_iterations, train_ys_bytag, train_pred_ys_bytag, test_ys_bytag, test_pred_ys_bytag = tpl
+            f1s.append(best_test_f1)
+
+        return np.mean(f1s)
+
+    except KeyboardInterrupt:
+        print("Process stopped by user")
+
+
+def train_model_parallel_logged(CB_TAGGING_TD, feat_extractors: List[str], min_feat_freq, cv_folds, name2essay, C, pa_type, loss_type, max_update_items, set_cr_tags, \
+                         initial_weight, max_epochs=5, early_stop_iters=5):
+    try:
+        results = Parallel(n_jobs=len(cv_folds))(
+            delayed(train_model_fold)(train, test, name2essay, C, pa_type, loss_type, max_update_items, set_cr_tags, \
+                                      initial_weight, max_epochs, early_stop_iters)
+            for (train, test) in cv_folds)
 
         cv_sent_td_ys_by_tag, cv_sent_td_predictions_by_tag = defaultdict(list), defaultdict(list)
         cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
 
         f1s = []
         for tpl in results:
-            best_model, best_test_f1, best_iterations, train_ys_bytag, train_pred_ys_bytag, test_ys_bytag, test_pred_ys_bytag = tpl
+            best_test_f1, best_iterations, train_ys_bytag, train_pred_ys_bytag, test_ys_bytag, test_pred_ys_bytag = tpl
             f1s.append(best_test_f1)
 
             merge_dictionaries(train_ys_bytag, cv_sent_td_ys_by_tag)
-            merge_dictionaries(test_ys_bytag,  cv_sent_vd_ys_by_tag)
+            merge_dictionaries(test_ys_bytag, cv_sent_vd_ys_by_tag)
 
             merge_dictionaries(train_pred_ys_bytag, cv_sent_td_predictions_by_tag)
-            merge_dictionaries(test_pred_ys_bytag,  cv_sent_vd_predictions_by_tag)
+            merge_dictionaries(test_pred_ys_bytag, cv_sent_vd_predictions_by_tag)
+
+    CB_TAGGING_VD = CB_TAGGING_TD.replace("_TD", "_VD")
+
+    SUFFIX = "_FEAT_SELECTION"
+    CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
+    parameters = dict()
+    parameters["extractors"] = map(lambda fn: fn.func_name, feat_extractors)
+    parameters["min_feat_freq"] = min_feat_freq
+
+        """
+    wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag,
+                                               cv_wd_td_predictions_by_tag, parameters, wd_algo)
+    wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag,
+                                               cv_wd_vd_predictions_by_tag, parameters, wd_algo)
+
+    avg_f1 = float(processor.get_metric(CB_TAGGING_VD, wd_vd_objectid, __MICRO_F1__)["f1_score"])
+
+        """
 
         return np.mean(f1s)
 
     except KeyboardInterrupt:
         print("Process stopped by user")
+
