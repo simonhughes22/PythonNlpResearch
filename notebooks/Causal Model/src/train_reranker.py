@@ -143,7 +143,8 @@ def train_model_parallel(cv_folds, name2essay, C, pa_type, loss_type, max_update
         print("Process stopped by user")
 
 
-def train_model_parallel_logged(training_collection_name: str, feat_extractors: List[str], min_feat_freq: int, results_processor: ResultsProcessor,
+def train_model_parallel_logged(training_collection_name: str, results_processor: ResultsProcessor,
+                                feat_extractors: List[str], params: Dict[str, Any],
                                 cv_folds: List[Any], name2essay: Dict[str,str],
                                 C: float, pa_type: str, loss_type: str, max_update_items:int, set_cr_tags: Set[str], \
                                 initial_weight: float,  max_epochs=5, early_stop_iters=5):
@@ -171,7 +172,8 @@ def train_model_parallel_logged(training_collection_name: str, feat_extractors: 
         ALGO = "MIRA Cost Sensitive Re-Ranker"
         validation_collection = training_collection_name.replace("_TD", "_VD")
 
-        extractors = list(map(lambda fn: fn.func_name, feat_extractors))
+        # extractors = list(map(lambda fn: fn.func_name, feat_extractors))
+        extractors = list(feat_extractors)
 
         parameters = {
             "C": C,
@@ -183,9 +185,10 @@ def train_model_parallel_logged(training_collection_name: str, feat_extractors: 
             "max_epochs": max_epochs,
             "early_stopping_iters": early_stop_iters,
 
-            "extractors": extractors,
-            "min_feat_freq": min_feat_freq
+            "extractors": extractors
         }
+        # add in additional parameters not passed in
+        parameters.update(params)
 
         wd_td_objectid = results_processor.persist_results(training_collection_name,
                                                            cv_sent_td_ys_by_tag,
