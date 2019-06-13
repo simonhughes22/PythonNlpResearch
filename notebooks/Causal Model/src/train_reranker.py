@@ -125,9 +125,12 @@ def train_model_fold(xs_train, xs_test, name2essay, C, pa_type, loss_type, max_u
             verbose=False, return_metrics=True, early_stopping=False)
 
 def train_model_parallel(cv_folds, name2essay, C, pa_type, loss_type, max_update_items, set_cr_tags, \
-                         initial_weight, max_epochs=5, early_stop_iters=5):
+                         initial_weight, max_epochs=5, early_stop_iters=5, n_jobs=None):
+
+    if n_jobs == None:
+        n_jobs = len(cv_folds)
     try:
-        results = Parallel(n_jobs=len(cv_folds))(
+        results = Parallel(n_jobs=n_jobs)(
             delayed(train_model_fold)(train, test, name2essay, C, pa_type, loss_type, max_update_items, set_cr_tags, \
                                       initial_weight, max_epochs, early_stop_iters)
             for (train, test) in cv_folds)
