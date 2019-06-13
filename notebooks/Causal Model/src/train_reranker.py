@@ -1,12 +1,13 @@
 from collections import defaultdict
 from random import shuffle
+from typing import Any, Dict, Set
 
 from joblib import Parallel, delayed
 import numpy as np
 
 from MIRA import CostSensitiveMIRA
 from evaluation import add_cr_labels
-from results_procesor import ResultsProcessor
+from results_procesor import ResultsProcessor, __MICRO_F1__
 from train_parser import get_label_data_essay_level, essay_to_crels, List
 from wordtagginghelper import merge_dictionaries
 
@@ -142,8 +143,10 @@ def train_model_parallel(cv_folds, name2essay, C, pa_type, loss_type, max_update
         print("Process stopped by user")
 
 
-def train_model_parallel_logged(CB_TAGGING_TD, feat_extractors: List[str], min_feat_freq, cv_folds, name2essay, C, pa_type, loss_type, max_update_items, set_cr_tags, \
-                         initial_weight, max_epochs=5, early_stop_iters=5):
+def train_model_parallel_logged(training_collection_name: str, feat_extractors: List[str], min_feat_freq: int, results_processor: ResultsProcessor,
+                                cv_folds: List[Any], name2essay: Dict[str,str],
+                                C: float, pa_type: str, loss_type: str, max_update_items:int, set_cr_tags: Set[str], \
+                                initial_weight: float,  max_epochs=5, early_stop_iters=5):
     try:
         results = Parallel(n_jobs=len(cv_folds))(
             delayed(train_model_fold)(train, test, name2essay, C, pa_type, loss_type, max_update_items, set_cr_tags, \
@@ -164,25 +167,38 @@ def train_model_parallel_logged(CB_TAGGING_TD, feat_extractors: List[str], min_f
             merge_dictionaries(train_pred_ys_bytag, cv_sent_td_predictions_by_tag)
             merge_dictionaries(test_pred_ys_bytag, cv_sent_vd_predictions_by_tag)
 
-    CB_TAGGING_VD = CB_TAGGING_TD.replace("_TD", "_VD")
 
-    SUFFIX = "_FEAT_SELECTION"
-    CB_TAGGING_TD, CB_TAGGING_VD = "CB_TAGGING_TD" + SUFFIX, "CB_TAGGING_VD" + SUFFIX
-    parameters = dict()
-    parameters["extractors"] = map(lambda fn: fn.func_name, feat_extractors)
-    parameters["min_feat_freq"] = min_feat_freq
+        ALGO = "MIRA Cost Sensitive Re-Ranker"
+        validation_collection = training_collection_name.replace("_TD", "_VD")
 
-        """
-    wd_td_objectid = processor.persist_results(CB_TAGGING_TD, cv_wd_td_ys_by_tag,
-                                               cv_wd_td_predictions_by_tag, parameters, wd_algo)
-    wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag,
-                                               cv_wd_vd_predictions_by_tag, parameters, wd_algo)
+        extractors = list(map(lambda fn: fn.func_name, feat_extractors))
 
-    avg_f1 = float(processor.get_metric(CB_TAGGING_VD, wd_vd_objectid, __MICRO_F1__)["f1_score"])
+        parameters = {
+            "C": C,
+            "pa_type": pa_type,
+            "loss_type": loss_type,
+            "max_update_items": max_update_items,
+            "initial_weight": initial_weight,
 
-        """
+            "max_epochs": max_epochs,
+            "early_stopping_iters": early_stop_iters,
 
-        return np.mean(f1s)
+            "extractors": extractors,
+            "min_feat_freq": min_feat_freq
+        }
+
+        wd_td_objectid = results_processor.persist_results(training_collection_name,
+                                                           cv_sent_td_ys_by_tag,
+                                                           cv_sent_td_predictions_by_tag,
+                                                           parameters, ALGO)
+
+        wd_vd_objectid = results_processor.persist_results(validation_collection,
+                                                           cv_sent_vd_ys_by_tag,
+                                                           cv_sent_vd_predictions_by_tag,
+                                                           parameters, ALGO)
+
+        avg_f1 = float(results_processor.get_metric(validation_collection, wd_vd_objectid, __MICRO_F1__)["f1_score"])
+        return avg_f1
 
     except KeyboardInterrupt:
         print("Process stopped by user")
