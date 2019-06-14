@@ -138,7 +138,7 @@ def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[fl
     # need to sort so that order of a and b is consistent across parses
     pairs = combinations(sorted(parse), r=2)
     for a, b in pairs:
-        feats["CREL_Pair-{a}|{b}".format(a=a, b=b)] = 1
+        feats["CRELPair-{a}|{b}".format(a=a, b=b)] = 1
 
     # chains
     chains = build_chains(tree)
