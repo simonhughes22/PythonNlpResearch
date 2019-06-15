@@ -102,7 +102,8 @@ def train_model(model, xs_train, xs_test, name2essay, set_cr_tags, max_epochs=30
 
     # If return metrics, then return everything
     if return_metrics:
-        return best_test_f1, best_iterations, train_ys_bytag, train_pred_ys_bytag, test_ys_bytag, test_pred_ys_bytag
+        return best_test_f1, best_iterations, train_ys_bytag, train_pred_ys_bytag, \
+               test_ys_bytag, test_pred_ys_bytag, best_model.num_feats()
 
     return best_model, best_test_f1, best_iterations
 
@@ -137,7 +138,7 @@ def train_model_parallel(cv_folds, name2essay, C, pa_type, loss_type, max_update
 
         f1s = []
         for tpl in results:
-            best_test_f1, best_iterations, train_ys_bytag, train_pred_ys_bytag, test_ys_bytag, test_pred_ys_bytag = tpl
+            best_test_f1, best_iterations, train_ys_bytag, train_pred_ys_bytag, test_ys_bytag, test_pred_ys_bytag, num_feats = tpl
             f1s.append(best_test_f1)
 
         return np.mean(f1s)
@@ -161,8 +162,10 @@ def train_model_parallel_logged(training_collection_name: str, results_processor
         cv_sent_vd_ys_by_tag, cv_sent_vd_predictions_by_tag = defaultdict(list), defaultdict(list)
 
         f1s = []
+        feats = []
         for tpl in results:
-            best_test_f1, best_iterations, train_ys_bytag, train_pred_ys_bytag, test_ys_bytag, test_pred_ys_bytag = tpl
+            best_test_f1, best_iterations, train_ys_bytag, train_pred_ys_bytag, test_ys_bytag, test_pred_ys_bytag, num_feats = tpl
+            feats.append(num_feats)
             f1s.append(best_test_f1)
 
             merge_dictionaries(train_ys_bytag, cv_sent_td_ys_by_tag)
@@ -179,16 +182,20 @@ def train_model_parallel_logged(training_collection_name: str, results_processor
         extractors = list(feat_extractors)
 
         parameters = {
-            "C": C,
-            "pa_type": pa_type,
-            "loss_type": loss_type,
-            "max_update_items": max_update_items,
-            "initial_weight": initial_weight,
+            "C":                    C,
+            "pa_type":              pa_type,
+            "loss_type":            loss_type,
+            "max_update_items":     max_update_items,
+            "initial_weight":       initial_weight,
 
-            "max_epochs": max_epochs,
+            "max_epochs":           max_epochs,
             "early_stopping_iters": early_stop_iters,
 
-            "extractors": extractors
+            "extractors":           extractors,
+
+            # Add in number of features
+            "num_feats_per_fold":   feats,
+            "num_feats_MEAN":       np.mean(feats)
         }
         # add in additional parameters not passed in
         parameters.update(params)

@@ -27,6 +27,9 @@ class StructuredPerceptron(object):
         self.max_update_items = max_update_items
         self.averaged = False
 
+    def num_feats(self):
+        return len(self.weights)
+
     def clone(self):
         cloney = StructuredPerceptron(self.learning_rate)
         cloney.weights.update(self.weights)
