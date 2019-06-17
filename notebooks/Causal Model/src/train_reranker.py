@@ -151,9 +151,12 @@ def train_model_parallel_logged(training_collection_name: str, results_processor
                                 feat_extractors: List[str], params: Dict[str, Any],
                                 cv_folds: List[Any], name2essay: Dict[str,str],
                                 C: float, pa_type: str, loss_type: str, max_update_items:int, set_cr_tags: Set[str], \
-                                initial_weight: float,  max_epochs=5, early_stop_iters=5):
+                                initial_weight: float,  max_epochs=5, early_stop_iters=5, n_jobs=None):
+    if not n_jobs or n_jobs == None:
+        n_jobs = len(cv_folds)
+
     try:
-        results = Parallel(n_jobs=len(cv_folds))(
+        results = Parallel(n_jobs=n_jobs)(
             delayed(train_model_fold)(train, test, name2essay, C, pa_type, loss_type, max_update_items, set_cr_tags, \
                                       initial_weight, max_epochs, early_stop_iters)
             for (train, test) in cv_folds)
