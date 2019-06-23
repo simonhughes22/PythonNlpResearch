@@ -58,7 +58,7 @@ class MIRA(StructuredPerceptron):
             tau = loss / l2_norm_of_diffs
         elif self.pa_type == 1:
             tau = min(self.C, loss / l2_norm_of_diffs)
-        else:
+        else: #self.pa_type == 2:
             tau = loss / (l2_norm_of_diffs + 1 / (2 * self.C))
 
         for feat, weight in self.weights.items():
