@@ -140,14 +140,6 @@ class CostSensitiveStructuredPerceptron(StructuredPerceptron):
                 self.update(best_feats=best_feats,
                             highest_ranked_feats=feats_array[ix], highest_ranked_cost=costs_array[ix])
 
-    def clone(self):
-        p = CostSensitiveStructuredPerceptron(self.learning_rate)
-        p.weights.update(self.weights)
-        p._totals.update(self._totals)
-        p._tstamps.update(self._tstamps)
-        p.i = self.i
-        return p
-
     def update(self, best_feats, highest_ranked_feats, highest_ranked_cost):
         '''Update the feature weights.'''
 
@@ -156,6 +148,14 @@ class CostSensitiveStructuredPerceptron(StructuredPerceptron):
             val = (best_feats[feat] - highest_ranked_feats[feat]) * highest_ranked_cost
             self.__upd_feat__(feat, val)
         return None
+
+    def clone(self):
+        p = CostSensitiveStructuredPerceptron(self.learning_rate)
+        p.weights.update(self.weights)
+        p._totals.update(self._totals)
+        p._tstamps.update(self._tstamps)
+        p.i = self.i
+        return p
 
 
 if __name__ == "__main__":
