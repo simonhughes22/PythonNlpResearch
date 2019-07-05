@@ -1,6 +1,6 @@
 boto==2.47.0
 costcla==0.5
-dill==0.2.6
+dill==0.2.8.2
 gensim==0.13.4
 h5py==2.7.0
 html5lib==0.999
