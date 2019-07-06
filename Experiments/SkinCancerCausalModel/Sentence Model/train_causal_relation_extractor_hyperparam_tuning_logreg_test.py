@@ -126,8 +126,8 @@ def evaluate_model(
 
     logger.info("\t\tMean num feats: {avg_feats:.2f}".format(avg_feats=avg_feats))
 
-    TD = collection_prefix + "_TD"
-    VD = collection_prefix + "_VD"
+    TD = collection_prefix + "_TD_2"
+    VD = collection_prefix + "_VD_2"
     if down_sample_rate < 1.0:
         logger.info("\t\tDown sampling at rate: {rate:.5f}, storing temp results".format(rate=down_sample_rate))
         parameters["down_sample"] = down_sample_rate
