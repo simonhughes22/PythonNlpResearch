@@ -1,0 +1,1 @@
+{ "indexes" : [ { "v" : 1, "key" : { "_id" : 1 }, "name" : "_id_", "ns" : "metrics_causal_model_parser.SENT_TEST_CR_SC_SHIFT_REDUCE_PARSER_TEMPLATED_HYPER_PARAM_VD" } ] }

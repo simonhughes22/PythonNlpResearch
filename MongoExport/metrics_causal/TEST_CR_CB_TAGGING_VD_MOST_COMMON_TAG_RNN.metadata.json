@@ -1,1 +1,1 @@
-{"options":{},"indexes":[{"v":1,"key":{"_id":1},"name":"_id_","ns":"metrics_causal.TEST_CR_CB_TAGGING_VD_MOST_COMMON_TAG_RNN"}]}
+{ "indexes" : [ { "v" : 1, "key" : { "_id" : 1 }, "name" : "_id_", "ns" : "metrics_causal.TEST_CR_CB_TAGGING_VD_MOST_COMMON_TAG_RNN" } ] }
