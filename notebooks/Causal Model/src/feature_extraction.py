@@ -42,7 +42,7 @@ def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[fl
     pairs = set()
     inverted_count = 0
     num_fwd = 0
-    num_equal = 0
+    num_equal = 0 # count of crels where causer = effect
 
     # differences inbetween codes
     num_adjacent = 0
@@ -83,7 +83,7 @@ def extract_features_from_parse(parse: Tuple[str], crel2probs: Dict[str, List[fl
             if is_forward_relation(l_short, r_short, causal_model):
                 num_fwd += 1
 
-        # Equal to
+        # Equal to - causer = effect
         if l_short == r_short:
             num_equal += 1
 
