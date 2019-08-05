@@ -17,8 +17,11 @@ def group_by(df, bycols, agg_map):
 
     if type(agg_map) == dict:
         agg_map = agg_map.items()
-    for k,v in agg_map:
+
+    for k, v in agg_map:
         grp = df[bycols + [k]].groupby(bycols).agg(v)
+        grp["{v}({k})".format(k=k, v=v)] = grp[k]
+        del grp[k]
         grp.reset_index(inplace=True)
         grps.append(grp)
 
