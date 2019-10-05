@@ -314,7 +314,7 @@ class Essay(object):
                 codes_end[annotation.end].add(annotation.dep_type)
             return True
 
-        def process_anaphoric_reference(anaphora_annotation, reference_annotation)->None:
+        def process_anaphoric_reference(anaphora_annotation, reference_annotation):
             """
             Adds start and end code for anaphoric references, resolving them with the
             location of the anphora tag, but the code from the reference annotation

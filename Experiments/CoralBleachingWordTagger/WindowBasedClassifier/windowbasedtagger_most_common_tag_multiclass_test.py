@@ -49,6 +49,8 @@ unigram_window_stemmed  = fact_extract_positional_word_features_stemmed(offset)
 biigram_window_stemmed  = fact_extract_ngram_features_stemmed(offset, 2)
 triigram_window_stemmed = fact_extract_ngram_features_stemmed(offset, 3)
 unigram_bow_window      = fact_extract_bow_ngram_features(offset, 1)
+extract_dependency_relation= fact_extract_dependency_relation()
+extract_brown_cluster   = fact_extract_brown_cluster()
 
 #optimal CB feature set
 extractors = [
@@ -66,7 +68,7 @@ extractors = [
 extractor_names = map(lambda fn: fn.func_name, extractors)
 print("Extractors\n\t" + "\n\t".join(extractor_names))
 
-feat_config = dict(train_config.items() + [("extractors", extractors)])
+feat_config = dict(list(train_config.items()) + [("extractors", extractors)])
 """ LOAD DATA """
 train_tagged_essays = load_process_essays(**train_config)
 
@@ -74,6 +76,11 @@ test_config = dict(train_config.items())
 test_config["folder"] = test_folder
 
 test_tagged_essays = load_process_essays(**test_config)
+
+#TODO DELETE
+# train_tagged_essays = train_tagged_essays[:100]
+# test_tagged_essays = train_tagged_essays[100:200]
+
 logger.info("Essays loaded- Train: %i Test %i" % (len(train_tagged_essays), len(test_tagged_essays)))
 
 # most params below exist ONLY for the purposes of the hashing to and from disk

@@ -95,7 +95,7 @@ folds = [(train_essay_feats, test_essay_feats)]
 """ CLASSIFIERS """
 fn_create_wd_cls   = lambda: LogisticRegression() # C=1, dual = False seems optimal
 wd_algo   = str(fn_create_wd_cls())
-print "Classifier:", wd_algo
+print("Classifier:", wd_algo)
 
 def train_tagger(fold, essays_TD, essays_VD, wd_test_tags, wd_train_tags,
                  dual, C, penalty, fit_intercept, multi_class):

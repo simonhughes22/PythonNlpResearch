@@ -1,5 +1,3 @@
-from typing import List, Set, Dict, Any
-
 import BrattEssay
 import Rpfa
 
@@ -10,7 +8,8 @@ from Rpfa import mean_rpfa, weighted_mean_rpfa, rpfa, micro_rpfa
 from Metrics import compute_tp_fp_fn, rpf1a_from_tp_fp_tn_fn
 from datetime import datetime
 from collections import defaultdict
-
+import datetime
+import dill
 import pandas
 
 __MACRO_F1__ = "MACRO_F1"
@@ -20,7 +19,7 @@ def is_a_regular_code(code):
     return (code[0].isdigit() or code[0].lower() == 'p') \
             and "->" not in code and ":" not in code
 
-def metrics_to_df(metrics: Dict[str, Any])->pandas.DataFrame:
+def metrics_to_df(metrics):
     """
     Given a metrics Dictionary, returns a Pandas DataFrame
     :param metrics:
@@ -93,7 +92,7 @@ class ResultsProcessor(object):
         return metrics_by_tag
 
     @staticmethod
-    def compute_mean_metrics(ys_by_tag, predictions_by_tag, fltr=is_a_regular_code)->Dict[str, float]:
+    def compute_mean_metrics(ys_by_tag, predictions_by_tag, fltr=is_a_regular_code):
         metrics = ResultsProcessor.compute_metrics(ys_by_tag, predictions_by_tag)
         return ResultsProcessor.add_mean_metrics(metrics, fltr)
 
@@ -130,8 +129,7 @@ class ResultsProcessor(object):
         return ysbycode
 
     @staticmethod
-    def compute_mean_metrics_from_tagged_essays(
-            tagged_esssays: List[BrattEssay.Essay], expected_tags: Set[str])->Dict[str, float]:
+    def compute_mean_metrics_from_tagged_essays(tagged_esssays):
         """
         Given a set of already tagged essays, computes the mean metrics using the BrattEssay.pred_tagged_sentences list
         :param tagged_esssays:
@@ -153,7 +151,7 @@ class ResultsProcessor(object):
 
     @staticmethod
     def compute_metrics_from_tagged_essays(
-            tagged_esssays: List[BrattEssay.Essay], expected_tags: Set[str]) -> Dict[str, Dict[str, Rpfa.rpfa]]:
+            tagged_esssays, expected_tags):
         """
         Given a set of already tagged essays, computes the regular metrics using the BrattEssay.pred_tagged_sentences list
         :param tagged_esssays:
@@ -215,6 +213,27 @@ class ResultsProcessor(object):
 
     def persist_results(self, dbcollection, ys_by_tag, predictions_by_tag, experiment_args, algorithm, **kwargs):
 
+        # Persist predictions (too large to store in mongo
+        folder = "/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Predictions/"
+        n = datetime.datetime.now()
+        ts = "{y}-{m}-{d}_{h}-{minut}".format(y=n.year, m=n.month, d=n.day, h=n.hour, minut=n.time().minute)
+        suffix_ts = "_" + ts + ".dill"
+        suffix = ".dill"
+
+        f_ys    = folder + dbcollection + "_YS_" + suffix
+        f_ys_ts = folder + dbcollection + "_YS_" + suffix_ts
+        with open(f_ys, "wb+") as f:
+            dill.dump(dict(ys_by_tag.items()), f)
+        with open(f_ys_ts, "wb+") as f:
+            dill.dump(dict(ys_by_tag.items()), f)
+
+        f_preds    = folder + dbcollection + "_PREDS_" + suffix
+        f_preds_ts = folder + dbcollection + "_PREDS_" + suffix_ts
+        with open(f_preds, "wb+") as f:
+            dill.dump(dict(predictions_by_tag.items()), f)
+        with open(f_preds_ts, "wb+") as f:
+            dill.dump(dict(predictions_by_tag.items()), f)
+
         experiment_args["num_tags"] = len(ys_by_tag.keys())
         # Compute Mean metrics over all folds
         metrics_by_code = ResultsProcessor.compute_metrics(ys_by_tag, predictions_by_tag)
@@ -222,8 +241,6 @@ class ResultsProcessor(object):
 
         db_row = dict(mean_td_metrics_by_tag.items())
         db_row["algorithm"] = algorithm
-        db_row["ys"] = dict(ys_by_tag.items())
-        db_row["preds"] = dict(predictions_by_tag.items())
         # merge in additional values
         for key, val in kwargs.items():
             db_row[key] = val

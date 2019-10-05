@@ -34,6 +34,7 @@ class FeatureExtractorInput(object):
                                     which are lists of tuples of words and a set of tags
     """
     def __init__(self, wordix, tagged_sentence, sentenceix, essay):
+        assert type(wordix) == int
         self.wordix = wordix
         self.tagged_sentence = tagged_sentence
         self.sentenceix = sentenceix

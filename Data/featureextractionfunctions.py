@@ -3,6 +3,7 @@ from Decorators import memoize
 from SpaCyParserWrapper import Parser
 import PosTagger
 import sys
+import math
 
 PYTHON_VERSION = sys.version_info[0]
 IS_PYTHON_3 = (PYTHON_VERSION >= 3)
@@ -206,6 +207,7 @@ def fact_extract_positional_word_features_stemmed(offset):
         returns     :   fn
                             feature extractor function: FeatureExtactorInput -> dict
     """
+    offset = int(math.floor(offset))
     lcls = locals()
     # curry offset
     def fn_pos_wd_feats_stemmed(input, val=1):
@@ -282,6 +284,7 @@ def fact_extract_bow_ngram_features(offset, ngram_size):
                             feature extractor function: FeatureExtactorInput -> dict
     """
     # curry offset and ngram size
+    offset = int(math.floor(offset))
     lcls = locals()
     def fn_bow_ngram_feat(input, val=1):
         return extract_bow_ngram_features(offset, ngram_size, input, val)
@@ -388,6 +391,7 @@ def fact_extract_ngram_features_stemmed(offset, ngram_size):
         returns     :   fn
                             feature extractor function: FeatureExtactorInput -> dict
     """
+    offset = int(math.floor(offset))
     lcls = locals()
     # curry offset and ngram size
     def fn_pos_ngram_feat_stemmed(input, val=1):
