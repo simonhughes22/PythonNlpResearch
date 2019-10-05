@@ -210,8 +210,7 @@ class ResultsProcessor(object):
             return 0.0
         return (2.0 * r * p) / denom
 
-    def persist_results(self, dbcollection, ys_by_tag, predictions_by_tag, experiment_args, algorithm, **kwargs):
-
+    def persist_predictions(self, dbcollection, predictions_by_tag, ys_by_tag):
         # Persist predictions (too large to store in mongo
         folder = "/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Predictions/"
         n = datetime.datetime.now()
@@ -219,7 +218,7 @@ class ResultsProcessor(object):
         suffix_ts = "_" + ts + ".dill"
         suffix = ".dill"
 
-        f_ys    = folder + dbcollection + "_YS_" + suffix
+        f_ys = folder + dbcollection + "_YS_" + suffix
         f_ys_ts = folder + dbcollection + "_YS_" + suffix_ts
         with open(f_ys, "wb+") as f:
             dill.dump(dict(ys_by_tag.items()), f)
@@ -233,9 +232,13 @@ class ResultsProcessor(object):
         with open(f_preds_ts, "wb+") as f:
             dill.dump(dict(predictions_by_tag.items()), f)
 
+    def persist_results(self, dbcollection, ys_by_tag, predictions_by_tag, experiment_args, algorithm, **kwargs):
+
+        self.persist_predictions(dbcollection, predictions_by_tag, ys_by_tag)
+
         experiment_args["num_tags"] = len(ys_by_tag.keys())
         # Compute Mean metrics over all folds
-        metrics_by_code = ResultsProcessor.compute_metrics(ys_by_tag, predictions_by_tag)
+        metrics_by_code        = ResultsProcessor.compute_metrics(ys_by_tag, predictions_by_tag)
         mean_td_metrics_by_tag = ResultsProcessor.add_mean_metrics(metrics_by_code, self.fltr)
 
         db_row = dict(mean_td_metrics_by_tag.items())
