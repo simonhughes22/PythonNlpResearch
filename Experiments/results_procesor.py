@@ -6,7 +6,6 @@ __author__ = 'simon.hughes'
 import pymongo
 from Rpfa import mean_rpfa, weighted_mean_rpfa, rpfa, micro_rpfa
 from Metrics import compute_tp_fp_fn, rpf1a_from_tp_fp_tn_fn
-from datetime import datetime
 from collections import defaultdict
 import datetime
 import dill
@@ -67,7 +66,7 @@ class ResultsProcessor(object):
 
     def __add_meta_data_(self, db_row, experiment_args):
         db_row["parameters"] = experiment_args
-        db_row["asof"] = datetime.now()
+        db_row["asof"] = datetime.datetime.now()
 
     @staticmethod
     def compute_metrics(ys_by_tag, predictions_by_tag):
