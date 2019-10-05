@@ -222,6 +222,8 @@ class ResultsProcessor(object):
 
         db_row = dict(mean_td_metrics_by_tag.items())
         db_row["algorithm"] = algorithm
+        db_row["ys"] = dict(ys_by_tag.items())
+        db_row["preds"] = dict(predictions_by_tag.items())
         # merge in additional values
         for key, val in kwargs.items():
             db_row[key] = val
