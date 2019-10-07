@@ -163,6 +163,6 @@ for feat_poss_state in [False]:
             wd_vd_objectid = processor.persist_results(CB_TAGGING_VD, cv_wd_vd_ys_by_tag, cv_wd_vd_predictions_by_tag, parameters, wd_algo)
 
             # This outputs 0's for MEAN CONCEPT CODES as we aren't including those in the outputs
-            print processor.results_to_string(wd_td_objectid, CB_TAGGING_TD, wd_vd_objectid, CB_TAGGING_VD, "TAGGING")
+            print(processor.results_to_string(wd_td_objectid, CB_TAGGING_TD, wd_vd_objectid, CB_TAGGING_VD, "TAGGING"))
             logger.info("Results Processed")
 
