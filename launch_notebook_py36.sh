@@ -12,4 +12,4 @@ export MONTYLINGUA='/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Pyt
 #conda info --envs
 
 cd notebooks
-jupyter lab
+jupyter notebook

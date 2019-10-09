@@ -247,8 +247,8 @@ feats_pipeline = [{ "$project": project }]
 collection = COLLECTION_PREFIX  + "_VD"
 rows = [row for row in db[collection].aggregate(feats_pipeline)]
 param_hash = set()
-for r in rows:
-    param_hash.add(hash_params(r["params"]))
+# for r in rows:
+#     param_hash.add(hash_params(r["params"]))
 
 for ngrams in [1]:
 
