@@ -210,7 +210,8 @@ class ResultsProcessor(object):
             return 0.0
         return (2.0 * r * p) / denom
 
-    def persist_predictions(self, dbcollection, predictions_by_tag, ys_by_tag):
+    @staticmethod
+    def persist_predictions(dbcollection, predictions_by_tag, ys_by_tag):
         # Persist predictions (too large to store in mongo
         folder = "/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Predictions/"
         n = datetime.datetime.now()
@@ -234,8 +235,7 @@ class ResultsProcessor(object):
 
     def persist_results(self, dbcollection, ys_by_tag, predictions_by_tag, experiment_args, algorithm, **kwargs):
 
-        self.persist_predictions(dbcollection, predictions_by_tag, ys_by_tag)
-
+        ResultsProcessor.persist_predictions(dbcollection, predictions_by_tag, ys_by_tag)
         experiment_args["num_tags"] = len(ys_by_tag.keys())
         # Compute Mean metrics over all folds
         metrics_by_code        = ResultsProcessor.compute_metrics(ys_by_tag, predictions_by_tag)
