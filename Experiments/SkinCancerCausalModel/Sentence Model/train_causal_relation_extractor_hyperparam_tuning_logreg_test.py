@@ -3,6 +3,7 @@ import datetime
 import logging
 from collections import defaultdict
 from typing import Any, List, Set, Tuple
+import time
 
 import dill
 import numpy as np
@@ -261,7 +262,7 @@ for ngrams in [1]:
                         for beta in [0.3]:
                             for max_epochs in [3]:
 
-                                for C in [0.5]:
+                                for C in [0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]:
 
                                     BASE_LEARNER_FACT = lambda : LogisticRegression(dual=dual,
                                                                                C=C,

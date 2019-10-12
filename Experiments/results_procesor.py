@@ -214,7 +214,7 @@ class ResultsProcessor(object):
         # Persist predictions (too large to store in mongo
         folder = "/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Predictions/"
         n = datetime.datetime.now()
-        ts = "{y}-{m}-{d}_{h}-{minut}".format(y=n.year, m=n.month, d=n.day, h=n.hour, minut=n.time().minute)
+        ts = "{y}-{m}-{d}_{h}-{minut}-{sec}".format(y=n.year, m=n.month, d=n.day, h=n.hour, minut=n.time().minute, sec=n.time().second)
         suffix_ts = "_" + ts + ".dill"
         suffix = ".dill"
 

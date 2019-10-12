@@ -1,6 +1,7 @@
 # coding: utf-8
 import datetime
 import logging
+import time
 from collections import defaultdict
 from typing import Any, List, Set, Tuple
 
@@ -257,7 +258,8 @@ for ngrams in [1]:
                         if dual and penalty != "l2":
                             continue
 
-                        for beta in [0.5]:
+                        for beta in [0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5]:
+
                             for max_epochs in [2]:
 
                                 for C in [0.5]:
