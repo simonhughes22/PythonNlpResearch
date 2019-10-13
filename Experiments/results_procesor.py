@@ -212,6 +212,10 @@ class ResultsProcessor(object):
 
     @staticmethod
     def persist_predictions(dbcollection, predictions_by_tag, ys_by_tag):
+        # We have all the predictions we need for now
+        if 1 == 1:
+            return
+
         # Persist predictions (too large to store in mongo
         folder = "/Users/simon.hughes/GitHub/NlpResearch/PythonNlpResearch/Predictions/"
         n = datetime.datetime.now()
