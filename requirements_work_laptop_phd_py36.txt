@@ -30,7 +30,7 @@ gensim==0.13.4
 grpcio==1.14.0
 h5py==2.7.0
 hdbscan==0.8.12
-html5lib==1.0.1
+html5lib==0.99999999
 idna==2.6
 ipykernel==4.8.2
 ipython==6.2.1
