@@ -5,7 +5,7 @@ joblib==0.9.4
 jupyter==1.0.0
 matplotlib==1.5.3
 nltk==3.2.5
-numpy==1.13.0
+numpy==1.21.0
 pandas==0.19.2
 pymongo==3.3.0
 pystruct==0.2.3
