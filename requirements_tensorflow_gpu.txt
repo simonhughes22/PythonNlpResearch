@@ -17,7 +17,7 @@ nbconvert==5.1.1
 nbformat==4.3.0
 nltk==3.2.2
 notebook
-numpy==1.12.0
+numpy==1.22.0
 packaging==16.8
 pandocfilters==1.4.1
 pexpect==4.2.1
