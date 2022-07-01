@@ -21,7 +21,7 @@ jupyter-core==4.3.0
 kiwisolver==1.1.0
 MarkupSafe==1.0
 matplotlib==3.1.1
-mistune==0.7.4
+mistune==0.8.1
 mlxtend==0.17.0
 nb-anacondacloud==1.4.0
 nb-conda==2.2.0
