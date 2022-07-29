@@ -53,7 +53,7 @@ Keras-Preprocessing==1.0.2
 Markdown==2.6.11
 MarkupSafe==1.0
 matplotlib==2.0.0
-mistune==0.8.3
+mistune==2.0.3
 murmurhash==0.26.4
 nb-anacondacloud==1.4.0
 nb-conda==2.2.1
