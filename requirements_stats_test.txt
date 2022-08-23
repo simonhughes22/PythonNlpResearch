@@ -26,7 +26,7 @@ mlxtend==0.17.0
 nb-anacondacloud==1.4.0
 nb-conda==2.2.0
 nb-conda-kernels==2.1.0
-nbconvert==5.2.1
+nbconvert==6.5.1
 nbformat==4.4.0
 nbpresent==3.0.2
 nltk==3.4.5
