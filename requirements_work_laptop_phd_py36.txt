@@ -75,7 +75,7 @@ Pillow==5.0.0
 plac==0.9.6
 preshed==1.0.0
 prompt-toolkit==1.0.15
-protobuf==3.6.0
+protobuf==3.18.3
 ptyprocess==0.5.2
 pycparser==2.18
 pyea==0.2
