@@ -1,7 +1,7 @@
 boto==2.45.0
 dill==0.2.6
 gensim==0.13.4
-joblib==0.9.4
+joblib==1.2.0
 jupyter==1.0.0
 matplotlib==1.5.3
 nltk==3.2.5

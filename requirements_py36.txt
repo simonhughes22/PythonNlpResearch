@@ -4,7 +4,7 @@ dill==0.2.8.2
 gensim==0.13.4
 h5py==2.7.0
 html5lib==0.999
-joblib==0.9.4
+joblib==1.2.0
 jupyter==1.0.0
 matplotlib==2.0.0
 # causes some issues
